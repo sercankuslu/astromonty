@@ -1,0 +1,20 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=A3979alone\A3979alone.PrjPCB
+[Project2]
+ProjectPath=MotherBoard\MotherBoard.PrjPCB
+[Project3]
+ProjectPath=AddOnCard\AddOnCard.PrjPCB
+[Project4]
+ProjectPath=dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.PrjPCB
+[Project5]
+ProjectPath=Interface\Interface.PrjPCB
+[Project6]
+ProjectPath=..\lib\Library.PrjPCB
+[Project7]
+ProjectPath=Interface\Display\Display.PrjPCB
+[Project8]
+ProjectPath=Driver1\Driver1.PrjPCB
+[Project9]
+ProjectPath=Interface\Imported Interface.PRJPCB\Interface.PRJPCB
