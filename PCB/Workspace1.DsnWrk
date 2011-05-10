@@ -1,0 +1,8 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=PCB_Project1.PrjPCB
+[Project2]
+ProjectPath=Display.PrjPCB
+[Project3]
+ProjectPath=..\Imported 4.PRJPCB\4.PRJPCB
