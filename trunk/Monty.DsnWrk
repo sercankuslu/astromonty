@@ -5,12 +5,10 @@ ProjectPath=A3979alone\A3979alone.PrjPCB
 [Project2]
 ProjectPath=MotherBoard\MotherBoard.PrjPCB
 [Project3]
-ProjectPath=AddOnCard\AddOnCard.PrjPCB
-[Project4]
 ProjectPath=dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.PrjPCB
-[Project5]
+[Project4]
 ProjectPath=Interface\Interface.PrjPCB
-[Project6]
+[Project5]
 ProjectPath=Interface\Display\Display.PrjPCB
-[Project7]
+[Project6]
 ProjectPath=Driver1\Driver1.PrjPCB
