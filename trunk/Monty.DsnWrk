@@ -11,10 +11,6 @@ ProjectPath=dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.PrjPCB
 [Project5]
 ProjectPath=Interface\Interface.PrjPCB
 [Project6]
-ProjectPath=..\lib\Library.PrjPCB
-[Project7]
 ProjectPath=Interface\Display\Display.PrjPCB
-[Project8]
+[Project7]
 ProjectPath=Driver1\Driver1.PrjPCB
-[Project9]
-ProjectPath=Interface\Imported Interface.PRJPCB\Interface.PRJPCB
