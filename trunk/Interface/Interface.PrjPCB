@@ -56,6 +56,10 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for Interface\Design Rule Check - Interface.html
+DItemRevisionGUID=
+
 [OutputGroup1]
 Name=Netlist Outputs
 Description=
@@ -211,7 +215,7 @@ OutputDefault3=0
 [OutputGroup3]
 Name=Documentation Outputs
 Description=
-TargetPrinter=Lexmark Universal
+TargetPrinter=HP LaserJet 4200/4300 PCL6
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintWhat=1
 OutputType1=Composite
 OutputName1=Composite Drawing
