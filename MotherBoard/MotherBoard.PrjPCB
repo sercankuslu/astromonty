@@ -294,7 +294,7 @@ TargetPrinter=HP LaserJet 4200/4300 PCL6
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintWhat=2
 OutputType1=Composite
 OutputName1=Composite Drawing
-OutputDocumentPath1=E:\shemes\trunk\Монтировка\MotherBoard\MotherBoard.PcbDoc
+OutputDocumentPath1=E:\astromonty\MotherBoard\PCB_18.PcbDoc
 OutputVariantName1=
 OutputDefault1=0
 PageOptions1=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|PrintScale=1.00|XCorrection=1.00|YCorrection=1.00|PrintKind=1|BorderSize=5000000|LeftOffset=0|BottomOffset=0|Orientation=1|PaperLength=1000|PaperWidth=1000|Scale=100|PaperSource=7|PrintQuality=-4|MediaType=1|DitherType=10|PaperKind=A4|PrintScaleMode=0
