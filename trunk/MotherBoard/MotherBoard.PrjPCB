@@ -132,7 +132,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
 [Document8]
-DocumentPath=Project Outputs for MotherBoard\CAMtastic1.Cam
+DocumentPath=Project Outputs for MotherBoard\CAMtastic_dril_18.Cam
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -147,7 +147,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
 [Document9]
-DocumentPath=Project Outputs for MotherBoard\CAMtastic2.Cam
+DocumentPath=Project Outputs for MotherBoard\CAMtastic_dril_70.Cam
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -162,7 +162,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
 [Document10]
-DocumentPath=Project Outputs for MotherBoard\CAMtastic3.Cam
+DocumentPath=Project Outputs for MotherBoard\CAMtastic_l_18.Cam
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -177,7 +177,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
 [Document11]
-DocumentPath=Project Outputs for MotherBoard\CAMtastic4.Cam
+DocumentPath=Project Outputs for MotherBoard\CAMtastic_l_70.Cam
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
