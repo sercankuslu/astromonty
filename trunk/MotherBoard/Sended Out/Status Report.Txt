@@ -1,0 +1,14 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [MotherBoard.PrjPCB]
+   Generated File[cpu_iface_disp_18um-RoundHoles.TXT]
+   Generated File[cpu_iface_disp_18um-SlotHoles.TXT]
+   Generated File[cpu_iface_disp_18um.DRL]
+   Generated File[cpu_iface_disp_18um.LDP]
+   Generated File[cpu_iface_disp_18um.DRR]
+
+
+Files Generated   : 5
+Documents Printed : 0
+
+Finished Output Generation At 16:13:44 On 2011-06-07
