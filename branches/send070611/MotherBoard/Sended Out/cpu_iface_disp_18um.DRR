@@ -1,0 +1,27 @@
+---------------------------------------------------------------------------
+NCDrill File Report For: cpu_iface_disp_18um.PcbDoc   2011-06-07  16:13:42
+---------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : cpu_iface_disp_18um-RoundHoles.TXT
+ASCII SlotHoles File : cpu_iface_disp_18um-SlotHoles.TXT
+EIA File   : cpu_iface_disp_18um.DRL
+
+Tool         Hole Size           Hole Type     Hole Count Plated       Tool Travel
+---------------------------------------------------------------------------
+T1        0.6mm (23.622mil)        Round          650              3412.06 mm (134.33 Inch)
+T2        0.71mm (27.953mil)       Round          36               654.99 mm (25.79 Inch)
+T3        0.8mm (31.496mil)        Round          8                144.08 mm (5.67 Inch)
+T4        0.9mm (35.433mil)        Round          181              1935.95 mm (76.22 Inch)
+T5        0.9mm (35.433mil)        Slot           10               7602.84 mm (299.32 Inch)
+T6        1mm (39.37mil)           Round          4                169.00 mm (6.65 Inch)
+T7        1.1mm (43.307mil)        Slot           6                7778.52 mm (306.24 Inch)
+T8        1.8mm (70.866mil)        Round          8                507.15 mm (19.97 Inch)
+T9        2mm (78.74mil)           Round          2                104.80 mm (4.13 Inch)
+T10       3mm (118.11mil)          Round          16               919.72 mm (36.21 Inch)
+T11       3.5mm (137.795mil)       Round          16               421.96 mm (16.61 Inch)
+T12       3mm (118.11mil)          Round          8         NPTH   498.91 mm (19.64 Inch)
+---------------------------------------------------------------------------
+Totals                                            945              24149.98 mm (950.79 Inch)
+
+Total Processing Time (hh:mm:ss) : 00:00:02

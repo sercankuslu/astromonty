@@ -1,0 +1,3 @@
+Layer Pairs Export File for PCB: F:\astromonty\MotherBoard\cpu_iface_disp_18um.PcbDoc
+LayersSetName=Top_Bot_Thru_Holes|DrillFile=cpu_iface_disp_18um-roundholes.txt|LayerPairs=gtl,gbl
+LayersSetName=Top_Bot_Slot_Holes|DrillFile=cpu_iface_disp_18um-slotholes.txt|LayerPairs=gtl,gbl
