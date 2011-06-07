@@ -1,0 +1,23 @@
+---------------------------------------------------------------------------
+NCDrill File Report For: mother_drivers_70um.PcbDoc   2011-06-07  16:12:31
+---------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : mother_drivers_70um.TXT
+EIA File   : mother_drivers_70um.DRL
+
+Tool         Hole Size           Hole Type     Hole Count Plated       Tool Travel
+---------------------------------------------------------------------------
+T1        0.4mm (15.748mil)        Round          126              646.69 mm (25.46 Inch)
+T2        0.6mm (23.622mil)        Round          416              3396.77 mm (133.73 Inch)
+T3        0.9mm (35.433mil)        Round          356              1562.59 mm (61.52 Inch)
+T4        1mm (39.37mil)           Round          54               663.18 mm (26.11 Inch)
+T5        1.1mm (43.307mil)        Round          18               691.97 mm (27.24 Inch)
+T6        1.4mm (55.118mil)        Round          20               288.01 mm (11.34 Inch)
+T7        3mm (118.11mil)          Round          32               1155.68 mm (45.50 Inch)
+T8        3.3mm (129.921mil)       Round          12               693.96 mm (27.32 Inch)
+T9        4mm (157.48mil)          Round          22               1015.04 mm (39.96 Inch)
+---------------------------------------------------------------------------
+Totals                                            1056             10113.90 mm (398.18 Inch)
+
+Total Processing Time (hh:mm:ss) : 00:00:02
