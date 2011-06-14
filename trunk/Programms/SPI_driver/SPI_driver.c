@@ -4,11 +4,10 @@
 #define WORD unsigned int
 
 typedef struct
-{
-	unsigned short RST_IO;
+{	
 	unsigned short CS;
-	unsigned short CON1;
-	unsigned short CON2;
+	unsigned short mode;
+	unsigned short ;
 } SPI_PARAMS;
 
 static void SPIInit(BYTE SPInum);
