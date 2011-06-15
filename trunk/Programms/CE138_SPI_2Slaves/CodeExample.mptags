@@ -1,0 +1,22 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.5.4	//
+!_TAG_REVISION_NAME	MCHPTags	//
+!_TAG_REVISION_VERSION	6.0.1	//
+CRC_32_TABLE	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	62;"	v	line:62
+FNOSC_FRC	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	56;"	v	line:56
+FWDTEN_OFF	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	60;"	v	line:60
+Init_SPI	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	94;"	f	line:94	signature:(void)
+POSCMD_XT	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	57;"	v	line:57
+delay	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	87;"	f	line:87	signature:(void)
+i	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	108;"	l	line:108
+j	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	108;"	l	line:108
+main	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	105;"	f	line:105	signature:(void)
+temp	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	67;"	l	line:67
+temp	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	78;"	l	line:78
+temp	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	89;"	l	line:89
+write_SPI1	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	65;"	f	line:65	signature:(short command)
+write_SPI2	C:\Documents and Settings\c13661.MCHP-MAIN\My Documents\CVS_folder\src\33F\R_apps\Code Examples\CE138_SPI_2Slaves\src\main.c	76;"	f	line:76	signature:(short command)
