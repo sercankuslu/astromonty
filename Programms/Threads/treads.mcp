@@ -5,7 +5,7 @@ device=dsPIC33FJ128GP710
 [PATH_INFO]
 BuildDirPolicy=BuildDirIsProjectDir
 dir_src=
-dir_bin=E:\astromonty\Programms\Threads\out
+dir_bin=
 dir_tmp=
 dir_sin=
 dir_inc=..\Microchip\Include
@@ -25,15 +25,15 @@ subfolder_lib=
 subfolder_lkr=
 [FILE_SUBFOLDERS]
 file_000=.
-file_001=microchip
-file_002=.
+file_001=.
+file_002=microchip
 file_003=microchip
 file_004=microchip
-file_005=microchip
+file_005=.
 file_006=microchip
 file_007=microchip
 file_008=microchip
-file_009=.
+file_009=microchip
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -58,15 +58,15 @@ file_008=no
 file_009=no
 [FILE_INFO]
 file_000=Threads.c
-file_001=E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-file_002=Main.c
-file_003=E:\astromonty\Programms\Microchip\Include\GenericTypeDefs.h
-file_004=E:\astromonty\Programms\Microchip\Include\Compiler.h
-file_005=E:\astromonty\Programms\Microchip\Include\timer.h
-file_006=E:\astromonty\Programms\Microchip\Include\TCPIP Stack\Tick.h
-file_007=HardwareProfile.h
-file_008=TCPIPConfig.h
-file_009=Threads.h
+file_001=Main.c
+file_002=F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+file_003=HardwareProfile.h
+file_004=TCPIPConfig.h
+file_005=Threads.h
+file_006=F:\astromonty\Programms\Microchip\Include\Compiler.h
+file_007=F:\astromonty\Programms\Microchip\Include\GenericTypeDefs.h
+file_008=F:\astromonty\Programms\Microchip\Include\timer.h
+file_009=F:\astromonty\Programms\Microchip\Include\TCPIP Stack\Tick.h
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=

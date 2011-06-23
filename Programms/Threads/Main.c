@@ -71,9 +71,9 @@ void main(void)
 int main(void)
 #endif
 {
+   	InitMultiTasking();
     
-    
-	 while(1)
+	while(1)
     {
         // Blink LED0 (right most one) every second.
         LATAbits.LATA0 ^= 1;
