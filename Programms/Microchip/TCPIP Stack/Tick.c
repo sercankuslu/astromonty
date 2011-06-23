@@ -55,7 +55,8 @@
 ********************************************************************/
 #define __TICK_C
 
-#include "TCPIP Stack/TCPIP.h"
+#include "TCPIP Stack/tick.h"
+//#include "TCPIP Stack/TCPIP.h"
 
 // Internal counter to store Ticks.  This variable is incremented in an ISR and 
 // therefore must be marked volatile to prevent the compiler optimizer from 
