@@ -53,8 +53,9 @@
 #ifndef __TICK_H
 #define __TICK_H
 
-#include "TCPIP Stack/TCPIP.h"
-
+//#include "TCPIP Stack/TCPIP.h"
+#include "GenericTypeDefs.h"
+#include "Compiler.h"
 // All TICKS are stored as 32-bit unsigned integers.
 // This is deprecated since it conflicts with other TICK definitions used in 
 // other Microchip software libraries and therefore poses a merge and maintence 
@@ -66,8 +67,8 @@ typedef __attribute__((__deprecated__)) DWORD TICK;
 // For this definition, the Timer must be initialized to use a 1:256 prescalar 
 // in Tick.c.  If using a 32kHz watch crystal as the time base, modify the 
 // Tick.c file to use no prescalar.
-#define TICKS_PER_SECOND		((GetPeripheralClock()+128ull)/256ull)	// Internal core clock drives timer with 1:256 prescaler
-//#define TICKS_PER_SECOND		(32768ul)								// 32kHz crystal drives timer with no scalar
+//#define TICKS_PER_SECOND		((GetPeripheralClock()+128ull)/256ull)	// Internal core clock drives timer with 1:256 prescaler
+#define TICKS_PER_SECOND		(32768ul)								// 32kHz crystal drives timer with no scalar
 
 // Represents one second in Ticks
 #define TICK_SECOND				((QWORD)TICKS_PER_SECOND)
