@@ -1,22 +1,15 @@
 
-
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
-
+#include "threads.h"
 
 #if defined(__C30__)
-	void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
+	void _ISR __attribute__((__no_auto_psv__)) _T5Interrupt(void)
 	{
 	   
 	}
 
-	
-#elif defined(__C32__)
-	void _general_exception_handler(unsigned cause, unsigned status)
-	{
-		Nop();
-		Nop();
-	}
+
 #endif
 
 
