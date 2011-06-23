@@ -71,6 +71,8 @@ void main(void)
 int main(void)
 #endif
 {
+    
+    
 	 while(1)
     {
         // Blink LED0 (right most one) every second.
