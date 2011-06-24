@@ -59,21 +59,21 @@ file_009=no
 [FILE_INFO]
 file_000=Threads.c
 file_001=Main.c
-file_002=F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+file_002=..\Microchip\TCPIP Stack\Tick.c
 file_003=HardwareProfile.h
 file_004=TCPIPConfig.h
 file_005=Threads.h
-file_006=F:\astromonty\Programms\Microchip\Include\Compiler.h
-file_007=F:\astromonty\Programms\Microchip\Include\GenericTypeDefs.h
-file_008=F:\astromonty\Programms\Microchip\Include\timer.h
-file_009=F:\astromonty\Programms\Microchip\Include\TCPIP Stack\Tick.h
+file_006=..\Microchip\Include\Compiler.h
+file_007=..\Microchip\Include\GenericTypeDefs.h
+file_008=..\Microchip\Include\timer.h
+file_009=E:\astromonty\Programms\Microchip\Include\TCPIP Stack\Tick.h
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=
 [TOOL_SETTINGS]
 TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}=-g
 TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}=-g -Wall
-TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}=-Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
+TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}=--stack=256 -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
 TS{509E5861-1E2A-483B-8B6B-CA8DB7F2DD78}=
 [INSTRUMENTED_TRACE]
 enable=0
