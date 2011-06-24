@@ -61,6 +61,20 @@
 	}
 #endif
 
+void Process1 (void)
+{
+    while(1){
+        Nop();
+        Nop();
+    }
+}
+void Process2 (void)
+{
+    while(1){
+        Nop();
+        Nop();
+    }
+}
 
 //
 // Main application entry point.
@@ -72,12 +86,16 @@ int main(void)
 #endif
 {
    	InitMultiTasking();
+    StartProcess(&Process1,0x10);   
+    StartProcess(&Process2,0x10); 
+    StartMultiTasking();
+loop: //	while(1)
     
-	while(1)
-    {
-        // Blink LED0 (right most one) every second.
-        LATAbits.LATA0 ^= 1;
+        // Blink LED0 
+        //LATAbits.LATA0 ^= 1;
        
-	}
+	
+	goto loop;
+	
 }
 
