@@ -74,7 +74,7 @@ void GenericTCPServer(void);
 void BerkeleyTCPClientDemo(void);
 void BerkeleyTCPServerDemo(void);
 void BerkeleyUDPClientDemo(void);
-
+signed char putsI2C1_1( unsigned char *wrptr, unsigned char count );
 
 // Define a header structure for validating the AppConfig data structure in EEPROM/Flash
 typedef struct

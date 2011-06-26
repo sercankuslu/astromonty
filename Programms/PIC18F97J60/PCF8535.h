@@ -6,6 +6,10 @@ PCF8535 lcd controller control codes
 */
 
 #define PCF8535_BUS_ADDRESS 0x78
+//#define PCF8535_BUS_ADDRESS 0b01111000
+//#define PCF8535_BUS_ADDRESS 0b01111010
+//#define PCF8535_BUS_ADDRESS 0b01111100
+//#define PCF8535_BUS_ADDRESS 0b01111110
 
 // Co, D/~C bits
 enum
