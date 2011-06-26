@@ -66,7 +66,7 @@ file_005=Threads.h
 file_006=..\Microchip\Include\Compiler.h
 file_007=..\Microchip\Include\GenericTypeDefs.h
 file_008=..\Microchip\Include\timer.h
-file_009=E:\astromonty\Programms\Microchip\Include\TCPIP Stack\Tick.h
+file_009=..\Microchip\Include\timer.h
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=

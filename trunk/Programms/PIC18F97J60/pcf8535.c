@@ -66,10 +66,10 @@ static uint8_t lcd_init_sequence[] =
 	,
 	cmdLCD_HV_GEN_CONTROL
 	| paramLCD_HV_ENABLED
-	| paramLCD_VLCD_LOW
+	| paramLCD_VLCD_HIGH
 	,
 	cmdLCD_HV_GEN_STAGES
-	| paramLCD_HV_MUL3
+	| paramLCD_HV_MUL5
 	,
 	cmdLCD_TEMP_COEFF
 	| paramLCD_TC_274
@@ -146,16 +146,18 @@ void lcd_init()
 	//***************************************************
 	//* Lcd init commands *
 	//***************************************************
-	if(lcd_start_write(modeLCD_CMD_TILL_STOP)==1){
-		
-		if(lcd_send_array(lcd_init_sequence, sizeof(lcd_init_sequence))==1){
+	//if(lcd_start_write(modeLCD_CMD_TILL_STOP)){
+	lcd_start_write(modeLCD_CMD_TILL_STOP);
+		lcd_send_array(lcd_init_sequence, sizeof(lcd_init_sequence));
+		//if(lcd_send_array(lcd_init_sequence, sizeof(lcd_init_sequence))){
 			LATAbits.LATA0 =1;
-		}
-	}
+		//}
+	//}
 	StopI2C1();	
 		// Now lcd address pointer set to row 0, col. 0.
 		// fill whole screen with black pattern
-	if(lcd_start_write(modeLCD_DATA_TILL_STOP)==1){
+	//if(lcd_start_write(modeLCD_DATA_TILL_STOP)){
+	lcd_start_write(modeLCD_DATA_TILL_STOP);
 		// lcd address pointer autoincrements,
 		// so we can just draw LCD_SIZE_X*LCD_SIZE_Y points.
 		// one byte fills 8 dots on screen,
@@ -171,7 +173,7 @@ void lcd_init()
 			WriteI2C(0x1F);
 		//}
 		
-	}
+	//}
 	StopI2C1();
 	
 }
@@ -264,3 +266,4 @@ void lcd_set_contrast(uint8_t contrast)
 		StopI2C1();
 	}
 }
+
