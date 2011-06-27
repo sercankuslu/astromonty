@@ -1,6 +1,6 @@
 #include "font.h"
-
-static rom far unsigned char EnglishData[]={
+#include "GenericTypeDefs.h"
+static rom int EnglishData[]={
     0x0DF,0x0FB,0x03F,0x023,0x03F,0x0FB,0x0DF,                          
     0x0FE,0x0FE,0x088,0x088,0x0FE,0x076,                               
     0x03C,0x07E,0x0C2,0x080,0x080,0x0C2,0x042,                         
@@ -55,7 +55,7 @@ static rom far unsigned char EnglishData[]={
     0x0C3,0x0E3,0x0B3,0x09B,0x08B,
 };
 
-static rom unsigned char cp1251[]={
+static rom int cp1251[]={
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -75,13 +75,19 @@ static rom unsigned char cp1251[]={
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 };
 
-unsigned char* GetSymbolImage(unsigned char symbol,unsigned char* count){
-    unsigned char Image[12];
-    unsigned int i;        
-    unsigned int begin = cp1251[symbol];
-    unsigned int end = cp1251[symbol+1];    
-    unsigned int size = end - begin;
-    
+int* GetSymbolImage(BYTE symbol,BYTE* count){
+    int Image[12];
+    int i;        
+    int begin =  0;
+    int end   =  0;    
+    int size  =  0;
+	int* position = cp1251;
+	position+=symbol;
+
+    begin =  *position++;
+    end   =  *position++;    
+    size  =  end - begin;
+
     for(i=0;i<12;i++){
         Image[i]=0;
     }
