@@ -317,8 +317,8 @@ int main(void)
 	unsigned char data; 
 	unsigned char status; 
 	unsigned char length;
-	unsigned char* symbol;
-	unsigned char count;
+	int* symbol;
+	BYTE count;
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
     //очистка буфера экрана
@@ -326,7 +326,7 @@ int main(void)
     //    DisplayBuffer[i]=0;
     //}
     
-    symbol = GetSymbolImage('A',&count);
+    symbol = GetSymbolImage(106,&count);
     
 	TRISAbits.TRISA0=0;
 	TRISAbits.TRISA1=0;
