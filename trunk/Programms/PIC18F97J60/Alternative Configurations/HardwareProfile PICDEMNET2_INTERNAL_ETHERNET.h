@@ -54,7 +54,7 @@
 #include "Compiler.h"
 
 // Define a macro describing this hardware set up (used in other files)
-#define PICDEMNET2
+#define YOUR_BOARD
 
 // Set configuration fuses (but only in MainDemo.c where THIS_IS_STACK_APPLICATION is defined)
 #if defined(THIS_IS_STACK_APPLICATION)

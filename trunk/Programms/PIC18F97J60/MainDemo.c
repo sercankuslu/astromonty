@@ -94,6 +94,7 @@
 #include "TCPIP Stack/TCPIP.h"
 #include "pcf8535.h"
 #include <i2c.h>
+#include "font.h"
 
 
 
@@ -196,14 +197,11 @@ static void ProcessIO(void);
 	}
 #endif
 
-void LCDSendData(unsigned char add1,unsigned char* I2C_Send, unsigned char size);
-void LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size);
-void LCDClearData(unsigned char add1);
-void LCDSetXY(unsigned char add1, unsigned char X,unsigned char Y);
+
 
 //unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
 unsigned char I2C_Recv[21];
-static unsigned char I2C_Send[] =
+const rom unsigned char I2C_Send[] =
 {	
 	modeLCD_CMD_TILL_STOP
 	,
@@ -280,7 +278,7 @@ static unsigned char I2C_Send[] =
 	| 0, 
 		
 };
-static unsigned char I2C_Home[] =
+const rom unsigned char I2C_Home[] =
 {
 	cmdLCD_DEFAULT_PAGE
 	,
@@ -293,35 +291,11 @@ static unsigned char I2C_Home[] =
 };
 
 
-static unsigned char I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //A
-								0x81,0xFF,0xFF,0x89,0x89,0xFF,0x76,0x00, //B
-								0x3C,0x7E,0xC3,0x81,0x81,0x82,0x47,0x00, //C
-								0x81,0xFF,0xFF,0x81,0x81,0xC3,0x7E,0x3C, //D
-								0x81,0xFF,0xFF,0x89,0x9D,0xC3, //E
-								0x81,0xFF,0xFF,0x89,0x1D,0x03,0x00, //F
-								0x3C,0x7E,0xC3,0x81,0xA1,0xE2,0x67,0x20, //G
-								0x81,0xFF,0xFF,0x89,0x08,0x89,0xFF,0xFF,0x81, //H
-								0x81,0xFF,0xFF,0x81, //I
-								0x60,0xE0,0x81,0xFF,0x7F,0x01, //J
-								0x81,0xFF,0xFF,0x99,0x3C,0xE3,0xC1,0x81, //K
-								0x81,0xFF,0xFF,0x81,0x80,0xC0,0xE0, //L
-								0x81,0xFF,0x87,0x3F,0xF8,0x3C,0x87,0xFF,0xFF,0x81, //M
-								0x81,0xFF,0x83,0x0E,0x1C,0x71,0xFF,0x01, //N
-								0x3C,0x7E,0xC3,0x81,0x81,0xC3,0x7E,0x3C, //O
-								0x81,0xFF,0xFF,0x91,0x11,0x11,0x1F,0x0E, //P
-								0x3C,0x7E,0xC3,0x81,0xA1,0xC3,0xFE,0xBC, //Q 
+const rom unsigned char I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //A
+								
 };
-static unsigned char I2C_Send2[]={0x81,0xFF,0xFF,0x89,0x39,0xF7,0xCC,0x80, //R
-								0xCE,0x5F,0x99,0xFA,0x73, //S
-								0x03,0x81,0xFF,0xFF,0x81,0x03, //T
-								0x01,0x7F,0xFF,0x81,0x80,0x81,0x7F,0x01, //U
-								0x01,0x07,0x3F,0xF9,0xC0,0x39,0x07,0x01, //V
-								0x01,0x07,0x3F,0xF8,0xE1,0x1B,0x1F,0xF9,0xE0,0x1D,0x03,0x01, //W
-								0x81,0xC3,0xAF,0x3D,0xF4,0xC3,0x81, //X
-								0x01,0x03,0x8F,0xFD,0xF0,0x8D,0x03,0x01, //Y
-								0x80,0xC7,0xF1,0xBD,0x8F,0xC3,0xE1, //Z
 
-};
+//static unsigned char DisplayBuffer[133*7];
 //
 // Main application entry point.
 //
@@ -343,10 +317,17 @@ int main(void)
 	unsigned char data; 
 	unsigned char status; 
 	unsigned char length;
-	
+	unsigned char* symbol;
+	unsigned char count;
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
-
+    //очистка буфера экрана
+    //for(i=0;i<133*7;i++){
+    //    DisplayBuffer[i]=0;
+    //}
+    
+    symbol = GetSymbolImage('A',&count);
+    
 	TRISAbits.TRISA0=0;
 	TRISAbits.TRISA1=0;
 	LATAbits.LATA0 =0;
@@ -437,7 +418,7 @@ int main(void)
 }
 
 
-void LCDSendData(unsigned char add1,unsigned char* wrptr, unsigned char size)
+signed char LCDSendData(unsigned char add1,unsigned char* wrptr, unsigned char size)
 {
 	unsigned char sync_mode=0;
 	unsigned char slew=0; 
@@ -498,9 +479,10 @@ void LCDSendData(unsigned char add1,unsigned char* wrptr, unsigned char size)
     
 	
 //---TERMINATE COMMUNICATION FROM MASTER SIDE---
-     IdleI2C();
+     IdleI2C(); 
+     return 0;
 }
-void LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size)
+signed char LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size)
 {
 	unsigned char sync_mode=0;
 	unsigned char slew=0; 
@@ -557,13 +539,11 @@ void LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size)
 		}	  
 	wrptr ++;                        // increment pointer
 	}            
-    
-	
-//---TERMINATE COMMUNICATION FROM MASTER SIDE---
-     IdleI2C();
+    IdleI2C();
+    return 0;
 }
 
-void LCDClearData(unsigned char add1)
+signed char LCDClearData(unsigned char add1)
 {
 	unsigned char sync_mode=0;
 	unsigned char slew=0; 
@@ -628,6 +608,7 @@ void LCDClearData(unsigned char add1)
 	//---TERMINATE COMMUNICATION FROM MASTER SIDE---
 	     IdleI2C();
 	}
+	return 0;
 }
 void LCDSetXY(unsigned char add1, unsigned char X,unsigned char Y)
 {
