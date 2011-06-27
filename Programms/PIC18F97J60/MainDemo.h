@@ -65,6 +65,7 @@ void DoUARTConfig(void);
 	#define SaveAppConfig(a)
 #endif
 
+/*
 void SMTPDemo(void);
 void PingDemo(void);
 void SNMPTrapDemo(void);
@@ -74,6 +75,11 @@ void GenericTCPServer(void);
 void BerkeleyTCPClientDemo(void);
 void BerkeleyTCPServerDemo(void);
 void BerkeleyUDPClientDemo(void);
+*/
+signed char  LCDSendData(unsigned char add1,unsigned char* I2C_Send, unsigned char size);
+signed char  LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size);
+signed char  LCDClearData(unsigned char add1);
+void LCDSetXY(unsigned char add1, unsigned char X,unsigned char Y);
 signed char putsI2C1_1( unsigned char *wrptr, unsigned char count );
 
 // Define a header structure for validating the AppConfig data structure in EEPROM/Flash
@@ -87,7 +93,7 @@ typedef struct
 
 // An actual function defined in MainDemo.c for displaying the current IP 
 // address on the UART and/or LCD.
-void DisplayIPValue(IP_ADDR IPVal);
+//void DisplayIPValue(IP_ADDR IPVal);
 
 
 #endif // _MAINDEMO_H

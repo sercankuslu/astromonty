@@ -1,17 +1,13 @@
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 488 : unexpected return value
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 493 : unexpected return value
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 550 : unexpected return value
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 555 : unexpected return value
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 617 : unexpected return value
-Warning[2052] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 622 : unexpected return value
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 639 : static function 'ProcessIO' not defined
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 639 : static function 'InitializeBoard' not defined
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 639 : static function 'InitAppConfig' not defined
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2066] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 382 : type qualifier mismatch in assignment
+Warning[2066] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 386 : type qualifier mismatch in assignment
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'ProcessIO' not defined
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'InitializeBoard' not defined
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'InitAppConfig' not defined
