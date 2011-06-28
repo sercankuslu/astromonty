@@ -1,6 +1,6 @@
 #include "font.h"
 #include "GenericTypeDefs.h"
-static rom int EnglishData[]={
+static rom WORD EnglishData[]={
     0x0DF,0x0FB,0x03F,0x023,0x03F,0x0FB,0x0DF,                          
     0x0FE,0x0FE,0x088,0x088,0x0FE,0x076,                               
     0x03C,0x07E,0x0C2,0x080,0x080,0x0C2,0x042,                         
@@ -55,7 +55,7 @@ static rom int EnglishData[]={
     0x0C3,0x0E3,0x0B3,0x09B,0x08B,
 };
 
-static rom int cp1251[]={
+static rom WORD cp1251[256]={
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -71,29 +71,25 @@ static rom int cp1251[]={
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,     
 };
 
 int* GetSymbolImage(BYTE symbol,BYTE* count){
-    int Image[12];
-    int i;        
-    int begin =  0;
-    int end   =  0;    
-    int size  =  0;
-	int* position = cp1251;
-	position+=symbol;
-
-    begin =  *position++;
-    end   =  *position++;    
-    size  =  end - begin;
+    WORD Image[12];
+    BYTE i;        
+    signed short int Begin =  0;
+    signed short int End   =  0;    
+    signed short int Size  =  0;
+    Begin = cp1251[106];
+    End   = cp1251[107];    
+    Size  =  End - Begin;
 
     for(i=0;i<12;i++){
         Image[i]=0;
     }
-    for(i=0;i<size;i++){
-        Image[i]= EnglishData[begin+i];
+    for(i=0;i<Size;i++){
+        Image[i]= EnglishData[Begin+i];
     }    
-    count[0] = size;
+    count[0] = Size;
     return Image;    
 }
