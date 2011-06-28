@@ -318,6 +318,7 @@ int main(void)
 	unsigned char status; 
 	unsigned char length;
 	WORD* symbol;
+
 	BYTE count;
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
@@ -325,22 +326,7 @@ int main(void)
     //for(i=0;i<133*7;i++){
     //    DisplayBuffer[i]=0;
     //}
-    symbol = GetSymbolImage(0x00,&count);
-    symbol = GetSymbolImage(0x10,&count);
-    symbol = GetSymbolImage(0x20,&count);
-    symbol = GetSymbolImage(0x30,&count);
-    symbol = GetSymbolImage(0x40,&count);
-    symbol = GetSymbolImage(0x50,&count);
-    symbol = GetSymbolImage(0x60,&count);
-    symbol = GetSymbolImage(0x70,&count);
-    symbol = GetSymbolImage(0x80,&count);
-    symbol = GetSymbolImage(0x90,&count);
-    symbol = GetSymbolImage(0xA0,&count);
-    symbol = GetSymbolImage(0xB0,&count);
-    symbol = GetSymbolImage(0xC0,&count);
-    symbol = GetSymbolImage(0xD0,&count);
-    symbol = GetSymbolImage(0xE0,&count);
-    symbol = GetSymbolImage(0xF0,&count);
+    
 
     
 	TRISAbits.TRISA0=0;
@@ -374,7 +360,7 @@ int main(void)
 
 	//DelayMs(1000);
 	// вывели lcd из ресета
-
+	
 	for(w=0;w<20;w++)
     I2C_Recv[w]=0;
 
@@ -385,7 +371,7 @@ int main(void)
 
 	//---INITIALISE THE I2C MODULE FOR MASTER MODE WITH 100KHz ---
     sync_mode = MASTER;
-    slew = SLEW_OFF;
+    slew = SLEW_ON;
     OpenI2C(sync_mode,slew);
     SSPADD=0x0A;             //400kHz Baud clock(9) @8MHz
 //check for bus idle condition in multi master communication
@@ -394,11 +380,18 @@ int main(void)
 //---START I2C---
     StartI2C();
 
-	LCDSendCommand(add1,I2C_Send,sizeof(I2C_Send));
+	LCDSendCommand(add1,(unsigned char*)I2C_Send,sizeof(I2C_Send));
 	LCDClearData(add1);
+	LCDSetXY(add1,0,0);
+	LCDSendData(add1,(unsigned char*)I2C_Send1,sizeof(I2C_Send1));
+	//symbol = GetSymbolImage(0x40,&count);
+	//for(i=0;i<count;i++){
+	//	test[i] = symbol[i];
+	//}
+	//LCDSendData(add1,test,count);
 	for(i=7;i>0;i--){
 		LCDSetXY(add1,0,i);
-		LCDSendData(add1,I2C_Send1,sizeof(I2C_Send1));
+		LCDSendData(add1,(unsigned char*)I2C_Send1,sizeof(I2C_Send1));
 	}
 	
 	
@@ -425,6 +418,11 @@ int main(void)
 			if(t1>=255){
 				t1=0;
 			}
+			//for(i=0;i<16;i++){				
+				//symbol = GetSymbolImage(0x50,&count);
+				
+			//}
+			
 			//lcd_set_contrast(t1);
 			
 		}
