@@ -1,13 +1,29 @@
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2060] F:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
-Warning[2066] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 382 : type qualifier mismatch in assignment
-Warning[2066] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 386 : type qualifier mismatch in assignment
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'ProcessIO' not defined
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'InitializeBoard' not defined
-Warning[2064] F:\astromonty\Programms\PIC18F97J60\MainDemo.c 620 : static function 'InitAppConfig' not defined
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2060] E:\astromonty\Programms\PIC18F97J60\pcf8535.h 118 : shift expression has no effect
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 328 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 329 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 330 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 331 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 332 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 333 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 334 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 335 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 336 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 337 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 338 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 339 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 340 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 341 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 342 : suspicious pointer conversion
+Warning[2054] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 343 : suspicious pointer conversion
+Warning[2066] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 397 : type qualifier mismatch in assignment
+Warning[2066] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 401 : type qualifier mismatch in assignment
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 635 : static function 'ProcessIO' not defined
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 635 : static function 'InitializeBoard' not defined
+Warning[2064] E:\astromonty\Programms\PIC18F97J60\MainDemo.c 635 : static function 'InitAppConfig' not defined

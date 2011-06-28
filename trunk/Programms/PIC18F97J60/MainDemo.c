@@ -95,7 +95,7 @@
 #include "pcf8535.h"
 #include <i2c.h>
 #include "font.h"
-
+#include "DisplayBuffer.h"
 
 
 #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
@@ -295,7 +295,7 @@ const rom unsigned char I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //
 								
 };
 
-//static unsigned char DisplayBuffer[133*7];
+
 //
 // Main application entry point.
 //
@@ -317,7 +317,7 @@ int main(void)
 	unsigned char data; 
 	unsigned char status; 
 	unsigned char length;
-	int* symbol;
+	WORD* symbol;
 	BYTE count;
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
@@ -325,8 +325,23 @@ int main(void)
     //for(i=0;i<133*7;i++){
     //    DisplayBuffer[i]=0;
     //}
-    
-    symbol = GetSymbolImage(106,&count);
+    symbol = GetSymbolImage(0x00,&count);
+    symbol = GetSymbolImage(0x10,&count);
+    symbol = GetSymbolImage(0x20,&count);
+    symbol = GetSymbolImage(0x30,&count);
+    symbol = GetSymbolImage(0x40,&count);
+    symbol = GetSymbolImage(0x50,&count);
+    symbol = GetSymbolImage(0x60,&count);
+    symbol = GetSymbolImage(0x70,&count);
+    symbol = GetSymbolImage(0x80,&count);
+    symbol = GetSymbolImage(0x90,&count);
+    symbol = GetSymbolImage(0xA0,&count);
+    symbol = GetSymbolImage(0xB0,&count);
+    symbol = GetSymbolImage(0xC0,&count);
+    symbol = GetSymbolImage(0xD0,&count);
+    symbol = GetSymbolImage(0xE0,&count);
+    symbol = GetSymbolImage(0xF0,&count);
+
     
 	TRISAbits.TRISA0=0;
 	TRISAbits.TRISA1=0;

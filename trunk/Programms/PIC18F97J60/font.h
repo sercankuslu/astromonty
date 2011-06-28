@@ -1,3 +1,4 @@
 ///
 #include "GenericTypeDefs.h"
-int* GetSymbolImage(BYTE symbol,BYTE* count);
+WORD* GetSymbolImage(BYTE symbol,WORD* OutWordCount);
+WORD* GetStringImage(BYTE* string, WORD* OutWordCount);
