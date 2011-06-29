@@ -125,9 +125,9 @@ BYTE AN0String[8];
 
 // Private helper functions.
 // These may or may not be present in all applications.
-static void InitAppConfig(void);
-static void InitializeBoard(void);
-static void ProcessIO(void);
+//static void InitAppConfig(void);
+//static void InitializeBoard(void);
+//static void ProcessIO(void);
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
@@ -201,83 +201,7 @@ static void ProcessIO(void);
 
 //unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
 unsigned char I2C_Recv[21];
-const rom unsigned char I2C_Send[] =
-{	
-	modeLCD_CMD_TILL_STOP
-	,
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_COMMAND_PAGE
-	| paramLCD_PAGE_DISPLAY_SETTINGS
-	,
-	cmdLCD_BIAS_SYSTEM
-	| paramLCD_BIAS_9 // Bias 1/9, MUX 1:65
-	,
-	cmdLCD_MULTILPEX_RATE
-	| paramLCD_MUX_65
-	,
-	cmdLCD_DISPLAY_CONTROL
-	| paramLCD_NORMAL
-	,
-	cmdLCD_EXT_DISPLAY_CTL
-	| paramLCD_XDIRECTION_REVERSE
-	| paramLCD_YDIRECTION_REVERSE 
-	,
-	cmdLCD_DISPLAY_SIZE
-	| paramLCD_LARGE_DISPLAY
-	,
-	
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_COMMAND_PAGE
-	| paramLCD_PAGE_HV_GEN
-	,
-	cmdLCD_HV_GEN_CONTROL
-	| paramLCD_HV_ENABLED
-	| paramLCD_VLCD_LOW
-	,
-	cmdLCD_HV_GEN_STAGES
-	| paramLCD_HV_MUL5
-	,
-	cmdLCD_TEMP_COEFF
-	| paramLCD_TC_274
-	,
-	cmdLCD_VLCD_CONTROL
-	| 51
-	,
-	
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_COMMAND_PAGE
-	| paramLCD_PAGE_SPECIAL_FEATURE
-	,
-	cmdLCD_STATE_CONTROL
-	| 0
-	,
-	cmdLCD_OSC_SETTING
-	| paramLCD_OSC_INTERNAL
-	,
-	cmdLCD_COG_TCP
-	| paramLCD_BOT_ROW_SWAP_ENABLED
-	| paramLCD_TOP_ROW_SWAP_ENABLED
-	,
-	
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_FUNCTION_SET
-	| paramLCD_ACTIVE
-	| paramLCD_HORIZONTAL_ADDRESSING
-	, 
-	cmdLCD_RAM_PAGE
-	| paramLCD_PAGE0
-	,
-	cmdLCD_SET_Y
-	| 0
-	, 
-	cmdLCD_SET_X
-	| 0, 
-		
-};
+
 const rom unsigned char I2C_Home[] =
 {
 	cmdLCD_DEFAULT_PAGE
@@ -309,25 +233,18 @@ int main(void)
 	static DWORD t1 = 0;
 	static DWORD dwLastIP = 0;
 	BYTE b = 0;
-	unsigned char sync_mode=0;
-	unsigned char slew=0; 
-	unsigned char add1; 
-	unsigned char w; 
-	unsigned char i; 
-	unsigned char data; 
-	unsigned char status; 
-	unsigned char length;
+	
+	BYTE add1 = PCF8535_BUS_ADDRESS; 	
+	BYTE i; 	
 	WORD* symbol;
-
+	WORD  temp[12];
+	unsigned char Text[20] = "Что это о_О?";
 	BYTE count;
+	
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
-    //очистка буфера экрана
-    //for(i=0;i<133*7;i++){
-    //    DisplayBuffer[i]=0;
-    //}
     
-
+    OutTextXY(0,7,Text);
     
 	TRISAbits.TRISA0=0;
 	TRISAbits.TRISA1=0;
@@ -361,29 +278,10 @@ int main(void)
 	//DelayMs(1000);
 	// вывели lcd из ресета
 	
-	for(w=0;w<20;w++)
-    I2C_Recv[w]=0;
-
-    add1=PCF8535_BUS_ADDRESS;        //address of the device (slave) under communication
-
-    CloseI2C();    //close i2c if was operating earlier
-
-
-	//---INITIALISE THE I2C MODULE FOR MASTER MODE WITH 100KHz ---
-    sync_mode = MASTER;
-    slew = SLEW_ON;
-    OpenI2C(sync_mode,slew);
-    SSPADD=0x0A;             //400kHz Baud clock(9) @8MHz
-//check for bus idle condition in multi master communication
-    IdleI2C();
-
-//---START I2C---
-    StartI2C();
-
-	LCDSendCommand(add1,(unsigned char*)I2C_Send,sizeof(I2C_Send));
+	LCDInit(add1);	
 	LCDClearData(add1);
 	LCDSetXY(add1,0,0);
-	LCDSendData(add1,(unsigned char*)I2C_Send1,sizeof(I2C_Send1));
+	LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
 	//symbol = GetSymbolImage(0x40,&count);
 	//for(i=0;i<count;i++){
 	//	test[i] = symbol[i];
@@ -391,7 +289,7 @@ int main(void)
 	//LCDSendData(add1,test,count);
 	for(i=7;i>0;i--){
 		LCDSetXY(add1,0,i);
-		LCDSendData(add1,(unsigned char*)I2C_Send1,sizeof(I2C_Send1));
+		LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
 	}
 	
 	
@@ -401,13 +299,14 @@ int main(void)
     while(1)
     {
         // Blink LED0 (right most one) every second.
-		/*
+		
         if(TickGet() - t >= TICK_SECOND/2ul)
         {
             t = TickGet();
-            LATGbits.LATG4 ^= 1;
+            LATAbits.LATA1 ^= 1;
+            DisplayDraw(add1);
         }
-		*/
+		
 		
 		t++;
 		if(t>=200){
@@ -431,204 +330,4 @@ int main(void)
 }
 
 
-signed char LCDSendData(unsigned char add1,unsigned char* wrptr, unsigned char size)
-{
-	unsigned char sync_mode=0;
-	unsigned char slew=0; 
-	unsigned char i; 
-	unsigned char w; 
-	unsigned char data; 
-	unsigned char status; 
-	unsigned char length;
 
-	RestartI2C();
-    IdleI2C();
-
-	//****write the address of the device for communication***
-    data = SSPBUF;        //read any previous stored content in buffer to clear buffer full status
-    do
-    {
-    status = WriteI2C( add1 | 0x00 );    //write the address of slave
-        if(status == -1)        //check if bus collision happened
-        {
-            data = SSPBUF;        //upon bus collision detection clear the buffer,
-            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
-        }
-    }
-    while(status!=0);        //write untill successful communication
-	//R/W BIT IS '0' FOR FURTHER WRITE TO SLAVE
-	do
-    {
-    status = WriteI2C(modeLCD_DATA_TILL_STOP);    //write the address of slave
-        if(status == -1)        //check if bus collision happened
-        {
-            data = SSPBUF;        //upon bus collision detection clear the buffer,
-            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
-        }
-    }
-    while(status!=0);        //write untill successful communication
-	//***WRITE THE THE DATA TO BE SENT FOR SLAVE***
-	//write string of data to be transmitted to slave
-   	for (i=0;i<size;i++ )                 // transmit data 
-	{
-	  	if ( SSP1CON1bits.SSPM3 )      // if Master transmitter then execute the following
-		{
-			//temp = putcI2C1 ( *wrptr );
-			//if (temp ) return ( temp );   	
-			if ( WriteI2C1( *wrptr ) )    // write 1 byte
-			{
-			  return ( -3 );             // return with write collision error
-			}
-			IdleI2C1();                  // test for idle condition
-			if ( SSP1CON2bits.ACKSTAT )  // test received ack bit state
-			{
-			  return ( -2 );             // bus device responded with  NOT ACK
-			}                            // terminate putsI2C1() function
-		}	  
-	wrptr ++;                        // increment pointer
-	}            
-    
-	
-//---TERMINATE COMMUNICATION FROM MASTER SIDE---
-     IdleI2C(); 
-     return 0;
-}
-signed char LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size)
-{
-	unsigned char sync_mode=0;
-	unsigned char slew=0; 
-	unsigned char i; 
-	unsigned char w; 
-	unsigned char data; 
-	unsigned char status; 
-	unsigned char length;
-	//****write the address of the device for communication***
-  	RestartI2C();
-    IdleI2C();
-
-    data = SSPBUF;        //read any previous stored content in buffer to clear buffer full status
-    do
-    {
-    status = WriteI2C( add1 | 0x00 );    //write the address of slave
-        if(status == -1)        //check if bus collision happened
-        {
-            data = SSPBUF;        //upon bus collision detection clear the buffer,
-            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
-        }
-    }
-    while(status!=0);        //write untill successful communication
-	//R/W BIT IS '0' FOR FURTHER WRITE TO SLAVE
-	do
-    {
-    status = WriteI2C(modeLCD_CMD_TILL_STOP);    //write the address of slave
-        if(status == -1)        //check if bus collision happened
-        {
-            data = SSPBUF;        //upon bus collision detection clear the buffer,
-            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
-        }
-    }
-    while(status!=0);        //write untill successful communication
-	//***WRITE THE THE DATA TO BE SENT FOR SLAVE***
-	//write string of data to be transmitted to slave
-   	for (i=0;i<size;i++ )                 // transmit data 
-	{
-	  	if ( SSP1CON1bits.SSPM3 )      // if Master transmitter then execute the following
-		{
-			//temp = putcI2C1 ( *wrptr );
-			//if (temp ) return ( temp );   	
-			if ( WriteI2C1( *wrptr ) )    // write 1 byte
-			{
-			  return ( -3 );             // return with write collision error
-			}
-			IdleI2C1();                  // test for idle condition
-			if ( SSP1CON2bits.ACKSTAT )  // test received ack bit state
-			{
-			  return ( -2 );             // bus device responded with  NOT ACK
-			}                            // terminate putsI2C1() function
-		}	  
-	wrptr ++;                        // increment pointer
-	}            
-    IdleI2C();
-    return 0;
-}
-
-signed char LCDClearData(unsigned char add1)
-{
-	unsigned char sync_mode=0;
-	unsigned char slew=0; 
-	unsigned char i; 
-	unsigned char j; 
-	unsigned char w; 
-	unsigned char data; 
-	unsigned char status; 
-	unsigned char length;
-		
-	for(j=0;j<6;j++){
-		LCDSetXY(add1,0,j);
-		RestartI2C();
-	    IdleI2C();
-	
-		//****write the address of the device for communication***
-	    data = SSPBUF;        //read any previous stored content in buffer to clear buffer full status
-	    do
-	    {
-	    status = WriteI2C( add1 | 0x00 );    //write the address of slave
-	        if(status == -1)        //check if bus collision happened
-	        {
-	            data = SSPBUF;        //upon bus collision detection clear the buffer,
-	            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-				LATAbits.LATA1 =1;
-	        }
-	    }
-	    while(status!=0);        //write untill successful communication
-		//R/W BIT IS '0' FOR FURTHER WRITE TO SLAVE
-		do
-	    {
-	    status = WriteI2C(modeLCD_DATA_TILL_STOP);    //write the address of slave
-	        if(status == -1)        //check if bus collision happened
-	        {
-	            data = SSPBUF;        //upon bus collision detection clear the buffer,
-	            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-				LATAbits.LATA1 =1;
-	        }
-	    }
-	    while(status!=0);        //write untill successful communication
-		//***WRITE THE THE DATA TO BE SENT FOR SLAVE***
-		//write string of data to be transmitted to slave
-	   	for (i=0;i<128;i++ )                 // transmit data 
-		{
-		  	if ( SSP1CON1bits.SSPM3 )      // if Master transmitter then execute the following
-			{
-				//temp = putcI2C1 ( *wrptr );
-				//if (temp ) return ( temp );   	
-				if ( WriteI2C1( 0 ) )    // write 1 byte
-				{
-				  return ( -3 );             // return with write collision error
-				}
-				IdleI2C1();                  // test for idle condition
-				if ( SSP1CON2bits.ACKSTAT )  // test received ack bit state
-				{
-				  return ( -2 );             // bus device responded with  NOT ACK
-				}                            // terminate putsI2C1() function
-			}	  	          
-		}         
-	    
-		
-	//---TERMINATE COMMUNICATION FROM MASTER SIDE---
-	     IdleI2C();
-	}
-	return 0;
-}
-void LCDSetXY(unsigned char add1, unsigned char X,unsigned char Y)
-{
-	unsigned char temp[3];
-
-	temp[0]= cmdLCD_DEFAULT_PAGE;
-	temp[1]= cmdLCD_SET_Y | Y;
-	temp[2]= cmdLCD_SET_X | X;
-	LCDSendCommand(add1,temp,3);
-}
