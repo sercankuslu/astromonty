@@ -17,7 +17,7 @@ static BYTE DisplayBuffer4[40];
 #pragma udata
 void DisplayInit()
 {
-    BYTE i;
+    WORD i;
     //очистка буфера экрана
     for(i=0;i<256;i++){
         DisplayBuffer0[i]=0;
@@ -31,6 +31,7 @@ void DisplayInit()
 void DisplayDraw(BYTE addr)
 {    
     LCDSetXY(addr,0,0);
+	//*
     LCDSendData(addr, DisplayBuffer0,      128);
     LCDSendData(addr,&DisplayBuffer0[128], 128);
     LCDSendData(addr, DisplayBuffer1,      128);
@@ -40,6 +41,17 @@ void DisplayDraw(BYTE addr)
     LCDSendData(addr, DisplayBuffer3,      128);
     LCDSendData(addr,&DisplayBuffer3[128], 128);
     LCDSendData(addr, DisplayBuffer4,      40);
+	/*
+	LCDSendData(addr, DisplayBuffer4,      40);
+    LCDSendData(addr,&DisplayBuffer3[128], 128);
+    LCDSendData(addr, DisplayBuffer3,      128);
+    LCDSendData(addr,&DisplayBuffer2[128], 128);
+    LCDSendData(addr, DisplayBuffer2,      128);
+    LCDSendData(addr,&DisplayBuffer1[128], 128);
+    LCDSendData(addr, DisplayBuffer1,      128);
+    LCDSendData(addr,&DisplayBuffer0[128], 128);
+    LCDSendData(addr, DisplayBuffer0,      128);
+	*/
 }
 void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
 {   
@@ -83,7 +95,7 @@ void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
 void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
 {    
     BYTE  count;    
-    BYTE i;
+    BYTE i;	
     BYTE  YBank = (Y >> 3);    
     BYTE  YPos  =  Y&0x07;  
     BYTE  XPos  = X;
@@ -95,35 +107,37 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
     BYTE  Mask1;//^
     BYTE  Mask2;//=    
     BYTE  Mask3;//v
-    WORD  FontMask = ARIAL_B_MASK;
+    WORD  FontMask = ARIAL_B_MASK<<6;
     BYTE* ptr;
     WORD* Image;
+	WORD  I;
     
-    Mask.Val  = (FontMask<<YPos);
-    Mask1 = Mask.byte.LB;
-    Mask2 = Mask.byte.HB;
-    Mask.Val  = (FontMask>>(16-YPos));
-    Mask3 = Mask.byte.LB;
+    Mask.Val  = (FontMask>>YPos);
+    Mask2 = Mask.byte.LB;
+    Mask3 = Mask.byte.HB;
+    Mask.Val  = (FontMask<<(16-YPos));
+    Mask1 = Mask.byte.HB;
         
     ptr = Text;
     while ( *ptr ){
-        Image = GetSymbolImage(*ptr++,&count);
+        Image = GetSymbolImage(*ptr++,&count);		
         for(i=0;i<count;i++){
-            Data.Val = *Image<<YPos;
-            Data1 = Data.byte.LB;
-            Data2 = Data.byte.HB;
-            Data.Val  = (*Image>>(16-YPos));
-            Data3 = Data.byte.LB;
-            WriteByteAtBank(YBank,   XPos, Data1,Mask1);
+			I = *Image<<6;
+            Data.Val = I>>YPos;
+            Data2 = Data.byte.LB;
+            Data3 = Data.byte.HB;
+            Data.Val  = (I<<(16-YPos));
+            Data1 = Data.byte.HB;
+            WriteByteAtBank(YBank,   XPos, Data3,Mask3);
             WriteByteAtBank(YBank+1, XPos, Data2,Mask2);
-            WriteByteAtBank(YBank+2, XPos, Data3,Mask3);            
+            WriteByteAtBank(YBank+2, XPos, Data1,Mask1);            
             XPos++;
             Image++;
         }
         //промежуток между символами
-        WriteByteAtBank(YBank,   XPos, 0,Mask1);
+        WriteByteAtBank(YBank,   XPos, 0,Mask3);
         WriteByteAtBank(YBank+1, XPos, 0,Mask2);
-        WriteByteAtBank(YBank+2, XPos, 0,Mask3);            
+        WriteByteAtBank(YBank+2, XPos, 0,Mask1);            
         XPos++;
     }    
 }
