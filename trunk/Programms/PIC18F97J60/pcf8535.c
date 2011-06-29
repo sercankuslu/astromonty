@@ -4,10 +4,8 @@
 #include <i2c.h>
 
 // LCD controller init sequence
-const rom unsigned char INIT_SEQUENCE[] =
-{	
-	modeLCD_CMD_TILL_STOP
-	,
+static BYTE INIT_SEQUENCE[] =
+{
 	cmdLCD_DEFAULT_PAGE
 	,
 	cmdLCD_COMMAND_PAGE
@@ -24,7 +22,7 @@ const rom unsigned char INIT_SEQUENCE[] =
 	,
 	cmdLCD_EXT_DISPLAY_CTL
 	| paramLCD_XDIRECTION_REVERSE
-	| paramLCD_YDIRECTION_REVERSE 
+	| paramLCD_YDIRECTION_REVERSE
 	,
 	cmdLCD_DISPLAY_SIZE
 	| paramLCD_LARGE_DISPLAY
@@ -70,18 +68,30 @@ const rom unsigned char INIT_SEQUENCE[] =
 	cmdLCD_FUNCTION_SET
 	| paramLCD_ACTIVE
 	| paramLCD_HORIZONTAL_ADDRESSING
-	, 
+	,
 	cmdLCD_RAM_PAGE
 	| paramLCD_PAGE0
 	,
 	cmdLCD_SET_Y
 	| 0
-	, 
+	,
 	cmdLCD_SET_X
-	| 0, 
-		
+	| 0
+	,
 };
-
+const BYTE I2C_Home[] =
+{
+	cmdLCD_DEFAULT_PAGE
+	,
+	cmdLCD_SET_Y
+	| 0
+	,
+	cmdLCD_SET_X
+	| 0
+	,
+};
+BYTE I2C_Recv[21];
+static char START = 0;
 void LCDInit(BYTE addr)
 {
 	WORD i;
@@ -90,35 +100,37 @@ void LCDInit(BYTE addr)
 
 	// Set lcd reset pin as output
 	// Set lcd reset pin low
-	LCD_RESET = 0;
-	DelayMs(500); // tW(RESL)
-	LCD_RESET = 1;
-	DelayMs(500); // tW(RESH)
-	LCD_RESET = 0;
-	DelayMs(1); // tW(RESL)
-	LCD_RESET = 1;
-	DelayMs(3); // tR(OP)
+	//LCD_RESET = 0;
+	//DelayMs(500); // tW(RESL)
+	//LCD_RESET = 1;
+	//DelayMs(500); // tW(RESH)
+	//LCD_RESET = 0;
+	//DelayMs(1); // tW(RESL)
+	//LCD_RESET = 1;
+	//DelayMs(3); // tR(OP)
 	
 	//***************************************************
 	//* Lcd init commands *
 	//***************************************************
-    //for(i=0;i<20;i++)
-    //I2C_Recv[i]=0;
+    for(i=0;i<20;i++)
+    I2C_Recv[i]=0;
 
-    //addr=PCF8535_BUS_ADDRESS;        //address of the device (slave) under communication
+    addr=PCF8535_BUS_ADDRESS;        //address of the device (slave) under communication
 
     CloseI2C();    //close i2c if was operating earlier
 
 	//---INITIALISE THE I2C MODULE FOR MASTER MODE WITH 100KHz ---
     sync_mode = MASTER;
-    slew = SLEW_ON;
+    slew = SLEW_OFF;
+
     OpenI2C(sync_mode,slew);
+
     SSPADD=0x0A;             //400kHz Baud clock(9) @8MHz
     //check for bus idle condition in multi master communication
     IdleI2C();
 
     //---START I2C---
-    StartI2C();
+    //StartI2C();
     LCDSendCommand(addr,(BYTE*)INIT_SEQUENCE,sizeof(INIT_SEQUENCE));
 }
 
@@ -217,7 +229,13 @@ int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
 	BYTE status; 
 	
 	//****write the address of the device for communication***
-  	RestartI2C();
+	if(START){
+  		RestartI2C();
+	} 
+	else {
+		StartI2C();
+		START=1;
+	}
     IdleI2C();
 
     data = SSPBUF;        //read any previous stored content in buffer to clear buffer full status
@@ -309,7 +327,7 @@ int LCDClearData(BYTE add1)
 	    while(status!=0);        //write untill successful communication
 		//***WRITE THE THE DATA TO BE SENT FOR SLAVE***
 		//write string of data to be transmitted to slave
-	   	for (i=0;i<133;i++ )                 // transmit data 
+	   	for (i=0;i<128;i++ )                 // transmit data 
 		{
 		  	if ( SSP1CON1bits.SSPM3 )      // if Master transmitter then execute the following
 			{

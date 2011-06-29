@@ -93,10 +93,15 @@
 // Include all headers for any enabled TCPIP Stack functions
 #include "TCPIP Stack/TCPIP.h"
 #include "pcf8535.h"
-#include <i2c.h>
+
 #include "font.h"
+
+#define USE_OR_MASKS
+#include <p18cxxx.h>
+#include <i2c.h>
 #include "DisplayBuffer.h"
 
+unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
 
 #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
 #include "TCPIP Stack/ZeroconfLinkLocal.h"
@@ -200,26 +205,13 @@ BYTE AN0String[8];
 
 
 //unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
-unsigned char I2C_Recv[21];
-
-const rom unsigned char I2C_Home[] =
-{
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_SET_Y
-	| 0
-	,
-	cmdLCD_SET_X
-	| 0
-	,
-};
 
 
-const rom unsigned char I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //A
+const BYTE I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //A
 								
 };
 
-
+static BYTE add1 = PCF8535_BUS_ADDRESS; 
 //
 // Main application entry point.
 //
@@ -233,18 +225,18 @@ int main(void)
 	static DWORD t1 = 0;
 	static DWORD dwLastIP = 0;
 	BYTE b = 0;
-	
-	BYTE add1 = PCF8535_BUS_ADDRESS; 	
+		
+		
 	BYTE i; 	
 	WORD* symbol;
 	WORD  temp[12];
-	unsigned char Text[20] = "Что это о_О?";
+	unsigned char Text[20] = "Люблю КАТЮ!!!";
 	BYTE count;
-	
+		
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
     
-    //OutTextXY(0,7,Text);
+    //
     
     TickInit();
     
@@ -256,65 +248,55 @@ int main(void)
 	TRISCbits.TRISC3=1;
 	TRISCbits.TRISC4=1;
 	LATGbits.LATG4 =0;
-	LATCbits.LATC5 =1;
-	TRISCbits.TRISC5=0;	 //LCD reset
-	TRISGbits.TRISG4=0;
 	LATCbits.LATC5 =0;
-	DelayMs(500);
+	TRISCbits.TRISC5=0;	 //LCD reset
+	TRISGbits.TRISG4=0;	
+	DelayMs(100);
 	LATCbits.LATC5 =1;
-	//LATGbits.LATG4 =1;
-	
+	//LATGbits.LATG4 =1;	
 
-	// Initialize stack-related hardware components that may be 
-	// required by the UART configuration routines
 	
-   
-	//DelayMs(1000);
-	//LATAbits.LATA0 =0;
-	//LATAbits.LATA1 =0;
-
-	//DelayMs(1000);
-	// вывели lcd из ресета
-	
-	LCDInit(add1);	
-	LCDClearData(add1);
-	LCDSetXY(add1,0,0);
-	LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
-	//symbol = GetSymbolImage(0x40,&count);
-	//for(i=0;i<count;i++){
-	//	test[i] = symbol[i];
-	//}
+	LCDInit(add1);		
+	//LCDClearData(add1);
+	//LCDSetXY(add1,0,0);	
+	//LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));	
 	//LCDSendData(add1,test,count);
-	for(i=7;i>0;i--){
-		LCDSetXY(add1,0,i);
-		LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
-	}
-	
-	
-	//LCDSetXY(add1,0,5);
-	//LCDSendData(add1,I2C_Send2,sizeof(I2C_Send2));
-
+	//for(i=7;i>0;i--){
+	//	LCDSetXY(add1,0,i);
+	//	LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
+	//}
+	DisplayInit();
+		
+	//t1=54;
     while(1)
     {
         // Blink LED0 (right most one) every second.
-		
+		/*
         if(TickGet() - t >= TICK_SECOND/2ul)
         {
             t = TickGet();
             LATAbits.LATA1 ^= 1;
-            DisplayDraw(add1);
+            //DisplayDraw(add1);
         }
 		
+		*/
 		
 		t++;
-		if(t>=200){
+
+		if(t>=20000){
 			t=0;
 			LATGbits.LATG4 ^= 1;
+			
 			//LATAbits.LATA1 ^= 1;
 			t1++;
-			if(t1>=255){
+			if(t1>=64){
 				t1=0;
+				
 			}
+			DisplayInit();
+			OutTextXY(t1,t1,Text);
+			DisplayDraw(add1);
+			DelayMs(100);
 			//for(i=0;i<16;i++){				
 				//symbol = GetSymbolImage(0x50,&count);
 				
@@ -323,7 +305,7 @@ int main(void)
 			//lcd_set_contrast(t1);
 			
 		}
-			
+				
 	}
 }
 
