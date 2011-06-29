@@ -1,5 +1,5 @@
 MPLINK 4.39, Linker
-Linker Map File - Created Wed Jun 29 15:03:42 2011
+Linker Map File - Created Wed Jun 29 16:50:58 2011
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -34,22 +34,22 @@ Linker Map File - Created Wed Jun 29 15:03:42 2011
                 lowVector       code   0x000018    program   0x000006
                    .cinit    romdata   0x00001e    program   0x00001a
     .code_DisplayBuffer.o       code   0x000038    program   0x000762
-          .code_pcf8535.o       code   0x00079a    program   0x0004fc
-         .code_MainDemo.o       code   0x000c96    program   0x000302
-             .code_font.o       code   0x000f98    program   0x000230
-             .code_Tick.o       code   0x0011c8    program   0x000140
-               _cinit_scn       code   0x001308    program   0x00009e
-        .code_i2c1puts1.o       code   0x0013a6    program   0x00009c
-         .code_i2c1writ.o       code   0x001442    program   0x000080
-         .code_fxd3232u.o       code   0x0014c2    program   0x000048
-                     PROG       code   0x00150a    program   0x00003c
-         .code_i2c1open.o       code   0x001546    program   0x000036
-                    .code       code   0x00157c    program   0x00002c
-              D1KTCYXCODE       code   0x0015a8    program   0x000020
-             _startup_scn       code   0x0015c8    program   0x00001c
-       .romdata_pcf8535.o    romdata   0x0015e4    program   0x000018
-      .romdata_MainDemo.o    romdata   0x0015fc    program   0x00000b
-      .idata_MainDemo.o_i    romdata   0x001607    program   0x00000c
+          .code_pcf8535.o       code   0x00079a    program   0x000518
+         .code_MainDemo.o       code   0x000cb2    program   0x0002e4
+             .code_font.o       code   0x000f96    program   0x00021a
+             .code_Tick.o       code   0x0011b0    program   0x000140
+               _cinit_scn       code   0x0012f0    program   0x00009e
+        .code_i2c1puts1.o       code   0x00138e    program   0x00009c
+         .code_i2c1writ.o       code   0x00142a    program   0x000080
+         .code_fxd3232u.o       code   0x0014aa    program   0x000048
+                     PROG       code   0x0014f2    program   0x00003c
+         .code_i2c1open.o       code   0x00152e    program   0x000036
+                    .code       code   0x001564    program   0x00002c
+              D1KTCYXCODE       code   0x001590    program   0x000020
+             _startup_scn       code   0x0015b0    program   0x00001c
+       .romdata_pcf8535.o    romdata   0x0015cc    program   0x000018
+      .romdata_MainDemo.o    romdata   0x0015e4    program   0x00000b
+      .idata_MainDemo.o_i    romdata   0x0015ef    program   0x00000c
              FONT_SECTION    romdata   0x00ac00    program   0x000958
  .config_1fff8_MainDemo.o    romdata   0x01fff8    program   0x000001
  .config_1fffa_MainDemo.o    romdata   0x01fffa    program   0x000001
@@ -111,12 +111,12 @@ Linker Map File - Created Wed Jun 29 15:03:42 2011
                                Start         End      
                            ---------   ---------      
                             0x000000    0x000011      
-                            0x000018    0x001612      
+                            0x000018    0x0015fa      
                             0x00ac00    0x00b557      
                             0x01fff8    0x01fff8      
                             0x01fffa    0x01fffa      
                             0x01fffd    0x01fffd      
-            8040 out of 131072 program addresses used, program memory utilization is 6%
+            8016 out of 131072 program addresses used, program memory utilization is 6%
 
 
 
@@ -125,73 +125,72 @@ Linker Map File - Created Wed Jun 29 15:03:42 2011
                 ---------  ---------  ---------  --------- ---------                
                 ArialData   0x00ac00    program     static E:\astromonty\Programms\PIC18F97J60\font.c
              Arial_cp1251   0x00b356    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-                    D1K_1   0x0015b4    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                     D1Kx   0x0015b2    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-              Delay1KTCYx   0x0015a8    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                    D1K_1   0x00159c    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                     D1Kx   0x00159a    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+              Delay1KTCYx   0x001590    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
               DisplayDraw   0x0000b4    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
               DisplayInit   0x000038    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                 FXD3232U   0x0014c2    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
-                 FXM1616U   0x00150a    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
-           GetStringImage   0x0011b2    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-           GetSymbolImage   0x000f98    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-              GetTickCopy   0x0011d8    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                  HighISR   0x000d50    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 FXD3232U   0x0014aa    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
+                 FXM1616U   0x0014f2    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
+           GetSymbolImage   0x000f96    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
+              GetTickCopy   0x0011c0    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                  HighISR   0x000d6c    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                HighVector   0x000008    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 I2C_Home   0x0015fc    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 I2C_Send   0x0015e4    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                I2C_Send1   0x0015ff    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-             LCDClearData   0x000b08    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 I2C_Home   0x0015e4    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                I2C_Send1   0x0015e7    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+            INIT_SEQUENCE   0x0015cc    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+             LCDClearData   0x000b24    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
                   LCDInit   0x00079a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSendCommand   0x000a00    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-              LCDSendData   0x0008ee    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSetContrast   0x0008de    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 LCDSetXY   0x000c3a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                   LowISR   0x000c96    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+           LCDSendCommand   0x000a1c    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+              LCDSendData   0x00090a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSetContrast   0x0008fa    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 LCDSetXY   0x000c56    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                   LowISR   0x000cb2    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                 LowVector   0x000018    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 OpenI2C1   0x001546    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
+                 OpenI2C1   0x00152e    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
                 OutTextXY   0x0004ba    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-TickConvertToMilliseconds   0x0012b0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                  TickGet   0x0011fe    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv256   0x001214    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv64K   0x001262    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                 TickInit   0x0011c8    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-               TickUpdate   0x0012f4    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+TickConvertToMilliseconds   0x001298    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                  TickGet   0x0011e6    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv256   0x0011fc    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv64K   0x00124a    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                 TickInit   0x0011b0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+               TickUpdate   0x0012dc    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
           WriteByteAtBank   0x0001e6    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                WriteI2C1   0x001442    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
-        _D1KTCYXCODE_0010   0x0015b8    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0016   0x0015be    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-           ___do_lbl00002   0x0011f6    program     static                          
-           ___do_lbl00003   0x0011fa    program     static                          
-           ___do_lbl00004   0x0011d8    program     static                          
+                WriteI2C1   0x00142a    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
+        _D1KTCYXCODE_0010   0x0015a0    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0016   0x0015a6    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+           ___do_lbl00002   0x0011de    program     static                          
+           ___do_lbl00003   0x0011e2    program     static                          
+           ___do_lbl00004   0x0011c0    program     static                          
        ___return_lbl00000   0x000004    program     static                          
-       ___return_lbl00000   0x001508    program     static                          
-       ___return_lbl00001   0x0015e2    program     static                          
-       ___return_lbl00001   0x0011fc    program     static                          
-       ___return_lbl00002   0x0013a4    program     static                          
+       ___return_lbl00000   0x0014f0    program     static                          
+       ___return_lbl00001   0x0015ca    program     static                          
+       ___return_lbl00001   0x0011e4    program     static                          
+       ___return_lbl00002   0x00138c    program     static                          
        ___return_lbl00002   0x00001c    program     static                          
        ___return_lbl00003   0x00000c    program     static                          
                __config_0   0x01fff8    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                __config_1   0x01fffa    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                __config_2   0x01fffd    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                    __init   0x000006    program     extern C:\MCC18\src\traditional\stdclib\__init.c
-            __zero_memory   0x00157c    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                _do_cinit   0x001308    program     extern C:\MCC18\src\traditional\startup\c018i.c
+            __zero_memory   0x001564    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                _do_cinit   0x0012f0    program     extern C:\MCC18\src\traditional\startup\c018i.c
                    _entry   0x000000    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                   _false   0x001504    program     static                          
-                 _startup   0x0015c8    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                compare_l   0x00159e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                copy_loop   0x00137a    program     static                          
-            copy_one_byte   0x001380    program     static                          
-                     done   0x0013a4    program     static                          
-             done_copying   0x00138e    program     static                          
-                     loop   0x0014d0    program     static                          
-                     loop   0x0015d8    program     static                          
-                   loop_h   0x001596    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_l   0x0015a0    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     main   0x000d76    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               putsI2C1_1   0x0013a6    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
-                     test   0x001322    program     static                          
-               zero_block   0x001596    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   _false   0x0014ec    program     static                          
+                 _startup   0x0015b0    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                compare_l   0x001586    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                copy_loop   0x001362    program     static                          
+            copy_one_byte   0x001368    program     static                          
+                     done   0x00138c    program     static                          
+             done_copying   0x001376    program     static                          
+                     loop   0x0014b8    program     static                          
+                     loop   0x0015c0    program     static                          
+                   loop_h   0x00157e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_l   0x001588    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     main   0x000d92    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               putsI2C1_1   0x00138e    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                     test   0x00130a    program     static                          
+               zero_block   0x00157e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON0   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                ADCON0bits   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON1   0x000fc1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -624,58 +623,57 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
           WriteByteAtBank   0x0001e6    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
                 OutTextXY   0x0004ba    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
                   LCDInit   0x00079a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSetContrast   0x0008de    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-              LCDSendData   0x0008ee    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSendCommand   0x000a00    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-             LCDClearData   0x000b08    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 LCDSetXY   0x000c3a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                   LowISR   0x000c96    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                  HighISR   0x000d50    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                     main   0x000d76    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-           GetSymbolImage   0x000f98    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-           GetStringImage   0x0011b2    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-                 TickInit   0x0011c8    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-           ___do_lbl00004   0x0011d8    program     static                          
-              GetTickCopy   0x0011d8    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-           ___do_lbl00002   0x0011f6    program     static                          
-           ___do_lbl00003   0x0011fa    program     static                          
-       ___return_lbl00001   0x0011fc    program     static                          
-                  TickGet   0x0011fe    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv256   0x001214    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv64K   0x001262    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-TickConvertToMilliseconds   0x0012b0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-               TickUpdate   0x0012f4    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                _do_cinit   0x001308    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                     test   0x001322    program     static                          
-                copy_loop   0x00137a    program     static                          
-            copy_one_byte   0x001380    program     static                          
-             done_copying   0x00138e    program     static                          
-                     done   0x0013a4    program     static                          
-       ___return_lbl00002   0x0013a4    program     static                          
-               putsI2C1_1   0x0013a6    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
-                WriteI2C1   0x001442    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
-                 FXD3232U   0x0014c2    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
-                     loop   0x0014d0    program     static                          
-                   _false   0x001504    program     static                          
-       ___return_lbl00000   0x001508    program     static                          
-                 FXM1616U   0x00150a    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
-                 OpenI2C1   0x001546    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
-            __zero_memory   0x00157c    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_h   0x001596    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-               zero_block   0x001596    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                compare_l   0x00159e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_l   0x0015a0    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-              Delay1KTCYx   0x0015a8    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                     D1Kx   0x0015b2    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                    D1K_1   0x0015b4    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0010   0x0015b8    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0016   0x0015be    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                 _startup   0x0015c8    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                     loop   0x0015d8    program     static                          
-       ___return_lbl00001   0x0015e2    program     static                          
-                 I2C_Send   0x0015e4    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 I2C_Home   0x0015fc    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                I2C_Send1   0x0015ff    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+           LCDSetContrast   0x0008fa    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+              LCDSendData   0x00090a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSendCommand   0x000a1c    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+             LCDClearData   0x000b24    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 LCDSetXY   0x000c56    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                   LowISR   0x000cb2    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                  HighISR   0x000d6c    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                     main   0x000d92    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+           GetSymbolImage   0x000f96    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
+                 TickInit   0x0011b0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+              GetTickCopy   0x0011c0    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+           ___do_lbl00004   0x0011c0    program     static                          
+           ___do_lbl00002   0x0011de    program     static                          
+           ___do_lbl00003   0x0011e2    program     static                          
+       ___return_lbl00001   0x0011e4    program     static                          
+                  TickGet   0x0011e6    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv256   0x0011fc    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv64K   0x00124a    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+TickConvertToMilliseconds   0x001298    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+               TickUpdate   0x0012dc    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                _do_cinit   0x0012f0    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                     test   0x00130a    program     static                          
+                copy_loop   0x001362    program     static                          
+            copy_one_byte   0x001368    program     static                          
+             done_copying   0x001376    program     static                          
+                     done   0x00138c    program     static                          
+       ___return_lbl00002   0x00138c    program     static                          
+               putsI2C1_1   0x00138e    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                WriteI2C1   0x00142a    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
+                 FXD3232U   0x0014aa    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
+                     loop   0x0014b8    program     static                          
+                   _false   0x0014ec    program     static                          
+       ___return_lbl00000   0x0014f0    program     static                          
+                 FXM1616U   0x0014f2    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
+                 OpenI2C1   0x00152e    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
+            __zero_memory   0x001564    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_h   0x00157e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+               zero_block   0x00157e    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                compare_l   0x001586    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_l   0x001588    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+              Delay1KTCYx   0x001590    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                     D1Kx   0x00159a    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                    D1K_1   0x00159c    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0010   0x0015a0    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0016   0x0015a6    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                 _startup   0x0015b0    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                     loop   0x0015c0    program     static                          
+       ___return_lbl00001   0x0015ca    program     static                          
+            INIT_SEQUENCE   0x0015cc    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 I2C_Home   0x0015e4    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                I2C_Send1   0x0015e7    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
                 ArialData   0x00ac00    program     static E:\astromonty\Programms\PIC18F97J60\font.c
              Arial_cp1251   0x00b356    program     static E:\astromonty\Programms\PIC18F97J60\font.c
                __config_0   0x01fff8    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
