@@ -76,10 +76,6 @@ void BerkeleyTCPClientDemo(void);
 void BerkeleyTCPServerDemo(void);
 void BerkeleyUDPClientDemo(void);
 */
-signed char  LCDSendData(unsigned char add1,unsigned char* I2C_Send, unsigned char size);
-signed char  LCDSendCommand(unsigned char add1,unsigned char* wrptr, unsigned char size);
-signed char  LCDClearData(unsigned char add1);
-void LCDSetXY(unsigned char add1, unsigned char X,unsigned char Y);
 signed char putsI2C1_1( unsigned char *wrptr, unsigned char count );
 
 // Define a header structure for validating the AppConfig data structure in EEPROM/Flash
