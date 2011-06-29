@@ -3,12 +3,8 @@
 #include "TCPIP Stack/TCPIP.h"
 #include <i2c.h>
 
-
-
-
-
 // LCD controller init sequence
-const rom unsigned char I2C_Send[] =
+const rom unsigned char INIT_SEQUENCE[] =
 {	
 	modeLCD_CMD_TILL_STOP
 	,
@@ -123,6 +119,7 @@ void LCDInit(BYTE addr)
 
     //---START I2C---
     StartI2C();
+    LCDSendCommand(addr,(BYTE*)INIT_SEQUENCE,sizeof(INIT_SEQUENCE));
 }
 
 void LCDSetContrast(BYTE contrast)
@@ -280,7 +277,7 @@ int LCDClearData(BYTE add1)
 	BYTE data; 
 	BYTE status; 	
 		
-	for(j=0;j<6;j++){
+	for(j=0;j<7;j++){
 		LCDSetXY(add1,0,j);
 		RestartI2C();
 	    IdleI2C();

@@ -209,6 +209,4 @@ WORD* GetSymbolImage(BYTE symbol,WORD* OutWordCount){
     OutWordCount[0] = Size;
     return Image;//&ArialData[Begin];    
 }
-WORD* GetStringImage(BYTE* string, WORD* OutWordCount){
-    return 0;    
-}
+

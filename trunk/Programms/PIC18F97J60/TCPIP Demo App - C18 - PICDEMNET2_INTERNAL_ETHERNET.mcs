@@ -13,7 +13,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File001]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\Tick.o
 Folder=Intermediary
@@ -26,7 +26,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File002]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\MainDemo.o
 Folder=Intermediary
@@ -39,7 +39,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File003]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\pcf8535.o
 Folder=Intermediary
@@ -52,7 +52,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File004]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\i2c1puts1.o
 Folder=Intermediary
@@ -65,7 +65,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File005]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\font.o
 Folder=Intermediary
@@ -78,7 +78,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File006]
 Location=E:\astromonty\Programms\PIC18F97J60\Objects - TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET\DisplayBuffer.o
 Folder=Intermediary
@@ -91,7 +91,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=-mL -Ou- -Ot- -Ob- -Op- -Or- -Od- -Opa-
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG
 [File007]
 Location=E:\astromonty\Programms\PIC18F97J60\TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET.cof
 Folder=Output
@@ -104,7 +104,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=/m"$(BINDIR_)$(TARGETBASE).map" /w /o"$(BINDIR_)$(TARGETBASE).cof"
 TraceCmdString=
-DebugOptions=
+DebugOptions=/z__MPLAB_DEBUG=1
 [File008]
 Location=E:\astromonty\Programms\PIC18F97J60\TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET.hex
 Folder=Output
@@ -117,7 +117,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=/m"$(BINDIR_)$(TARGETBASE).map" /w /o"$(BINDIR_)$(TARGETBASE).cof"
 TraceCmdString=
-DebugOptions=
+DebugOptions=/z__MPLAB_DEBUG=1
 [File009]
 Location=E:\astromonty\Programms\PIC18F97J60\TCPIP Demo App - C18 - PICDEMNET2_INTERNAL_ETHERNET.map
 Folder=Output
@@ -130,7 +130,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\Tick.c|Main
 SuiteArgsString=
 ToolArgsString=/m"$(BINDIR_)$(TARGETBASE).map" /w /o"$(BINDIR_)$(TARGETBASE).cof"
 TraceCmdString=
-DebugOptions=
+DebugOptions=/z__MPLAB_DEBUG=1
 [TOOL_LOC_STAMPS]
 tool_loc{49D3CA3F-D9A3-4518-9943-226A347E8CC7}=C:\Program Files (x86)\MCC18\mpasm\MPASMWIN.exe
 tool_loc{96C98149-AA1B-4CF9-B967-FAE79CAB663C}=C:\Program Files (x86)\Microchip\mplabc18\v3.38\bin\mplink.exe

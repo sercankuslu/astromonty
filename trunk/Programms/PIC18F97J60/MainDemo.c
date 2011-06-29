@@ -244,16 +244,14 @@ int main(void)
 	OSCTUNE = 0x40;
 	OSCCON = 0x02;
     
-    OutTextXY(0,7,Text);
+    //OutTextXY(0,7,Text);
+    
+    TickInit();
     
 	TRISAbits.TRISA0=0;
 	TRISAbits.TRISA1=0;
 	LATAbits.LATA0 =0;
-	LATAbits.LATA1 =0;
-	//DelayMs(1000);
-	//LATAbits.LATA0 =1;
-	//DelayMs(1000);
-	//LATAbits.LATA1 =1;
+	LATAbits.LATA1 =0;	
 
 	TRISCbits.TRISC3=1;
 	TRISCbits.TRISC4=1;
@@ -270,7 +268,7 @@ int main(void)
 	// Initialize stack-related hardware components that may be 
 	// required by the UART configuration routines
 	
-    TickInit();
+   
 	//DelayMs(1000);
 	//LATAbits.LATA0 =0;
 	//LATAbits.LATA1 =0;
