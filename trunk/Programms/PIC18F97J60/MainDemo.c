@@ -155,6 +155,7 @@ BYTE AN0String[8];
 	#endif
 	{
 	    TickUpdate();
+	    LCDUpdate();
 		//LED0_IO ^= 1;
 	}
 	
@@ -204,6 +205,7 @@ static BYTE add1 = PCF8535_BUS_ADDRESS;
 
 void LCDUpdate(void){
 	DisplayDraw(add1);
+	PIR1bits.TMR1IF=0;
 }
 
 
@@ -246,17 +248,18 @@ int main(void)
     
 	LCDInit(add1);		
 	DisplayInit();	
-	DisplayClear();
-	SetFont(ARIAL);
-	OutTextXY(0,0,Text);
-	SetFont(ARIAL_B);
-	OutTextXY(0,15,Text);
+	
+	
+	OutTextXY(0,0,Text,0);
+	
+	OutTextXY(0,15,Text,1);
+	DisplayDraw(add1);
 	
     //----Configure Timer1----
     timer1_value = 0x00;    
     WriteTimer1(timer1_value);            //clear timer if previously contains any value
     
-    IPR1bits.TMR1IP = 1;
+    IPR1bits.TMR1IP = 0;
     config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
     OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
     

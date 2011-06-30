@@ -1,5 +1,5 @@
 MPLINK 4.39, Linker
-Linker Map File - Created Thu Jun 30 14:46:01 2011
+Linker Map File - Created Fri Jul 01 00:55:05 2011
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -7,11 +7,12 @@ Linker Map File - Created Thu Jun 30 14:46:01 2011
                _entry_scn       code   0x000000    program   0x000006
            .code___init.o       code   0x000006    program   0x000002
                highVector       code   0x000008    program   0x000006
-       .idata_pcf8535.o_i    romdata   0x00000e    program   0x000001
-     .romdata_tmrccpsrc.o    romdata   0x00000e    program   0x000000
+       .romdata_pcf8535.o    romdata   0x00000e    program   0x000000
      .idata_tmrccpsrc.o_i    romdata   0x00000e    program   0x000000
+     .idata_i2c1puts1.o_i    romdata   0x00000e    program   0x000000
      .romdata_i2c1puts1.o    romdata   0x00000e    program   0x000000
       .romdata_pw5setdc.o    romdata   0x00000e    program   0x000000
+          .idata_font.o_i    romdata   0x00000e    program   0x000000
           .romdata_font.o    romdata   0x00000e    program   0x000000
       .idata_pw5setdc.o_i    romdata   0x00000e    program   0x000000
         .romdata_t2open.o    romdata   0x00000e    program   0x000000
@@ -19,55 +20,54 @@ Linker Map File - Created Thu Jun 30 14:46:01 2011
         .idata_t2open.o_i    romdata   0x00000e    program   0x000000
         .romdata_t1open.o    romdata   0x00000e    program   0x000000
         .idata_t1open.o_i    romdata   0x00000e    program   0x000000
+      .idata_fxd3232u.o_i    romdata   0x00000e    program   0x000000
       .romdata_fxd3232u.o    romdata   0x00000e    program   0x000000
        .romdata_pw5open.o    romdata   0x00000e    program   0x000000
        .idata_pw5open.o_i    romdata   0x00000e    program   0x000000
+      .idata_i2c1open.o_i    romdata   0x00000e    program   0x000000
       .romdata_i2c1open.o    romdata   0x00000e    program   0x000000
+         .idata_c018i.o_i    romdata   0x00000e    program   0x000000
          .romdata_c018i.o    romdata   0x00000e    program   0x000000
          .romdata_Delay.o    romdata   0x00000e    program   0x000000
+          .idata_Tick.o_i    romdata   0x00000e    program   0x000004
           .romdata_Tick.o    romdata   0x00000e    program   0x000000
         .romdata___init.o    romdata   0x00000e    program   0x000000
+        .idata___init.o_i    romdata   0x00000e    program   0x000000
       .romdata_MainDemo.o    romdata   0x00000e    program   0x000000
        .romdata_t1write.o    romdata   0x00000e    program   0x000000
              .stringtable    romdata   0x00000e    program   0x000000
        .idata_t1write.o_i    romdata   0x00000e    program   0x000000
       .romdata_i2c1writ.o    romdata   0x00000e    program   0x000000
-     .idata_i2c1puts1.o_i    romdata   0x00000f    program   0x000000
-          .idata_font.o_i    romdata   0x00000f    program   0x000001
-      .idata_i2c1open.o_i    romdata   0x00000f    program   0x000000
-      .idata_fxd3232u.o_i    romdata   0x00000f    program   0x000000
-      .idata_i2c1writ.o_i    romdata   0x00000f    program   0x000000
-         .idata_c018i.o_i    romdata   0x000010    program   0x000000
-          .idata_Tick.o_i    romdata   0x000010    program   0x000004
-        .idata___init.o_i    romdata   0x000010    program   0x000000
- .idata_DisplayBuffer.o_i    romdata   0x000014    program   0x000001
-         .idata_Delay.o_i    romdata   0x000015    program   0x000000
-            .code_Delay.o       code   0x000016    program   0x000000
-            .code_c018i.o       code   0x000016    program   0x000000
+      .idata_i2c1writ.o_i    romdata   0x00000e    program   0x000000
+     .romdata_tmrccpsrc.o    romdata   0x00000e    program   0x000000
+ .idata_DisplayBuffer.o_i    romdata   0x000012    program   0x000000
+            .code_Delay.o       code   0x000012    program   0x000000
+         .idata_Delay.o_i    romdata   0x000012    program   0x000000
+            .code_c018i.o       code   0x000012    program   0x000000
                 lowVector       code   0x000018    program   0x000006
-                   .cinit    romdata   0x00001e    program   0x00003e
-    .code_DisplayBuffer.o       code   0x00005c    program   0x000810
+                   .cinit    romdata   0x00001e    program   0x000026
+    .code_DisplayBuffer.o       code   0x000044    program   0x000828
           .code_pcf8535.o       code   0x00086c    program   0x00055e
-             .code_font.o       code   0x000dca    program   0x000382
-         .code_MainDemo.o       code   0x00114c    program   0x0002da
-             .code_Tick.o       code   0x001426    program   0x000140
-               _cinit_scn       code   0x001566    program   0x00009e
-        .code_i2c1puts1.o       code   0x001604    program   0x00009c
-         .code_i2c1writ.o       code   0x0016a0    program   0x000080
-         .code_pw5setdc.o       code   0x001720    program   0x00005e
-         .code_fxd3232u.o       code   0x00177e    program   0x000048
-          .code_pw5open.o       code   0x0017c6    program   0x000044
-           .code_t1open.o       code   0x00180a    program   0x000042
-                     PROG       code   0x00184c    program   0x00003c
-          .code_t1write.o       code   0x001888    program   0x000038
-           .code_t2open.o       code   0x0018c0    program   0x000036
-         .code_i2c1open.o       code   0x0018f6    program   0x000036
-        .code_tmrccpsrc.o       code   0x00192c    program   0x00002c
-                    .code       code   0x001958    program   0x00002c
-              D1KTCYXCODE       code   0x001984    program   0x000020
-             _startup_scn       code   0x0019a4    program   0x00001c
-       .romdata_pcf8535.o    romdata   0x0019c0    program   0x000017
-      .idata_MainDemo.o_i    romdata   0x0019d7    program   0x000023
+             .code_font.o       code   0x000dca    program   0x000384
+         .code_MainDemo.o       code   0x00114e    program   0x000308
+             .code_Tick.o       code   0x001456    program   0x000140
+               _cinit_scn       code   0x001596    program   0x00009e
+        .code_i2c1puts1.o       code   0x001634    program   0x00009c
+         .code_i2c1writ.o       code   0x0016d0    program   0x000080
+         .code_pw5setdc.o       code   0x001750    program   0x00005e
+         .code_fxd3232u.o       code   0x0017ae    program   0x000048
+          .code_pw5open.o       code   0x0017f6    program   0x000044
+           .code_t1open.o       code   0x00183a    program   0x000042
+                     PROG       code   0x00187c    program   0x00003c
+          .code_t1write.o       code   0x0018b8    program   0x000038
+           .code_t2open.o       code   0x0018f0    program   0x000036
+         .code_i2c1open.o       code   0x001926    program   0x000036
+        .code_tmrccpsrc.o       code   0x00195c    program   0x00002c
+                    .code       code   0x001988    program   0x00002c
+              D1KTCYXCODE       code   0x0019b4    program   0x000020
+             _startup_scn       code   0x0019d4    program   0x00001c
+       .idata_pcf8535.o_i    romdata   0x0019f0    program   0x000018
+      .idata_MainDemo.o_i    romdata   0x001a08    program   0x000022
              FONT_SECTION    romdata   0x00ac00    program   0x000e07
  .config_1fff8_MainDemo.o    romdata   0x01fff8    program   0x000001
  .config_1fffa_MainDemo.o    romdata   0x01fffa    program   0x000001
@@ -82,39 +82,11 @@ Linker Map File - Created Thu Jun 30 14:46:01 2011
                  DISPLAY4      udata   0x000c00       data   0x000028
                    .stack      udata   0x000d00       data   0x000100
             .udata_font.o      udata   0x000e00       data   0x000018
-         .udata_pcf8535.o      udata   0x000e18       data   0x000015
-           .udata_c018i.o      udata   0x000e2d       data   0x00000a
-            .udata_Tick.o      udata   0x000e37       data   0x000006
-            .idata_Tick.o      idata   0x000e3d       data   0x000004
-         .idata_pcf8535.o      idata   0x000e41       data   0x000001
-            .idata_font.o      idata   0x000e42       data   0x000001
-   .idata_DisplayBuffer.o      idata   0x000e43       data   0x000001
-        .udata_i2c1writ.o      udata   0x000e44       data   0x000000
-       .idata_tmrccpsrc.o      idata   0x000e44       data   0x000000
-        .idata_i2c1writ.o      idata   0x000e44       data   0x000000
-         .udata_t1write.o      udata   0x000e44       data   0x000000
-           .idata_c018i.o      idata   0x000e44       data   0x000000
-        .udata_fxd3232u.o      udata   0x000e44       data   0x000000
-        .idata_fxd3232u.o      idata   0x000e44       data   0x000000
-        .udata_i2c1open.o      udata   0x000e44       data   0x000000
-        .idata_i2c1open.o      idata   0x000e44       data   0x000000
-         .udata_pw5open.o      udata   0x000e44       data   0x000000
-         .idata_pw5open.o      idata   0x000e44       data   0x000000
-          .udata_t1open.o      udata   0x000e44       data   0x000000
-          .idata_t1open.o      idata   0x000e44       data   0x000000
-          .udata_t2open.o      udata   0x000e44       data   0x000000
-          .idata_t2open.o      idata   0x000e44       data   0x000000
-        .udata_pw5setdc.o      udata   0x000e44       data   0x000000
-        .idata_pw5setdc.o      idata   0x000e44       data   0x000000
-       .udata_tmrccpsrc.o      udata   0x000e44       data   0x000000
-       .udata_i2c1puts1.o      udata   0x000e44       data   0x000000
-       .idata_i2c1puts1.o      idata   0x000e44       data   0x000000
-   .udata_DisplayBuffer.o      udata   0x000e44       data   0x000000
-          .idata___init.o      idata   0x000e44       data   0x000000
-           .idata_Delay.o      idata   0x000e44       data   0x000000
-           .udata_Delay.o      udata   0x000e44       data   0x000000
-          .udata___init.o      udata   0x000e44       data   0x000000
-         .idata_t1write.o      idata   0x000e44       data   0x000000
+         .idata_pcf8535.o      idata   0x000e18       data   0x000018
+         .udata_pcf8535.o      udata   0x000e30       data   0x000015
+           .udata_c018i.o      udata   0x000e45       data   0x00000a
+            .udata_Tick.o      udata   0x000e4f       data   0x000006
+            .idata_Tick.o      idata   0x000e55       data   0x000004
               SFR_BANKED0      udata   0x000e80       data   0x000006
               SFR_BANKED1      udata   0x000e8a       data   0x000001
               SFR_BANKED2      udata   0x000e97       data   0x000003
@@ -132,7 +104,35 @@ Linker Map File - Created Thu Jun 30 14:46:01 2011
              SFR_BANKED14      udata   0x000efb       data   0x000001
              SFR_BANKED15      udata   0x000efd       data   0x000002
         .udata_MainDemo.o      udata   0x000f00       data   0x00003d
-        .idata_MainDemo.o      idata   0x000f3d       data   0x000023
+        .idata_MainDemo.o      idata   0x000f3d       data   0x000022
+         .udata_t1write.o      udata   0x000f5f       data   0x000000
+        .idata_i2c1writ.o      idata   0x000f5f       data   0x000000
+        .udata_i2c1writ.o      udata   0x000f5f       data   0x000000
+       .idata_tmrccpsrc.o      idata   0x000f5f       data   0x000000
+         .idata_t1write.o      idata   0x000f5f       data   0x000000
+          .udata___init.o      udata   0x000f5f       data   0x000000
+          .idata___init.o      idata   0x000f5f       data   0x000000
+       .udata_tmrccpsrc.o      udata   0x000f5f       data   0x000000
+        .idata_pw5setdc.o      idata   0x000f5f       data   0x000000
+        .udata_pw5setdc.o      udata   0x000f5f       data   0x000000
+          .idata_t2open.o      idata   0x000f5f       data   0x000000
+          .udata_t2open.o      udata   0x000f5f       data   0x000000
+          .idata_t1open.o      idata   0x000f5f       data   0x000000
+          .udata_t1open.o      udata   0x000f5f       data   0x000000
+         .idata_pw5open.o      idata   0x000f5f       data   0x000000
+         .udata_pw5open.o      udata   0x000f5f       data   0x000000
+        .idata_i2c1open.o      idata   0x000f5f       data   0x000000
+        .udata_i2c1open.o      udata   0x000f5f       data   0x000000
+        .idata_fxd3232u.o      idata   0x000f5f       data   0x000000
+        .udata_fxd3232u.o      udata   0x000f5f       data   0x000000
+           .idata_c018i.o      idata   0x000f5f       data   0x000000
+       .udata_i2c1puts1.o      udata   0x000f5f       data   0x000000
+       .idata_i2c1puts1.o      idata   0x000f5f       data   0x000000
+            .idata_font.o      idata   0x000f5f       data   0x000000
+   .udata_DisplayBuffer.o      udata   0x000f5f       data   0x000000
+   .idata_DisplayBuffer.o      idata   0x000f5f       data   0x000000
+           .idata_Delay.o      idata   0x000f5f       data   0x000000
+           .udata_Delay.o      udata   0x000f5f       data   0x000000
             SFR_UNBANKED0      udata   0x000f60       data   0x0000a0
 
 
@@ -140,95 +140,95 @@ Linker Map File - Created Thu Jun 30 14:46:01 2011
                               Program Memory Usage 
                                Start         End      
                            ---------   ---------      
-                            0x000000    0x000014      
-                            0x000018    0x0019f9      
+                            0x000000    0x000011      
+                            0x000018    0x001a29      
                             0x00ac00    0x00ba06      
                             0x01fff8    0x01fff8      
                             0x01fffa    0x01fffa      
                             0x01fffd    0x01fffd      
-            10241 out of 131072 program addresses used, program memory utilization is 7%
+            10286 out of 131072 program addresses used, program memory utilization is 7%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-             Arial_B_Data   0x00aead    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-           Arial_B_cp1251   0x00b805    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-               Arial_Data   0x00ac00    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-             Arial_cp1251   0x00b603    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-                    D1K_1   0x001990    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                     D1Kx   0x00198e    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-              Delay1KTCYx   0x001984    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
-             DisplayClear   0x000060    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-              DisplayDraw   0x00010c    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-              DisplayInit   0x00005c    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                 FXD3232U   0x00177e    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
-                 FXM1616U   0x00184c    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
-           GetSymbolImage   0x000dca    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-              GetTickCopy   0x001436    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                  HighISR   0x001206    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               HighVector   0x000008    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-            INIT_SEQUENCE   0x0019c0    program     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-             LCDClearData   0x000c40    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                  LCDInit   0x00086c    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSendCommand   0x000b28    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-              LCDSendData   0x000a1a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSetContrast   0x000a0a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 LCDSetXY   0x000d6e    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                LCDUpdate   0x0012be    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                   LowISR   0x00114c    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                LowVector   0x000018    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 OpenI2C1   0x0018f6    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
-                 OpenPWM5   0x0017c6    program     extern C:\MCC18\src\pmc_common\PWM\pw5open.c
-               OpenTimer1   0x00180a    program     extern C:\MCC18\src\pmc_common\Timers\t1open.c
-               OpenTimer2   0x0018c0    program     extern C:\MCC18\src\pmc_common\Timers\t2open.c
-                OutTextXY   0x000512    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                SetDCPWM5   0x001720    program     extern C:\MCC18\src\pmc_common\PWM\pw5setdc.c
-             SetTmrCCPSrc   0x00192c    program     extern C:\MCC18\src\pmc_common\Timers\tmrccpsrc.c
-TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                  TickGet   0x00145c    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv256   0x001472    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv64K   0x0014c0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                 TickInit   0x001426    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-               TickUpdate   0x001552    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-          WriteByteAtBank   0x00023e    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                WriteI2C1   0x0016a0    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
-              WriteTimer1   0x001888    program     extern C:\MCC18\src\pmc_common\Timers\t1write.c
-        _D1KTCYXCODE_0010   0x001994    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0016   0x00199a    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-           ___do_lbl00002   0x001454    program     static                          
-           ___do_lbl00003   0x001458    program     static                          
-           ___do_lbl00004   0x001436    program     static                          
-       ___return_lbl00000   0x0017c4    program     static                          
+             Arial_B_Data   0x00aead    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+           Arial_B_cp1251   0x00b805    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+               Arial_Data   0x00ac00    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+             Arial_cp1251   0x00b603    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+                    D1K_1   0x0019c0    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                     D1Kx   0x0019be    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+              Delay1KTCYx   0x0019b4    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
+             DisplayClear   0x000048    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+              DisplayDraw   0x0000f4    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+              DisplayInit   0x000044    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                 FXD3232U   0x0017ae    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
+                 FXM1616U   0x00187c    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
+           GetSymbolImage   0x000dca    program     extern F:\astromonty\Programms\PIC18F97J60\font.c
+              GetTickCopy   0x001466    program     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                  HighISR   0x00120a    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               HighVector   0x000008    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+             LCDClearData   0x000c40    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                  LCDInit   0x00086c    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSendCommand   0x000b28    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+              LCDSendData   0x000a1a    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSetContrast   0x000a0a    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 LCDSetXY   0x000d6e    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                LCDUpdate   0x0012c2    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                   LowISR   0x00114e    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                LowVector   0x000018    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 OpenI2C1   0x001926    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
+                 OpenPWM5   0x0017f6    program     extern C:\MCC18\src\pmc_common\PWM\pw5open.c
+               OpenTimer1   0x00183a    program     extern C:\MCC18\src\pmc_common\Timers\t1open.c
+               OpenTimer2   0x0018f0    program     extern C:\MCC18\src\pmc_common\Timers\t2open.c
+                 OutImage   0x00085c    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                OutTextXY   0x0004fa    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                SetDCPWM5   0x001750    program     extern C:\MCC18\src\pmc_common\PWM\pw5setdc.c
+             SetTmrCCPSrc   0x00195c    program     extern C:\MCC18\src\pmc_common\Timers\tmrccpsrc.c
+TickConvertToMilliseconds   0x00153e    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                  TickGet   0x00148c    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv256   0x0014a2    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv64K   0x0014f0    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                 TickInit   0x001456    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+               TickUpdate   0x001582    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+          WriteByteAtBank   0x000226    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                WriteI2C1   0x0016d0    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
+              WriteTimer1   0x0018b8    program     extern C:\MCC18\src\pmc_common\Timers\t1write.c
+        _D1KTCYXCODE_0010   0x0019c4    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0016   0x0019ca    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+           ___do_lbl00002   0x001484    program     static                          
+           ___do_lbl00003   0x001488    program     static                          
+           ___do_lbl00004   0x001466    program     static                          
+       ___return_lbl00000   0x0017f4    program     static                          
        ___return_lbl00000   0x000004    program     static                          
-       ___return_lbl00001   0x0019be    program     static                          
-       ___return_lbl00001   0x00145a    program     static                          
-       ___return_lbl00002   0x001602    program     static                          
+       ___return_lbl00001   0x0019ee    program     static                          
+       ___return_lbl00001   0x00148a    program     static                          
+       ___return_lbl00002   0x001632    program     static                          
        ___return_lbl00002   0x00001c    program     static                          
        ___return_lbl00003   0x00000c    program     static                          
-               __config_0   0x01fff8    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               __config_1   0x01fffa    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               __config_2   0x01fffd    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               __config_0   0x01fff8    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               __config_1   0x01fffa    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               __config_2   0x01fffd    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
                    __init   0x000006    program     extern C:\MCC18\src\traditional\stdclib\__init.c
-            __zero_memory   0x001958    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                _do_cinit   0x001566    program     extern C:\MCC18\src\traditional\startup\c018i.c
+            __zero_memory   0x001988    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                _do_cinit   0x001596    program     extern C:\MCC18\src\traditional\startup\c018i.c
                    _entry   0x000000    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                   _false   0x0017c0    program     static                          
-                 _startup   0x0019a4    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                compare_l   0x00197a    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                copy_loop   0x0015d8    program     static                          
-            copy_one_byte   0x0015de    program     static                          
-                     done   0x001602    program     static                          
-             done_copying   0x0015ec    program     static                          
-                     loop   0x00178c    program     static                          
-                     loop   0x0019b4    program     static                          
-                   loop_h   0x001972    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_l   0x00197c    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     main   0x0012ca    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               putsI2C1_1   0x001604    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
-                     test   0x001580    program     static                          
-               zero_block   0x001972    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   _false   0x0017f0    program     static                          
+                 _startup   0x0019d4    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                compare_l   0x0019aa    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                copy_loop   0x001608    program     static                          
+            copy_one_byte   0x00160e    program     static                          
+                     done   0x001632    program     static                          
+             done_copying   0x00161c    program     static                          
+                     loop   0x0017bc    program     static                          
+                     loop   0x0019e4    program     static                          
+                   loop_h   0x0019a2    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_l   0x0019ac    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     main   0x0012d0    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               putsI2C1_1   0x001634    program     extern F:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                     test   0x0015b0    program     static                          
+               zero_block   0x0019a2    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON0   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                ADCON0bits   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON1   0x000fc1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -238,8 +238,8 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                     ADRES   0x000fc3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADRESH   0x000fc4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADRESL   0x000fc3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                AN0String   0x000f35       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                AppConfig   0x000f00       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                AN0String   0x000f35       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                AppConfig   0x000f00       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
                   BAUDCON   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  BAUDCON1   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
              BAUDCON1bits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -274,9 +274,6 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                     CCPR5   0x000f71       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR5H   0x000f72       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR5L   0x000f71       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    CFont   0x000f3d       data     static E:\astromonty\Programms\PIC18F97J60\font.h
-                    CFont   0x000e42       data     static E:\astromonty\Programms\PIC18F97J60\font.h
-                    CFont   0x000e43       data     static E:\astromonty\Programms\PIC18F97J60\font.h
                     CMCON   0x000fb4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 CMCONbits   0x000fb4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CVRCON   0x000fb5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -296,11 +293,11 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                      DDRG   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  DDRGbits   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
             DelayCounter1   0x00001c       data     extern C:\MCC18\src\traditional\delays\delayd1.asm
-           DisplayBuffer0   0x000800       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer1   0x000900       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer2   0x000a00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer3   0x000b00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer4   0x000c00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer0   0x000800       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer1   0x000900       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer2   0x000a00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer3   0x000b00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer4   0x000c00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
                   ECCP1AS   0x000fb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               ECCP1ASbits   0x000fb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ECCP1CON   0x000fbd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -409,11 +406,12 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                      FSR2   0x000fd9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     FSR2H   0x000fda       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     FSR2L   0x000fd9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 I2C_Recv   0x000e18       data     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 I2C_Send   0x000f3e       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 I2C_Recv   0x000e30       data     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 I2C_Send   0x000f3d       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
                     INDF0   0x000fef       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     INDF1   0x000fe7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     INDF2   0x000fdf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+            INIT_SEQUENCE   0x000e18       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
                    INTCON   0x000ff2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   INTCON2   0x000ff1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               INTCON2bits   0x000ff1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -426,7 +424,7 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                  IPR2bits   0x000fa2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      IPR3   0x000fa5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  IPR3bits   0x000fa5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    Image   0x000e00       data     static E:\astromonty\Programms\PIC18F97J60\font.c
+                    Image   0x000e00       data     static F:\astromonty\Programms\PIC18F97J60\font.c
                      LATA   0x000f89       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATAbits   0x000f89       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      LATB   0x000f8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -552,7 +550,7 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
               SSPCON2bits   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSPSTAT   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               SSPSTATbits   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    START   0x000e41       data     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                    START   0x000e2f       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
                    STATUS   0x000fd8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                STATUSbits   0x000fd8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    STKPTR   0x000ffc       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -634,21 +632,22 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                  __TEMPB3   0x000010       data     extern C:\MCC18\src\traditional\math\temparg.asm
                   __tmp_0   0x000014       data     static C:\MCC18\src\pmc_common\i2c\i2c1writ.c
                   __tmp_0   0x000014       data     static C:\MCC18\src\pmc_common\PWM\pw5setdc.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\font.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                     add1   0x000f53       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                curr_byte   0x000e30       data     static C:\MCC18\src\traditional\startup\c018i.c
-               curr_entry   0x000e32       data     static C:\MCC18\src\traditional\startup\c018i.c
-                 data_ptr   0x000e34       data     static C:\MCC18\src\traditional\startup\c018i.c
-          dwInternalTicks   0x000e3d       data     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                 dwLastIP   0x000f5c       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                     prom   0x000e2d       data     static C:\MCC18\src\traditional\startup\c018i.c
-                        t   0x000f54       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                       t1   0x000f58       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-             vTickReading   0x000e37       data     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\font.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                     add1   0x000f52       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                curr_byte   0x000e48       data     static C:\MCC18\src\traditional\startup\c018i.c
+               curr_entry   0x000e4a       data     static C:\MCC18\src\traditional\startup\c018i.c
+                 data_ptr   0x000e4c       data     static C:\MCC18\src\traditional\startup\c018i.c
+          dwInternalTicks   0x000e55       data     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                 dwLastIP   0x000f5b       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                     prom   0x000e45       data     static C:\MCC18\src\traditional\startup\c018i.c
+                        t   0x000f53       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                       t1   0x000f57       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+             vTickReading   0x000e4f       data     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+wOriginalAppConfigChecksum   0x000f33       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
 
 
 
@@ -658,84 +657,84 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                    _entry   0x000000    program     extern C:\MCC18\src\traditional\startup\c018i.c
        ___return_lbl00000   0x000004    program     static                          
                    __init   0x000006    program     extern C:\MCC18\src\traditional\stdclib\__init.c
-               HighVector   0x000008    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               HighVector   0x000008    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
        ___return_lbl00003   0x00000c    program     static                          
-                LowVector   0x000018    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                LowVector   0x000018    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
        ___return_lbl00002   0x00001c    program     static                          
-              DisplayInit   0x00005c    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-             DisplayClear   0x000060    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-              DisplayDraw   0x00010c    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-          WriteByteAtBank   0x00023e    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                OutTextXY   0x000512    program     extern E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                  LCDInit   0x00086c    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSetContrast   0x000a0a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-              LCDSendData   0x000a1a    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           LCDSendCommand   0x000b28    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-             LCDClearData   0x000c40    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                 LCDSetXY   0x000d6e    program     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-           GetSymbolImage   0x000dca    program     extern E:\astromonty\Programms\PIC18F97J60\font.c
-                   LowISR   0x00114c    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                  HighISR   0x001206    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                LCDUpdate   0x0012be    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                     main   0x0012ca    program     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 TickInit   0x001426    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-              GetTickCopy   0x001436    program     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-           ___do_lbl00004   0x001436    program     static                          
-           ___do_lbl00002   0x001454    program     static                          
-           ___do_lbl00003   0x001458    program     static                          
-       ___return_lbl00001   0x00145a    program     static                          
-                  TickGet   0x00145c    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv256   0x001472    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-            TickGetDiv64K   0x0014c0    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-               TickUpdate   0x001552    program     extern E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                _do_cinit   0x001566    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                     test   0x001580    program     static                          
-                copy_loop   0x0015d8    program     static                          
-            copy_one_byte   0x0015de    program     static                          
-             done_copying   0x0015ec    program     static                          
-                     done   0x001602    program     static                          
-       ___return_lbl00002   0x001602    program     static                          
-               putsI2C1_1   0x001604    program     extern E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
-                WriteI2C1   0x0016a0    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
-                SetDCPWM5   0x001720    program     extern C:\MCC18\src\pmc_common\PWM\pw5setdc.c
-                 FXD3232U   0x00177e    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
-                     loop   0x00178c    program     static                          
-                   _false   0x0017c0    program     static                          
-       ___return_lbl00000   0x0017c4    program     static                          
-                 OpenPWM5   0x0017c6    program     extern C:\MCC18\src\pmc_common\PWM\pw5open.c
-               OpenTimer1   0x00180a    program     extern C:\MCC18\src\pmc_common\Timers\t1open.c
-                 FXM1616U   0x00184c    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
-              WriteTimer1   0x001888    program     extern C:\MCC18\src\pmc_common\Timers\t1write.c
-               OpenTimer2   0x0018c0    program     extern C:\MCC18\src\pmc_common\Timers\t2open.c
-                 OpenI2C1   0x0018f6    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
-             SetTmrCCPSrc   0x00192c    program     extern C:\MCC18\src\pmc_common\Timers\tmrccpsrc.c
-            __zero_memory   0x001958    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_h   0x001972    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-               zero_block   0x001972    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                compare_l   0x00197a    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   loop_l   0x00197c    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
-              Delay1KTCYx   0x001984    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                     D1Kx   0x00198e    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                    D1K_1   0x001990    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0010   0x001994    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-        _D1KTCYXCODE_0016   0x00199a    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
-                 _startup   0x0019a4    program     extern C:\MCC18\src\traditional\startup\c018i.c
-                     loop   0x0019b4    program     static                          
-       ___return_lbl00001   0x0019be    program     static                          
-            INIT_SEQUENCE   0x0019c0    program     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-               Arial_Data   0x00ac00    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-             Arial_B_Data   0x00aead    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-             Arial_cp1251   0x00b603    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-           Arial_B_cp1251   0x00b805    program     static E:\astromonty\Programms\PIC18F97J60\font.c
-               __config_0   0x01fff8    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               __config_1   0x01fffa    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-               __config_2   0x01fffd    program     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+              DisplayInit   0x000044    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+             DisplayClear   0x000048    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+              DisplayDraw   0x0000f4    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+          WriteByteAtBank   0x000226    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                OutTextXY   0x0004fa    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                 OutImage   0x00085c    program     extern F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                  LCDInit   0x00086c    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSetContrast   0x000a0a    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+              LCDSendData   0x000a1a    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           LCDSendCommand   0x000b28    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+             LCDClearData   0x000c40    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 LCDSetXY   0x000d6e    program     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+           GetSymbolImage   0x000dca    program     extern F:\astromonty\Programms\PIC18F97J60\font.c
+                   LowISR   0x00114e    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                  HighISR   0x00120a    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                LCDUpdate   0x0012c2    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                     main   0x0012d0    program     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 TickInit   0x001456    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+              GetTickCopy   0x001466    program     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+           ___do_lbl00004   0x001466    program     static                          
+           ___do_lbl00002   0x001484    program     static                          
+           ___do_lbl00003   0x001488    program     static                          
+       ___return_lbl00001   0x00148a    program     static                          
+                  TickGet   0x00148c    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv256   0x0014a2    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+            TickGetDiv64K   0x0014f0    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+TickConvertToMilliseconds   0x00153e    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+               TickUpdate   0x001582    program     extern F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+                _do_cinit   0x001596    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                     test   0x0015b0    program     static                          
+                copy_loop   0x001608    program     static                          
+            copy_one_byte   0x00160e    program     static                          
+             done_copying   0x00161c    program     static                          
+       ___return_lbl00002   0x001632    program     static                          
+                     done   0x001632    program     static                          
+               putsI2C1_1   0x001634    program     extern F:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                WriteI2C1   0x0016d0    program     extern C:\MCC18\src\pmc_common\i2c\i2c1writ.c
+                SetDCPWM5   0x001750    program     extern C:\MCC18\src\pmc_common\PWM\pw5setdc.c
+                 FXD3232U   0x0017ae    program     extern C:\MCC18\src\traditional\math\fxd3232u.c
+                     loop   0x0017bc    program     static                          
+                   _false   0x0017f0    program     static                          
+       ___return_lbl00000   0x0017f4    program     static                          
+                 OpenPWM5   0x0017f6    program     extern C:\MCC18\src\pmc_common\PWM\pw5open.c
+               OpenTimer1   0x00183a    program     extern C:\MCC18\src\pmc_common\Timers\t1open.c
+                 FXM1616U   0x00187c    program     extern C:\MCC18\src\traditional\math\fxm1616u.asm
+              WriteTimer1   0x0018b8    program     extern C:\MCC18\src\pmc_common\Timers\t1write.c
+               OpenTimer2   0x0018f0    program     extern C:\MCC18\src\pmc_common\Timers\t2open.c
+                 OpenI2C1   0x001926    program     extern C:\MCC18\src\pmc_common\i2c\i2c1open.c
+             SetTmrCCPSrc   0x00195c    program     extern C:\MCC18\src\pmc_common\Timers\tmrccpsrc.c
+            __zero_memory   0x001988    program     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_h   0x0019a2    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+               zero_block   0x0019a2    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                compare_l   0x0019aa    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   loop_l   0x0019ac    program     static C:\MCC18\src\traditional\proc\p18F67J60.asm
+              Delay1KTCYx   0x0019b4    program     extern C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                     D1Kx   0x0019be    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                    D1K_1   0x0019c0    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0010   0x0019c4    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+        _D1KTCYXCODE_0016   0x0019ca    program     static C:\MCC18\src\traditional\delays\d1ktcyx.asm
+                 _startup   0x0019d4    program     extern C:\MCC18\src\traditional\startup\c018i.c
+                     loop   0x0019e4    program     static                          
+       ___return_lbl00001   0x0019ee    program     static                          
+               Arial_Data   0x00ac00    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+             Arial_B_Data   0x00aead    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+             Arial_cp1251   0x00b603    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+           Arial_B_cp1251   0x00b805    program     static F:\astromonty\Programms\PIC18F97J60\font.c
+               __config_0   0x01fff8    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               __config_1   0x01fffa    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+               __config_2   0x01fffd    program     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
                      SIGN   0x000000       data     extern C:\MCC18\src\traditional\math\cmath18.asm
-            __FPFLAGSbits   0x000001       data     extern C:\MCC18\src\traditional\math\cmath18.asm
                 __FPFLAGS   0x000001       data     extern C:\MCC18\src\traditional\math\cmath18.asm
-                 __AARGB7   0x000002       data     extern C:\MCC18\src\traditional\math\aarg.asm
+            __FPFLAGSbits   0x000001       data     extern C:\MCC18\src\traditional\math\cmath18.asm
                   __REMB3   0x000002       data     extern C:\MCC18\src\traditional\math\aarg.asm
+                 __AARGB7   0x000002       data     extern C:\MCC18\src\traditional\math\aarg.asm
                  __AARGB6   0x000003       data     extern C:\MCC18\src\traditional\math\aarg.asm
                   __REMB2   0x000003       data     extern C:\MCC18\src\traditional\math\aarg.asm
                  __AARGB5   0x000004       data     extern C:\MCC18\src\traditional\math\aarg.asm
@@ -757,29 +756,29 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                  __TEMPB1   0x000012       data     extern C:\MCC18\src\traditional\math\temparg.asm
                    __TEMP   0x000013       data     extern C:\MCC18\src\traditional\math\temparg.asm
                  __TEMPB0   0x000013       data     extern C:\MCC18\src\traditional\math\temparg.asm
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\font.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
                   __tmp_0   0x000014       data     static C:\MCC18\src\pmc_common\PWM\pw5setdc.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\font.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\i2c1puts1.c
                   __tmp_0   0x000014       data     static C:\MCC18\src\pmc_common\i2c\i2c1writ.c
-                  __tmp_0   0x000014       data     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                  __tmp_0   0x000014       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
             DelayCounter1   0x00001c       data     extern C:\MCC18\src\traditional\delays\delayd1.asm
-           DisplayBuffer0   0x000800       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer1   0x000900       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer2   0x000a00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer3   0x000b00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-           DisplayBuffer4   0x000c00       data     static E:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
-                    Image   0x000e00       data     static E:\astromonty\Programms\PIC18F97J60\font.c
-                 I2C_Recv   0x000e18       data     extern E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                     prom   0x000e2d       data     static C:\MCC18\src\traditional\startup\c018i.c
-                curr_byte   0x000e30       data     static C:\MCC18\src\traditional\startup\c018i.c
-               curr_entry   0x000e32       data     static C:\MCC18\src\traditional\startup\c018i.c
-                 data_ptr   0x000e34       data     static C:\MCC18\src\traditional\startup\c018i.c
-             vTickReading   0x000e37       data     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-          dwInternalTicks   0x000e3d       data     static E:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
-                    START   0x000e41       data     static E:\astromonty\Programms\PIC18F97J60\pcf8535.c
-                    CFont   0x000e42       data     static E:\astromonty\Programms\PIC18F97J60\font.h
-                    CFont   0x000e43       data     static E:\astromonty\Programms\PIC18F97J60\font.h
+           DisplayBuffer0   0x000800       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer1   0x000900       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer2   0x000a00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer3   0x000b00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+           DisplayBuffer4   0x000c00       data     static F:\astromonty\Programms\PIC18F97J60\DisplayBuffer.c
+                    Image   0x000e00       data     static F:\astromonty\Programms\PIC18F97J60\font.c
+            INIT_SEQUENCE   0x000e18       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                    START   0x000e2f       data     static F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                 I2C_Recv   0x000e30       data     extern F:\astromonty\Programms\PIC18F97J60\pcf8535.c
+                     prom   0x000e45       data     static C:\MCC18\src\traditional\startup\c018i.c
+                curr_byte   0x000e48       data     static C:\MCC18\src\traditional\startup\c018i.c
+               curr_entry   0x000e4a       data     static C:\MCC18\src\traditional\startup\c018i.c
+                 data_ptr   0x000e4c       data     static C:\MCC18\src\traditional\startup\c018i.c
+             vTickReading   0x000e4f       data     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
+          dwInternalTicks   0x000e55       data     static F:\astromonty\Programms\Microchip\TCPIP Stack\Tick.c
                    MAADR5   0x000e80       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MAADR6   0x000e81       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MAADR3   0x000e82       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -788,10 +787,10 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                    MAADR2   0x000e85       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MISTAT   0x000e8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                MISTATbits   0x000e8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  EFLOCON   0x000e97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               EFLOCONbits   0x000e97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   EPAUSL   0x000e98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  EFLOCON   0x000e97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     EPAUS   0x000e98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   EPAUSL   0x000e98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EPAUSH   0x000e99       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MACON1   0x000ea0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                MACON1bits   0x000ea0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -804,17 +803,17 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                     MAIPG   0x000ea6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MAIPGL   0x000ea6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    MAIPGH   0x000ea7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   MAMXFL   0x000eaa       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   MAMXFLL   0x000eaa       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   MAMXFL   0x000eaa       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   MAMXFLH   0x000eab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    MICMD   0x000eb2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 MICMDbits   0x000eb2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    MICMD   0x000eb2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  MIREGADR   0x000eb4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     MIWR   0x000eb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     MIWRL   0x000eb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     MIWR   0x000eb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     MIWRH   0x000eb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     MIRD   0x000eb8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     MIRDL   0x000eb8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     MIRD   0x000eb8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     MIRDH   0x000eb9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      EHT0   0x000ec0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      EHT1   0x000ec1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -832,63 +831,62 @@ TickConvertToMilliseconds   0x00150e    program     extern E:\astromonty\Program
                     EPMM5   0x000ecd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     EPMM6   0x000ece       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     EPMM7   0x000ecf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    EPMCS   0x000ed0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EPMCSL   0x000ed0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    EPMCS   0x000ed0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EPMCSH   0x000ed1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    EPMOL   0x000ed4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      EPMO   0x000ed4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    EPMOL   0x000ed4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     EPMOH   0x000ed5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   ERXFCON   0x000ed8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               ERXFCONbits   0x000ed8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EPKTCNT   0x000ed9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   EWRPTL   0x000ee2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     EWRPT   0x000ee2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   EWRPTL   0x000ee2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EWRPTH   0x000ee3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ETXST   0x000ee4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ETXSTL   0x000ee4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ETXSTH   0x000ee5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    ETXND   0x000ee6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ETXNDL   0x000ee6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    ETXND   0x000ee6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ETXNDH   0x000ee7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    ERXST   0x000ee8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ERXSTL   0x000ee8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    ERXST   0x000ee8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ERXSTH   0x000ee9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ERXND   0x000eea       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ERXNDL   0x000eea       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ERXNDH   0x000eeb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  ERXRDPT   0x000eec       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ERXRDPTL   0x000eec       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  ERXRDPT   0x000eec       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ERXRDPTH   0x000eed       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   ERXWRPT   0x000eee       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ERXWRPTL   0x000eee       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ERXWRPTH   0x000eef       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  EDMASTL   0x000ef0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EDMAST   0x000ef0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  EDMASTL   0x000ef0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EDMASTH   0x000ef1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EDMANDL   0x000ef2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EDMAND   0x000ef2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EDMANDH   0x000ef3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  EDMADST   0x000ef4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  EDMADSTL   0x000ef4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  EDMADST   0x000ef4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  EDMADSTH   0x000ef5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EDMACSL   0x000ef6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EDMACS   0x000ef6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EDMACSH   0x000ef7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                      EIE   0x000efb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   EIEbits   0x000efb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                ESTATbits   0x000efd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                      EIE   0x000efb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ESTAT   0x000efd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                ESTATbits   0x000efd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 ECON2bits   0x000efe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ECON2   0x000efe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                AppConfig   0x000f00       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                AN0String   0x000f35       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                    CFont   0x000f3d       data     static E:\astromonty\Programms\PIC18F97J60\font.h
-                 I2C_Send   0x000f3e       data     extern E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                     add1   0x000f53       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                        t   0x000f54       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                       t1   0x000f58       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
-                 dwLastIP   0x000f5c       data     static E:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                AppConfig   0x000f00       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+wOriginalAppConfigChecksum   0x000f33       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                AN0String   0x000f35       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 I2C_Send   0x000f3d       data     extern F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                     add1   0x000f52       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                        t   0x000f53       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                       t1   0x000f57       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
+                 dwLastIP   0x000f5b       data     static F:\astromonty\Programms\PIC18F97J60\MainDemo.c
                   EIRbits   0x000f60       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                       EIR   0x000f60       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 EDATAbits   0x000f61       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -901,126 +899,126 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                  ECCP3DEL   0x000f69       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               ECCP3ASbits   0x000f6a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   ECCP3AS   0x000f6a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-              CCP5CONbits   0x000f70       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   CCP5CON   0x000f70       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+              CCP5CONbits   0x000f70       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR5L   0x000f71       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     CCPR5   0x000f71       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR5H   0x000f72       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  CCP4CON   0x000f73       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               CCP4CONbits   0x000f73       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  CCP4CON   0x000f73       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR4L   0x000f74       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     CCPR4   0x000f74       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR4H   0x000f75       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    T4CON   0x000f76       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 T4CONbits   0x000f76       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    T4CON   0x000f76       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                       PR4   0x000f77       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      TMR4   0x000f78       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
              ECCP1DELbits   0x000f79       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  ECCP1DEL   0x000f79       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   ERDPTL   0x000f7a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ERDPT   0x000f7a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   ERDPTL   0x000f7a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ERDPTH   0x000f7b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-              BAUDCTLbits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  BAUDCON   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 BAUDCON1   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-             BAUDCON1bits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-              BAUDCONbits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  BAUDCTL   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
              BAUDCTL1bits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+              BAUDCTLbits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  BAUDCTL1   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  BAUDCTL   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+              BAUDCONbits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+             BAUDCON1bits   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 BAUDCON1   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  BAUDCON   0x000f7e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    SPBRGH   0x000f7f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SPBRGH1   0x000f7f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    PORTA   0x000f80       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTAbits   0x000f80       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    PORTB   0x000f81       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    PORTA   0x000f80       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTBbits   0x000f81       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    PORTC   0x000f82       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    PORTB   0x000f81       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTCbits   0x000f82       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    PORTD   0x000f83       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    PORTC   0x000f82       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTDbits   0x000f83       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    PORTD   0x000f83       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     PORTE   0x000f84       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTEbits   0x000f84       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    PORTF   0x000f85       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 PORTFbits   0x000f85       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                PORTGbits   0x000f86       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    PORTF   0x000f85       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     PORTG   0x000f86       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                PORTGbits   0x000f86       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATAbits   0x000f89       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      LATA   0x000f89       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     LATB   0x000f8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATBbits   0x000f8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     LATC   0x000f8b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     LATB   0x000f8a       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATCbits   0x000f8b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     LATD   0x000f8c       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     LATC   0x000f8b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATDbits   0x000f8c       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     LATE   0x000f8d       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     LATD   0x000f8c       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATEbits   0x000f8d       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     LATE   0x000f8d       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATFbits   0x000f8e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      LATF   0x000f8e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  LATGbits   0x000f8f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      LATG   0x000f8f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     DDRA   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 DDRAbits   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TRISA   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISAbits   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 DDRAbits   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     DDRA   0x000f92       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    TRISB   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                TRISBbits   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 DDRBbits   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      DDRB   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 DDRBbits   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                TRISBbits   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    TRISB   0x000f93       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  DDRCbits   0x000f94       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      DDRC   0x000f94       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    TRISC   0x000f94       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISCbits   0x000f94       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 DDRDbits   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     DDRD   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    TRISC   0x000f94       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TRISD   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISDbits   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 DDREbits   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     DDRE   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 DDRDbits   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     DDRD   0x000f95       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TRISE   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISEbits   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 DDREbits   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     DDRE   0x000f96       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISFbits   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 DDRFbits   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     DDRF   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TRISF   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     DDRG   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     DDRF   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 DDRFbits   0x000f97       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    TRISG   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 TRISGbits   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  DDRGbits   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    TRISG   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-              OSCTUNEbits   0x000f9b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     DDRG   0x000f98       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   OSCTUNE   0x000f9b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+              OSCTUNEbits   0x000f9b       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      PIE1   0x000f9d       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIE1bits   0x000f9d       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     PIR1   0x000f9e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIR1bits   0x000f9e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 IPR1bits   0x000f9f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     PIR1   0x000f9e       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      IPR1   0x000f9f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     PIE2   0x000fa0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 IPR1bits   0x000f9f       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIE2bits   0x000fa0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     PIE2   0x000fa0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIR2bits   0x000fa1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      PIR2   0x000fa1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 IPR2bits   0x000fa2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      IPR2   0x000fa2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 IPR2bits   0x000fa2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      PIE3   0x000fa3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIE3bits   0x000fa3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  PIR3bits   0x000fa4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      PIR3   0x000fa4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  IPR3bits   0x000fa5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      IPR3   0x000fa5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   EECON1   0x000fa6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                EECON1bits   0x000fa6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   EECON1   0x000fa6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    EECON2   0x000fa7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    RCSTA   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   RCSTA1   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                RCSTA1bits   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   RCSTA1   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    RCSTA   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 RCSTAbits   0x000fab       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                TXSTAbits   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-               TXSTA1bits   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   TXSTA1   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TXSTA   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    TXREG   0x000fad       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   TXSTA1   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+               TXSTA1bits   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                TXSTAbits   0x000fac       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    TXREG1   0x000fad       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    RCREG   0x000fae       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    TXREG   0x000fad       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    RCREG1   0x000fae       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    RCREG   0x000fae       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     SPBRG   0x000faf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    SPBRG1   0x000faf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 T3CONbits   0x000fb1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -1031,17 +1029,17 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                     CMCON   0x000fb4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                CVRCONbits   0x000fb5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CVRCON   0x000fb5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-              ECCP1ASbits   0x000fb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   ECCP1AS   0x000fb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 ECCP3CON   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-             ECCP3CONbits   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+              ECCP1ASbits   0x000fb6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   CCP3CON   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               CCP3CONbits   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 ECCP3CON   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+             ECCP3CONbits   0x000fb7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     CCPR3   0x000fb8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR3L   0x000fb8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR3H   0x000fb9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 ECCP2CON   0x000fba       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
              ECCP2CONbits   0x000fba       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 ECCP2CON   0x000fba       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               CCP2CONbits   0x000fba       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   CCP2CON   0x000fba       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR2L   0x000fbb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -1051,48 +1049,48 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                  ECCP1CON   0x000fbd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               CCP1CONbits   0x000fbd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   CCP1CON   0x000fbd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    CCPR1   0x000fbe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR1L   0x000fbe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    CCPR1   0x000fbe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    CCPR1H   0x000fbf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-               ADCON2bits   0x000fc0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON2   0x000fc0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-               ADCON1bits   0x000fc1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+               ADCON2bits   0x000fc0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON1   0x000fc1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+               ADCON1bits   0x000fc1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                ADCON0bits   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADCON0   0x000fc2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   ADRESL   0x000fc3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     ADRES   0x000fc3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   ADRESL   0x000fc3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    ADRESH   0x000fc4       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               SSPCON2bits   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 SSP1CON2   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSPCON2   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 SSP1CON2   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
              SSP1CON2bits   0x000fc5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-             SSP1CON1bits   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 SSP1CON1   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               SSPCON1bits   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSPCON1   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 SSP1CON1   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+             SSP1CON1bits   0x000fc6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                 SSP1STAT   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+             SSP1STATbits   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSPSTAT   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               SSPSTATbits   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-             SSP1STATbits   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                 SSP1STAT   0x000fc7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSP1ADD   0x000fc8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    SSPADD   0x000fc8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   SSPBUF   0x000fc9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   SSP1BUF   0x000fc9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    T2CON   0x000fca       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   SSPBUF   0x000fc9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 T2CONbits   0x000fca       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    T2CON   0x000fca       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                       PR2   0x000fcb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      TMR2   0x000fcc       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                T1CONbits   0x000fcd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     T1CON   0x000fcd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                T1CONbits   0x000fcd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TMR1L   0x000fce       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     TMR1H   0x000fcf       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  RCONbits   0x000fd0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      RCON   0x000fd0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                WDTCONbits   0x000fd1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    WDTCON   0x000fd1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                    ECON1   0x000fd2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                 ECON1bits   0x000fd2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                    ECON1   0x000fd2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                OSCCONbits   0x000fd3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    OSCCON   0x000fd3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     T0CON   0x000fd5       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -1119,18 +1117,18 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                  POSTINC1   0x000fe6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     INDF1   0x000fe7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      WREG   0x000fe8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                     FSR0   0x000fe9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     FSR0L   0x000fe9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                     FSR0   0x000fe9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     FSR0H   0x000fea       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    PLUSW0   0x000feb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   PREINC0   0x000fec       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  POSTDEC0   0x000fed       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                  POSTINC0   0x000fee       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                     INDF0   0x000fef       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  INTCON3   0x000ff0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               INTCON3bits   0x000ff0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                  INTCON2   0x000ff1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  INTCON3   0x000ff0       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
               INTCON2bits   0x000ff1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                  INTCON2   0x000ff1       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    INTCON   0x000ff2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                INTCONbits   0x000ff2       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      PROD   0x000ff3       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
@@ -1141,12 +1139,12 @@ wOriginalAppConfigChecksum   0x000f33       data     static E:\astromonty\Progra
                   TBLPTRL   0x000ff6       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   TBLPTRH   0x000ff7       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                   TBLPTRU   0x000ff8       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                       PC   0x000ff9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                       PCL   0x000ff9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                       PC   0x000ff9       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    PCLATH   0x000ffa       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                    PCLATU   0x000ffb       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
-                   STKPTR   0x000ffc       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                STKPTRbits   0x000ffc       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
+                   STKPTR   0x000ffc       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                       TOS   0x000ffd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      TOSL   0x000ffd       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm
                      TOSH   0x000ffe       data     extern C:\MCC18\src\traditional\proc\p18F67J60.asm

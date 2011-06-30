@@ -4,7 +4,7 @@
 #include <i2c.h>
 
 // LCD controller init sequence
-static rom BYTE INIT_SEQUENCE[] =
+static BYTE INIT_SEQUENCE[] =
 {
 	cmdLCD_DEFAULT_PAGE
 	,
@@ -44,7 +44,7 @@ static rom BYTE INIT_SEQUENCE[] =
 	| paramLCD_TC_274
 	,
 	cmdLCD_VLCD_CONTROL
-	| 51
+	| 55
 	,
 	
 	cmdLCD_DEFAULT_PAGE
