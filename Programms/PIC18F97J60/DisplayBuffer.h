@@ -5,5 +5,5 @@
 void DisplayInit(void);
 void DisplayClear(void);
 void DisplayDraw(BYTE addr);
-void OutTextXY(BYTE X,BYTE Y,BYTE* Text);
+void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont);
 #endif //_DISPLAY_BUFFER_H

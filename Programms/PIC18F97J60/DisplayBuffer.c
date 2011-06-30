@@ -97,7 +97,7 @@ void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
     }
     
 }
-void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
+void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 {    
     BYTE  count;    
     BYTE i;	
@@ -118,10 +118,10 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
 	WORD  I;
 	switch(CFont){
         case 0:
-            FontMask = ARIAL_MASK<<8;
+            FontMask = (WORD)ARIAL_MASK<<8;
         break;
         case 1:
-            FontMask = ARIAL_B_MASK<<6;
+            FontMask = (WORD)ARIAL_B_MASK<<6;
         break;
         default:
             FontMask = 0;
@@ -135,7 +135,7 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
         
     ptr = Text;
     while ( *ptr ){
-        Image = GetSymbolImage(*ptr++,&count);		
+        Image = GetSymbolImage(*ptr++,&count,CFont);		
         for(i=0;i<count;i++){
             	switch(CFont){
             case 0:
