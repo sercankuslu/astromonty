@@ -71,50 +71,6 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 
-[GeneratedDocument1]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\Board Information - dsPIC33_CPU_ETH_Unit.html
-DItemRevisionGUID=
-
-[GeneratedDocument2]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.EXTREP
-DItemRevisionGUID=
-
-[GeneratedDocument3]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GBL
-DItemRevisionGUID=
-
-[GeneratedDocument4]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GBS
-DItemRevisionGUID=
-
-[GeneratedDocument5]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GD1
-DItemRevisionGUID=
-
-[GeneratedDocument6]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GG1
-DItemRevisionGUID=
-
-[GeneratedDocument7]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GM1
-DItemRevisionGUID=
-
-[GeneratedDocument8]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GTL
-DItemRevisionGUID=
-
-[GeneratedDocument9]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.GTS
-DItemRevisionGUID=
-
-[GeneratedDocument10]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.REP
-DItemRevisionGUID=
-
-[GeneratedDocument11]
-DocumentPath=Project Outputs for dsPIC33_CPU_ETH_Unit\dsPIC33_CPU_ETH_Unit.RUL
-DItemRevisionGUID=
-
 [OutputGroup1]
 Name=Netlist Outputs
 Description=
@@ -270,7 +226,7 @@ OutputDefault3=0
 [OutputGroup3]
 Name=Documentation Outputs
 Description=
-TargetPrinter=Lexmark Universal
+TargetPrinter=HP LaserJet 4200/4300 PCL6
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=2|Collate=1|PrintWhat=1
 OutputType1=Composite
 OutputName1=Composite Drawing

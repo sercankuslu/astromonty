@@ -17,6 +17,11 @@ static BYTE DisplayBuffer4[40];
 #pragma udata
 void DisplayInit()
 {
+    DisplayClear();
+}
+
+void DisplayClear(void)
+{
     WORD i;
     //очистка буфера экрана
     for(i=0;i<256;i++){
@@ -107,10 +112,20 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
     BYTE  Mask1;//^
     BYTE  Mask2;//=    
     BYTE  Mask3;//v
-    WORD  FontMask = ARIAL_B_MASK<<6;
+    WORD  FontMask;
     BYTE* ptr;
     WORD* Image;
 	WORD  I;
+	switch(CFont){
+        case 0:
+            FontMask = ARIAL_MASK<<8;
+        break;
+        case 1:
+            FontMask = ARIAL_B_MASK<<6;
+        break;
+        default:
+            FontMask = 0;
+    }       
     
     Mask.Val  = (FontMask>>YPos);
     Mask2 = Mask.byte.LB;
@@ -122,7 +137,17 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
     while ( *ptr ){
         Image = GetSymbolImage(*ptr++,&count);		
         for(i=0;i<count;i++){
-			I = *Image<<6;
+            	switch(CFont){
+            case 0:
+                I = *Image<<8;
+            break;
+            case 1:
+                I = *Image<<6;
+            break;
+            default:      
+                I=0;              
+         }       
+			
             Data.Val = I>>YPos;
             Data2 = Data.byte.LB;
             Data3 = Data.byte.HB;
@@ -141,4 +166,8 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text)
         XPos++;
     }    
 }
-
+//битовое изображение, хранится построчно 
+void OutImage(BYTE X, BYTE Y, BYTE SX, BYTE SY,BYTE* Image)
+{
+    
+}
