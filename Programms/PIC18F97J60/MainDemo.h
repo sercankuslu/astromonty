@@ -65,6 +65,7 @@ void DoUARTConfig(void);
 	#define SaveAppConfig(a)
 #endif
 
+void LCDUpdate(void);
 /*
 void SMTPDemo(void);
 void PingDemo(void);

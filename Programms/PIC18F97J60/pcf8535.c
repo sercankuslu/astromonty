@@ -4,7 +4,7 @@
 #include <i2c.h>
 
 // LCD controller init sequence
-static BYTE INIT_SEQUENCE[] =
+static rom BYTE INIT_SEQUENCE[] =
 {
 	cmdLCD_DEFAULT_PAGE
 	,
@@ -79,17 +79,7 @@ static BYTE INIT_SEQUENCE[] =
 	| 0
 	,
 };
-const BYTE I2C_Home[] =
-{
-	cmdLCD_DEFAULT_PAGE
-	,
-	cmdLCD_SET_Y
-	| 0
-	,
-	cmdLCD_SET_X
-	| 0
-	,
-};
+
 BYTE I2C_Recv[21];
 static char START = 0;
 void LCDInit(BYTE addr)
@@ -100,14 +90,15 @@ void LCDInit(BYTE addr)
 
 	// Set lcd reset pin as output
 	// Set lcd reset pin low
-	//LCD_RESET = 0;
-	//DelayMs(500); // tW(RESL)
-	//LCD_RESET = 1;
-	//DelayMs(500); // tW(RESH)
-	//LCD_RESET = 0;
-	//DelayMs(1); // tW(RESL)
-	//LCD_RESET = 1;
-	//DelayMs(3); // tR(OP)
+	LCD_RESET_TRIS = 0;
+	LCD_RESET = 0;
+	DelayMs(500); // tW(RESL)
+	LCD_RESET = 1;
+	DelayMs(500); // tW(RESH)
+	LCD_RESET = 0;
+	DelayMs(1); // tW(RESL)
+	LCD_RESET = 1;
+	DelayMs(3); // tR(OP)
 	
 	//***************************************************
 	//* Lcd init commands *
@@ -178,7 +169,7 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
         {
             data = SSPBUF;        //upon bus collision detection clear the buffer,
             SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
+			//LATAbits.LATA1 =1;
         }
     }
     while(status!=0);        //write untill successful communication
@@ -190,7 +181,7 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
         {
             data = SSPBUF;        //upon bus collision detection clear the buffer,
             SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
+			//LATAbits.LATA1 =1;
         }
     }
     while(status!=0);        //write untill successful communication
@@ -246,7 +237,7 @@ int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
         {
             data = SSPBUF;        //upon bus collision detection clear the buffer,
             SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
+			//LATAbits.LATA1 =1;
         }
     }
     while(status!=0);        //write untill successful communication
@@ -258,7 +249,7 @@ int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
         {
             data = SSPBUF;        //upon bus collision detection clear the buffer,
             SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-			LATAbits.LATA1 =1;
+			//LATAbits.LATA1 =1;
         }
     }
     while(status!=0);        //write untill successful communication
@@ -309,7 +300,7 @@ int LCDClearData(BYTE add1)
 	        {
 	            data = SSPBUF;        //upon bus collision detection clear the buffer,
 	            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-				LATAbits.LATA1 =1;
+				//LATAbits.LATA1 =1;
 	        }
 	    }
 	    while(status!=0);        //write untill successful communication
@@ -321,7 +312,7 @@ int LCDClearData(BYTE add1)
 	        {
 	            data = SSPBUF;        //upon bus collision detection clear the buffer,
 	            SSPCON1bits.WCOL=0;    // clear the bus collision status bit
-				LATAbits.LATA1 =1;
+				//LATAbits.LATA1 =1;
 	        }
 	    }
 	    while(status!=0);        //write untill successful communication

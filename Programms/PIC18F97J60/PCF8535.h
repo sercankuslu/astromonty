@@ -8,6 +8,7 @@ PCF8535 lcd controller control codes
 
 #define PCF8535_BUS_ADDRESS 0x78
 #define LCD_RESET LATCbits.LATC5 
+#define LCD_RESET_TRIS TRISCbits.TRISC5
 #define LCD_SIZE_X 133
 #define LCD_SIZE_Y 64
 

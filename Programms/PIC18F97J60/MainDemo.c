@@ -99,6 +99,10 @@
 #define USE_OR_MASKS
 #include <p18cxxx.h>
 #include <i2c.h>
+#include <timers.h>
+#include <pwm.h>
+#include <flash.h>
+
 #include "DisplayBuffer.h"
 
 unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
@@ -161,13 +165,7 @@ BYTE AN0String[8];
 	void HighISR(void)
 	#endif
 	{
-	    #if defined(STACK_USE_UART2TCP_BRIDGE)
-			UART2TCPBridgeISR();
-		#endif
-
-		#if defined(WF_CS_TRIS)
-			WFEintISR();
-		#endif // WF_CS_TRIS
+	    LCDUpdate();
 	}
 
 	#if !defined(HI_TECH_C)
@@ -202,16 +200,13 @@ BYTE AN0String[8];
 	}
 #endif
 
-
-
-//unsigned char I2C_Send[21] = "MICROCHIP:I2C_MASTER" ;
-
-
-const BYTE I2C_Send1[]={0x80,0xE0,0xB8,0x17,0x9F,0xFC,0xE0,0x80, //A
-								
-};
-
 static BYTE add1 = PCF8535_BUS_ADDRESS; 
+
+void LCDUpdate(void){
+	DisplayDraw(add1);
+}
+
+
 //
 // Main application entry point.
 //
@@ -224,49 +219,66 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD t1 = 0;
 	static DWORD dwLastIP = 0;
-	BYTE b = 0;
-		
-		
+	BYTE b = 0;		
 	BYTE i; 	
 	WORD* symbol;
 	WORD  temp[12];
-	unsigned char Text[20] = "Ëþáëþ ÊÀÒÞ!!!";
+	unsigned char Text[20] = "Testing";
 	BYTE count;
+	//CCP5
+	char period=0x00;
+    unsigned char outputconfig=0;
+    unsigned char outputmode=0;
+    unsigned char config=0;
+    unsigned int duty_cycle=0;
+    //Timer1    
+    unsigned char config1=0x00;
+    unsigned int timer1_value=0x00;
+    //Timer2    
+    unsigned char config2=0x00;
+    unsigned int timer2_value=0x00;
+
 		
 	OSCTUNE = 0x40;
-	OSCCON = 0x02;
+	OSCCON = 0x02;    
     
-    //
+    TickInit(); 	   
     
-    TickInit();
+	LCDInit(add1);		
+	DisplayInit();	
+	DisplayClear();
+	SetFont(ARIAL);
+	OutTextXY(0,0,Text);
+	SetFont(ARIAL_B);
+	OutTextXY(0,15,Text);
+	
+    //----Configure Timer1----
+    timer1_value = 0x00;    
+    WriteTimer1(timer1_value);            //clear timer if previously contains any value
     
-	TRISAbits.TRISA0=0;
-	TRISAbits.TRISA1=0;
-	LATAbits.LATA0 =0;
-	LATAbits.LATA1 =0;	
+    IPR1bits.TMR1IP = 1;
+    config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
+    OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
+    
+    //----Configure Timer2----
+    timer2_value = 0x00;    
+    WriteTimer2(timer2_value);            //clear timer if previously contains any value
 
-	TRISCbits.TRISC3=1;
-	TRISCbits.TRISC4=1;
-	LATGbits.LATG4 =0;
-	LATCbits.LATC5 =0;
-	TRISCbits.TRISC5=0;	 //LCD reset
-	TRISGbits.TRISG4=0;	
-	DelayMs(100);
-	LATCbits.LATC5 =1;
-	//LATGbits.LATG4 =1;	
+    config2 =  T2_POST_1_16 | T2_PS_1_16 | TIMER_INT_OFF;
+    OpenTimer2(config2);                //API configures the tmer1 as per user defined parameters
+
+    SetTmrCCPSrc(T12_SOURCE_CCP);
+    
+    //----Configure pwm ----
+    period = 0xFF;
+    OpenPWM5( period);            //Configure PWM module and initialize PWM period
+
+    //-----set duty cycle----
+    duty_cycle = 0x0F00;
+    SetDCPWM5(duty_cycle);        //set the duty cycle
 
 	
-	LCDInit(add1);		
-	//LCDClearData(add1);
-	//LCDSetXY(add1,0,0);	
-	//LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));	
-	//LCDSendData(add1,test,count);
-	//for(i=7;i>0;i--){
-	//	LCDSetXY(add1,0,i);
-	//	LCDSendData(add1,(BYTE*)I2C_Send1,sizeof(I2C_Send1));
-	//}
-	DisplayInit();
-		
+
 	//t1=54;
     while(1)
     {
@@ -279,32 +291,7 @@ int main(void)
             //DisplayDraw(add1);
         }
 		
-		*/
-		
-		t++;
-
-		if(t>=20000){
-			t=0;
-			LATGbits.LATG4 ^= 1;
-			
-			//LATAbits.LATA1 ^= 1;
-			t1++;
-			if(t1>=64){
-				t1=0;
-				
-			}
-			DisplayInit();
-			OutTextXY(t1,t1,Text);
-			DisplayDraw(add1);
-			DelayMs(100);
-			//for(i=0;i<16;i++){				
-				//symbol = GetSymbolImage(0x50,&count);
-				
-			//}
-			
-			//lcd_set_contrast(t1);
-			
-		}
+		*/	
 				
 	}
 }
