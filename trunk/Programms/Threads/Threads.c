@@ -6,9 +6,16 @@ static TASKS_LIST Tasks[TASK_COUNT];
 static BYTE CurrentTask;
 
 #if defined(__C30__)
-	void _ISR __attribute__((__no_auto_psv__)) _T6Interrupt(void)
+	//void _ISR __attribute__((__no_auto_psv__)) _T6Interrupt(void)
+	void _ISR __attribute__((__no_auto_psv__,__interrupt__(
+                        save(WREG3,WREG4,WREG5,WREG6,WREG7,
+                         WREG8,WREG9,WREG10,WREG11,WREG12,WREG13))
+                         //[, irq(irqid)]
+                         //[, altirq(altirqid)]                         
+             ))  _T6Interrupt(void)
+
 	{  
-        /*     	
+       /*     	
 	   asm volatile ("push.w w0 \n"
 	                 "push.w w1 \n"
 	                 "push.w w2 \n"
@@ -44,15 +51,14 @@ static BYTE CurrentTask;
 	                 "pop.w w1 \n"
                      "pop.w w0");        
        */
-        WORD wreg14;
-        BYTE i;
-        //asm volatile ("mov.w w14, %0 \n" :"=r"(wreg14));  
+        static WORD wreg14;        
+        static BYTE i;
+        asm volatile ("mov.w w14, %0 \n" :"=r"(wreg14));  
                      
         for(i=0;i<TASK_COUNT;i++){
             if(Tasks[i].Status==(TASK_ACTIVE + TASK_CURRENT)){
                 Tasks[i].Status=TASK_ACTIVE;
-                Tasks[i].W14 = wreg14;   
-                             
+                Tasks[i].W14 = wreg14;                               
             }    
         }  
         CurrentTask++;
@@ -61,12 +67,13 @@ static BYTE CurrentTask;
             if(CurrentTask>TASK_COUNT){
                 CurrentTask=0;
             }
-        }           
+        }               
         Tasks[CurrentTask].Status = TASK_ACTIVE+TASK_CURRENT;
+        
         wreg14 = Tasks[CurrentTask].W14;
-        //asm volatile ("mov.w %0, w14 \n" 
-        //              "mov.w %0, w15 \n": : "r"(wreg14));  
-                
+        asm volatile ("mov.w %0, w14 \n" 
+                      "mov.w %0, w15 \n": : "r"(wreg14));  
+               
 	    IFS2bits.T6IF=0;
 	}
 
@@ -133,19 +140,31 @@ BYTE StartMultiTasking(void){
 BYTE StartProcess(void* process, DWORD TimeNeeded)
 {
     BYTE i;    
+    BYTE j; 
     for(i=0;i<TASK_COUNT;i++){
         if(Tasks[i].Status==0){
             Tasks[i].Status = TASK_ACTIVE;
-            Tasks[i].PC = (DWORD*)process+1;
+            Tasks[i].PC = (WORD*)process+1;
             Tasks[i].Time = TimeNeeded;            
             
+            /*
             Tasks[i].Stack[0] = Tasks[i].SPEnd;
             Tasks[i].Stack[1] = Tasks[i].PC;
             Tasks[i].Stack[2] = 0;
             Tasks[i].Stack[3] = &Tasks[i].Stack[1];
+            */
             
-            Tasks[i].W14 = &Tasks[i].Stack[3] + 1;
             Tasks[i].W15 = Tasks[i].W14;
+            j=0;
+            Tasks[i].Stack[j++] = 0x021E;            
+            Tasks[i].Stack[j++] = 0x0000;
+            Tasks[i].Stack[j++] = 0x47F0;
+            Tasks[i].Stack[j++] = Tasks[i].PC;
+            for(j=4;j<(16+3);j++){
+                Tasks[i].Stack[j] = 0x0000;
+            }                        
+            Tasks[i].Stack[j++] = &Tasks[i].Stack[3];
+            Tasks[i].W14 = &Tasks[i].Stack[j];
             return 0;
         }         
     }

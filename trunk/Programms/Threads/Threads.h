@@ -13,7 +13,7 @@ typedef struct _TASKS_LIST
     WORD*   W14;
     WORD*   SPBeg;
     WORD*   SPEnd;
-    DWORD*  PC;
+    WORD*  PC;
     WORD   	Stack[STACK_SIZE];
     
     //WORD    ;

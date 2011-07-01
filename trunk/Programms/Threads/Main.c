@@ -2,6 +2,7 @@
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
 #include "Threads.h"
+//#include "timer.h"
 
 //
 // PIC18 Interrupt Service Routines
@@ -60,19 +61,37 @@
 		Nop();
 	}
 #endif
-
-void Process1 (void)
+BYTE Test(BYTE a)
 {
+    BYTE i;
+    DWORD j;    
+    for(i=0;i<50;i++){        
+        if(a==i){
+            for(j=0;j<32000;j++)
+            {
+                Nop();
+            }
+            break;
+        }
+    }
+    return 7;
+}
+void Process1 (void) __attribute__ ((noreturn));
+void Process1 (void)
+{    
     while(1){
         Nop();
-        Nop();
+        Nop();        
+        Test(43);
     }
 }
+void Process2 (void) __attribute__ ((noreturn));
 void Process2 (void)
-{
+{    
     while(1){
         Nop();
         Nop();
+        Test(32);
     }
 }
 
@@ -89,6 +108,8 @@ int main(void)
     StartProcess(&Process1,0x10);   
     StartProcess(&Process2,0x10); 
     StartMultiTasking();
+    //Process1();
+    //Process2();
 loop: //	while(1)
     
         // Blink LED0 
