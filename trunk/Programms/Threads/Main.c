@@ -94,7 +94,24 @@ void Process2 (void)
         Test(32);
     }
 }
-
+void Process3 (void) __attribute__ ((noreturn));
+void Process3 (void)
+{    
+    while(1){
+        Nop();
+        Nop();        
+        Test(43);
+    }
+}
+void Process4 (void) __attribute__ ((noreturn));
+void Process4 (void)
+{    
+    while(1){
+        Nop();
+        Nop();
+        Test(32);
+    }
+}
 //
 // Main application entry point.
 //
@@ -107,6 +124,8 @@ int main(void)
    	InitMultiTasking();
     StartProcess(&Process1,0x10);   
     StartProcess(&Process2,0x10); 
+    StartProcess(&Process3,0x10);   
+    StartProcess(&Process4,0x10); 
     StartMultiTasking();
     //Process1();
     //Process2();

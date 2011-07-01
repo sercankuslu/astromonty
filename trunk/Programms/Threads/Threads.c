@@ -9,49 +9,12 @@ static BYTE CurrentTask;
 	//void _ISR __attribute__((__no_auto_psv__)) _T6Interrupt(void)
 	void _ISR __attribute__((__no_auto_psv__,__interrupt__(
                         save(WREG3,WREG4,WREG5,WREG6,WREG7,
-                         WREG8,WREG9,WREG10,WREG11,WREG12,WREG13))
-                         //[, irq(irqid)]
-                         //[, altirq(altirqid)]                         
+                         WREG8,WREG9,WREG10,WREG11,WREG12,WREG13))                                               
              ))  _T6Interrupt(void)
 
-	{  
-       /*     	
-	   asm volatile ("push.w w0 \n"
-	                 "push.w w1 \n"
-	                 "push.w w2 \n"
-	                 "push.w w3 \n"
-	                 "push.w w4 \n"
-	                 "push.w w5 \n"
-	                 "push.w w6 \n"
-	                 "push.w w7 \n"
-	                 "push.w w8 \n"
-	                 "push.w w9 \n"
-	                 "push.w w10 \n"
-	                 "push.w w11 \n"
-	                 "push.w w12 \n"
-	                 "push.w w13 \n"	                 
-                     );
-       */
-       //asm volatile ("mov.w w15,[%0] \n": /* no outputs */ : "r"(&Tasks[0].W15));
-       /* 
-	   asm volatile ("mov.w w6, 0x1234");
-	   asm volatile (
-	                 "pop.w w13 \n"
-	                 "pop.w w12 \n"
-	                 "pop.w w11 \n"
-	                 "pop.w w10 \n"
-	                 "pop.w w9 \n"
-	                 "pop.w w8 \n"
-	                 "pop.w w7 \n"
-	                 "pop.w w6 \n"
-	                 "pop.w w5 \n"
-	                 "pop.w w4 \n"
-	                 "pop.w w3 \n"
-	                 "pop.w w2 \n"
-	                 "pop.w w1 \n"
-                     "pop.w w0");        
-       */
-        static WORD wreg14;        
+	{         
+        static WORD wreg14;  
+        static WORD splim;      
         static BYTE i;
         asm volatile ("mov.w w14, %0 \n" :"=r"(wreg14));  
                      
@@ -71,8 +34,10 @@ static BYTE CurrentTask;
         Tasks[CurrentTask].Status = TASK_ACTIVE+TASK_CURRENT;
         
         wreg14 = Tasks[CurrentTask].W14;
+        splim  = Tasks[CurrentTask].SPEnd;
         asm volatile ("mov.w %0, w14 \n" 
-                      "mov.w %0, w15 \n": : "r"(wreg14));  
+                      "mov.w %0, w15 \n"
+                      "mov.w %1, 0x0020 \n": : "r"(wreg14), "r"(splim));  
                
 	    IFS2bits.T6IF=0;
 	}
@@ -158,7 +123,7 @@ BYTE StartProcess(void* process, DWORD TimeNeeded)
             j=0;
             Tasks[i].Stack[j++] = 0x021E;            
             Tasks[i].Stack[j++] = 0x0000;
-            Tasks[i].Stack[j++] = 0x47F0;
+            Tasks[i].Stack[j++] = Tasks[i].SPEnd;//0x47F0;
             Tasks[i].Stack[j++] = Tasks[i].PC;
             for(j=4;j<(16+3);j++){
                 Tasks[i].Stack[j] = 0x0000;
