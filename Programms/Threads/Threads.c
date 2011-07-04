@@ -9,7 +9,8 @@ static BYTE CurrentTask;
 	//void _ISR __attribute__((__no_auto_psv__)) _T6Interrupt(void)
 	void _ISR __attribute__((__no_auto_psv__,__interrupt__(
                         save(WREG3,WREG4,WREG5,WREG6,WREG7,
-                         WREG8,WREG9,WREG10,WREG11,WREG12,WREG13))                                               
+                         WREG8,WREG9,WREG10,WREG11,WREG12,WREG13,
+                        RCOUNT,DCOUNT,CORCON,SR))                                               
              ))  _T6Interrupt(void)
 
 	{         
@@ -125,7 +126,7 @@ BYTE StartProcess(void* process, DWORD TimeNeeded)
             Tasks[i].Stack[j++] = 0x0000;
             Tasks[i].Stack[j++] = Tasks[i].SPEnd;//0x47F0;
             Tasks[i].Stack[j++] = Tasks[i].PC;
-            for(j=4;j<(16+3);j++){
+            for(j=4;j<(20+3);j++){
                 Tasks[i].Stack[j] = 0x0000;
             }                        
             Tasks[i].Stack[j++] = &Tasks[i].Stack[3];

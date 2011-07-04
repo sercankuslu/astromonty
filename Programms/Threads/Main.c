@@ -2,6 +2,7 @@
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
 #include "Threads.h"
+#include <spi.h>
 //#include "timer.h"
 
 //

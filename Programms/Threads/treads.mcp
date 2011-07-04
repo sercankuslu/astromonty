@@ -34,6 +34,8 @@ file_006=microchip
 file_007=microchip
 file_008=microchip
 file_009=microchip
+file_010=.
+file_011=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -45,6 +47,8 @@ file_006=no
 file_007=no
 file_008=no
 file_009=no
+file_010=no
+file_011=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -56,6 +60,8 @@ file_006=no
 file_007=no
 file_008=no
 file_009=no
+file_010=no
+file_011=no
 [FILE_INFO]
 file_000=Threads.c
 file_001=Main.c
@@ -67,6 +73,8 @@ file_006=..\Microchip\Include\Compiler.h
 file_007=..\Microchip\Include\GenericTypeDefs.h
 file_008=..\Microchip\Include\timer.h
 file_009=..\Microchip\Include\timer.h
+file_010=C:\Program Files (x86)\Microchip\mplabc30\v3.30\lib\dsPIC33F\libp33FJ128GP710-coff.a
+file_011=C:\Program Files (x86)\Microchip\mplabc30\v3.30\lib\dsPIC33F\libp33FJ128GP710-elf.a
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=
