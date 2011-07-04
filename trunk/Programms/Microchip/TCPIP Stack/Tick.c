@@ -101,7 +101,7 @@ void TickInit(void)
     TMR0L = 0;
 
 	// Set up the timer interrupt
-	INTCON2bits.TMR0IP = 0;		// Low priority
+	INTCON2bits.TMR0IP = 1;		// High priority
     INTCONbits.TMR0IF = 0;
     INTCONbits.TMR0IE = 1;		// Enable interrupt
 
@@ -396,7 +396,9 @@ void TickUpdate(void)
 		dwInternalTicks++;
 
 		// Reset interrupt flag
-        INTCONbits.TMR0IF = 0;
+        //INTCONbits.TMR0IF = 0;
+        INTCON = INTCON & 0xFB;
+        
     }
 }
 
