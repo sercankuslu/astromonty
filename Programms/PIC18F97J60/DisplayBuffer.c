@@ -35,16 +35,21 @@ void DisplayClear(void)
 
 void DisplayDraw(BYTE addr)
 {    
-    LCDSetXY(addr,0,0);
-	//*
-    LCDSendData(addr, DisplayBuffer0,      128);
-    LCDSendData(addr,&DisplayBuffer0[128], 128);
-    LCDSendData(addr, DisplayBuffer1,      128);
-    LCDSendData(addr,&DisplayBuffer1[128], 128);
-    LCDSendData(addr, DisplayBuffer2,      128);
-    LCDSendData(addr,&DisplayBuffer2[128], 128);
-    LCDSendData(addr, DisplayBuffer3,      128);
-    LCDSendData(addr,&DisplayBuffer3[128], 128);
+	WORD i;
+	#define BLOCK_SIZE 64
+    LCDSetXY(addr,0,0);	
+	for(i=0;i<256;i+=BLOCK_SIZE){			
+    	LCDSendData(addr, &DisplayBuffer0[i],BLOCK_SIZE);
+ 	}   
+	for(i=0;i<256;i+=64){			
+    	LCDSendData(addr, &DisplayBuffer1[i],BLOCK_SIZE);
+ 	}   
+	for(i=0;i<256;i+=64){			
+    	LCDSendData(addr, &DisplayBuffer2[i],BLOCK_SIZE);
+ 	}   
+	for(i=0;i<256;i+=64){			
+    	LCDSendData(addr, &DisplayBuffer3[i],BLOCK_SIZE);
+ 	}   
     LCDSendData(addr, DisplayBuffer4,      40);
 	/*
 	LCDSendData(addr, DisplayBuffer4,      40);

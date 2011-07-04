@@ -91,6 +91,18 @@ typedef struct
 // An actual function defined in MainDemo.c for displaying the current IP 
 // address on the UART and/or LCD.
 //void DisplayIPValue(IP_ADDR IPVal);
+#define KEY_UP_MASK 	0xFE
+#define KEY_DOWN_MASK 	0xFD
+#define KEY_LEFT_MASK 	0xFB
+#define KEY_RIGHT_MASK 	0xF7
+#define KEY_ENTER_MASK 	0xE9
+#define KEY_MENU_MASK 	0xCD
 
+#define KEY_UP 			0x04
+#define KEY_DOWN 		0x08
+#define KEY_LEFT 		0x02
+#define KEY_RIGHT 		0x01
+#define KEY_ENTER 		0x10
+#define KEY_MENU 		0x20
 
 #endif // _MAINDEMO_H

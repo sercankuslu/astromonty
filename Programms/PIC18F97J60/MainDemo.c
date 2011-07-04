@@ -140,33 +140,39 @@ BYTE AN0String[8];
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
-
+static BYTE add1 = PCF8535_BUS_ADDRESS; 
+void LCDUpdate(void){
+	if(PIR1bits.TMR1IF)
+    {	    
+		DisplayDraw(add1);
+		PIR1bits.TMR1IF=0;
+	}
+}
 //
 // PIC18 Interrupt Service Routines
 // 
 // NOTE: Several PICs, including the PIC18F4620 revision A3 have a RETFIE FAST/MOVFF bug
 // The interruptlow keyword is used to work around the bug when using C18
 #if defined(__18CXX)
-	#if defined(HI_TECH_C)
-	void interrupt low_priority LowISR(void)
-	#else
+	
 	#pragma interruptlow LowISR
 	void LowISR(void)
-	#endif
-	{
-	    TickUpdate();
-	    LCDUpdate();
-		//LED0_IO ^= 1;
+	{	
+		//LCDUpdate();   	    
+		//LATAbits.LATA0 ^= 1;
+		//INTCONbits.TMR0IF = 0;
 	}
 	
-	#if defined(HI_TECH_C)
-	void interrupt HighISR(void)
-	#else
+	
 	#pragma interruptlow HighISR
-	void HighISR(void)
-	#endif
+	void HighISR(void)	
 	{
-	    LCDUpdate();
+		//LATAbits.LATA0 ^= 1;			
+		TickUpdate();
+		LCDUpdate();  
+		PIR1 = 0x00;   
+		PIR2 = 0x00;	
+		PIR3 = 0x00;		
 	}
 
 	#if !defined(HI_TECH_C)
@@ -176,39 +182,65 @@ BYTE AN0String[8];
 	void HighVector(void){_asm goto HighISR _endasm}
 	#pragma code // Return to default code section
 	#endif
-
-// C30 and C32 Exception Handlers
-// If your code gets here, you either tried to read or write
-// a NULL pointer, or your application overflowed the stack
-// by having too many local variables or parameters declared.
-#elif defined(__C30__)
-	void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
-	{
-	    Nop();
-		Nop();
-	}
-	void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
-	{
-	    Nop();
-		Nop();
-	}
+static BYTE CKeys=0;
+void UpdateKey()
+{
+	BYTE i;
+	BYTE j;		
+	static BYTE a = 0;
+	static BYTE b = 0;
+	static BYTE k = 0;
+	TRISBbits.TRISB1 = 1;
+	TRISBbits.TRISB2 = 1;
+	TRISBbits.TRISB3 = 1;
+	TRISBbits.TRISB4 = 1;
+				
+	TRISD=0x07; //порт D на чтение строки 1-3
+	TRISBbits.TRISB5 = 1;  //строка 4
+	LATD = 0x07; //
+	LATBbits.LATB5 = 1;
 	
-#elif defined(__C32__)
-	void _general_exception_handler(unsigned cause, unsigned status)
-	{
-		Nop();
-		Nop();
-	}
-#endif
-
-static BYTE add1 = PCF8535_BUS_ADDRESS; 
-
-void LCDUpdate(void){
-	DisplayDraw(add1);
-	PIR1bits.TMR1IF=0;
+	TRISDbits.TRISD0 = 0; //первая строка
+	Nop();
+	a=(PORTB>>1);
+	TRISDbits.TRISD0 = 1; //первая строка
+	Nop();
+	TRISDbits.TRISD1 = 0; //вторая строка
+	Nop();
+	b=(PORTB<<3);
+	TRISDbits.TRISD1 = 1; //вторая строка
+	k=a&0x0F;
+	k|=b&0xF0;
+	CKeys = k;
 }
-
-
+BYTE IsRightKey()
+{
+	if((CKeys&KEY_RIGHT)>0){
+		return 1;
+	}
+	return 0;
+}
+BYTE IsLeftKey()
+{
+	if((CKeys&KEY_LEFT)>0){
+		return 1;
+	}
+	return 0;
+}
+BYTE IsUpKey()
+{
+	if((CKeys&KEY_UP)>0){
+		return 1;
+	}
+	return 0;
+}
+BYTE IsDownKey()
+{
+	if((CKeys&KEY_DOWN)>0){
+		return 1;
+	}
+	return 0;
+}
 //
 // Main application entry point.
 //
@@ -219,8 +251,10 @@ int main(void)
 #endif
 {
 	static DWORD t = 0;
-	static DWORD t1 = 0;
+	 DWORD t1 = 0;
 	static DWORD dwLastIP = 0;
+	static BYTE x = 0;
+	static BYTE y = 0;
 	BYTE b = 0;		
 	BYTE i; 	
 	WORD* symbol;
@@ -233,6 +267,9 @@ int main(void)
     unsigned char outputmode=0;
     unsigned char config=0;
     unsigned int duty_cycle=0;
+    //Timer0
+    unsigned char config0=0x00;
+    unsigned int timer0_value=0x00;
     //Timer1    
     unsigned char config1=0x00;
     unsigned int timer1_value=0x00;
@@ -241,27 +278,29 @@ int main(void)
     unsigned int timer2_value=0x00;
 
 		
-	OSCTUNE = 0x40;
-	OSCCON = 0x02;    
-    
-    TickInit(); 	   
-    
+	TRISAbits.TRISA0 = 0;
+	TRISAbits.TRISA1 = 0;
+	LATAbits.LATA0 = 0;	
+	LATAbits.LATA1 = 0;
+	
 	LCDInit(add1);		
 	DisplayInit();	
 	
 	
-	OutTextXY(0,0,Text,0);
+	//OutTextXY(0,0,Text,0);
 	
-	OutTextXY(0,15,Text,1);
+	//OutTextXY(0,15,Text,1);
 	DisplayDraw(add1);
+	
 	
     //----Configure Timer1----
     timer1_value = 0x00;    
     WriteTimer1(timer1_value);            //clear timer if previously contains any value
     
-    IPR1bits.TMR1IP = 0;
+    
     config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
     OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
+    IPR1bits.TMR1IP = 0;
     
     //----Configure Timer2----
     timer2_value = 0x00;    
@@ -279,23 +318,30 @@ int main(void)
     //-----set duty cycle----
     duty_cycle = 0x0F00;
     SetDCPWM5(duty_cycle);        //set the duty cycle
-
 	
-
-	//t1=54;
-    while(1)
+	TickInit();
+	INTCONbits.PEIE_GIEL = 1;
+	INTCONbits.GIE_GIEH  = 1;	
+	while(1)
     {
         // Blink LED0 (right most one) every second.
-		/*
-        if(TickGet() - t >= TICK_SECOND/2ul)
-        {
-            t = TickGet();
-            LATAbits.LATA1 ^= 1;
-            //DisplayDraw(add1);
-        }
+		if(TickGet() - t >= TICK_SECOND/10ul)
+       	{
+       		t = TickGet();
+			LATAbits.LATA1 ^= 1;
+			UpdateKey();
+			if(IsUpKey()) y++;
+			if(IsRightKey()) x++;						
+			if(IsDownKey()) y--;
+			
+			if (IsLeftKey())x--;
 		
-		*/	
-				
+			
+			OutTextXY(x,y,Text,1);	
+							
+		}		
+			
+		//DelayMs(100);		
 	}
 }
 
