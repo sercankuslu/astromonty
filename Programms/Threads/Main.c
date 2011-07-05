@@ -3,6 +3,7 @@
 #include "Compiler.h"
 #include "Threads.h"
 #include <spi.h>
+#include <dsp.h>
 //#include "timer.h"
 
 //
@@ -65,15 +66,20 @@
 BYTE Test(BYTE a)
 {
     BYTE i;
-    DWORD j;    
-    for(i=0;i<50;i++){        
-        if(a==i){
-            for(j=0;j<32000;j++)
-            {
+    DWORD j;
+    double k=0.0;  
+    double kk=0.0;   
+    for(i=0;i<50;i++){
+        for(j=1;j<360;j++)
+        {
+            k=(double)i*sin((double)j*PI/180.0);
+            Nop();
+            Nop();
+            kk=(double)i*sin((double)j*PI/180.0);
+            if(k!=kk){
                 Nop();
-            }
-            break;
-        }
+            }         
+        }                       
     }
     return 7;
 }
@@ -122,11 +128,13 @@ void main(void)
 int main(void)
 #endif
 {
+    BYTE T;
+    T=LATAbits.LATA0;
    	InitMultiTasking();
-    StartProcess(&Process1,0x10);   
-    StartProcess(&Process2,0x10); 
-    StartProcess(&Process3,0x10);   
-    StartProcess(&Process4,0x10); 
+    StartProcess(&Process1,100);   
+    StartProcess(&Process2,100); 
+    StartProcess(&Process3,100);   
+    StartProcess(&Process4,100); 
     StartMultiTasking();
     //Process1();
     //Process2();
