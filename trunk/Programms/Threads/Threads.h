@@ -1,7 +1,7 @@
 #ifndef __THREADS_H
 #define __THREADS_H
 
-#define STACK_SIZE    128
+#define STACK_SIZE    256
 #define TASK_ACTIVE   1
 #define TASK_CURRENT  2
 typedef struct _TASKS_LIST
@@ -13,7 +13,7 @@ typedef struct _TASKS_LIST
     WORD*   W14;
     WORD*   SPBeg;
     WORD*   SPEnd;
-    WORD*  PC;
+    WORD*   PC;
     WORD   	Stack[STACK_SIZE];
     
     //WORD    ;

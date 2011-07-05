@@ -22,7 +22,7 @@ static BYTE CurrentTask;
         for(i=0;i<TASK_COUNT;i++){
             if(Tasks[i].Status==(TASK_ACTIVE + TASK_CURRENT)){
                 Tasks[i].Status=TASK_ACTIVE;
-                Tasks[i].W14 = wreg14;                               
+                Tasks[i].W14 = (WORD*)wreg14;                               
             }    
         }  
         CurrentTask++;
@@ -33,7 +33,7 @@ static BYTE CurrentTask;
             }
         }               
         Tasks[CurrentTask].Status = TASK_ACTIVE+TASK_CURRENT;
-        
+        PR6=Tasks[CurrentTask].Time;
         wreg14 = Tasks[CurrentTask].W14;
         splim  = Tasks[CurrentTask].SPEnd;
         asm volatile ("mov.w %0, w14 \n" 
@@ -71,7 +71,7 @@ BYTE InitMultiTasking(void)
 		Tasks[i].TaskID=i;
 		Tasks[i].Status = 0;
 		Tasks[i].SPBeg = Tasks[i].Stack;
-		Tasks[i].W15 = Tasks[i].SPBeg;
+		Tasks[i].W15 = (WORD*)Tasks[i].SPBeg;
 		Tasks[i].SPEnd = Tasks[i].SPBeg + STACK_SIZE;
 	} 
 	for(i=0;i<TASK_COUNT;i++){
@@ -86,6 +86,7 @@ BYTE StartMultiTasking(void){
     T6CON = 0x8030;
     IEC2bits.T6IE = 1;
     IPC11bits.T6IP = 0x01;
+    PR6=0x0010;
     return 0;
 }
 
