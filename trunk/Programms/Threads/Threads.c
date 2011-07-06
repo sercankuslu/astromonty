@@ -18,14 +18,20 @@ static BYTE CurrentTask;
         static WORD splim;      
         static BYTE i;
         asm volatile ("mov.w w14, %0 \n" :"=r"(wreg14));  
-                     
+        /*             
         for(i=0;i<TASK_COUNT;i++){
             if(Tasks[i].Status==(TASK_ACTIVE + TASK_CURRENT)){
                 Tasks[i].Status=TASK_ACTIVE;
                 Tasks[i].W14 = (WORD*)wreg14;                               
             }    
-        }  
+        } 
+        */ 
+        if(Tasks[CurrentTask].Status==(TASK_ACTIVE + TASK_CURRENT)){
+            Tasks[CurrentTask].Status=TASK_ACTIVE;
+            Tasks[CurrentTask].W14 = (WORD*)wreg14;                               
+        }    
         CurrentTask++;
+        //пропускаем неактивные задачи
         while(Tasks[CurrentTask].Status != TASK_ACTIVE){        
             CurrentTask++;
             if(CurrentTask>TASK_COUNT){
