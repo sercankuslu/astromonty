@@ -4,6 +4,7 @@
 #include "Threads.h"
 #include <spi.h>
 #include <dsp.h>
+#include "SpiDriver.h"
 //#include "timer.h"
 
 //
@@ -119,6 +120,15 @@ void Process4 (void)
         Test(32);
     }
 }
+
+void CS_On()
+{
+    LATDbits.LATD0=1;
+}
+void CS_Off()
+{
+    LATDbits.LATD0=0;
+}
 //
 // Main application entry point.
 //
@@ -129,7 +139,13 @@ int main(void)
 #endif
 {
     BYTE T;
+    //DWORD* D;
     T=LATAbits.LATA0;
+    
+    //SPI1_Init(D);
+    //CS_Control(1);
+    //SPI1_Init(&CS_On,&CS_Off);
+    SPI_Init();
    	InitMultiTasking();
     StartProcess(&Process1,100);   
     StartProcess(&Process2,100); 
