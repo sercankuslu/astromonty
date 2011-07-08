@@ -102,10 +102,10 @@
 // Hardware I/O pin mappings
 
 // LEDs
-#define LED0_TRIS			(TRISAbits.TRISA0)	// Ref D3
-#define LED0_IO				(LATAbits.LATA0)
-#define LED1_TRIS			(TRISAbits.TRISA1)	// Ref D4
-#define LED1_IO				(LATAbits.LATA1)
+#define LED0_TRIS			(TRISGbits.TRISG0)	// Ref D3
+#define LED0_IO				(LATGbits.LATG0)
+#define LED1_TRIS			(TRISGbits.TRISG1)	// Ref D4
+#define LED1_IO				(LATGbits.LATG1)
 #define LED2_TRIS			(TRISAbits.TRISA2)	// Ref D5
 #define LED2_IO				(LATAbits.LATA2)
 #define LED3_TRIS			(TRISAbits.TRISA3)	// Ref D6
@@ -150,17 +150,17 @@
 	#define ENC_SPICON1bits		(SPI2CON1bits)
 	#define ENC_SPICON2			(SPI2CON2)
 #else	// SPI1 for all other processors
-	#define ENC_CS_TRIS			(TRISDbits.TRISD14)	// Comment this line out if you are using the ENC424J600/624J600, MRF24WB0M, or other network controller.
-	#define ENC_CS_IO			(LATDbits.LATD14)
+	#define ENC_CS_TRIS			(TRISGbits.TRISG9)	// Comment this line out if you are using the ENC424J600/624J600, MRF24WB0M, or other network controller.
+	#define ENC_CS_IO			(LATGbits.LATG9)
 	// SPI SCK, SDI, SDO pins are automatically controlled by the 
 	// PIC24/dsPIC SPI module 
-	#define ENC_SPI_IF			(IFS0bits.SPI1IF)
-	#define ENC_SSPBUF			(SPI1BUF)
-	#define ENC_SPISTAT			(SPI1STAT)
-	#define ENC_SPISTATbits		(SPI1STATbits)
-	#define ENC_SPICON1			(SPI1CON1)
-	#define ENC_SPICON1bits		(SPI1CON1bits)
-	#define ENC_SPICON2			(SPI1CON2)
+	#define ENC_SPI_IF			(IFS2bits.SPI2IF)
+	#define ENC_SSPBUF			(SPI2BUF)
+	#define ENC_SPISTAT			(SPI2STAT)
+	#define ENC_SPISTATbits		(SPI2STATbits)
+	#define ENC_SPICON1			(SPI2CON1)
+	#define ENC_SPICON1bits		(SPI2CON1bits)
+	#define ENC_SPICON2			(SPI2CON2)
 #endif
 
 
@@ -420,8 +420,8 @@
 	#define EEPROM_CS_TRIS		TRISGbits.TRISG0 = TRISDbits.TRISD12
 	#define EEPROM_CS_IO		LATGbits.LATG0 = LATDbits.LATD12
 #else
-	#define EEPROM_CS_TRIS		(TRISDbits.TRISD12)
-	#define EEPROM_CS_IO		(LATDbits.LATD12)
+	//#define EEPROM_CS_TRIS		(TRISDbits.TRISD12)
+	//#define EEPROM_CS_IO		(LATDbits.LATD12)
 #endif
 #define EEPROM_SCK_TRIS		(TRISGbits.TRISG6)
 #define EEPROM_SDI_TRIS		(TRISGbits.TRISG7)

@@ -8,31 +8,38 @@ static BYTE DeviceBusy[SPI_PORT_COUNT];
 static BYTE CurDevID[SPI_PORT_COUNT];
 
 
-static BYTE GetPrescale(DWORD Speed)
+static WORD GetPrescale(DWORD Speed)
 {
     double Div;
     WORD IntDiv;
     WORD T = 1;
-    BYTE PPS = 0;
-    BYTE SPS = 0;
-    BYTE Shift=0;
-    Div=40000000.0/((double)Speed);
+    BYTE i = 0;
+    BYTE PPRE = 0;
+    BYTE SPRE = 0;
+    BYTE Shift=0;    
+    WORD SPIXCON1=0;
+    
+    Div=GetPeripheralClock()/((double)Speed);
     IntDiv=(WORD)Div+1;
     while(T>0){
         T = IntDiv>>Shift;
         if((T>=1)&&(T<=8)) {
-            PPS = 1<<(Shift);
-            SPS = (BYTE)T;
+            PPRE = i;
+            SPRE = (~((BYTE)T-1))&0x07;
             break;
         }  
-        Shift += 2;                   
+        Shift += 2; 
+        i++;                  
     }    
-    return 0;
+    SPIXCON1 = (SPRE<<2)|(PPRE);
+
+    return SPIXCON1;
 }
 
 BYTE SPI_Init(void)
 {
     WORD i;	
+    WORD SPIXCON1=0;
 	for(i=0;i<SPI_DEV_COUNT;i++){		
 		SPI_Devices[i].DevID=i;
 		SPI_Devices[i].Port = 0;
@@ -44,7 +51,6 @@ BYTE SPI_Init(void)
     	DeviceBusy[i]=0;
     	CurDevID[i]=0;
     }   
-    GetPrescale(800000);	
     return 0;
 }
 
@@ -66,7 +72,7 @@ port   - номер порта SPI
 DevOn  - адрес функции для выбора устройства
 DevOff - адрес функции для освобождения устройства
 */
-BYTE SPI_RegDevice(BYTE port,void* DevOn,void* DevOff) 
+BYTE SPI_RegDevice(BYTE port, BYTE Mode, DWORD Speed, void* DevOn,void* DevOff)
 {   
     //ищем свободный элемент массива 
     BYTE i;    
@@ -74,9 +80,18 @@ BYTE SPI_RegDevice(BYTE port,void* DevOn,void* DevOff)
     if((DevOn==0)||(DevOff==0)) return 2;//неправильные функции выбора устройства
     for(i=0;i<SPI_DEV_COUNT;i++){
         if(SPI_Devices[i].Status==0){
+            SPI_Devices[i].Port=port;
             SPI_Devices[i].Status = SPI_DEV_ACTIVE;
             SPI_Devices[i].DevSelect = DevOn;
-		    SPI_Devices[i].DevDeselect = DevOff;            
+		    SPI_Devices[i].DevDeselect = DevOff;  
+		    SPI_Devices[i].SPIParams = (GetPrescale(Speed)&0x001F) ;
+		    Call_Dev(SPI_Devices[i].DevDeselect);
+		    if(Mode&0x01){
+    		    SPI_Devices[i].SPIParams|=SPI_CLK_POLAR_H;    		    
+		    }
+		    if(Mode&0x02){
+    		    SPI_Devices[i].SPIParams|=SPI_CLK_EDGE_HL;
+		    }		    
             return 0; //завершено успешно
         }         
     }
@@ -104,16 +119,21 @@ BOOL SPI_Open(BYTE DevId)
     SPI_Devices[DevId].Status |= SPI_DEV_CURRENT;
     //устанавливаем параметры
     
-    //SPIxSTATbits.SPIEN включение SPI
-    
-    
     switch(Port){
         case 1:
-            
+            SPI1CON1=SPI_Devices[DevId].SPIParams;
+            Call_Dev(SPI_Devices[DevId].DevSelect);
+            SPI1CON1bits.MSTEN = 1;
+            SPI1STATbits.SPIEN = 1;
         break;        
         case 2:
-            
+            SPI2CON1=SPI_Devices[DevId].SPIParams;
+            Call_Dev(SPI_Devices[DevId].DevSelect);
+            SPI1CON1bits.MSTEN = 1;
+            SPI2STATbits.SPIEN = 1;
         break;
+        default:
+            return 0; //неправильный номер порта
     }
     
 }

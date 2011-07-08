@@ -1,4 +1,4 @@
-Microchip Technology Inc, vv3_30 (A) =
+Microchip Technology Inc, vv3_30 (A) 7
 
 Tool Name:
   c:\program files (x86)\microchip\mplabc30\v3.30\bin\bin\..\bin/pic30-coff-ld.exe
@@ -86,10 +86,13 @@ Command:
   Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UARTConfig.o \
   Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg2.o \
   Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg.o \
-  F:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_elf.a \
-  F:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_coff.a \
+  E:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_elf.a \
+  E:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_coff.a \
   -Tp33FJ128GP710.gld.00 \
   --defsym=__MPLAB_BUILD=1 \
+  --defsym=__MPLAB_DEBUG=1 \
+  --defsym=__MPLAB_DEBUGGER_PK3=1 \
+  --defsym=__ICD2RAM=1 \
   -Map=TCPIP Demo App - C30 - EXPLORER_16_ENC28J60.map \
   --report-mem \
   -start-group \
@@ -104,83 +107,50 @@ c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.
                               (_resetPRI)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.a(data_init_standard.o)
                               c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.a(crt0_standard.o) (_data_init_standard)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umodsi3.o)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o (__umodsi3)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(muldi3.o)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o (__muldi3)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(divmoddi3.o)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o (__udivdi3)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(mulsi3.o)
                               Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Delay.o (__mulsi3)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(udivsi3.o)
-                              c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umodsi3.o) (__udivsi3)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umuldi3.o)
-                              c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(muldi3.o) (__umuldi3)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcpy.XXo)
                               Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o (memcpy)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memset.XXo)
                               Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o (memset)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o (strlen)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcmp.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o (strcmp)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcmp.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o (memcmp)
+                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o (memcmp)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcpy.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o (strcpy)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atol.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o (atol)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strchr.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o (strchr)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atoi.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o (atoi)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strstr.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o (strstr)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(ltoa.XXo)
-                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o (ultoa)
+                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o (strcpy)
+c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
+                              Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o (strlen)
 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcat.XXo)
                               Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o (strcat)
-c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strncmp.XXo)
-                              c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strstr.XXo) (strncmp)
 
 
 Program Memory  [Origin = 0x200, Length = 0x155fe]
 
 section                    address   length (PC units)   length (bytes) (dec)
 -------                    -------   -----------------   --------------------
-.text                        0x200               0x58a           0x84f  (2127)
-.const                       0x78a              0x147a          0x1eb7  (7863)
-.text                       0x1c04              0x8e88          0xd5cc  (54732)
-.dinit                      0xaa8c               0x1d6           0x2c1  (705)
-.text                       0xac62              0x1016          0x1821  (6177)
+.text                        0x200               0x124           0x1b6  (438)
+.const                       0x324               0x250           0x378  (888)
+.text                        0x574              0x4c94          0x72de  (29406)
+.dinit                      0x5208                0xb6           0x111  (273)
+.text                       0x52be               0x144           0x1e6  (486)
 
-                     Total program memory used (bytes):        0x117b4  (71604) 54%
+                     Total program memory used (bytes):         0x7b03  (31491) 23%
 
 
 Data Memory  [Origin = 0x800, Length = 0x4000]
 
 section                    address      alignment gaps    total length  (dec)
 -------                    -------      --------------    -------------------
-.nbss                        0x800                   0           0x330  (816)
-.ndata                       0xb30                   0            0x70  (112)
-.nbss                        0xba0                   0           0x114  (276)
-.ndata                       0xcb4                   0            0x48  (72)
-.nbss                        0xcfc                   0           0x1ec  (492)
-.ndata                       0xee8                   0            0x16  (22)
-.nbss                        0xefe                   0            0x3e  (62)
-.ndata                       0xf3c                   0             0xa  (10)
-.nbss                        0xf46                   0            0x2e  (46)
-.ndata                       0xf74                   0             0x8  (8)
-.nbss                        0xf7c                   0            0x10  (16)
-.ndata                       0xf8c                   0             0x6  (6)
-_035b39a04df5253f            0xf92                   0             0x2  (2)
-.ndata                       0xf94                   0             0x6  (6)
-_0376e1504df52557            0xf9a                   0             0x2  (2)
-.ndata                       0xf9c                   0             0x4  (4)
-_036155404df5255e            0xfa0                   0             0x2  (2)
-.ndata                       0xfa2                   0             0x2  (2)
+.icd                         0x800                0x50            0x50  (80)
+.nbss                        0x850                   0           0x2b2  (690)
+.ndata                       0xb02                   0             0x4  (4)
+.nbss                        0xb06                   0             0xc  (12)
+.ndata                       0xb12                   0             0xa  (10)
+_033136904e170f51            0xb1c                   0             0x2  (2)
+.ndata                       0xb1e                   0             0x2  (2)
+_031d9a804e170f59            0xb20                   0             0x2  (2)
+.ndata                       0xb22                   0             0x2  (2)
 
-                        Total data memory used (bytes):          0x7a4  (1956) 11%
+                        Total data memory used (bytes):          0x324  (804) 4%
 
 
 Dynamic Memory Usage
@@ -188,670 +158,360 @@ Dynamic Memory Usage
 region                     address                      maximum length  (dec)
 ------                     -------                      ---------------------
 heap                             0                                   0  (0)
-stack                        0xfa4                              0x385c  (14428)
+stack                        0xb24                              0x3cdc  (15580)
 
-                        Maximum dynamic memory (bytes):         0x385c  (14428)
+                        Maximum dynamic memory (bytes):         0x3cdc  (15580)
 
 
 External Symbols in Data Memory (by address):
 
-                    0x099c                  _UDPRxCount
-                    0x099e                  _UDPTxCount
-                    0x09a0                  _activeUDPSocket
-                    0x09a2                  _UDPSocketInfo
-                    0x0a34                  _curHTTPID
-                    0x0a36                  _httpStubs
-                    0x0a3e                  _curHTTP
-                    0x0ac0                  _lastRead
-                    0x0d04                  _AN0String
-                    0x0d0c                  _AppConfig
-                    0x0d42                  _lastBlock
-                    0x0d96                  _SMTPClient
-                    0x0e5e                  _LCDText
-                    0x0f26                  _remoteNode
-                    0x0f8e                  _DHCPClientInitializedOnce
-                    0x0f90                  _bDHCPServerEnabled
-                    0x0fa2                  ___C30_UART
+                    0x091a                  _UDPRxCount
+                    0x091c                  _UDPTxCount
+                    0x091e                  _activeUDPSocket
+                    0x0920                  _UDPSocketInfo
+                    0x0a18                  _AN0String
+                    0x0a20                  _AppConfig
+                    0x0a56                  _LCDText
+                    0x0ac4                  _remoteNode
+                    0x0b14                  _DHCPClientInitializedOnce
+                    0x0b16                  _bDHCPServerEnabled
+                    0x0b22                  ___C30_UART
 
 External Symbols in Data Memory (by name):
 
-                    0x0d04                  _AN0String
-                    0x0d0c                  _AppConfig
-                    0x0f8e                  _DHCPClientInitializedOnce
-                    0x0e5e                  _LCDText
-                    0x0d96                  _SMTPClient
-                    0x099c                  _UDPRxCount
-                    0x09a2                  _UDPSocketInfo
-                    0x099e                  _UDPTxCount
-                    0x0fa2                  ___C30_UART
-                    0x09a0                  _activeUDPSocket
-                    0x0f90                  _bDHCPServerEnabled
-                    0x0a3e                  _curHTTP
-                    0x0a34                  _curHTTPID
-                    0x0a36                  _httpStubs
-                    0x0d42                  _lastBlock
-                    0x0ac0                  _lastRead
-                    0x0f26                  _remoteNode
+                    0x0a18                  _AN0String
+                    0x0a20                  _AppConfig
+                    0x0b14                  _DHCPClientInitializedOnce
+                    0x0a56                  _LCDText
+                    0x091a                  _UDPRxCount
+                    0x0920                  _UDPSocketInfo
+                    0x091c                  _UDPTxCount
+                    0x0b22                  ___C30_UART
+                    0x091e                  _activeUDPSocket
+                    0x0b16                  _bDHCPServerEnabled
+                    0x0ac4                  _remoteNode
 
 External Symbols in Program Memory (by address):
 
                   0x000200                  __resetPRI
                   0x000222                  __psv_init
-                  0x000232                  __data_init_standard
                   0x000232                  __data_init
+                  0x000232                  __data_init_standard
                   0x000290                  __DefaultInterrupt
-                  0x000294                  ___mulsi3
                   0x000294                  ___mulp32eds3
+                  0x000294                  ___mulsi3
                   0x000294                  ___mulp32peds3
-                  0x0002a0                  ___umodsi3
-                  0x0002a6                  ___muldi3
-                  0x000328                  ___udivmoddi3
-                  0x0003f6                  ___udivdi3
-                  0x000404                  ___umoddi3
-                  0x00040c                  ___divdi3
-                  0x000446                  ___moddi3
-                  0x000518                  ___udivsi3
-                  0x000538                  ___umuldi3
-                  0x00057c                  _memcpy
-                  0x00058a                  _memset
-                  0x000598                  _strlen
-                  0x0005a4                  _strcmp
-                  0x0005b4                  _memcmp
-                  0x0005e8                  _strcpy
-                  0x0005f8                  _atol
-                  0x00065c                  _strchr
-                  0x00066c                  _atoi
-                  0x0006b4                  _strstr
-                  0x0006e2                  _ultoa
-                  0x00072e                  _ltoa
-                  0x000750                  _strcat
-                  0x000768                  _strncmp
-                  0x000f68                  _HTML_DOWN_ARROW
-                  0x000f6b                  _HTML_UP_ARROW
-                  0x001b7c                  _TCPSocketInitializer
-                  0x001c3c                  _TCPWasReset
-                  0x001c4c                  _TCPIsConnected
-                  0x001c5c                  _TCPIsPutReady
-                  0x001c84                  _TCPGetTxFIFOFull
-                  0x001c9a                  _TCPIsGetReady
-                  0x001cb6                  _TCPGetRxFIFOFree
-                  0x001e96                  _TCPGetRemoteInfo
-                  0x001eaa                  _TCPInit
-                  0x0021fe                  _TCPAdjustFIFOSize
-                  0x0022ba                  _TCPDiscard
-                  0x0022d6                  _TCPFlush
-                  0x0022ea                  _TCPDisconnect
-                  0x002356                  _TCPClose
-                  0x002366                  _TCPOpen
-                  0x00245e                  _TCPProcess
-                  0x002b18                  _TCPTick
-                  0x002e38                  _TCPFindArrayEx
-                  0x002fa6                  _TCPFindEx
-                  0x002fba                  _TCPPeekArray
-                  0x003020                  _TCPPeek
-                  0x003032                  _TCPGetArray
-                  0x0030ae                  _TCPGet
-                  0x003106                  _TCPPutArray
-                  0x00319c                  _TCPPutString
-                  0x0031b6                  _TCPPut
-                  0x003228                  _HTTPPrint_
-                  0x003238                  _HTTPInit
-                  0x0032da                  _HTTPURLDecode
-                  0x003344                  _HTTPGetArg
-                  0x0034a4                  _HTTPReadPostName
-                  0x0034c4                  _HTTPReadPostValue
-                  0x003516                  _HTTPIncFile
-                  0x0035ba                  _HTTPPrint
-                  0x003766                  _HTTPServer
-                  0x00450a                  _HTTPNeedsAuth
-                  0x004532                  _HTTPCheckAuth
-                  0x004556                  _HTTPExecuteGet
-                  0x0046de                  _HTTPExecutePost
-                  0x004e68                  _HTTPPrint_builddate
-                  0x004e9c                  _HTTPPrint_version
-                  0x004eac                  _HTTPPrint_btn
-                  0x004eea                  _HTTPPrint_led
-                  0x004f4e                  _HTTPPrint_ledSelected
-                  0x004fbe                  _HTTPPrint_pot
-                  0x004fdc                  _HTTPPrint_lcdtext
-                  0x00506e                  _HTTPPrint_hellomsg
-                  0x0050a4                  _HTTPPrint_cookiename
-                  0x0050d4                  _HTTPPrint_uploadedmd5
-                  0x005178                  _HTTPPrintIP
-                  0x0051c2                  _HTTPPrint_config_hostname
-                  0x0051d2                  _HTTPPrint_config_dhcpchecked
-                  0x0051e8                  _HTTPPrint_config_ip
-                  0x005206                  _HTTPPrint_config_gw
-                  0x005224                  _HTTPPrint_config_subnet
-                  0x005242                  _HTTPPrint_config_dns1
-                  0x005260                  _HTTPPrint_config_dns2
-                  0x00527e                  _HTTPPrint_config_mac
-                  0x0052f6                  _HTTPPrint_read_comm
-                  0x0052f8                  _HTTPPrint_write_comm
-                  0x0052fa                  _HTTPPrint_reboot
-                  0x0052fe                  _HTTPPrint_rebootaddr
-                  0x00530e                  _HTTPPrint_ddns_user
-                  0x005310                  _HTTPPrint_ddns_pass
-                  0x005312                  _HTTPPrint_ddns_host
-                  0x005314                  _HTTPPrint_ddns_service
-                  0x005316                  _HTTPPrint_ddns_status
-                  0x005326                  _HTTPPrint_ddns_status_msg
-                  0x00535e                  _HTTPPrint_smtps_en
-                  0x00536e                  _HTTPPrint_snmp_en
-                  0x00537e                  _HTTPPrint_status_ok
-                  0x0053a2                  _HTTPPrint_status_fail
-                  0x0053c6                  _MACGet
-                  0x0053ec                  _MACGetArray
-                  0x00547e                  _MACPut
-                  0x0054ac                  _MACPutArray
-                  0x0055c6                  _MACSetReadPtrInRx
-                  0x0055e8                  _MACPutHeader
-                  0x005668                  _MACDiscardRx
-                  0x0056dc                  _SetCLKOUT
-                  0x0056f2                  _WritePHYReg
-                  0x00572a                  _ReadPHYReg
-                  0x005788                  _MACIsLinked
-                  0x0057c8                  _GetCLKOUT
-                  0x0057e6                  _MACPowerUp
-                  0x005804                  _MACPowerDown
-                  0x00582e                  _MACIsMemCopyDone
-                  0x005844                  _MACMemCopyAsync
-                  0x0059bc                  _CalcIPBufferChecksum
-                  0x005a4a                  _MACCalcRxChecksum
-                  0x005aa6                  _MACSetReadPtr
-                  0x005ae0                  _MACSetWritePtr
-                  0x005b1a                  _MACFlush
-                  0x005c30                  _MACGetHeader
-                  0x005ccc                  _MACGetFreeRxSize
-                  0x005d4e                  _MACIsTxReady
-                  0x005d64                  _MACInit
-                  0x005e9e                  _SMTPBeginUsage
-                  0x005ec8                  _SMTPEndUsage
-                  0x005fac                  _SMTPTask
-                  0x0066bc                  _SMTPSendMail
-                  0x0066c0                  _SMTPIsBusy
-                  0x0066ca                  _SMTPIsPutReady
-                  0x0066de                  _SMTPPut
-                  0x006744                  _SMTPPutArray
-                  0x006766                  _SMTPPutString
-                  0x006782                  _SMTPFlush
-                  0x006788                  _SMTPPutDone
-                  0x00678c                  _DHCPInit
-                  0x0067ae                  _DHCPDisable
-                  0x0067be                  _DHCPEnable
-                  0x0067ca                  _DHCPIsEnabled
-                  0x0067d4                  _DHCPIsBound
-                  0x0067da                  _DHCPStateChanged
-                  0x0067e6                  _DHCPIsServerDetected
-                  0x006baa                  _DHCPTask
-                  0x006e0e                  _BerkeleySocketInit
-                  0x006e1c                  _socket
-                  0x006e56                  _bind
-                  0x006eb4                  _listen
-                  0x006f4c                  _accept
-                  0x006ff6                  _gethostname
-                  0x007088                  _recv
-                  0x0070ec                  _recvfrom
-                  0x0071a8                  _sendto
-                  0x0072f8                  _send
-                  0x0072fe                  _connect
-                  0x0073e4                  _closesocket
-                  0x00747a                  _MPFSClose
-                  0x007492                  _MPFSGet
-                  0x007510                  _MPFSGetArray
-                  0x0075ae                  _MPFSOpenID
-                  0x007608                  _MPFSOpen
-                  0x0076ea                  _MPFSGetLong
-                  0x0076fc                  _MPFSGetSize
-                  0x007724                  _MPFSGetStartAddr
-                  0x007752                  _MPFSGetEndAddr
-                  0x007784                  _MPFSSeek
-                  0x00783c                  _MPFSFormat
-                  0x00787c                  _MPFSGetTimestamp
-                  0x0078a4                  _MPFSGetMicrotime
-                  0x0078cc                  _MPFSGetFlags
-                  0x0078f0                  _MPFSGetBytesRem
-                  0x007910                  _MPFSGetFilename
-                  0x007954                  _MPFSGetPosition
-                  0x00796c                  _MPFSGetID
-                  0x0079a6                  _MPFSPutEnd
-                  0x0079c2                  _MPFSPutArray
-                  0x007a28                  _MPFSInit
-                  0x007a44                  _DNSBeginUsage
-                  0x007a50                  _DNSEndUsage
-                  0x007a6a                  _DNSResolve
-                  0x007b2e                  _DNSIsResolved
-                  0x007f66                  _LFSRRand
-                  0x007f9e                  _LFSRSeedRand
-                  0x007fc4                  _GenerateRandomDWORD
-                  0x00806e                  _StringToIPAddress
-                  0x00811c                  _Base64Decode
-                  0x0081ce                  _Base64Encode
-                  0x008294                  _uitoa
-                  0x0082ce                  _hexatob
-                  0x00832a                  _btohexa_high
-                  0x00833e                  _btohexa_low
-                  0x008350                  _stricmppgm2ram
-                  0x008390                  _swaps
-                  0x0083a2                  _swapl
-                  0x0083d0                  _CalcIPChecksum
-                  0x0083fa                  _strupr
-                  0x008418                  _FormatNetBIOSName
-                  0x008448                  _strnchr
-                  0x008468                  _DHCPServerTask
-                  0x008912                  _AutoIPInit
-                  0x008926                  _AutoIPIsConfigured
-                  0x008934                  _AutoIPConfigIsInProgress
-                  0x00893a                  _AutoIPRandSeed
-                  0x008940                  _AutoIPConflict
-                  0x0089a8                  _AutoIPDisable
-                  0x008a04                  _AutoIPEnable
-                  0x008a0c                  _AutoIPIsDisabled
-                  0x008a18                  _AutoIPRand
-                  0x008a2c                  _AutoIPTasks
-                  0x008d38                  _UDPClose
-                  0x008d50                  _UDPTask
-                  0x008d54                  _UDPOpen
-                  0x008db4                  _UDPSetTxBuffer
-                  0x008dc6                  _UDPSetRxBuffer
-                  0x008dd6                  _UDPIsPutReady
-                  0x008e00                  _UDPPut
-                  0x008e26                  _UDPPutArray
-                  0x008e52                  _UDPPutString
-                  0x008e68                  _UDPFlush
-                  0x008f30                  _UDPIsGetReady
-                  0x008f4c                  _UDPGet
-                  0x008f70                  _UDPGetArray
-                  0x008f98                  _UDPDiscard
-                  0x008fa8                  _UDPProcess
-                  0x0090d4                  _UDPInit
-                  0x0090ea                  _TelnetTask
-                  0x009470                  __AddressError
-                  0x009476                  __StackError
-                  0x00947c                  _DisplayIPValue
-                  0x0094fc                  _SaveAppConfig
-                  0x00952e                  _main
-                  0x009796                  _ARPInit
-                  0x0097b0                  _ARPIsResolved
-                  0x00984c                  _SwapARPPacket
-                  0x0098d8                  _ARPResolve
-                  0x009960                  _ARPProcess
-                  0x009a6a                  _MD5Initialize
-                  0x009bec                  _MD5AddData
-                  0x009c36                  _HashAddData
-                  0x009c44                  _MD5Calculate
-                  0x009d3a                  _NBNSTask
-                  0x009fbe                  _XEEInit
-                  0x009fd6                  _XEEBeginRead
-                  0x009fde                  _XEEEndRead
-                  0x009fe0                  _XEEBeginWrite
-                  0x009fe8                  _XEEReadArray
-                  0x00a07c                  _XEERead
-                  0x00a0b4                  _XEEIsBusy
-                  0x00a1ca                  _XEEEndWrite
-                  0x00a1d2                  _XEEWrite
-                  0x00a1f2                  _XEEWriteArray
-                  0x00a210                  _TCPTXPerformanceTask
-                  0x00a36e                  _TCPRXPerformanceTask
-                  0x00a448                  _TCPPerformanceTask
-                  0x00a44c                  _DoUARTConfig
-                  0x00a682                  _SNTPClient
-                  0x00a852                  _SNTPGetUTCSeconds
-                  0x00a888                  _ICMPProcess
-                  0x00a942                  _ICMPSendPing
-                  0x00a95c                  _ICMPSendPingToHost
-                  0x00a976                  _ICMPGetReply
-                  0x00aa7c                  _ICMPBeginUsage
-                  0x00aa88                  _ICMPEndUsage
-                  0x00ac62                  _BerkeleyUDPClientDemo
-                  0x00adf6                  _BerkeleySNTPGetUTCSeconds
-                  0x00ae2c                  _StackInit
-                  0x00ae62                  _StackTask
-                  0x00afb6                  _StackApplications
-                  0x00afde                  _UART2TCPBridgeInit
-                  0x00aff0                  _UART2TCPBridgeTask
-                  0x00b0da                  __U2RXInterrupt
-                  0x00b10e                  __U2TXInterrupt
-                  0x00b168                  _LCDInit
-                  0x00b1e4                  _LCDUpdate
-                  0x00b260                  _LCDErase
-                  0x00b276                  _IPSetRxBuffer
-                  0x00b2a2                  _IPPutHeader
-                  0x00b32a                  _IPGetHeader
-                  0x00b3ae                  _AnnounceIP
-                  0x00b416                  _DiscoveryTask
-                  0x00b4dc                  _GenericTCPClient
-                  0x00b5fe                  _BerkeleyTCPClientDemo
-                  0x00b6e6                  _BerkeleyTCPServerDemo
-                  0x00b7c2                  _SMTPDemo
-                  0x00b892                  _DataRdyUART2
-                  0x00b898                  _ReadUART2
-                  0x00b8aa                  _putsUART2
-                  0x00b8de                  _BusyUART2
-                  0x00b8e6                  _WriteUART2
-                  0x00b8f6                  _getsUART2
-                  0x00b92e                  _ReadStringUART
-                  0x00b960                  _TickInit
-                  0x00b9b6                  _TickGet
-                  0x00b9be                  _TickGetDiv256
-                  0x00b9da                  _TickGetDiv64K
-                  0x00b9f6                  _TickConvertToMilliseconds
-                  0x00ba0a                  __T1Interrupt
-                  0x00ba1e                  _RebootTask
-                  0x00bada                  _GenericTCPServer
-                  0x00bb92                  _PingDemo
-                  0x00bc2a                  _Delay10us
-                  0x00bc52                  _DelayMs
+                  0x0002a0                  _memcpy
+                  0x0002ae                  _memset
+                  0x0002bc                  _memcmp
+                  0x0002f0                  _strcpy
+                  0x000300                  _strlen
+                  0x00030c                  _strcat
+                  0x000568                  _TCPSocketInitializer
+                  0x0005ac                  _TCPWasReset
+                  0x0005bc                  _TCPIsConnected
+                  0x0005cc                  _TCPIsPutReady
+                  0x0005f6                  _TCPGetTxFIFOFull
+                  0x00060c                  _TCPIsGetReady
+                  0x000628                  _TCPGetRxFIFOFree
+                  0x00094e                  _TCPGetRemoteInfo
+                  0x000962                  _TCPInit
+                  0x000cb4                  _TCPAdjustFIFOSize
+                  0x000d72                  _TCPDiscard
+                  0x000d8e                  _TCPFlush
+                  0x000da2                  _TCPDisconnect
+                  0x000e08                  _TCPClose
+                  0x000e18                  _TCPOpen
+                  0x001400                  _TCPProcess
+                  0x001492                  _TCPTick
+                  0x001748                  _TCPFindArrayEx
+                  0x0018c4                  _TCPFindEx
+                  0x0018d8                  _TCPPeekArray
+                  0x001940                  _TCPPeek
+                  0x001952                  _TCPGetArray
+                  0x0019ce                  _TCPGet
+                  0x001a26                  _TCPPutArray
+                  0x001abc                  _TCPPutString
+                  0x001ad6                  _TCPPut
+                  0x001b74                  _MACPut
+                  0x001bbe                  _MACIsTxReady
+                  0x001bd4                  _MACGetArray
+                  0x001c46                  _MACPutArray
+                  0x001d06                  _MACGetFreeRxSize
+                  0x001d8c                  _MACGet
+                  0x001da8                  _MACIsMemCopyDone
+                  0x001e34                  _WritePHYReg
+                  0x001e6c                  _ReadPHYReg
+                  0x001eca                  _MACIsLinked
+                  0x001edc                  _MACMemCopyAsync
+                  0x002052                  _CalcIPBufferChecksum
+                  0x0020e2                  _MACCalcRxChecksum
+                  0x00213e                  _MACSetReadPtr
+                  0x002178                  _MACSetWritePtr
+                  0x0021b2                  _MACSetReadPtrInRx
+                  0x0021d4                  _MACFlush
+                  0x0022ec                  _MACPutHeader
+                  0x002336                  _MACDiscardRx
+                  0x002362                  _MACGetHeader
+                  0x0023fe                  _MACInit
+                  0x002512                  _MACPowerDown
+                  0x00253c                  _MACPowerUp
+                  0x00255a                  _SetCLKOUT
+                  0x002570                  _GetCLKOUT
+                  0x00258c                  _BerkeleySocketInit
+                  0x00259c                  _socket
+                  0x0025d6                  _bind
+                  0x002634                  _listen
+                  0x0026c6                  _accept
+                  0x00276c                  _gethostname
+                  0x0027fe                  _recv
+                  0x002862                  _recvfrom
+                  0x00291e                  _sendto
+                  0x002a6c                  _send
+                  0x002a72                  _connect
+                  0x002b54                  _closesocket
+                  0x002bea                  _DHCPInit
+                  0x002c0c                  _DHCPDisable
+                  0x002c1c                  _DHCPEnable
+                  0x002c28                  _DHCPIsEnabled
+                  0x002c32                  _DHCPIsBound
+                  0x002c38                  _DHCPStateChanged
+                  0x002c44                  _DHCPIsServerDetected
+                  0x002fb4                  _DHCPTask
+                  0x003518                  _DHCPServerTask
+                  0x0036bc                  _UDPClose
+                  0x0036d4                  _UDPInit
+                  0x0036e8                  _UDPTask
+                  0x0036ec                  _UDPOpen
+                  0x00374c                  _UDPSetTxBuffer
+                  0x00375e                  _UDPSetRxBuffer
+                  0x00376e                  _UDPIsPutReady
+                  0x003798                  _UDPPut
+                  0x0037c0                  _UDPPutArray
+                  0x0037ec                  _UDPPutString
+                  0x003802                  _UDPFlush
+                  0x0038c4                  _UDPIsGetReady
+                  0x0038e0                  _UDPGet
+                  0x003904                  _UDPGetArray
+                  0x003928                  _UDPDiscard
+                  0x0039bc                  _UDPProcess
+                  0x003a76                  _LFSRRand
+                  0x003ab0                  _LFSRSeedRand
+                  0x003ad6                  _GenerateRandomDWORD
+                  0x003b7e                  _StringToIPAddress
+                  0x003c2c                  _uitoa
+                  0x003c66                  _hexatob
+                  0x003cc4                  _btohexa_high
+                  0x003cd8                  _btohexa_low
+                  0x003cea                  _stricmppgm2ram
+                  0x003d2a                  _swaps
+                  0x003d3c                  _swapl
+                  0x003d6a                  _CalcIPChecksum
+                  0x003d94                  _strupr
+                  0x003db2                  _FormatNetBIOSName
+                  0x003de0                  _strnchr
+                  0x003dfc                  _TelnetTask
+                  0x0041f6                  _NBNSTask
+                  0x00440e                  _ARPInit
+                  0x004428                  _ARPIsResolved
+                  0x0044ca                  _SwapARPPacket
+                  0x004556                  _ARPResolve
+                  0x0045e4                  _ARPProcess
+                  0x00469a                  __AddressError
+                  0x0046a0                  __StackError
+                  0x0046e8                  _DisplayIPValue
+                  0x0047fe                  _main
+                  0x00489e                  _ICMPProcess
+                  0x00495a                  _ICMPSendPing
+                  0x004974                  _ICMPGetReply
+                  0x004a2e                  _ICMPBeginUsage
+                  0x004a3a                  _ICMPEndUsage
+                  0x004a3e                  _StackInit
+                  0x004a76                  _StackTask
+                  0x004bca                  _StackApplications
+                  0x004c14                  _LCDInit
+                  0x004c92                  _LCDUpdate
+                  0x004d12                  _LCDErase
+                  0x004d28                  _IPSetRxBuffer
+                  0x004d54                  _IPPutHeader
+                  0x004ddc                  _IPGetHeader
+                  0x004e64                  _AnnounceIP
+                  0x004ecc                  _DiscoveryTask
+                  0x004f92                  _BerkeleyTCPServerDemo
+                  0x005074                  _RebootTask
+                  0x005150                  _TickInit
+                  0x0051a6                  _TickGet
+                  0x0051ae                  _TickGetDiv256
+                  0x0051ca                  _TickGetDiv64K
+                  0x0051e6                  _TickConvertToMilliseconds
+                  0x0051f4                  __T1Interrupt
+                  0x0052be                  _PingDemo
+                  0x00536e                  _Delay10us
+                  0x00539a                  _DelayMs
+                  0x0053c0                  _BerkeleyUDPClientDemo
+                  0x0053c2                  _BerkeleySNTPGetUTCSeconds
+                  0x005400                  _BerkeleyTCPClientDemo
 
 External Symbols in Program Memory (by name):
 
-                  0x009796                  _ARPInit
-                  0x0097b0                  _ARPIsResolved
-                  0x009960                  _ARPProcess
-                  0x0098d8                  _ARPResolve
-                  0x00b3ae                  _AnnounceIP
-                  0x008934                  _AutoIPConfigIsInProgress
-                  0x008940                  _AutoIPConflict
-                  0x0089a8                  _AutoIPDisable
-                  0x008a04                  _AutoIPEnable
-                  0x008912                  _AutoIPInit
-                  0x008926                  _AutoIPIsConfigured
-                  0x008a0c                  _AutoIPIsDisabled
-                  0x008a18                  _AutoIPRand
-                  0x00893a                  _AutoIPRandSeed
-                  0x008a2c                  _AutoIPTasks
-                  0x00811c                  _Base64Decode
-                  0x0081ce                  _Base64Encode
-                  0x00adf6                  _BerkeleySNTPGetUTCSeconds
-                  0x006e0e                  _BerkeleySocketInit
-                  0x00b5fe                  _BerkeleyTCPClientDemo
-                  0x00b6e6                  _BerkeleyTCPServerDemo
-                  0x00ac62                  _BerkeleyUDPClientDemo
-                  0x00b8de                  _BusyUART2
-                  0x0059bc                  _CalcIPBufferChecksum
-                  0x0083d0                  _CalcIPChecksum
-                  0x0067ae                  _DHCPDisable
-                  0x0067be                  _DHCPEnable
-                  0x00678c                  _DHCPInit
-                  0x0067d4                  _DHCPIsBound
-                  0x0067ca                  _DHCPIsEnabled
-                  0x0067e6                  _DHCPIsServerDetected
-                  0x008468                  _DHCPServerTask
-                  0x0067da                  _DHCPStateChanged
-                  0x006baa                  _DHCPTask
-                  0x007a44                  _DNSBeginUsage
-                  0x007a50                  _DNSEndUsage
-                  0x007b2e                  _DNSIsResolved
-                  0x007a6a                  _DNSResolve
-                  0x00b892                  _DataRdyUART2
-                  0x00bc2a                  _Delay10us
-                  0x00bc52                  _DelayMs
-                  0x00b416                  _DiscoveryTask
-                  0x00947c                  _DisplayIPValue
-                  0x00a44c                  _DoUARTConfig
-                  0x008418                  _FormatNetBIOSName
-                  0x007fc4                  _GenerateRandomDWORD
-                  0x00b4dc                  _GenericTCPClient
-                  0x00bada                  _GenericTCPServer
-                  0x0057c8                  _GetCLKOUT
-                  0x000f68                  _HTML_DOWN_ARROW
-                  0x000f6b                  _HTML_UP_ARROW
-                  0x004532                  _HTTPCheckAuth
-                  0x004556                  _HTTPExecuteGet
-                  0x0046de                  _HTTPExecutePost
-                  0x003344                  _HTTPGetArg
-                  0x003516                  _HTTPIncFile
-                  0x003238                  _HTTPInit
-                  0x00450a                  _HTTPNeedsAuth
-                  0x0035ba                  _HTTPPrint
-                  0x005178                  _HTTPPrintIP
-                  0x003228                  _HTTPPrint_
-                  0x004eac                  _HTTPPrint_btn
-                  0x004e68                  _HTTPPrint_builddate
-                  0x0051d2                  _HTTPPrint_config_dhcpchecked
-                  0x005242                  _HTTPPrint_config_dns1
-                  0x005260                  _HTTPPrint_config_dns2
-                  0x005206                  _HTTPPrint_config_gw
-                  0x0051c2                  _HTTPPrint_config_hostname
-                  0x0051e8                  _HTTPPrint_config_ip
-                  0x00527e                  _HTTPPrint_config_mac
-                  0x005224                  _HTTPPrint_config_subnet
-                  0x0050a4                  _HTTPPrint_cookiename
-                  0x005312                  _HTTPPrint_ddns_host
-                  0x005310                  _HTTPPrint_ddns_pass
-                  0x005314                  _HTTPPrint_ddns_service
-                  0x005316                  _HTTPPrint_ddns_status
-                  0x005326                  _HTTPPrint_ddns_status_msg
-                  0x00530e                  _HTTPPrint_ddns_user
-                  0x00506e                  _HTTPPrint_hellomsg
-                  0x004fdc                  _HTTPPrint_lcdtext
-                  0x004eea                  _HTTPPrint_led
-                  0x004f4e                  _HTTPPrint_ledSelected
-                  0x004fbe                  _HTTPPrint_pot
-                  0x0052f6                  _HTTPPrint_read_comm
-                  0x0052fa                  _HTTPPrint_reboot
-                  0x0052fe                  _HTTPPrint_rebootaddr
-                  0x00535e                  _HTTPPrint_smtps_en
-                  0x00536e                  _HTTPPrint_snmp_en
-                  0x0053a2                  _HTTPPrint_status_fail
-                  0x00537e                  _HTTPPrint_status_ok
-                  0x0050d4                  _HTTPPrint_uploadedmd5
-                  0x004e9c                  _HTTPPrint_version
-                  0x0052f8                  _HTTPPrint_write_comm
-                  0x0034a4                  _HTTPReadPostName
-                  0x0034c4                  _HTTPReadPostValue
-                  0x003766                  _HTTPServer
-                  0x0032da                  _HTTPURLDecode
-                  0x009c36                  _HashAddData
-                  0x00aa7c                  _ICMPBeginUsage
-                  0x00aa88                  _ICMPEndUsage
-                  0x00a976                  _ICMPGetReply
-                  0x00a888                  _ICMPProcess
-                  0x00a942                  _ICMPSendPing
-                  0x00a95c                  _ICMPSendPingToHost
-                  0x00b32a                  _IPGetHeader
-                  0x00b2a2                  _IPPutHeader
-                  0x00b276                  _IPSetRxBuffer
-                  0x00b260                  _LCDErase
-                  0x00b168                  _LCDInit
-                  0x00b1e4                  _LCDUpdate
-                  0x007f66                  _LFSRRand
-                  0x007f9e                  _LFSRSeedRand
-                  0x005a4a                  _MACCalcRxChecksum
-                  0x005668                  _MACDiscardRx
-                  0x005b1a                  _MACFlush
-                  0x0053c6                  _MACGet
-                  0x0053ec                  _MACGetArray
-                  0x005ccc                  _MACGetFreeRxSize
-                  0x005c30                  _MACGetHeader
-                  0x005d64                  _MACInit
-                  0x005788                  _MACIsLinked
-                  0x00582e                  _MACIsMemCopyDone
-                  0x005d4e                  _MACIsTxReady
-                  0x005844                  _MACMemCopyAsync
-                  0x005804                  _MACPowerDown
-                  0x0057e6                  _MACPowerUp
-                  0x00547e                  _MACPut
-                  0x0054ac                  _MACPutArray
-                  0x0055e8                  _MACPutHeader
-                  0x005aa6                  _MACSetReadPtr
-                  0x0055c6                  _MACSetReadPtrInRx
-                  0x005ae0                  _MACSetWritePtr
-                  0x009bec                  _MD5AddData
-                  0x009c44                  _MD5Calculate
-                  0x009a6a                  _MD5Initialize
-                  0x00747a                  _MPFSClose
-                  0x00783c                  _MPFSFormat
-                  0x007492                  _MPFSGet
-                  0x007510                  _MPFSGetArray
-                  0x0078f0                  _MPFSGetBytesRem
-                  0x007752                  _MPFSGetEndAddr
-                  0x007910                  _MPFSGetFilename
-                  0x0078cc                  _MPFSGetFlags
-                  0x00796c                  _MPFSGetID
-                  0x0076ea                  _MPFSGetLong
-                  0x0078a4                  _MPFSGetMicrotime
-                  0x007954                  _MPFSGetPosition
-                  0x0076fc                  _MPFSGetSize
-                  0x007724                  _MPFSGetStartAddr
-                  0x00787c                  _MPFSGetTimestamp
-                  0x007a28                  _MPFSInit
-                  0x007608                  _MPFSOpen
-                  0x0075ae                  _MPFSOpenID
-                  0x0079c2                  _MPFSPutArray
-                  0x0079a6                  _MPFSPutEnd
-                  0x007784                  _MPFSSeek
-                  0x009d3a                  _NBNSTask
-                  0x00bb92                  _PingDemo
-                  0x00572a                  _ReadPHYReg
-                  0x00b92e                  _ReadStringUART
-                  0x00b898                  _ReadUART2
-                  0x00ba1e                  _RebootTask
-                  0x005e9e                  _SMTPBeginUsage
-                  0x00b7c2                  _SMTPDemo
-                  0x005ec8                  _SMTPEndUsage
-                  0x006782                  _SMTPFlush
-                  0x0066c0                  _SMTPIsBusy
-                  0x0066ca                  _SMTPIsPutReady
-                  0x0066de                  _SMTPPut
-                  0x006744                  _SMTPPutArray
-                  0x006788                  _SMTPPutDone
-                  0x006766                  _SMTPPutString
-                  0x0066bc                  _SMTPSendMail
-                  0x005fac                  _SMTPTask
-                  0x00a682                  _SNTPClient
-                  0x00a852                  _SNTPGetUTCSeconds
-                  0x0094fc                  _SaveAppConfig
-                  0x0056dc                  _SetCLKOUT
-                  0x00afb6                  _StackApplications
-                  0x00ae2c                  _StackInit
-                  0x00ae62                  _StackTask
-                  0x00806e                  _StringToIPAddress
-                  0x00984c                  _SwapARPPacket
-                  0x0021fe                  _TCPAdjustFIFOSize
-                  0x002356                  _TCPClose
-                  0x0022ba                  _TCPDiscard
-                  0x0022ea                  _TCPDisconnect
-                  0x002e38                  _TCPFindArrayEx
-                  0x002fa6                  _TCPFindEx
-                  0x0022d6                  _TCPFlush
-                  0x0030ae                  _TCPGet
-                  0x003032                  _TCPGetArray
-                  0x001e96                  _TCPGetRemoteInfo
-                  0x001cb6                  _TCPGetRxFIFOFree
-                  0x001c84                  _TCPGetTxFIFOFull
-                  0x001eaa                  _TCPInit
-                  0x001c4c                  _TCPIsConnected
-                  0x001c9a                  _TCPIsGetReady
-                  0x001c5c                  _TCPIsPutReady
-                  0x002366                  _TCPOpen
-                  0x003020                  _TCPPeek
-                  0x002fba                  _TCPPeekArray
-                  0x00a448                  _TCPPerformanceTask
-                  0x00245e                  _TCPProcess
-                  0x0031b6                  _TCPPut
-                  0x003106                  _TCPPutArray
-                  0x00319c                  _TCPPutString
-                  0x00a36e                  _TCPRXPerformanceTask
-                  0x001b7c                  _TCPSocketInitializer
-                  0x00a210                  _TCPTXPerformanceTask
-                  0x002b18                  _TCPTick
-                  0x001c3c                  _TCPWasReset
-                  0x0090ea                  _TelnetTask
-                  0x00b9f6                  _TickConvertToMilliseconds
-                  0x00b9b6                  _TickGet
-                  0x00b9be                  _TickGetDiv256
-                  0x00b9da                  _TickGetDiv64K
-                  0x00b960                  _TickInit
-                  0x00afde                  _UART2TCPBridgeInit
-                  0x00aff0                  _UART2TCPBridgeTask
-                  0x008d38                  _UDPClose
-                  0x008f98                  _UDPDiscard
-                  0x008e68                  _UDPFlush
-                  0x008f4c                  _UDPGet
-                  0x008f70                  _UDPGetArray
-                  0x0090d4                  _UDPInit
-                  0x008f30                  _UDPIsGetReady
-                  0x008dd6                  _UDPIsPutReady
-                  0x008d54                  _UDPOpen
-                  0x008fa8                  _UDPProcess
-                  0x008e00                  _UDPPut
-                  0x008e26                  _UDPPutArray
-                  0x008e52                  _UDPPutString
-                  0x008dc6                  _UDPSetRxBuffer
-                  0x008db4                  _UDPSetTxBuffer
-                  0x008d50                  _UDPTask
-                  0x0056f2                  _WritePHYReg
-                  0x00b8e6                  _WriteUART2
-                  0x009fd6                  _XEEBeginRead
-                  0x009fe0                  _XEEBeginWrite
-                  0x009fde                  _XEEEndRead
-                  0x00a1ca                  _XEEEndWrite
-                  0x009fbe                  _XEEInit
-                  0x00a0b4                  _XEEIsBusy
-                  0x00a07c                  _XEERead
-                  0x009fe8                  _XEEReadArray
-                  0x00a1d2                  _XEEWrite
-                  0x00a1f2                  _XEEWriteArray
-                  0x009470                  __AddressError
+                  0x00440e                  _ARPInit
+                  0x004428                  _ARPIsResolved
+                  0x0045e4                  _ARPProcess
+                  0x004556                  _ARPResolve
+                  0x004e64                  _AnnounceIP
+                  0x0053c2                  _BerkeleySNTPGetUTCSeconds
+                  0x00258c                  _BerkeleySocketInit
+                  0x005400                  _BerkeleyTCPClientDemo
+                  0x004f92                  _BerkeleyTCPServerDemo
+                  0x0053c0                  _BerkeleyUDPClientDemo
+                  0x002052                  _CalcIPBufferChecksum
+                  0x003d6a                  _CalcIPChecksum
+                  0x002c0c                  _DHCPDisable
+                  0x002c1c                  _DHCPEnable
+                  0x002bea                  _DHCPInit
+                  0x002c32                  _DHCPIsBound
+                  0x002c28                  _DHCPIsEnabled
+                  0x002c44                  _DHCPIsServerDetected
+                  0x003518                  _DHCPServerTask
+                  0x002c38                  _DHCPStateChanged
+                  0x002fb4                  _DHCPTask
+                  0x00536e                  _Delay10us
+                  0x00539a                  _DelayMs
+                  0x004ecc                  _DiscoveryTask
+                  0x0046e8                  _DisplayIPValue
+                  0x003db2                  _FormatNetBIOSName
+                  0x003ad6                  _GenerateRandomDWORD
+                  0x002570                  _GetCLKOUT
+                  0x004a2e                  _ICMPBeginUsage
+                  0x004a3a                  _ICMPEndUsage
+                  0x004974                  _ICMPGetReply
+                  0x00489e                  _ICMPProcess
+                  0x00495a                  _ICMPSendPing
+                  0x004ddc                  _IPGetHeader
+                  0x004d54                  _IPPutHeader
+                  0x004d28                  _IPSetRxBuffer
+                  0x004d12                  _LCDErase
+                  0x004c14                  _LCDInit
+                  0x004c92                  _LCDUpdate
+                  0x003a76                  _LFSRRand
+                  0x003ab0                  _LFSRSeedRand
+                  0x0020e2                  _MACCalcRxChecksum
+                  0x002336                  _MACDiscardRx
+                  0x0021d4                  _MACFlush
+                  0x001d8c                  _MACGet
+                  0x001bd4                  _MACGetArray
+                  0x001d06                  _MACGetFreeRxSize
+                  0x002362                  _MACGetHeader
+                  0x0023fe                  _MACInit
+                  0x001eca                  _MACIsLinked
+                  0x001da8                  _MACIsMemCopyDone
+                  0x001bbe                  _MACIsTxReady
+                  0x001edc                  _MACMemCopyAsync
+                  0x002512                  _MACPowerDown
+                  0x00253c                  _MACPowerUp
+                  0x001b74                  _MACPut
+                  0x001c46                  _MACPutArray
+                  0x0022ec                  _MACPutHeader
+                  0x00213e                  _MACSetReadPtr
+                  0x0021b2                  _MACSetReadPtrInRx
+                  0x002178                  _MACSetWritePtr
+                  0x0041f6                  _NBNSTask
+                  0x0052be                  _PingDemo
+                  0x001e6c                  _ReadPHYReg
+                  0x005074                  _RebootTask
+                  0x00255a                  _SetCLKOUT
+                  0x004bca                  _StackApplications
+                  0x004a3e                  _StackInit
+                  0x004a76                  _StackTask
+                  0x003b7e                  _StringToIPAddress
+                  0x0044ca                  _SwapARPPacket
+                  0x000cb4                  _TCPAdjustFIFOSize
+                  0x000e08                  _TCPClose
+                  0x000d72                  _TCPDiscard
+                  0x000da2                  _TCPDisconnect
+                  0x001748                  _TCPFindArrayEx
+                  0x0018c4                  _TCPFindEx
+                  0x000d8e                  _TCPFlush
+                  0x0019ce                  _TCPGet
+                  0x001952                  _TCPGetArray
+                  0x00094e                  _TCPGetRemoteInfo
+                  0x000628                  _TCPGetRxFIFOFree
+                  0x0005f6                  _TCPGetTxFIFOFull
+                  0x000962                  _TCPInit
+                  0x0005bc                  _TCPIsConnected
+                  0x00060c                  _TCPIsGetReady
+                  0x0005cc                  _TCPIsPutReady
+                  0x000e18                  _TCPOpen
+                  0x001940                  _TCPPeek
+                  0x0018d8                  _TCPPeekArray
+                  0x001400                  _TCPProcess
+                  0x001ad6                  _TCPPut
+                  0x001a26                  _TCPPutArray
+                  0x001abc                  _TCPPutString
+                  0x000568                  _TCPSocketInitializer
+                  0x001492                  _TCPTick
+                  0x0005ac                  _TCPWasReset
+                  0x003dfc                  _TelnetTask
+                  0x0051e6                  _TickConvertToMilliseconds
+                  0x0051a6                  _TickGet
+                  0x0051ae                  _TickGetDiv256
+                  0x0051ca                  _TickGetDiv64K
+                  0x005150                  _TickInit
+                  0x0036bc                  _UDPClose
+                  0x003928                  _UDPDiscard
+                  0x003802                  _UDPFlush
+                  0x0038e0                  _UDPGet
+                  0x003904                  _UDPGetArray
+                  0x0036d4                  _UDPInit
+                  0x0038c4                  _UDPIsGetReady
+                  0x00376e                  _UDPIsPutReady
+                  0x0036ec                  _UDPOpen
+                  0x0039bc                  _UDPProcess
+                  0x003798                  _UDPPut
+                  0x0037c0                  _UDPPutArray
+                  0x0037ec                  _UDPPutString
+                  0x00375e                  _UDPSetRxBuffer
+                  0x00374c                  _UDPSetTxBuffer
+                  0x0036e8                  _UDPTask
+                  0x001e34                  _WritePHYReg
+                  0x00469a                  __AddressError
                   0x000290                  __DefaultInterrupt
-                  0x009476                  __StackError
-                  0x00ba0a                  __T1Interrupt
-                  0x00b0da                  __U2RXInterrupt
-                  0x00b10e                  __U2TXInterrupt
-                  0x00040c                  ___divdi3
-                  0x000446                  ___moddi3
-                  0x0002a6                  ___muldi3
+                  0x0046a0                  __StackError
+                  0x0051f4                  __T1Interrupt
                   0x000294                  ___mulp32eds3
                   0x000294                  ___mulp32peds3
                   0x000294                  ___mulsi3
-                  0x0003f6                  ___udivdi3
-                  0x000328                  ___udivmoddi3
-                  0x000518                  ___udivsi3
-                  0x000404                  ___umoddi3
-                  0x0002a0                  ___umodsi3
-                  0x000538                  ___umuldi3
                   0x000232                  __data_init
                   0x000232                  __data_init_standard
                   0x000222                  __psv_init
                   0x000200                  __resetPRI
-                  0x006f4c                  _accept
-                  0x00066c                  _atoi
-                  0x0005f8                  _atol
-                  0x006e56                  _bind
-                  0x00832a                  _btohexa_high
-                  0x00833e                  _btohexa_low
-                  0x0073e4                  _closesocket
-                  0x0072fe                  _connect
-                  0x006ff6                  _gethostname
-                  0x00b8f6                  _getsUART2
-                  0x0082ce                  _hexatob
-                  0x006eb4                  _listen
-                  0x00072e                  _ltoa
-                  0x00952e                  _main
-                  0x0005b4                  _memcmp
-                  0x00057c                  _memcpy
-                  0x00058a                  _memset
-                  0x00b8aa                  _putsUART2
-                  0x007088                  _recv
-                  0x0070ec                  _recvfrom
-                  0x0072f8                  _send
-                  0x0071a8                  _sendto
-                  0x006e1c                  _socket
-                  0x000750                  _strcat
-                  0x00065c                  _strchr
-                  0x0005a4                  _strcmp
-                  0x0005e8                  _strcpy
-                  0x008350                  _stricmppgm2ram
-                  0x000598                  _strlen
-                  0x008448                  _strnchr
-                  0x000768                  _strncmp
-                  0x0006b4                  _strstr
-                  0x0083fa                  _strupr
-                  0x0083a2                  _swapl
-                  0x008390                  _swaps
-                  0x008294                  _uitoa
-                  0x0006e2                  _ultoa
+                  0x0026c6                  _accept
+                  0x0025d6                  _bind
+                  0x003cc4                  _btohexa_high
+                  0x003cd8                  _btohexa_low
+                  0x002b54                  _closesocket
+                  0x002a72                  _connect
+                  0x00276c                  _gethostname
+                  0x003c66                  _hexatob
+                  0x002634                  _listen
+                  0x0047fe                  _main
+                  0x0002bc                  _memcmp
+                  0x0002a0                  _memcpy
+                  0x0002ae                  _memset
+                  0x0027fe                  _recv
+                  0x002862                  _recvfrom
+                  0x002a6c                  _send
+                  0x00291e                  _sendto
+                  0x00259c                  _socket
+                  0x00030c                  _strcat
+                  0x0002f0                  _strcpy
+                  0x003cea                  _stricmppgm2ram
+                  0x000300                  _strlen
+                  0x003de0                  _strnchr
+                  0x003d94                  _strupr
+                  0x003d3c                  _swapl
+                  0x003d2a                  _swaps
+                  0x003c2c                  _uitoa
 
 Memory Configuration
 
@@ -943,8 +603,8 @@ LOAD Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
 LOAD Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UARTConfig.o
 LOAD Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg2.o
 LOAD Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg.o
-LOAD F:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_elf.a
-LOAD F:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_coff.a
+LOAD E:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_elf.a
+LOAD E:\astromonty\Programms\Microchip\TCPIP Stack\BigInt_helper_coff.a
 LOAD c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib/dsPIC33F\libp33FJ128GP710-coff.a
                     0xf80000                  __FBS = 0xf80000
                     0xf80002                  __FSS = 0xf80002
@@ -974,7 +634,7 @@ LOAD c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib/dsPIC33F\
                   0x000002          0x2 SHORT 0x0 ((ABSOLUTE (__reset) >> 0x10) & 0x7f)
                   0x000003          0x2 SHORT 0x0
 
-.text             0x000200        0x58a
+.text             0x000200        0x124
  *(.init)
  .init            0x000200         0x32 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.a(crt0_standard.o)
                   0x000200                  _resetPRI
@@ -994,50 +654,20 @@ LOAD c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib/dsPIC33F\
                   0x000294                  __mulsi3
                   0x000294                  __mulp32eds3
  *(.libm)
- .libm            0x0002a0          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umodsi3.o)
-                  0x0002a0                  __umodsi3
- .libm            0x0002a6         0x5c c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(muldi3.o)
-                  0x0002a6                  __muldi3
- .libm            0x000302        0x216 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(divmoddi3.o)
-                  0x000328                  __udivmoddi3
-                  0x0003f6                  __udivdi3
-                  0x000404                  __umoddi3
-                  0x00040c                  __divdi3
-                  0x000446                  __moddi3
- .libm            0x000518         0x20 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(udivsi3.o)
-                  0x000518                  __udivsi3
- .libm            0x000538         0x44 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umuldi3.o)
-                  0x000538                  __umuldi3
  *(.libdsp)
  *(.lib*)
- .libc.memcpy     0x00057c          0xe c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcpy.XXo)
-                  0x00057c                  memcpy
- .libc.memset     0x00058a          0xe c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memset.XXo)
-                  0x00058a                  memset
- .libc.strlen     0x000598          0xc c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
-                  0x000598                  strlen
- .libc.strcmp     0x0005a4         0x10 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcmp.XXo)
-                  0x0005a4                  strcmp
- .libc.memcmp     0x0005b4         0x34 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcmp.XXo)
-                  0x0005b4                  memcmp
- .libc.strcpy     0x0005e8         0x10 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcpy.XXo)
-                  0x0005e8                  strcpy
- .libc.atol       0x0005f8         0x64 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atol.XXo)
-                  0x0005f8                  atol
- .libc.strchr     0x00065c         0x10 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strchr.XXo)
-                  0x00065c                  strchr
- .libc.atoi       0x00066c         0x48 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atoi.XXo)
-                  0x00066c                  atoi
- .libc.strstr     0x0006b4         0x2e c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strstr.XXo)
-                  0x0006b4                  strstr
- .libc.ultoa      0x0006e2         0x4c c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(ltoa.XXo)
-                  0x0006e2                  ultoa
- .libc.ltoa       0x00072e         0x22 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(ltoa.XXo)
-                  0x00072e                  ltoa
- .libc.strcat     0x000750         0x18 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcat.XXo)
-                  0x000750                  strcat
- .libc.strncmp    0x000768         0x22 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strncmp.XXo)
-                  0x000768                  strncmp
+ .libc.memcpy     0x0002a0          0xe c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcpy.XXo)
+                  0x0002a0                  memcpy
+ .libc.memset     0x0002ae          0xe c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memset.XXo)
+                  0x0002ae                  memset
+ .libc.memcmp     0x0002bc         0x34 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcmp.XXo)
+                  0x0002bc                  memcmp
+ .libc.strcpy     0x0002f0         0x10 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcpy.XXo)
+                  0x0002f0                  strcpy
+ .libc.strlen     0x000300          0xc c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
+                  0x000300                  strlen
+ .libc.strcat     0x00030c         0x18 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcat.XXo)
+                  0x00030c                  strcat
 
 usercode
  *(usercode)
@@ -1081,6 +711,10 @@ __FUID2
 __FUID3
  *(__FUID3.sec)
 
+.icd                0x0800         0x50
+                    0x0850                  . = (. + DEFINED (__ICD2RAM)?0x50:0x0)
+ *fill*             0x0800         0x5000
+
 .comment
  *(.comment)
 
@@ -1118,8 +752,8 @@ __FUID3
 .ivt              0x000004         0xfc
                   0x000004          0x4 LONG 0x290 DEFINED (__ReservedTrap0)?ABSOLUTE (__ReservedTrap0):ABSOLUTE (__DefaultInterrupt)
                   0x000006          0x4 LONG 0x290 DEFINED (__OscillatorFail)?ABSOLUTE (__OscillatorFail):ABSOLUTE (__DefaultInterrupt)
-                  0x000008          0x4 LONG 0x9470 DEFINED (__AddressError)?ABSOLUTE (__AddressError):ABSOLUTE (__DefaultInterrupt)
-                  0x00000a          0x4 LONG 0x9476 DEFINED (__StackError)?ABSOLUTE (__StackError):ABSOLUTE (__DefaultInterrupt)
+                  0x000008          0x4 LONG 0x469a DEFINED (__AddressError)?ABSOLUTE (__AddressError):ABSOLUTE (__DefaultInterrupt)
+                  0x00000a          0x4 LONG 0x46a0 DEFINED (__StackError)?ABSOLUTE (__StackError):ABSOLUTE (__DefaultInterrupt)
                   0x00000c          0x4 LONG 0x290 DEFINED (__MathError)?ABSOLUTE (__MathError):ABSOLUTE (__DefaultInterrupt)
                   0x00000e          0x4 LONG 0x290 DEFINED (__DMACError)?ABSOLUTE (__DMACError):ABSOLUTE (__DefaultInterrupt)
                   0x000010          0x4 LONG 0x290 DEFINED (__ReservedTrap6)?ABSOLUTE (__ReservedTrap6):ABSOLUTE (__DefaultInterrupt)
@@ -1127,7 +761,7 @@ __FUID3
                   0x000014          0x4 LONG 0x290 DEFINED (__INT0Interrupt)?ABSOLUTE (__INT0Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000016          0x4 LONG 0x290 DEFINED (__IC1Interrupt)?ABSOLUTE (__IC1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000018          0x4 LONG 0x290 DEFINED (__OC1Interrupt)?ABSOLUTE (__OC1Interrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x00001a          0x4 LONG 0xba0a DEFINED (__T1Interrupt)?ABSOLUTE (__T1Interrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x00001a          0x4 LONG 0x51f4 DEFINED (__T1Interrupt)?ABSOLUTE (__T1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00001c          0x4 LONG 0x290 DEFINED (__DMA0Interrupt)?ABSOLUTE (__DMA0Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00001e          0x4 LONG 0x290 DEFINED (__IC2Interrupt)?ABSOLUTE (__IC2Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000020          0x4 LONG 0x290 DEFINED (__OC2Interrupt)?ABSOLUTE (__OC2Interrupt):ABSOLUTE (__DefaultInterrupt)
@@ -1154,8 +788,8 @@ __FUID3
                   0x00004a          0x4 LONG 0x290 DEFINED (__T4Interrupt)?ABSOLUTE (__T4Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00004c          0x4 LONG 0x290 DEFINED (__T5Interrupt)?ABSOLUTE (__T5Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00004e          0x4 LONG 0x290 DEFINED (__INT2Interrupt)?ABSOLUTE (__INT2Interrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x000050          0x4 LONG 0xb0da DEFINED (__U2RXInterrupt)?ABSOLUTE (__U2RXInterrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x000052          0x4 LONG 0xb10e DEFINED (__U2TXInterrupt)?ABSOLUTE (__U2TXInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x000050          0x4 LONG 0x290 DEFINED (__U2RXInterrupt)?ABSOLUTE (__U2RXInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x000052          0x4 LONG 0x290 DEFINED (__U2TXInterrupt)?ABSOLUTE (__U2TXInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000054          0x4 LONG 0x290 DEFINED (__SPI2ErrInterrupt)?ABSOLUTE (__SPI2ErrInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000056          0x4 LONG 0x290 DEFINED (__SPI2Interrupt)?ABSOLUTE (__SPI2Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000058          0x4 LONG 0x290 DEFINED (__C1RxRdyInterrupt)?ABSOLUTE (__C1RxRdyInterrupt):ABSOLUTE (__DefaultInterrupt)
@@ -1246,8 +880,8 @@ __FUID3
 .aivt             0x000104         0xfc
                   0x000104          0x4 LONG 0x290 DEFINED (__AltReservedTrap0)?ABSOLUTE (__AltReservedTrap0):DEFINED (__ReservedTrap0)?ABSOLUTE (__ReservedTrap0):ABSOLUTE (__DefaultInterrupt)
                   0x000106          0x4 LONG 0x290 DEFINED (__AltOscillatorFail)?ABSOLUTE (__AltOscillatorFail):DEFINED (__OscillatorFail)?ABSOLUTE (__OscillatorFail):ABSOLUTE (__DefaultInterrupt)
-                  0x000108          0x4 LONG 0x9470 DEFINED (__AltAddressError)?ABSOLUTE (__AltAddressError):DEFINED (__AddressError)?ABSOLUTE (__AddressError):ABSOLUTE (__DefaultInterrupt)
-                  0x00010a          0x4 LONG 0x9476 DEFINED (__AltStackError)?ABSOLUTE (__AltStackError):DEFINED (__StackError)?ABSOLUTE (__StackError):ABSOLUTE (__DefaultInterrupt)
+                  0x000108          0x4 LONG 0x469a DEFINED (__AltAddressError)?ABSOLUTE (__AltAddressError):DEFINED (__AddressError)?ABSOLUTE (__AddressError):ABSOLUTE (__DefaultInterrupt)
+                  0x00010a          0x4 LONG 0x46a0 DEFINED (__AltStackError)?ABSOLUTE (__AltStackError):DEFINED (__StackError)?ABSOLUTE (__StackError):ABSOLUTE (__DefaultInterrupt)
                   0x00010c          0x4 LONG 0x290 DEFINED (__AltMathError)?ABSOLUTE (__AltMathError):DEFINED (__MathError)?ABSOLUTE (__MathError):ABSOLUTE (__DefaultInterrupt)
                   0x00010e          0x4 LONG 0x290 DEFINED (__AltDMACError)?ABSOLUTE (__AltDMACError):DEFINED (__DMACError)?ABSOLUTE (__DMACError):ABSOLUTE (__DefaultInterrupt)
                   0x000110          0x4 LONG 0x290 DEFINED (__AltReservedTrap6)?ABSOLUTE (__AltReservedTrap6):DEFINED (__ReservedTrap6)?ABSOLUTE (__ReservedTrap6):ABSOLUTE (__DefaultInterrupt)
@@ -1255,7 +889,7 @@ __FUID3
                   0x000114          0x4 LONG 0x290 DEFINED (__AltINT0Interrupt)?ABSOLUTE (__AltINT0Interrupt):DEFINED (__INT0Interrupt)?ABSOLUTE (__INT0Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000116          0x4 LONG 0x290 DEFINED (__AltIC1Interrupt)?ABSOLUTE (__AltIC1Interrupt):DEFINED (__IC1Interrupt)?ABSOLUTE (__IC1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000118          0x4 LONG 0x290 DEFINED (__AltOC1Interrupt)?ABSOLUTE (__AltOC1Interrupt):DEFINED (__OC1Interrupt)?ABSOLUTE (__OC1Interrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x00011a          0x4 LONG 0xba0a DEFINED (__AltT1Interrupt)?ABSOLUTE (__AltT1Interrupt):DEFINED (__T1Interrupt)?ABSOLUTE (__T1Interrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x00011a          0x4 LONG 0x51f4 DEFINED (__AltT1Interrupt)?ABSOLUTE (__AltT1Interrupt):DEFINED (__T1Interrupt)?ABSOLUTE (__T1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00011c          0x4 LONG 0x290 DEFINED (__AltDMA0Interrupt)?ABSOLUTE (__AltDMA0Interrupt):DEFINED (__DMA0Interrupt)?ABSOLUTE (__DMA0Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00011e          0x4 LONG 0x290 DEFINED (__AltIC2Interrupt)?ABSOLUTE (__AltIC2Interrupt):DEFINED (__IC2Interrupt)?ABSOLUTE (__IC2Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000120          0x4 LONG 0x290 DEFINED (__AltOC2Interrupt)?ABSOLUTE (__AltOC2Interrupt):DEFINED (__OC2Interrupt)?ABSOLUTE (__OC2Interrupt):ABSOLUTE (__DefaultInterrupt)
@@ -1282,8 +916,8 @@ __FUID3
                   0x00014a          0x4 LONG 0x290 DEFINED (__AltT4Interrupt)?ABSOLUTE (__AltT4Interrupt):DEFINED (__T4Interrupt)?ABSOLUTE (__T4Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00014c          0x4 LONG 0x290 DEFINED (__AltT5Interrupt)?ABSOLUTE (__AltT5Interrupt):DEFINED (__T5Interrupt)?ABSOLUTE (__T5Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00014e          0x4 LONG 0x290 DEFINED (__AltINT2Interrupt)?ABSOLUTE (__AltINT2Interrupt):DEFINED (__INT2Interrupt)?ABSOLUTE (__INT2Interrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x000150          0x4 LONG 0xb0da DEFINED (__AltU2RXInterrupt)?ABSOLUTE (__AltU2RXInterrupt):DEFINED (__U2RXInterrupt)?ABSOLUTE (__U2RXInterrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x000152          0x4 LONG 0xb10e DEFINED (__AltU2TXInterrupt)?ABSOLUTE (__AltU2TXInterrupt):DEFINED (__U2TXInterrupt)?ABSOLUTE (__U2TXInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x000150          0x4 LONG 0x290 DEFINED (__AltU2RXInterrupt)?ABSOLUTE (__AltU2RXInterrupt):DEFINED (__U2RXInterrupt)?ABSOLUTE (__U2RXInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x000152          0x4 LONG 0x290 DEFINED (__AltU2TXInterrupt)?ABSOLUTE (__AltU2TXInterrupt):DEFINED (__U2TXInterrupt)?ABSOLUTE (__U2TXInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000154          0x4 LONG 0x290 DEFINED (__AltSPI2ErrInterrupt)?ABSOLUTE (__AltSPI2ErrInterrupt):DEFINED (__SPI2ErrInterrupt)?ABSOLUTE (__SPI2ErrInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000156          0x4 LONG 0x290 DEFINED (__AltSPI2Interrupt)?ABSOLUTE (__AltSPI2Interrupt):DEFINED (__SPI2Interrupt)?ABSOLUTE (__SPI2Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000158          0x4 LONG 0x290 DEFINED (__AltC1RxRdyInterrupt)?ABSOLUTE (__AltC1RxRdyInterrupt):DEFINED (__C1RxRdyInterrupt)?ABSOLUTE (__C1RxRdyInterrupt):ABSOLUTE (__DefaultInterrupt)
@@ -2598,6 +2232,9 @@ __FUID3
                     0x0230                  UART2 = 0x230
                     0x0230                  _UART2 = 0x230
                     0x0001                  __MPLAB_BUILD = 0x1
+                    0x0001                  __MPLAB_DEBUG = 0x1
+                    0x0001                  __MPLAB_DEBUGGER_PK3 = 0x1
+                    0x0001                  __ICD2RAM = 0x1
 START GROUP
 LOAD c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.a
 LOAD c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a
@@ -2608,7 +2245,7 @@ LOAD data_init
 LOAD default_isr
 
 __c30_signature
-                  0x000000        0x20a
+                  0x000000        0x1c2
  __c30_signature
                   0x000000          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
  __c30_signature
@@ -2746,493 +2383,258 @@ __c30_signature
  __c30_signature
                   0x000192          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libpic30-coff.a(data_init_standard.o)
  __c30_signature
-                  0x000198          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umodsi3.o)
+                  0x000198          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(mulsi3.o)
  __c30_signature
-                  0x00019e          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(muldi3.o)
+                  0x00019e          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcpy.XXo)
  __c30_signature
-                  0x0001a4          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(divmoddi3.o)
+                  0x0001a4          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memset.XXo)
  __c30_signature
-                  0x0001aa          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(mulsi3.o)
+                  0x0001aa          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcmp.XXo)
  __c30_signature
-                  0x0001b0          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(udivsi3.o)
+                  0x0001b0          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcpy.XXo)
  __c30_signature
-                  0x0001b6          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libm-coff.a(umuldi3.o)
+                  0x0001b6          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
  __c30_signature
-                  0x0001bc          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcpy.XXo)
- __c30_signature
-                  0x0001c2          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memset.XXo)
- __c30_signature
-                  0x0001c8          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strlen.XXo)
- __c30_signature
-                  0x0001ce          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcmp.XXo)
- __c30_signature
-                  0x0001d4          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(memcmp.XXo)
- __c30_signature
-                  0x0001da          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcpy.XXo)
- __c30_signature
-                  0x0001e0          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atol.XXo)
- __c30_signature
-                  0x0001e6          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strchr.XXo)
- __c30_signature
-                  0x0001ec          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(atoi.XXo)
- __c30_signature
-                  0x0001f2          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strstr.XXo)
- __c30_signature
-                  0x0001f8          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(ltoa.XXo)
- __c30_signature
-                  0x0001fe          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcat.XXo)
- __c30_signature
-                  0x000204          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strncmp.XXo)
+                  0x0001bc          0x6 c:/program files (x86)/microchip/mplabc30/v3.30/bin/bin/../../lib\libc-coff.a(strcat.XXo)
 
-.nbss               0x0800        0x330
- .nbss              0x0800        0x19c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
- .nbss              0x099c         0x98 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
-                    0x099c                  UDPRxCount
-                    0x099e                  UDPTxCount
-                    0x09a0                  activeUDPSocket
-                    0x09a2                  UDPSocketInfo
- .nbss              0x0a34         0x8c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o
-                    0x0a34                  curHTTPID
-                    0x0a36                  httpStubs
-                    0x0a3e                  curHTTP
- .nbss              0x0ac0         0x70 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFS2.o
-                    0x0ac0                  lastRead
+.nbss               0x0850        0x2b2
+ .nbss              0x0850         0xca Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
+ .nbss              0x091a         0x98 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
+                    0x091a                  UDPRxCount
+                    0x091c                  UDPTxCount
+                    0x091e                  activeUDPSocket
+                    0x0920                  UDPSocketInfo
+ .nbss              0x09b2         0x5e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
+ .nbss              0x0a10         0x46 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
+                    0x0a18                  AN0String
+                    0x0a20                  AppConfig
+ .nbss              0x0a56         0x22 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LCDBlocking.o
+                    0x0a56                  LCDText
+ .nbss              0x0a78         0x20 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
+ .nbss              0x0a98         0x16 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARP.o
+ .nbss              0x0aae         0x14 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ICMP.o
+ .nbss              0x0ac2          0xe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\StackTsk.o
+                    0x0ac4                  remoteNode
+ .nbss              0x0ad0          0xa Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Tick.o
+ .nbss              0x0ada          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
+ .nbss              0x0ae2          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENC28J60.o
+ .nbss              0x0aea          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
+ .nbss              0x0af2          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPServerDemo.o
+ .nbss              0x0af8          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
+ .nbss              0x0afe          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
 
-.ndata              0x0b30         0x70
- .ndata             0x0b30         0x70 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
+.ndata              0x0b02          0x4
+ .ndata             0x0b02          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Helpers.o
 
-.nbss               0x0ba0        0x114
- .nbss              0x0ba0         0x62 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomHTTPApp.o
- .nbss              0x0c02         0x5e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
- .nbss              0x0c60         0x54 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART2TCPBridge.o
+.nbss               0x0b06          0xc
+ .nbss              0x0b06          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\IP.o
+ .nbss              0x0b0a          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o
+ .nbss              0x0b0e          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
 
-.ndata              0x0cb4         0x48
- .ndata             0x0cb4         0x48 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
+.ndata              0x0b12          0xa
+ .ndata             0x0b12          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
+ .ndata             0x0b14          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
+                    0x0b14                  DHCPClientInitializedOnce
+ .ndata             0x0b16          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
+                    0x0b16                  bDHCPServerEnabled
+ .ndata             0x0b18          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
+ .ndata             0x0b1a          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
 
-.nbss               0x0cfc        0x1ec
- .nbss              0x0cfc         0x46 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
-                    0x0d04                  AN0String
-                    0x0d0c                  AppConfig
- .nbss              0x0d42         0x40 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Hashes.o
-                    0x0d42                  lastBlock
- .nbss              0x0d82         0x3a Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o
-                    0x0d96                  SMTPClient
- .nbss              0x0dbc         0x30 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o
- .nbss              0x0dec         0x28 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
- .nbss              0x0e14         0x26 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SPIEEPROM.o
- .nbss              0x0e3a         0x24 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
- .nbss              0x0e5e         0x22 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LCDBlocking.o
-                    0x0e5e                  LCDText
- .nbss              0x0e80         0x20 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o
- .nbss              0x0ea0         0x1a Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNTP.o
- .nbss              0x0eba         0x18 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNS.o
- .nbss              0x0ed2         0x16 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARP.o
+_033136904e170f51
+                    0x0b1c          0x2
+ _033136904e170f51
+                    0x0b1c          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
 
-.ndata              0x0ee8         0x16
- .ndata             0x0ee8         0x16 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPClient.o
+.ndata              0x0b1e          0x2
+ .ndata             0x0b1e          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
 
-.nbss               0x0efe         0x3e
- .nbss              0x0efe         0x14 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ICMP.o
- .nbss              0x0f12         0x12 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
- .nbss              0x0f24          0xe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\StackTsk.o
-                    0x0f26                  remoteNode
- .nbss              0x0f32          0xa Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Tick.o
+_031d9a804e170f59
+                    0x0b20          0x2
+ _031d9a804e170f59
+                    0x0b20          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
 
-.ndata              0x0f3c          0xa
- .ndata             0x0f3c          0xa Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART2TCPBridge.o
+.ndata              0x0b22          0x2
+ .ndata             0x0b22          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
+                    0x0b22                  __C30_UART
 
-.nbss               0x0f46         0x2e
- .nbss              0x0f46          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
- .nbss              0x0f4e          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENC28J60.o
- .nbss              0x0f56          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
- .nbss              0x0f5e          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPServerDemo.o
- .nbss              0x0f64          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
- .nbss              0x0f6a          0x6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
- .nbss              0x0f70          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
+.const              0x8324        0x250 load address 0x000324  
+ .const             0x8324        0x1b8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
+ .const             0x84dc         0x32 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
+ .const             0x850e         0x2c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
+ .const             0x853a         0x1c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
+ .const             0x8556         0x12 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
+ .const             0x8568          0xc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
+                    0x8568                  TCPSocketInitializer
 
-.ndata              0x0f74          0x8
- .ndata             0x0f74          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNS.o
- .ndata             0x0f78          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Helpers.o
+.text             0x000574       0x4c94
+ .text            0x000574       0x15d4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
+                  0x0005ac                  TCPWasReset
+                  0x0005bc                  TCPIsConnected
+                  0x0005cc                  TCPIsPutReady
+                  0x0005f6                  TCPGetTxFIFOFull
+                  0x00060c                  TCPIsGetReady
+                  0x000628                  TCPGetRxFIFOFree
+                  0x00094e                  TCPGetRemoteInfo
+                  0x000962                  TCPInit
+                  0x000cb4                  TCPAdjustFIFOSize
+                  0x000d72                  TCPDiscard
+                  0x000d8e                  TCPFlush
+                  0x000da2                  TCPDisconnect
+                  0x000e08                  TCPClose
+                  0x000e18                  TCPOpen
+                  0x001400                  TCPProcess
+                  0x001492                  TCPTick
+                  0x001748                  TCPFindArrayEx
+                  0x0018c4                  TCPFindEx
+                  0x0018d8                  TCPPeekArray
+                  0x001940                  TCPPeek
+                  0x001952                  TCPGetArray
+                  0x0019ce                  TCPGet
+                  0x001a26                  TCPPutArray
+                  0x001abc                  TCPPutString
+                  0x001ad6                  TCPPut
+ .text            0x001b48        0xa44 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENC28J60.o
+                  0x001b74                  MACPut
+                  0x001bbe                  MACIsTxReady
+                  0x001bd4                  MACGetArray
+                  0x001c46                  MACPutArray
+                  0x001d06                  MACGetFreeRxSize
+                  0x001d8c                  MACGet
+                  0x001da8                  MACIsMemCopyDone
+                  0x001e34                  WritePHYReg
+                  0x001e6c                  ReadPHYReg
+                  0x001eca                  MACIsLinked
+                  0x001edc                  MACMemCopyAsync
+                  0x002052                  CalcIPBufferChecksum
+                  0x0020e2                  MACCalcRxChecksum
+                  0x00213e                  MACSetReadPtr
+                  0x002178                  MACSetWritePtr
+                  0x0021b2                  MACSetReadPtrInRx
+                  0x0021d4                  MACFlush
+                  0x0022ec                  MACPutHeader
+                  0x002336                  MACDiscardRx
+                  0x002362                  MACGetHeader
+                  0x0023fe                  MACInit
+                  0x002512                  MACPowerDown
+                  0x00253c                  MACPowerUp
+                  0x00255a                  SetCLKOUT
+                  0x002570                  GetCLKOUT
+ .text            0x00258c        0x65e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
+                  0x00258c                  BerkeleySocketInit
+                  0x00259c                  socket
+                  0x0025d6                  bind
+                  0x002634                  listen
+                  0x0026c6                  accept
+                  0x00276c                  gethostname
+                  0x0027fe                  recv
+                  0x002862                  recvfrom
+                  0x00291e                  sendto
+                  0x002a6c                  send
+                  0x002a72                  connect
+                  0x002b54                  closesocket
+ .text            0x002bea        0x5f6 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
+                  0x002bea                  DHCPInit
+                  0x002c0c                  DHCPDisable
+                  0x002c1c                  DHCPEnable
+                  0x002c28                  DHCPIsEnabled
+                  0x002c32                  DHCPIsBound
+                  0x002c38                  DHCPStateChanged
+                  0x002c44                  DHCPIsServerDetected
+                  0x002fb4                  DHCPTask
+ .text            0x0031e0        0x4dc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
+                  0x003518                  DHCPServerTask
+ .text            0x0036bc        0x3ba Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
+                  0x0036bc                  UDPClose
+                  0x0036d4                  UDPInit
+                  0x0036e8                  UDPTask
+                  0x0036ec                  UDPOpen
+                  0x00374c                  UDPSetTxBuffer
+                  0x00375e                  UDPSetRxBuffer
+                  0x00376e                  UDPIsPutReady
+                  0x003798                  UDPPut
+                  0x0037c0                  UDPPutArray
+                  0x0037ec                  UDPPutString
+                  0x003802                  UDPFlush
+                  0x0038c4                  UDPIsGetReady
+                  0x0038e0                  UDPGet
+                  0x003904                  UDPGetArray
+                  0x003928                  UDPDiscard
+                  0x0039bc                  UDPProcess
+ .text            0x003a76        0x386 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Helpers.o
+                  0x003a76                  LFSRRand
+                  0x003ab0                  LFSRSeedRand
+                  0x003ad6                  GenerateRandomDWORD
+                  0x003b7e                  StringToIPAddress
+                  0x003c2c                  uitoa
+                  0x003c66                  hexatob
+                  0x003cc4                  btohexa_high
+                  0x003cd8                  btohexa_low
+                  0x003cea                  stricmppgm2ram
+                  0x003d2a                  swaps
+                  0x003d3c                  swapl
+                  0x003d6a                  CalcIPChecksum
+                  0x003d94                  strupr
+                  0x003db2                  FormatNetBIOSName
+                  0x003de0                  strnchr
+ .text            0x003dfc        0x35e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
+                  0x003dfc                  TelnetTask
+ .text            0x00415a        0x2b4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o
+                  0x0041f6                  NBNSTask
+ .text            0x00440e        0x28c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARP.o
+                  0x00440e                  ARPInit
+                  0x004428                  ARPIsResolved
+                  0x0044ca                  SwapARPPacket
+                  0x004556                  ARPResolve
+                  0x0045e4                  ARPProcess
+ .text            0x00469a        0x204 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
+                  0x00469a                  _AddressError
+                  0x0046a0                  _StackError
+                  0x0046e8                  DisplayIPValue
+                  0x0047fe                  main
+ .text            0x00489e        0x1a0 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ICMP.o
+                  0x00489e                  ICMPProcess
+                  0x00495a                  ICMPSendPing
+                  0x004974                  ICMPGetReply
+                  0x004a2e                  ICMPBeginUsage
+                  0x004a3a                  ICMPEndUsage
+ .text            0x004a3e        0x1a0 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\StackTsk.o
+                  0x004a3e                  StackInit
+                  0x004a76                  StackTask
+                  0x004bca                  StackApplications
+ .text            0x004bde        0x14a Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LCDBlocking.o
+                  0x004c14                  LCDInit
+                  0x004c92                  LCDUpdate
+                  0x004d12                  LCDErase
+ .text            0x004d28        0x13c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\IP.o
+                  0x004d28                  IPSetRxBuffer
+                  0x004d54                  IPPutHeader
+                  0x004ddc                  IPGetHeader
+ .text            0x004e64        0x12e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
+                  0x004e64                  AnnounceIP
+                  0x004ecc                  DiscoveryTask
+ .text            0x004f92         0xe2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPServerDemo.o
+                  0x004f92                  BerkeleyTCPServerDemo
+ .text            0x005074         0xdc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
+                  0x005074                  RebootTask
+ .text            0x005150         0xb8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Tick.o
+                  0x005150                  TickInit
+                  0x0051a6                  TickGet
+                  0x0051ae                  TickGetDiv256
+                  0x0051ca                  TickGetDiv64K
+                  0x0051e6                  TickConvertToMilliseconds
+                  0x0051f4                  _T1Interrupt
 
-.nbss               0x0f7c         0x10
- .nbss              0x0f7c          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\IP.o
- .nbss              0x0f80          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o
- .nbss              0x0f84          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPClient.o
- .nbss              0x0f88          0x4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPServer.o
+.dinit            0x005208         0xb6
+ .dinit           0x005208         0xb6 data_init
 
-.ndata              0x0f8c          0x6
- .ndata             0x0f8c          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
- .ndata             0x0f8e          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
-                    0x0f8e                  DHCPClientInitializedOnce
- .ndata             0x0f90          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
-                    0x0f90                  bDHCPServerEnabled
-
-_035b39a04df5253f
-                    0x0f92          0x2
- _035b39a04df5253f
-                    0x0f92          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNS.o
-
-.ndata              0x0f94          0x6
- .ndata             0x0f94          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
- .ndata             0x0f96          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o
- .ndata             0x0f98          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
-
-_0376e1504df52557
-                    0x0f9a          0x2
- _0376e1504df52557
-                    0x0f9a          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
-
-.ndata              0x0f9c          0x4
- .ndata             0x0f9c          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o
- .ndata             0x0f9e          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
-
-_036155404df5255e
-                    0x0fa0          0x2
- _036155404df5255e
-                    0x0fa0          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
-
-.ndata              0x0fa2          0x2
- .ndata             0x0fa2          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
-                    0x0fa2                  __C30_UART
-
-.const              0x878a       0x147a load address 0x00078a  
- .const             0x878a        0x7de Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o
- .const             0x8f68        0x360 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomHTTPApp.o
-                    0x8f68                  HTML_DOWN_ARROW
-                    0x8f6b                  HTML_UP_ARROW
- .const             0x92c8        0x1fe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UARTConfig.o
- .const             0x94c6        0x1c2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
- .const             0x9688        0x140 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Hashes.o
- .const             0x97c8        0x12e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
- .const             0x98f6         0x92 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
- .const             0x9988         0x8e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPClient.o
- .const             0x9a16         0x86 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o
- .const             0x9a9c         0x58 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o
- .const             0x9af4         0x4a Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
- .const             0x9b3e         0x3e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
- .const             0x9b7c         0x36 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
-                    0x9b7c                  TCPSocketInitializer
- .const             0x9bb2         0x1c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
- .const             0x9bce         0x12 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
- .const             0x9be0          0xe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNTP.o
- .const             0x9bee          0xe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
- .const             0x9bfc          0x8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFS2.o
-
-.text             0x001c04       0x8e88
- .text            0x001c04       0x1624 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
-                  0x001c3c                  TCPWasReset
-                  0x001c4c                  TCPIsConnected
-                  0x001c5c                  TCPIsPutReady
-                  0x001c84                  TCPGetTxFIFOFull
-                  0x001c9a                  TCPIsGetReady
-                  0x001cb6                  TCPGetRxFIFOFree
-                  0x001e96                  TCPGetRemoteInfo
-                  0x001eaa                  TCPInit
-                  0x0021fe                  TCPAdjustFIFOSize
-                  0x0022ba                  TCPDiscard
-                  0x0022d6                  TCPFlush
-                  0x0022ea                  TCPDisconnect
-                  0x002356                  TCPClose
-                  0x002366                  TCPOpen
-                  0x00245e                  TCPProcess
-                  0x002b18                  TCPTick
-                  0x002e38                  TCPFindArrayEx
-                  0x002fa6                  TCPFindEx
-                  0x002fba                  TCPPeekArray
-                  0x003020                  TCPPeek
-                  0x003032                  TCPGetArray
-                  0x0030ae                  TCPGet
-                  0x003106                  TCPPutArray
-                  0x00319c                  TCPPutString
-                  0x0031b6                  TCPPut
- .text            0x003228       0x12e2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o
-                  0x003228                  HTTPPrint_
-                  0x003238                  HTTPInit
-                  0x0032da                  HTTPURLDecode
-                  0x003344                  HTTPGetArg
-                  0x0034a4                  HTTPReadPostName
-                  0x0034c4                  HTTPReadPostValue
-                  0x003516                  HTTPIncFile
-                  0x0035ba                  HTTPPrint
-                  0x003766                  HTTPServer
- .text            0x00450a        0xebc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomHTTPApp.o
-                  0x00450a                  HTTPNeedsAuth
-                  0x004532                  HTTPCheckAuth
-                  0x004556                  HTTPExecuteGet
-                  0x0046de                  HTTPExecutePost
-                  0x004e68                  HTTPPrint_builddate
-                  0x004e9c                  HTTPPrint_version
-                  0x004eac                  HTTPPrint_btn
-                  0x004eea                  HTTPPrint_led
-                  0x004f4e                  HTTPPrint_ledSelected
-                  0x004fbe                  HTTPPrint_pot
-                  0x004fdc                  HTTPPrint_lcdtext
-                  0x00506e                  HTTPPrint_hellomsg
-                  0x0050a4                  HTTPPrint_cookiename
-                  0x0050d4                  HTTPPrint_uploadedmd5
-                  0x005178                  HTTPPrintIP
-                  0x0051c2                  HTTPPrint_config_hostname
-                  0x0051d2                  HTTPPrint_config_dhcpchecked
-                  0x0051e8                  HTTPPrint_config_ip
-                  0x005206                  HTTPPrint_config_gw
-                  0x005224                  HTTPPrint_config_subnet
-                  0x005242                  HTTPPrint_config_dns1
-                  0x005260                  HTTPPrint_config_dns2
-                  0x00527e                  HTTPPrint_config_mac
-                  0x0052f6                  HTTPPrint_read_comm
-                  0x0052f8                  HTTPPrint_write_comm
-                  0x0052fa                  HTTPPrint_reboot
-                  0x0052fe                  HTTPPrint_rebootaddr
-                  0x00530e                  HTTPPrint_ddns_user
-                  0x005310                  HTTPPrint_ddns_pass
-                  0x005312                  HTTPPrint_ddns_host
-                  0x005314                  HTTPPrint_ddns_service
-                  0x005316                  HTTPPrint_ddns_status
-                  0x005326                  HTTPPrint_ddns_status_msg
-                  0x00535e                  HTTPPrint_smtps_en
-                  0x00536e                  HTTPPrint_snmp_en
-                  0x00537e                  HTTPPrint_status_ok
-                  0x0053a2                  HTTPPrint_status_fail
- .text            0x0053c6        0xad8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENC28J60.o
-                  0x0053c6                  MACGet
-                  0x0053ec                  MACGetArray
-                  0x00547e                  MACPut
-                  0x0054ac                  MACPutArray
-                  0x0055c6                  MACSetReadPtrInRx
-                  0x0055e8                  MACPutHeader
-                  0x005668                  MACDiscardRx
-                  0x0056dc                  SetCLKOUT
-                  0x0056f2                  WritePHYReg
-                  0x00572a                  ReadPHYReg
-                  0x005788                  MACIsLinked
-                  0x0057c8                  GetCLKOUT
-                  0x0057e6                  MACPowerUp
-                  0x005804                  MACPowerDown
-                  0x00582e                  MACIsMemCopyDone
-                  0x005844                  MACMemCopyAsync
-                  0x0059bc                  CalcIPBufferChecksum
-                  0x005a4a                  MACCalcRxChecksum
-                  0x005aa6                  MACSetReadPtr
-                  0x005ae0                  MACSetWritePtr
-                  0x005b1a                  MACFlush
-                  0x005c30                  MACGetHeader
-                  0x005ccc                  MACGetFreeRxSize
-                  0x005d4e                  MACIsTxReady
-                  0x005d64                  MACInit
- .text            0x005e9e        0x8ee Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o
-                  0x005e9e                  SMTPBeginUsage
-                  0x005ec8                  SMTPEndUsage
-                  0x005fac                  SMTPTask
-                  0x0066bc                  SMTPSendMail
-                  0x0066c0                  SMTPIsBusy
-                  0x0066ca                  SMTPIsPutReady
-                  0x0066de                  SMTPPut
-                  0x006744                  SMTPPutArray
-                  0x006766                  SMTPPutString
-                  0x006782                  SMTPFlush
-                  0x006788                  SMTPPutDone
- .text            0x00678c        0x682 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
-                  0x00678c                  DHCPInit
-                  0x0067ae                  DHCPDisable
-                  0x0067be                  DHCPEnable
-                  0x0067ca                  DHCPIsEnabled
-                  0x0067d4                  DHCPIsBound
-                  0x0067da                  DHCPStateChanged
-                  0x0067e6                  DHCPIsServerDetected
-                  0x006baa                  DHCPTask
- .text            0x006e0e        0x66c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
-                  0x006e0e                  BerkeleySocketInit
-                  0x006e1c                  socket
-                  0x006e56                  bind
-                  0x006eb4                  listen
-                  0x006f4c                  accept
-                  0x006ff6                  gethostname
-                  0x007088                  recv
-                  0x0070ec                  recvfrom
-                  0x0071a8                  sendto
-                  0x0072f8                  send
-                  0x0072fe                  connect
-                  0x0073e4                  closesocket
- .text            0x00747a        0x5ca Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFS2.o
-                  0x00747a                  MPFSClose
-                  0x007492                  MPFSGet
-                  0x007510                  MPFSGetArray
-                  0x0075ae                  MPFSOpenID
-                  0x007608                  MPFSOpen
-                  0x0076ea                  MPFSGetLong
-                  0x0076fc                  MPFSGetSize
-                  0x007724                  MPFSGetStartAddr
-                  0x007752                  MPFSGetEndAddr
-                  0x007784                  MPFSSeek
-                  0x00783c                  MPFSFormat
-                  0x00787c                  MPFSGetTimestamp
-                  0x0078a4                  MPFSGetMicrotime
-                  0x0078cc                  MPFSGetFlags
-                  0x0078f0                  MPFSGetBytesRem
-                  0x007910                  MPFSGetFilename
-                  0x007954                  MPFSGetPosition
-                  0x00796c                  MPFSGetID
-                  0x0079a6                  MPFSPutEnd
-                  0x0079c2                  MPFSPutArray
-                  0x007a28                  MPFSInit
- .text            0x007a44        0x522 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNS.o
-                  0x007a44                  DNSBeginUsage
-                  0x007a50                  DNSEndUsage
-                  0x007a6a                  DNSResolve
-                  0x007b2e                  DNSIsResolved
- .text            0x007f66        0x502 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Helpers.o
-                  0x007f66                  LFSRRand
-                  0x007f9e                  LFSRSeedRand
-                  0x007fc4                  GenerateRandomDWORD
-                  0x00806e                  StringToIPAddress
-                  0x00811c                  Base64Decode
-                  0x0081ce                  Base64Encode
-                  0x008294                  uitoa
-                  0x0082ce                  hexatob
-                  0x00832a                  btohexa_high
-                  0x00833e                  btohexa_low
-                  0x008350                  stricmppgm2ram
-                  0x008390                  swaps
-                  0x0083a2                  swapl
-                  0x0083d0                  CalcIPChecksum
-                  0x0083fa                  strupr
-                  0x008418                  FormatNetBIOSName
-                  0x008448                  strnchr
- .text            0x008468        0x4aa Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
-                  0x008468                  DHCPServerTask
- .text            0x008912        0x426 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o
-                  0x008912                  AutoIPInit
-                  0x008926                  AutoIPIsConfigured
-                  0x008934                  AutoIPConfigIsInProgress
-                  0x00893a                  AutoIPRandSeed
-                  0x008940                  AutoIPConflict
-                  0x0089a8                  AutoIPDisable
-                  0x008a04                  AutoIPEnable
-                  0x008a0c                  AutoIPIsDisabled
-                  0x008a18                  AutoIPRand
-                  0x008a2c                  AutoIPTasks
- .text            0x008d38        0x3b2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
-                  0x008d38                  UDPClose
-                  0x008d50                  UDPTask
-                  0x008d54                  UDPOpen
-                  0x008db4                  UDPSetTxBuffer
-                  0x008dc6                  UDPSetRxBuffer
-                  0x008dd6                  UDPIsPutReady
-                  0x008e00                  UDPPut
-                  0x008e26                  UDPPutArray
-                  0x008e52                  UDPPutString
-                  0x008e68                  UDPFlush
-                  0x008f30                  UDPIsGetReady
-                  0x008f4c                  UDPGet
-                  0x008f70                  UDPGetArray
-                  0x008f98                  UDPDiscard
-                  0x008fa8                  UDPProcess
-                  0x0090d4                  UDPInit
- .text            0x0090ea        0x386 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
-                  0x0090ea                  TelnetTask
- .text            0x009470        0x326 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
-                  0x009470                  _AddressError
-                  0x009476                  _StackError
-                  0x00947c                  DisplayIPValue
-                  0x0094fc                  SaveAppConfig
-                  0x00952e                  main
- .text            0x009796        0x2d4 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARP.o
-                  0x009796                  ARPInit
-                  0x0097b0                  ARPIsResolved
-                  0x00984c                  SwapARPPacket
-                  0x0098d8                  ARPResolve
-                  0x009960                  ARPProcess
- .text            0x009a6a        0x2d0 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Hashes.o
-                  0x009a6a                  MD5Initialize
-                  0x009bec                  MD5AddData
-                  0x009c36                  HashAddData
-                  0x009c44                  MD5Calculate
- .text            0x009d3a        0x284 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o
-                  0x009d3a                  NBNSTask
- .text            0x009fbe        0x252 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SPIEEPROM.o
-                  0x009fbe                  XEEInit
-                  0x009fd6                  XEEBeginRead
-                  0x009fde                  XEEEndRead
-                  0x009fe0                  XEEBeginWrite
-                  0x009fe8                  XEEReadArray
-                  0x00a07c                  XEERead
-                  0x00a0b4                  XEEIsBusy
-                  0x00a1ca                  XEEEndWrite
-                  0x00a1d2                  XEEWrite
-                  0x00a1f2                  XEEWriteArray
- .text            0x00a210        0x23c Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o
-                  0x00a210                  TCPTXPerformanceTask
-                  0x00a36e                  TCPRXPerformanceTask
-                  0x00a448                  TCPPerformanceTask
- .text            0x00a44c        0x236 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UARTConfig.o
-                  0x00a44c                  DoUARTConfig
- .text            0x00a682        0x206 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNTP.o
-                  0x00a682                  SNTPClient
-                  0x00a852                  SNTPGetUTCSeconds
- .text            0x00a888        0x204 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ICMP.o
-                  0x00a888                  ICMPProcess
-                  0x00a942                  ICMPSendPing
-                  0x00a95c                  ICMPSendPingToHost
-                  0x00a976                  ICMPGetReply
-                  0x00aa7c                  ICMPBeginUsage
-                  0x00aa88                  ICMPEndUsage
-
-.dinit            0x00aa8c        0x1d6
- .dinit           0x00aa8c        0x1d6 data_init
-
-.text             0x00ac62       0x1016
- .text            0x00ac62        0x1ca Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
-                  0x00ac62                  BerkeleyUDPClientDemo
-                  0x00adf6                  BerkeleySNTPGetUTCSeconds
- .text            0x00ae2c        0x1b2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\StackTsk.o
-                  0x00ae2c                  StackInit
-                  0x00ae62                  StackTask
-                  0x00afb6                  StackApplications
- .text            0x00afde        0x154 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART2TCPBridge.o
-                  0x00afde                  UART2TCPBridgeInit
-                  0x00aff0                  UART2TCPBridgeTask
-                  0x00b0da                  _U2RXInterrupt
-                  0x00b10e                  _U2TXInterrupt
- .text            0x00b132        0x144 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LCDBlocking.o
-                  0x00b168                  LCDInit
-                  0x00b1e4                  LCDUpdate
-                  0x00b260                  LCDErase
- .text            0x00b276        0x138 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\IP.o
-                  0x00b276                  IPSetRxBuffer
-                  0x00b2a2                  IPPutHeader
-                  0x00b32a                  IPGetHeader
- .text            0x00b3ae        0x12e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Announce.o
-                  0x00b3ae                  AnnounceIP
-                  0x00b416                  DiscoveryTask
- .text            0x00b4dc        0x122 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPClient.o
-                  0x00b4dc                  GenericTCPClient
- .text            0x00b5fe         0xe8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
-                  0x00b5fe                  BerkeleyTCPClientDemo
- .text            0x00b6e6         0xdc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPServerDemo.o
-                  0x00b6e6                  BerkeleyTCPServerDemo
- .text            0x00b7c2         0xd0 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
-                  0x00b7c2                  SMTPDemo
- .text            0x00b892         0xce Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART.o
-                  0x00b892                  DataRdyUART2
-                  0x00b898                  ReadUART2
-                  0x00b8aa                  putsUART2
-                  0x00b8de                  BusyUART2
-                  0x00b8e6                  WriteUART2
-                  0x00b8f6                  getsUART2
-                  0x00b92e                  ReadStringUART
- .text            0x00b960         0xbe Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Tick.o
-                  0x00b960                  TickInit
-                  0x00b9b6                  TickGet
-                  0x00b9be                  TickGetDiv256
-                  0x00b9da                  TickGetDiv64K
-                  0x00b9f6                  TickConvertToMilliseconds
-                  0x00ba0a                  _T1Interrupt
- .text            0x00ba1e         0xbc Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
-                  0x00ba1e                  RebootTask
- .text            0x00bada         0xb8 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPServer.o
-                  0x00bada                  GenericTCPServer
- .text            0x00bb92         0x98 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
-                  0x00bb92                  PingDemo
- .text            0x00bc2a         0x4e Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Delay.o
-                  0x00bc2a                  Delay10us
-                  0x00bc52                  DelayMs
+.text             0x0052be        0x144
+ .text            0x0052be         0xb0 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
+                  0x0052be                  PingDemo
+ .text            0x00536e         0x52 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Delay.o
+                  0x00536e                  Delay10us
+                  0x00539a                  DelayMs
+ .text            0x0053c0         0x40 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
+                  0x0053c0                  BerkeleyUDPClientDemo
+                  0x0053c2                  BerkeleySNTPGetUTCSeconds
+ .text            0x005400          0x2 Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
+                  0x005400                  BerkeleyTCPClientDemo

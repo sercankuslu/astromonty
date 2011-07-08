@@ -65,13 +65,13 @@
  *   Uncomment or comment the following lines to enable or
  *   disabled the following high-level application modules.
  */
-#define STACK_USE_UART					// Application demo using UART for IP address display and stack configuration
-#define STACK_USE_UART2TCP_BRIDGE		// UART to TCP Bridge application example
+//#define STACK_USE_UART					// Application demo using UART for IP address display and stack configuration
+//#define STACK_USE_UART2TCP_BRIDGE		// UART to TCP Bridge application example
 //#define STACK_USE_IP_GLEANING
 #define STACK_USE_ICMP_SERVER			// Ping query and response capability
 #define STACK_USE_ICMP_CLIENT			// Ping transmission capability
 //#define STACK_USE_HTTP_SERVER			// Old HTTP server
-#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
+//#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
 //#define STACK_USE_SSL_SERVER			// SSL server socket support (Requires SW300052)
 //#define STACK_USE_SSL_CLIENT			// SSL client socket support (Requires SW300052)
 #define STACK_USE_AUTO_IP               // Dynamic link-layer IP address automatic configuration protocol
@@ -120,7 +120,7 @@
  *
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
-#define MPFS_USE_EEPROM
+//#define MPFS_USE_EEPROM
 //#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection

@@ -13,6 +13,13 @@
 
 #define SPI_DEV_ACTIVE   1
 #define SPI_DEV_CURRENT  2
+
+#define SPI_ENABLE              (1<<15)
+#define SPI_STOP_IDLE           (1<<13)
+//flags
+#define SPI_NEW_DATA_RECEIVED   (1<<6)
+#define SPI_DATA_TRANSFERRED    (1<<1)
+#define SPI_DATA_RECEIVED       (1<<1) 
 /*
 SPIxSTAT
 bit 15 SPIEN: SPIx Enable bit
@@ -38,7 +45,15 @@ bit 0 SPIRBF: SPIx Receive Buffer Full Status bit
     0 = Receive is not complete, SPIxRXB is empty
         Automatically set in hardware when SPIx transfers data from SPIxSR to SPIxRXB.
         Automatically cleared in hardware when core reads SPIxBUF location, reading SPIxRXB.
-        
+*/
+#define SPI_DISABLE_SCK     (1<<12)
+#define SPI_DISABLE_SDO     (1<<11)
+#define SPI_ENABLE_SS       (1<<7)
+#define SPI_MODE_16_8       (1<<10)
+#define SPI_CLK_EDGE_HL     (1<<8)
+#define SPI_CLK_POLAR_H     (1<<6)
+#define SPI_MASTER          (1<<5)
+/*  
 SPIXCON1
 bit 15-13 Unimplemented: Read as С0Т
 bit 12 DISSCK: Disable SCKx pin bit (SPI Master mode only)
@@ -80,7 +95,12 @@ bit 1-0 PPRE<1:0>: Primary Prescale bits (Master mode)(3)
     10 = Primary prescale 4:1
     01 = Primary prescale 16:1
     00 = Primary prescale 64:1        
-
+*/
+#define SPI_FRAME_ENABLE        (1<<15)
+#define SPI_FSYNC_SLAVE         (1<<14)
+#define SPI_FSYNC_POLAR_HIGH    (1<<13)
+#define SPI_FSYNC_COIN_FIRST    (1<<1)
+/*
 SPIxCON2
 bit 15 FRMEN: Framed SPIx Support bit
     1 = Framed SPIx support enabled (SSx pin is used as frame sync pulse input/output)
@@ -97,31 +117,22 @@ bit 1 FRMDLY: Frame Sync Pulse Edge Select bit
     0 = Frame sync pulse precedes first bit clock
 bit 0 Unimplemented: This bit must not be set to С1Т by the user application
 */
-#define SPI_MODE00 0x0000
-#define SPI_MODE01 0x0020
-#define SPI_MODE10 0x0100
-#define SPI_MODE11 0x0140
-
-#define SPI_PPRE1_1  0x00003
-#define SPI_PPRE4_1  0x00002
-#define SPI_PPRE16_1 0x00001
-#define SPI_PPRE64_1 0x00000 
-
-
-
+#define GetPeripheralClock() 40000000.0
 typedef struct _SPI_DEV_LIST
 {
     BYTE    DevID;
     BYTE    Port;
-    BYTE    Status;//SPI_DEV_ACTIVE|SPI_DEV_CURRENT
-    WORD    SPIParams; //пол€рность 0:0|0:1|1:0|1:1; скорость pri=1:1|4:1|16:1|64:1; sec= 1:1...8:1
+    BYTE    Status;     //SPI_DEV_ACTIVE|SPI_DEV_CURRENT
+    WORD    SPIParams;  //(SPIXCON1) Master/slave, пол€рность 0:0|0:1|1:0|1:1;
+                        // скорость pri=1:1|4:1|16:1|64:1; sec= 1:1...8:1
     void*   DevSelect;  //‘ункци€ дл€ выбора устройства
     void*   DevDeselect; //‘ункци€ дл€ освобождени€ устройства
 } SPI_DEVICE_LIST;
 
 BYTE SPI_Init(void);
 
-BYTE SPI_RegDevice(BYTE port, void* DevOn,void* DevOff); //возвращает DevId не требует захвата устройства
+//регистраци€ устройства
+BYTE SPI_RegDevice(BYTE port, BYTE Mode, DWORD Speed, void* DevOn,void* DevOff);
 
 BOOL SPI1_Open(BYTE DevId);
 void SPI1_Close(BYTE DevId);
