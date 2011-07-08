@@ -13,7 +13,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File001]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARCFOUR.o
 Folder=Intermediary
@@ -26,7 +26,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File002]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ARP.o
 Folder=Intermediary
@@ -39,7 +39,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File003]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\AutoIP.o
 Folder=Intermediary
@@ -52,7 +52,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File004]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyAPI.o
 Folder=Intermediary
@@ -65,7 +65,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File005]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BigInt.o
 Folder=Intermediary
@@ -78,7 +78,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File006]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Delay.o
 Folder=Intermediary
@@ -91,7 +91,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File007]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCP.o
 Folder=Intermediary
@@ -104,7 +104,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File008]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DHCPs.o
 Folder=Intermediary
@@ -117,7 +117,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File009]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNS.o
 Folder=Intermediary
@@ -130,7 +130,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File010]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DNSs.o
 Folder=Intermediary
@@ -143,7 +143,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File011]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\DynDNS.o
 Folder=Intermediary
@@ -156,7 +156,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File012]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENC28J60.o
 Folder=Intermediary
@@ -169,7 +169,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File013]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ENCX24J600.o
 Folder=Intermediary
@@ -182,7 +182,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File014]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\FileSystem.o
 Folder=Intermediary
@@ -195,7 +195,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File015]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\FTP.o
 Folder=Intermediary
@@ -208,7 +208,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File016]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Hashes.o
 Folder=Intermediary
@@ -221,7 +221,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File017]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Helpers.o
 Folder=Intermediary
@@ -234,7 +234,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File018]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP2.o
 Folder=Intermediary
@@ -247,7 +247,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File019]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\HTTP.o
 Folder=Intermediary
@@ -260,7 +260,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File020]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ICMP.o
 Folder=Intermediary
@@ -273,7 +273,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File021]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\IP.o
 Folder=Intermediary
@@ -286,7 +286,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File022]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LCDBlocking.o
 Folder=Intermediary
@@ -299,7 +299,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File023]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFS2.o
 Folder=Intermediary
@@ -312,7 +312,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File024]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFS.o
 Folder=Intermediary
@@ -325,7 +325,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File025]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\NBNS.o
 Folder=Intermediary
@@ -338,7 +338,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File026]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Random.o
 Folder=Intermediary
@@ -351,7 +351,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File027]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Reboot.o
 Folder=Intermediary
@@ -364,7 +364,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File028]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\RSA.o
 Folder=Intermediary
@@ -377,7 +377,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File029]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTP.o
 Folder=Intermediary
@@ -390,7 +390,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File030]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNMP.o
 Folder=Intermediary
@@ -403,7 +403,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File031]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNMPv3.o
 Folder=Intermediary
@@ -416,7 +416,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File032]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNMPv3USM.o
 Folder=Intermediary
@@ -429,7 +429,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File033]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SNTP.o
 Folder=Intermediary
@@ -442,7 +442,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File034]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SPIEEPROM.o
 Folder=Intermediary
@@ -455,7 +455,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File035]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SPIFlash.o
 Folder=Intermediary
@@ -468,7 +468,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File036]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SPIRAM.o
 Folder=Intermediary
@@ -481,7 +481,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File037]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SSL.o
 Folder=Intermediary
@@ -494,7 +494,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File038]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\StackTsk.o
 Folder=Intermediary
@@ -507,7 +507,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File039]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCP.o
 Folder=Intermediary
@@ -520,7 +520,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File040]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TCPPerformanceTest.o
 Folder=Intermediary
@@ -533,7 +533,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File041]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Telnet.o
 Folder=Intermediary
@@ -546,7 +546,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File042]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\TFTPc.o
 Folder=Intermediary
@@ -559,7 +559,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File043]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\Tick.o
 Folder=Intermediary
@@ -572,7 +572,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File044]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART2TCPBridge.o
 Folder=Intermediary
@@ -585,7 +585,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File045]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UART.o
 Folder=Intermediary
@@ -598,7 +598,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File046]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDP.o
 Folder=Intermediary
@@ -611,7 +611,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File047]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UDPPerformanceTest.o
 Folder=Intermediary
@@ -624,7 +624,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File048]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ZeroconfHelper.o
 Folder=Intermediary
@@ -637,7 +637,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File049]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ZeroconfLinkLocal.o
 Folder=Intermediary
@@ -650,7 +650,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File050]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\ZeroconfMulticastDNS.o
 Folder=Intermediary
@@ -663,7 +663,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File051]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomHTTPApp.o
 Folder=Intermediary
@@ -676,7 +676,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File052]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomSNMPApp.o
 Folder=Intermediary
@@ -689,7 +689,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File053]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\CustomSSLCert.o
 Folder=Intermediary
@@ -702,7 +702,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File054]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MainDemo.o
 Folder=Intermediary
@@ -715,7 +715,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File055]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPClientDemo.o
 Folder=Intermediary
@@ -728,7 +728,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File056]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyTCPServerDemo.o
 Folder=Intermediary
@@ -741,7 +741,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File057]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\BerkeleyUDPClientDemo.o
 Folder=Intermediary
@@ -754,7 +754,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File058]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPClient.o
 Folder=Intermediary
@@ -767,7 +767,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File059]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\GenericTCPServer.o
 Folder=Intermediary
@@ -780,7 +780,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File060]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\LegacyHTTPApp.o
 Folder=Intermediary
@@ -793,7 +793,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File061]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\PingDemo.o
 Folder=Intermediary
@@ -806,7 +806,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File062]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\SMTPDemo.o
 Folder=Intermediary
@@ -819,7 +819,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File063]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\UARTConfig.o
 Folder=Intermediary
@@ -832,7 +832,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File064]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg2.o
 Folder=Intermediary
@@ -845,7 +845,7 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
 [File065]
 Location=E:\astromonty\Programms\TCPIP Demo App\Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60\MPFSImg.o
 Folder=Intermediary
@@ -858,7 +858,33 @@ SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.
 SuiteArgsString=
 ToolArgsString=-g -Wall -DEXPLORER_16_ENC28J60 -mlarge-code -Os
 TraceCmdString=
-DebugOptions=
+DebugOptions=-D__DEBUG -D__MPLAB_DEBUGGER_PK3=1
+[File066]
+Location=E:\astromonty\Programms\TCPIP Demo App\TCPIP Demo App - C30 - EXPLORER_16_ENC28J60.cof
+Folder=Output
+DeviceName=dsPIC33FJ128GP710
+LanguageToolSuiteID={479DDE59-4D56-455E-855E-FFF59A3DB57E}
+LanguageToolID={433C3D55-811D-409D-A6BF-159CF9355B42}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\mplabc30\v3.30\bin\pic30-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)|Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60||$(AINDIR)||$(INCDIR)|.;..\Microchip\Include||$(LIBDIR)||$(LKRDIR)||
+SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.c|..\Microchip\TCPIP Stack\ARP.c|..\Microchip\TCPIP Stack\AutoIP.c|..\Microchip\TCPIP Stack\BerkeleyAPI.c|..\Microchip\TCPIP Stack\BigInt.c|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\DHCP.c|..\Microchip\TCPIP Stack\DHCPs.c|..\Microchip\TCPIP Stack\DNS.c|..\Microchip\TCPIP Stack\DNSs.c|..\Microchip\TCPIP Stack\DynDNS.c|..\Microchip\TCPIP Stack\ENC28J60.c|..\Microchip\TCPIP Stack\ENCX24J600.c|..\Microchip\TCPIP Stack\FileSystem.c|..\Microchip\TCPIP Stack\FTP.c|..\Microchip\TCPIP Stack\Hashes.c|..\Microchip\TCPIP Stack\Helpers.c|..\Microchip\TCPIP Stack\HTTP2.c|..\Microchip\TCPIP Stack\HTTP.c|..\Microchip\TCPIP Stack\ICMP.c|..\Microchip\TCPIP Stack\IP.c|..\Microchip\TCPIP Stack\LCDBlocking.c|..\Microchip\TCPIP Stack\MPFS2.c|..\Microchip\TCPIP Stack\MPFS.c|..\Microchip\TCPIP Stack\NBNS.c|..\Microchip\TCPIP Stack\Random.c|..\Microchip\TCPIP Stack\Reboot.c|..\Microchip\TCPIP Stack\RSA.c|..\Microchip\TCPIP Stack\SMTP.c|..\Microchip\TCPIP Stack\SNMP.c|..\Microchip\TCPIP Stack\SNMPv3.c|..\Microchip\TCPIP Stack\SNMPv3USM.c|..\Microchip\TCPIP Stack\SNTP.c|..\Microchip\TCPIP Stack\SPIEEPROM.c|..\Microchip\TCPIP Stack\SPIFlash.c|..\Microchip\TCPIP Stack\SPIRAM.c|..\Microchip\TCPIP Stack\SSL.c|..\Microchip\TCPIP Stack\StackTsk.c|..\Microchip\TCPIP Stack\TCP.c|..\Microchip\TCPIP Stack\TCPPerformanceTest.c|..\Microchip\TCPIP Stack\Telnet.c|..\Microchip\TCPIP Stack\TFTPc.c|..\Microchip\TCPIP Stack\Tick.c|..\Microchip\TCPIP Stack\UART2TCPBridge.c|..\Microchip\TCPIP Stack\UART.c|..\Microchip\TCPIP Stack\UDP.c|..\Microchip\TCPIP Stack\UDPPerformanceTest.c|..\Microchip\TCPIP Stack\ZeroconfHelper.c|..\Microchip\TCPIP Stack\ZeroconfLinkLocal.c|..\Microchip\TCPIP Stack\ZeroconfMulticastDNS.c|CustomHTTPApp.c|CustomSNMPApp.c|CustomSSLCert.c|MainDemo.c|BerkeleyTCPClientDemo.c|BerkeleyTCPServerDemo.c|BerkeleyUDPClientDemo.c|GenericTCPClient.c|GenericTCPServer.c|LegacyHTTPApp.c|PingDemo.c|SMTPDemo.c|UARTConfig.c|MPFSImg2.c|MPFSImg.c||<obj>||<lib>|..\Microchip\TCPIP Stack\BigInt_helper_elf.a|..\Microchip\TCPIP Stack\BigInt_helper_coff.a||<lkr>||
+SuiteArgsString=
+ToolArgsString=-Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
+TraceCmdString=
+DebugOptions=--defsym=__MPLAB_DEBUG=1 --defsym=__MPLAB_DEBUGGER_PK3=1 --defsym=__ICD2RAM=1
+[File067]
+Location=E:\astromonty\Programms\TCPIP Demo App\TCPIP Demo App - C30 - EXPLORER_16_ENC28J60.hex
+Folder=Output
+DeviceName=dsPIC33FJ128GP710
+LanguageToolSuiteID={479DDE59-4D56-455E-855E-FFF59A3DB57E}
+LanguageToolID={433C3D55-811D-409D-A6BF-159CF9355B42}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\mplabc30\v3.30\bin\pic30-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)|Objects - TCPIP Demo App - C30 - EXPLORER_16_ENC28J60||$(AINDIR)||$(INCDIR)|.;..\Microchip\Include||$(LIBDIR)||$(LKRDIR)||
+SOLK=<src>|..\Microchip\TCPIP Stack\Announce.c|..\Microchip\TCPIP Stack\ARCFOUR.c|..\Microchip\TCPIP Stack\ARP.c|..\Microchip\TCPIP Stack\AutoIP.c|..\Microchip\TCPIP Stack\BerkeleyAPI.c|..\Microchip\TCPIP Stack\BigInt.c|..\Microchip\TCPIP Stack\Delay.c|..\Microchip\TCPIP Stack\DHCP.c|..\Microchip\TCPIP Stack\DHCPs.c|..\Microchip\TCPIP Stack\DNS.c|..\Microchip\TCPIP Stack\DNSs.c|..\Microchip\TCPIP Stack\DynDNS.c|..\Microchip\TCPIP Stack\ENC28J60.c|..\Microchip\TCPIP Stack\ENCX24J600.c|..\Microchip\TCPIP Stack\FileSystem.c|..\Microchip\TCPIP Stack\FTP.c|..\Microchip\TCPIP Stack\Hashes.c|..\Microchip\TCPIP Stack\Helpers.c|..\Microchip\TCPIP Stack\HTTP2.c|..\Microchip\TCPIP Stack\HTTP.c|..\Microchip\TCPIP Stack\ICMP.c|..\Microchip\TCPIP Stack\IP.c|..\Microchip\TCPIP Stack\LCDBlocking.c|..\Microchip\TCPIP Stack\MPFS2.c|..\Microchip\TCPIP Stack\MPFS.c|..\Microchip\TCPIP Stack\NBNS.c|..\Microchip\TCPIP Stack\Random.c|..\Microchip\TCPIP Stack\Reboot.c|..\Microchip\TCPIP Stack\RSA.c|..\Microchip\TCPIP Stack\SMTP.c|..\Microchip\TCPIP Stack\SNMP.c|..\Microchip\TCPIP Stack\SNMPv3.c|..\Microchip\TCPIP Stack\SNMPv3USM.c|..\Microchip\TCPIP Stack\SNTP.c|..\Microchip\TCPIP Stack\SPIEEPROM.c|..\Microchip\TCPIP Stack\SPIFlash.c|..\Microchip\TCPIP Stack\SPIRAM.c|..\Microchip\TCPIP Stack\SSL.c|..\Microchip\TCPIP Stack\StackTsk.c|..\Microchip\TCPIP Stack\TCP.c|..\Microchip\TCPIP Stack\TCPPerformanceTest.c|..\Microchip\TCPIP Stack\Telnet.c|..\Microchip\TCPIP Stack\TFTPc.c|..\Microchip\TCPIP Stack\Tick.c|..\Microchip\TCPIP Stack\UART2TCPBridge.c|..\Microchip\TCPIP Stack\UART.c|..\Microchip\TCPIP Stack\UDP.c|..\Microchip\TCPIP Stack\UDPPerformanceTest.c|..\Microchip\TCPIP Stack\ZeroconfHelper.c|..\Microchip\TCPIP Stack\ZeroconfLinkLocal.c|..\Microchip\TCPIP Stack\ZeroconfMulticastDNS.c|CustomHTTPApp.c|CustomSNMPApp.c|CustomSSLCert.c|MainDemo.c|BerkeleyTCPClientDemo.c|BerkeleyTCPServerDemo.c|BerkeleyUDPClientDemo.c|GenericTCPClient.c|GenericTCPServer.c|LegacyHTTPApp.c|PingDemo.c|SMTPDemo.c|UARTConfig.c|MPFSImg2.c|MPFSImg.c||<obj>||<lib>|..\Microchip\TCPIP Stack\BigInt_helper_elf.a|..\Microchip\TCPIP Stack\BigInt_helper_coff.a||<lkr>||
+SuiteArgsString=
+ToolArgsString=-Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
+TraceCmdString=
+DebugOptions=--defsym=__MPLAB_DEBUG=1 --defsym=__MPLAB_DEBUGGER_PK3=1 --defsym=__ICD2RAM=1
 [TOOL_LOC_STAMPS]
 tool_loc{069BD372-6CA0-40D4-BF2F-5DC806D05083}=C:\Program Files (x86)\Microchip\mplabc30\v3.30\bin\pic30-gcc.exe
 tool_loc{433C3D55-811D-409D-A6BF-159CF9355B42}=C:\Program Files (x86)\Microchip\mplabc30\v3.30\bin\pic30-ld.exe
