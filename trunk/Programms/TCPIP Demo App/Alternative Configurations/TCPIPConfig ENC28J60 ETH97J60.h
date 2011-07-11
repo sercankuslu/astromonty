@@ -108,8 +108,8 @@
  *   applications.  If your custom application requires it
  *   otherwise, uncomment the appropriate selection.
  */
-//#define STACK_USE_MPFS
-//#define STACK_USE_MPFS2
+#define STACK_USE_MPFS
+#define STACK_USE_MPFS2
 
 /* MPFS Storage Location
  *   If html pages are stored in internal program memory,
@@ -121,7 +121,7 @@
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
 //#define MPFS_USE_EEPROM
-//#define MPFS_USE_SPI_FLASH
+#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection
  *   If using the 1Mbit EEPROM, uncomment this line

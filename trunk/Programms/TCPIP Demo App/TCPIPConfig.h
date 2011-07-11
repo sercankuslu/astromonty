@@ -71,7 +71,7 @@
 #define STACK_USE_ICMP_SERVER			// Ping query and response capability
 #define STACK_USE_ICMP_CLIENT			// Ping transmission capability
 //#define STACK_USE_HTTP_SERVER			// Old HTTP server
-//#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
+#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
 //#define STACK_USE_SSL_SERVER			// SSL server socket support (Requires SW300052)
 //#define STACK_USE_SSL_CLIENT			// SSL client socket support (Requires SW300052)
 //#define STACK_USE_AUTO_IP               // Dynamic link-layer IP address automatic configuration protocol
@@ -86,7 +86,7 @@
 //#define STACK_USE_GENERIC_TCP_SERVER_EXAMPLE	// ToUpper server example in GenericTCPServer.c
 #define STACK_USE_TELNET_SERVER			// Telnet server
 #define STACK_USE_ANNOUNCE				// Microchip Embedded Ethernet Device Discoverer server/client
-//#define STACK_USE_DNS					// Domain Name Service Client for resolving hostname strings to IP addresses
+#define STACK_USE_DNS					// Domain Name Service Client for resolving hostname strings to IP addresses
 //#define STACK_USE_DNS_SERVER			// Domain Name Service Server for redirection to the local device
 #define STACK_USE_NBNS					// NetBIOS Name Service Server for repsonding to NBNS hostname broadcast queries
 #define STACK_USE_REBOOT_SERVER			// Module for resetting this PIC remotely.  Primarily useful for a Bootloader.
@@ -109,7 +109,7 @@
  *   otherwise, uncomment the appropriate selection.
  */
 //#define STACK_USE_MPFS
-//#define STACK_USE_MPFS2
+#define STACK_USE_MPFS2
 
 /* MPFS Storage Location
  *   If html pages are stored in internal program memory,
@@ -120,8 +120,8 @@
  *
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
-#define MPFS_USE_EEPROM
-//#define MPFS_USE_SPI_FLASH
+//#define MPFS_USE_EEPROM
+#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection
  *   If using the 1Mbit EEPROM, uncomment this line
@@ -136,13 +136,13 @@
  *   For MPFS Classic, this setting must match the Reserved setting
  *	 on the Advanced Settings page of the MPFS2 Utility.
  */
-#define MPFS_RESERVE_BLOCK				(137ul)
+#define MPFS_RESERVE_BLOCK				(0ul)
 
 /* MPFS File Handles
  *   Maximum number of simultaneously open MPFS2 files.
  *   For MPFS Classic, this has no effect.
  */
-#define MAX_MPFS_HANDLES				(7ul)
+#define MAX_MPFS_HANDLES				(10ul)
 
 
 // =======================================================================
@@ -159,27 +159,27 @@
 #define MY_DEFAULT_MAC_BYTE1            (0x00)	// Use the default of 00-04-A3-00-00-00
 #define MY_DEFAULT_MAC_BYTE2            (0x04)	// if using an ENCX24J600, MRF24WB0M, or
 #define MY_DEFAULT_MAC_BYTE3            (0xA3)	// PIC32MX6XX/7XX internal Ethernet 
-#define MY_DEFAULT_MAC_BYTE4            (0x00)	// controller and wish to use the 
+#define MY_DEFAULT_MAC_BYTE4            (0xF3)	// controller and wish to use the 
 #define MY_DEFAULT_MAC_BYTE5            (0x00)	// internal factory programmed MAC
 #define MY_DEFAULT_MAC_BYTE6            (0x00)	// address instead.
 
-#define MY_DEFAULT_IP_ADDR_BYTE1        (169ul)
-#define MY_DEFAULT_IP_ADDR_BYTE2        (254ul)
+#define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
+#define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
 #define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
-#define MY_DEFAULT_IP_ADDR_BYTE4        (1ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (100ul)
 
 #define MY_DEFAULT_MASK_BYTE1           (255ul)
 #define MY_DEFAULT_MASK_BYTE2           (255ul)
-#define MY_DEFAULT_MASK_BYTE3           (0ul)
+#define MY_DEFAULT_MASK_BYTE3           (255ul)
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 
-#define MY_DEFAULT_GATE_BYTE1           (169ul)
-#define MY_DEFAULT_GATE_BYTE2           (254ul)
+#define MY_DEFAULT_GATE_BYTE1           (192ul)
+#define MY_DEFAULT_GATE_BYTE2           (168ul)
 #define MY_DEFAULT_GATE_BYTE3           (1ul)
 #define MY_DEFAULT_GATE_BYTE4           (1ul)
 
-#define MY_DEFAULT_PRIMARY_DNS_BYTE1	(169ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE2	(254ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE1	(192ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE2	(168ul)
 #define MY_DEFAULT_PRIMARY_DNS_BYTE3	(1ul)
 #define MY_DEFAULT_PRIMARY_DNS_BYTE4	(1ul)
 
@@ -239,7 +239,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(491ul)
+	#define TCP_ETH_RAM_SIZE					(3756ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -285,19 +285,23 @@
 			//{TCP_PURPOSE_GENERIC_TCP_CLIENT, TCP_ETH_RAM, 125, 100},
 			//{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_FTP_COMMAND, TCP_ETH_RAM, 100, 40},
 			//{TCP_PURPOSE_FTP_DATA, TCP_ETH_RAM, 0, 128},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_RX, TCP_ETH_RAM, 40, 1500},
 			//{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
-			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
 			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
 		};
 		#define END_OF_TCP_CONFIGURATION
@@ -332,7 +336,7 @@
 
 	// Maximum numbers of simultaneous HTTP connections allowed.
 	// Each connection consumes 2 bytes of RAM and a TCP socket
-	#define MAX_HTTP_CONNECTIONS	(2u)
+	#define MAX_HTTP_CONNECTIONS	(4u)
 
 	// Optional setting to use PIC RAM instead of Ethernet/Wi-Fi RAM for
 	// storing HTTP Connection Context variables (HTTP_CONN structure for each 
@@ -361,7 +365,7 @@
 	// If not using a specific module, comment it to save resources
 	#define HTTP_USE_POST					// Enable POST support
 	#define HTTP_USE_COOKIES				// Enable cookie support
-	#define HTTP_USE_AUTHENTICATION			// Enable basic authentication support
+	//#define HTTP_USE_AUTHENTICATION			// Enable basic authentication support
 
 	//#define HTTP_NO_AUTH_WITHOUT_SSL		// Uncomment to require SSL before requesting a password
 
@@ -379,7 +383,7 @@
 
 	#define STACK_USE_HTTP_APP_RECONFIG		// Use the AppConfig web page in the Demo App (~2.5kb ROM, ~0b RAM)
 	#define STACK_USE_HTTP_MD5_DEMO			// Use the MD5 Demo web page (~5kb ROM, ~160b RAM)
-	#define STACK_USE_HTTP_EMAIL_DEMO		// Use the e-mail demo web page
+	//#define STACK_USE_HTTP_EMAIL_DEMO		// Use the e-mail demo web page
 
 // -- SSL Options --------------------------------------------------------
 
@@ -403,7 +407,7 @@
 	// connections to work.  If fewer sockets are available than this
 	// definition, then the the lesser of the two quantities will be the
 	// actual limit.
-	#define MAX_TELNET_CONNECTIONS	(1u)
+	#define MAX_TELNET_CONNECTIONS	(4u)
 
 	// Default local listening port for the Telnet server.  Port 23 is the
 	// protocol default.
