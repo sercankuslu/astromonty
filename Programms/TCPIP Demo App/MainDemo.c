@@ -1164,7 +1164,7 @@ static void InitAppConfig(void)
 
 #if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
 void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
-{
+ {
 	NVM_VALIDATION_STRUCT NVMValidationStruct;
 
 	// Ensure adequate space has been reserved in non-volatile storage to 
