@@ -221,12 +221,12 @@ void SPIFlashInit(void)
 	    ClearSPIDoneFlag();
 	
 	    // Send instruction
-	    SPIFLASH_SSPBUF = RDID;
+	    SPIFLASH_SSPBUF = JEDEC_ID;//RDID;
 	    WaitForDataByte();
 	    Dummy = SPIFLASH_SSPBUF;	
 		
 		// Send 3 byte address (0x000000), discard Manufacture ID, get Device ID
-	    for(i = 0; i < 5; i++)
+	    for(i = 0; i < 3; i++)
 	    {
 		    SPIFLASH_SSPBUF = 0x00;
 		    WaitForDataByte();
@@ -245,8 +245,8 @@ void SPIFlashInit(void)
 			case 0x49:	// SST25VF010A		(1 Mbit)	0xAF, 14us, AAI Byte
 				deviceCaps.bits.bWriteByteStream = 1;
 				break;
-				
-			case 0x4B:	// SST25VF064C		(64 Mbit)	0x02, 1.5ms/256 byte page, no AAI
+			case 0x18:	
+			case 0x4B:	// SST25VF064C		(64 Mbit)	0x02, 1.5ms/256 byte page, no AAI			
 				deviceCaps.bits.bPageProgram = 1;
 				break;
 
@@ -742,7 +742,7 @@ void SPIFlashEraseSector(DWORD dwAddr)
     ClearSPIDoneFlag();
 
     // Issue ERASE command with address
-    SPIFLASH_SSPBUF = ERASE_4K;
+    SPIFLASH_SSPBUF = ERASE_SECTOR;
     WaitForDataByte();
     Dummy = SPIFLASH_SSPBUF;
 

@@ -121,7 +121,7 @@
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
 //#define MPFS_USE_EEPROM
-#define MPFS_USE_SPI_FLASH
+//#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection
  *   If using the 1Mbit EEPROM, uncomment this line

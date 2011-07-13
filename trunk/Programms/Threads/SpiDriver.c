@@ -123,13 +123,17 @@ BOOL SPI_Open(BYTE DevId)
         case 1:
             SPI1CON1=SPI_Devices[DevId].SPIParams;
             Call_Dev(SPI_Devices[DevId].DevSelect);
+            SPI1CON2 = 0;
+            SPI1CON1bits.CKE = 1;
             SPI1CON1bits.MSTEN = 1;
             SPI1STATbits.SPIEN = 1;
         break;        
         case 2:
             SPI2CON1=SPI_Devices[DevId].SPIParams;
             Call_Dev(SPI_Devices[DevId].DevSelect);
-            SPI1CON1bits.MSTEN = 1;
+            SPI2CON2 = 0;
+            SPI2CON1bits.CKE = 1;
+            SPI2CON1bits.MSTEN = 1;
             SPI2STATbits.SPIEN = 1;
         break;
         default:
