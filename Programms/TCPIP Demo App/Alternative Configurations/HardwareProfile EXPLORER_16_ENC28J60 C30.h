@@ -406,8 +406,8 @@
 #if defined(__PIC24FJ256GB110__)
 	// PIC24FJ256GB110 USB PIM has RD12 pin on Explorer 16 schematic 
 	// remapped and actually connected to PIC24FJ256GB110 pin 90 (RG0).  
-	#define EEPROM_CS_TRIS		(TRISGbits.TRISG0)
-	#define EEPROM_CS_IO		(LATGbits.LATG0)
+	//#define EEPROM_CS_TRIS		(TRISGbits.TRISG0)
+	//#define EEPROM_CS_IO		(LATGbits.LATG0)
 #elif defined(__PIC24FJ256GB210__)
 	// PIC24FJ256GB210 USB PIM has RD12 pin on Explorer 16 schematic 
 	// remapped and actually connected to PIC24FJ256GB210 pin 90 (RG0) when 
@@ -417,8 +417,8 @@
 	// as chip select to the same states.  For an actual application, you'd 
 	// want to specify only the single necessary pin as this double 
 	// assignment operation generates inefficient code by the C compiler.
-	#define EEPROM_CS_TRIS		TRISGbits.TRISG0 = TRISDbits.TRISD12
-	#define EEPROM_CS_IO		LATGbits.LATG0 = LATDbits.LATD12
+	//#define EEPROM_CS_TRIS		TRISGbits.TRISG0 = TRISDbits.TRISD12
+	//#define EEPROM_CS_IO		LATGbits.LATG0 = LATDbits.LATD12
 #else
 	//#define EEPROM_CS_TRIS		(TRISDbits.TRISD12)
 	//#define EEPROM_CS_IO		(LATDbits.LATD12)
@@ -438,7 +438,7 @@
 // same PMP lines required to communicate with an ENCX24J600 in parallel 
 // mode.  Since the LCD does not have a chip select wire, if you are using 
 // the ENC424J600/624J600 in parallel mode, the LCD cannot be used.
-#if !defined(ENC100_INTERFACE_MODE) || (ENC100_INTERFACE_MODE == 0)	// SPI only
+/*#if !defined(ENC100_INTERFACE_MODE) || (ENC100_INTERFACE_MODE == 0)	// SPI only
 	#define LCD_DATA_TRIS		(*((volatile unsigned char*)&TRISE))
 	#define LCD_DATA_IO			(*((volatile unsigned char*)&LATE))
 	#define LCD_RD_WR_TRIS		(TRISDbits.TRISD5)
@@ -448,7 +448,7 @@
 	#define LCD_E_TRIS			(TRISDbits.TRISD4)
 	#define LCD_E_IO			(LATDbits.LATD4)
 #endif
-
+*/
 
 //// Serial Flash/SRAM/UART PICtail Plus attached to SPI2 (middle pin group)
 //// This daughter card is not in production, but if you custom attach an SPI 

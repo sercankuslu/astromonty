@@ -183,9 +183,17 @@ int main(void)
     //SPI1_Init(D);
     //CS_Control(1);
     //SPI1_Init(&CS_On,&CS_Off);
-    SPI_Init();
-    DevId=SPI_RegDevice(2,2,8000000, &CS_On,&CS_Off); 
-    SPI_Open(DevId);
+    //SPI_Init();
+    //DevId=SPI_RegDevice(2,2,8000000, &CS_On,&CS_Off); 
+    //SPI_Open(DevId);
+    CS_Off();
+    SPI2STAT = 0;
+    SPI2CON1 = 0x0F;
+    SPI2CON2 = 0;
+    SPI2CON1bits.CKE = 1;
+    SPI2CON1bits.MSTEN = 1;
+    SPI2STATbits.SPIEN = 1;
+    CS_On();
     LATFbits.LATF0=1;
     for(T=0;T<65000;T++){
         Nop();

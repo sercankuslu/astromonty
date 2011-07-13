@@ -90,7 +90,7 @@
 //#define STACK_USE_DNS_SERVER			// Domain Name Service Server for redirection to the local device
 #define STACK_USE_NBNS					// NetBIOS Name Service Server for repsonding to NBNS hostname broadcast queries
 #define STACK_USE_REBOOT_SERVER			// Module for resetting this PIC remotely.  Primarily useful for a Bootloader.
-//#define STACK_USE_SNTP_CLIENT			// Simple Network Time Protocol for obtaining current date/time from Internet
+#define STACK_USE_SNTP_CLIENT			// Simple Network Time Protocol for obtaining current date/time from Internet
 //#define STACK_USE_UDP_PERFORMANCE_TEST	// Module for testing UDP TX performance characteristics.  NOTE: Enabling this will cause a huge amount of UDP broadcast packets to flood your network on the discard port.  Use care when enabling this on production networks, especially with VPNs (could tunnel broadcast traffic across a limited bandwidth connection).
 //#define STACK_USE_TCP_PERFORMANCE_TEST	// Module for testing TCP TX performance characteristics
 //#define STACK_USE_DYNAMICDNS_CLIENT		// Dynamic DNS client updater module
@@ -136,7 +136,7 @@
  *   For MPFS Classic, this setting must match the Reserved setting
  *	 on the Advanced Settings page of the MPFS2 Utility.
  */
-#define MPFS_RESERVE_BLOCK				(0ul)
+#define MPFS_RESERVE_BLOCK				(4096ul)
 
 /* MPFS File Handles
  *   Maximum number of simultaneously open MPFS2 files.
@@ -239,7 +239,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(3756ul)
+	#define TCP_ETH_RAM_SIZE					(2860ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -295,8 +295,8 @@
 			//{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
 			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
 			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
@@ -336,7 +336,7 @@
 
 	// Maximum numbers of simultaneous HTTP connections allowed.
 	// Each connection consumes 2 bytes of RAM and a TCP socket
-	#define MAX_HTTP_CONNECTIONS	(4u)
+	#define MAX_HTTP_CONNECTIONS	(2u)
 
 	// Optional setting to use PIC RAM instead of Ethernet/Wi-Fi RAM for
 	// storing HTTP Connection Context variables (HTTP_CONN structure for each 

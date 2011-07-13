@@ -203,6 +203,8 @@ int main(void)
 {
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
+	LATFbits.LATF4 = 0;
+	TRISFbits.TRISF4 = 0;
 
 	// Initialize application specific hardware
 	InitializeBoard();
@@ -228,6 +230,7 @@ int main(void)
 
     // Initiates board setup process if button is depressed 
 	// on startup
+	#ifdef bad
     if(BUTTON0_IO == 0u)
     {
 		#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
@@ -268,7 +271,7 @@ int main(void)
         DoUARTConfig();
 		#endif
     }
-
+    #endif //bad
 	// Initialize core stack layers (MAC, ARP, TCP, UDP) and
 	// application modules (HTTP, SNMP, etc.)
     StackInit();

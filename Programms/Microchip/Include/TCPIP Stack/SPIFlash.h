@@ -56,8 +56,8 @@
 
 #include "HardwareProfile.h"
 
-#define SPI_FLASH_SECTOR_SIZE		(4096ul)
-#define SPI_FLASH_PAGE_SIZE			(0ul)		// SST has no page boundary requirements
+#define SPI_FLASH_SECTOR_SIZE		(262144ul)
+#define SPI_FLASH_PAGE_SIZE			(256ul)		// SST has no page boundary requirements
 
 #define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 
