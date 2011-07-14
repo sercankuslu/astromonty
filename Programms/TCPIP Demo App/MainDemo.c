@@ -205,7 +205,7 @@ int main(void)
 	static DWORD dwLastIP = 0;
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;
-
+	SPIRTCSRAMInit();
 	// Initialize application specific hardware
 	InitializeBoard();
 
