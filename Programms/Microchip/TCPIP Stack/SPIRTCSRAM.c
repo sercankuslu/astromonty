@@ -132,7 +132,7 @@ static void _WaitWhileBusy(void);
 
 
 void spi_write(BYTE x){
-    BYTE Dummy;
+    volatile BYTE Dummy;
     SPIRTCSRAM_SSPBUF = x;
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;    
@@ -140,7 +140,7 @@ void spi_write(BYTE x){
 
 BYTE spi_read(void){
     BYTE dat;
-    SPIRTCSRAM_SSPBUF = 0x33;
+    SPIRTCSRAM_SSPBUF = 0x00;
     WaitForDataByte();
     dat = SPIRTCSRAM_SSPBUF;    
     return(dat);
@@ -148,12 +148,14 @@ BYTE spi_read(void){
 
 static void _WaitWhileBusy(void){
     BYTE x;
+    BYTE i;
     do {    
+        for(i=0;i<16;i++){Nop();}
         SPIRTCSRAM_CS_IO = 0;
         spi_write(0x0f);    //control/status register
         x = spi_read();
-        SPIRTCSRAM_CS_IO = 0;
-        x = (x & 0x04) >> 2;
+        SPIRTCSRAM_CS_IO = 1;
+        x = (x & 0x04) >> 2;        
     } while(x);
 }
 
@@ -183,11 +185,12 @@ static void _WaitWhileBusy(void){
 void SPIRTCSRAMInit(void)
 {
 	BYTE i;
+	BYTE seconds;
 	BYTE minutes;
     BYTE hours;
     BYTE temp_h;
     BYTE temp_l;
-    volatile WORD Dummy;
+    volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -229,16 +232,19 @@ void SPIRTCSRAMInit(void)
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
     
-        spi_write(0x01);
-    
+        spi_write(0x00);
+        seconds = spi_read();
         minutes = spi_read();
         hours = spi_read();
-        SPIRTCSRAM_CS_IO = 1;
+        SPIRTCSRAM_CS_IO = 1;                
         _WaitWhileBusy();         //check busy flag till clear
         SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
         spi_write(0x8e);
         spi_write(0x60);
         SPIRTCSRAM_CS_IO = 1;
+        
+        for(i=0;i<16;i++){Nop();}
+        
         SPIRTCSRAM_CS_IO = 0;                     //read temp
         spi_write(0x11);
         temp_h = spi_read();
@@ -246,7 +252,11 @@ void SPIRTCSRAMInit(void)
     
         SPIRTCSRAM_CS_IO = 1;
         
-    
+        Dummy = minutes;
+        Dummy = seconds;
+        Dummy = hours;
+        Dummy = temp_h;
+        Dummy = temp_l;
 
     // Restore SPI state
     SPI_ON_BIT = 0;
