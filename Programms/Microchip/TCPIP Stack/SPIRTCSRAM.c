@@ -87,7 +87,7 @@
 #if defined(__PIC24F__) || defined(__PIC24FK__)
     #define PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC33F__) || defined(__PIC24H__)
-    #define PROPER_SPICON1  (0x000F | 0x0120)   // 1:1 primary prescale, 5:1 secondary prescale, CKE=1, MASTER mode
+    #define PROPER_SPICON1  (0x0016 | 0x0120)   // 4:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC30F__)
     #define PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__PIC32MX__)
@@ -126,10 +126,36 @@
 
 // Internal pointer to address being written
 static DWORD dwWriteAddr;
-static void _SendCmd(BYTE cmd);
+//static void _SendCmd(BYTE cmd);
 static void _WaitWhileBusy(void);
 //static void _GetStatus(void);
 
+
+void spi_write(BYTE x){
+    BYTE Dummy;
+    SPIRTCSRAM_SSPBUF = x;
+    WaitForDataByte();
+    Dummy = SPIRTCSRAM_SSPBUF;    
+}
+
+BYTE spi_read(void){
+    BYTE dat;
+    SPIRTCSRAM_SSPBUF = 0x33;
+    WaitForDataByte();
+    dat = SPIRTCSRAM_SSPBUF;    
+    return(dat);
+}        
+
+static void _WaitWhileBusy(void){
+    BYTE x;
+    do {    
+        SPIRTCSRAM_CS_IO = 0;
+        spi_write(0x0f);    //control/status register
+        x = spi_read();
+        SPIRTCSRAM_CS_IO = 0;
+        x = (x & 0x04) >> 2;
+    } while(x);
+}
 
 /*****************************************************************************
   Function:
@@ -157,7 +183,11 @@ static void _WaitWhileBusy(void);
 void SPIRTCSRAMInit(void)
 {
 	BYTE i;
-    volatile BYTE Dummy;
+	BYTE minutes;
+    BYTE hours;
+    BYTE temp_h;
+    BYTE temp_l;
+    volatile WORD Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -166,6 +196,7 @@ void SPIRTCSRAMInit(void)
     #else
     DWORD SPICON1Save;
     #endif
+    
 
     SPIRTCSRAM_CS_IO = 1;
     SPIRTCSRAM_CS_TRIS = 0;   // Drive SPI Flash chip select pin
@@ -195,73 +226,34 @@ void SPIRTCSRAMInit(void)
         SPIRTCSRAM_SPISTATbits.SMP = 0;       // Input sampled at middle of data output time
     #endif
 
-	    
-
     SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
     
-    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;    
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
+        spi_write(0x01);
     
-   	SPIRTCSRAM_SSPBUF = 0x43;    	
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
+        minutes = spi_read();
+        hours = spi_read();
+        SPIRTCSRAM_CS_IO = 1;
+        _WaitWhileBusy();         //check busy flag till clear
+        SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
+        spi_write(0x8e);
+        spi_write(0x60);
+        SPIRTCSRAM_CS_IO = 1;
+        SPIRTCSRAM_CS_IO = 0;                     //read temp
+        spi_write(0x11);
+        temp_h = spi_read();
+        temp_l = spi_read();
     
-    SPIRTCSRAM_CS_IO = 1;
+        SPIRTCSRAM_CS_IO = 1;
+        
     
-	Nop();
-	Nop();
-	Nop();
-	
-    SPIRTCSRAM_CS_IO = 0;
-    
-    SPIRTCSRAM_SSPBUF = SRAM_DATA|WRITEMASK;
-	WaitForDataByte();
-	Dummy = SPIRTCSRAM_SSPBUF;
-	
-    SPIRTCSRAM_SSPBUF = 0x37; 
-	WaitForDataByte();	    
-	Dummy = SPIRTCSRAM_SSPBUF;
-		
-    SPIRTCSRAM_CS_IO = 1;
-    
-	Nop();
-	Nop();
-	Nop();
-	
-	SPIRTCSRAM_CS_IO = 0;
-    
-    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;    
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    
-   	SPIRTCSRAM_SSPBUF = 0x43;    	
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    
-    SPIRTCSRAM_CS_IO = 1;
-    
-	Nop();
-	Nop();
-	Nop();
-    SPIRTCSRAM_CS_IO = 0;
-    
-    SPIRTCSRAM_SSPBUF = SRAM_DATA;    
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    
-   	SPIRTCSRAM_SSPBUF = 0;    
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    
-    SPIRTCSRAM_CS_IO = 1;
 
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
 }
-#ifdef nowork
+
 
 /*****************************************************************************
   Function:
@@ -282,8 +274,9 @@ void SPIRTCSRAMInit(void)
   Returns:
     None
   ***************************************************************************/
-void SPIRTCSRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
+void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
 {
+    
     volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
@@ -293,6 +286,7 @@ void SPIRTCSRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     #else
     DWORD SPICON1Save;
     #endif
+    BYTE i;
 
     // Ignore operations when the destination is NULL or nothing to read
     if(vData == NULL || wLength == 0)
@@ -312,23 +306,29 @@ void SPIRTCSRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     ClearSPIDoneFlag();
 
     // Send READ opcode
-    SPIRTCSRAM_SSPBUF = READ;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
+    //SPIRTCSRAM_SSPBUF = READ;
+    //WaitForDataByte();
+    //Dummy = SPIRTCSRAM_SSPBUF;
 
     // Send address
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddress)[2];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddress)[1];
+    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;//((BYTE*)&dwAddress)[2];
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;
 
     SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddress)[0];
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;
-
+    SPIRTCSRAM_CS_IO = 1;
+    
+    for(i=0;i<16;i++){Nop();}
+    
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+    
+    SPIRTCSRAM_SSPBUF = SRAM_DATA;//((BYTE*)&dwAddress)[2];
+    WaitForDataByte();
+    Dummy = SPIRTCSRAM_SSPBUF;
+    
     // Read data
     while(wLength--)
     {
@@ -382,7 +382,7 @@ void SPIRTCSRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     not in the erased state.  The chip will provide no indication that the
     write has failed, and will silently ignore the command.
   ***************************************************************************/
-void SPIRTCSRAMBeginWrite(DWORD dwAddr)
+void SPISRAMBeginWrite(DWORD dwAddr)
 {
     dwWriteAddr = dwAddr;
 }
@@ -416,8 +416,9 @@ void SPIRTCSRAMBeginWrite(DWORD dwAddr)
     See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
     memory parts.
   ***************************************************************************/
-void SPIRTCSRAMWrite(BYTE vData)
+void SPISRAMWrite(BYTE vData)
 {
+    BYTE i;
     volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
@@ -437,31 +438,27 @@ void SPIRTCSRAMWrite(BYTE vData)
     SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
-    // If address is a boundary, erase a sector first
-    if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0u)
-        SPIRTCSRAMEraseSector(dwWriteAddr);
-
-    // Enable writing
-    _SendCmd(WREN);
-
+    
     // Activate the chip select
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
 
     // Issue WRITE command with address
-    SPIRTCSRAM_SSPBUF = WRITE;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
+    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;
 
     SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
+    WaitForDataByte();
+    Dummy = SPIRTCSRAM_SSPBUF;
+    SPIRTCSRAM_CS_IO = 1;    
+    
+    for(i=0;i<16;i++){Nop();}
+    
+    SPIRTCSRAM_CS_IO = 0;    
+    ClearSPIDoneFlag();
+    
+    SPIRTCSRAM_SSPBUF = SRAM_DATA|WRITEMASK;
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;
 
@@ -473,8 +470,7 @@ void SPIRTCSRAMWrite(BYTE vData)
 
     // Deactivate chip select and wait for write to complete
     SPIRTCSRAM_CS_IO = 1;
-    _WaitWhileBusy();
-
+    
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -511,7 +507,7 @@ void SPIRTCSRAMWrite(BYTE vData)
     See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
     memory parts.
   ***************************************************************************/
-void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
+void SPISRAMWriteArray(BYTE* vData, WORD wLen)
 {
     volatile BYTE Dummy;
     BYTE vSPIONSave;
@@ -522,8 +518,7 @@ void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
     #else
     DWORD SPICON1Save;
     #endif
-    BOOL isStarted;
-    BYTE vOpcode;
+    BOOL isStarted;    
     BYTE i;
 
 	// Do nothing if no data to process
@@ -538,119 +533,52 @@ void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
     SPI_ON_BIT = 1;
-
-    // If starting at an odd address, write a single byte
-    if((dwWriteAddr & 0x01) && wLen)
-    {
-        SPIRTCSRAMWrite(*vData);
-        vData++;
-        wLen--;
-    }
-
-	// Assume we are using AAI Word program mode unless changed later
-	vOpcode = WRITE_WORD_STREAM;	
-
+ 
     isStarted = FALSE;
 
     // Loop over all remaining WORDs
-    while(wLen > 1)
+    while(wLen > 0)
     {
-        // Don't do anything until chip is ready
-        _WaitWhileBusy();
-
-        // If address is a sector boundary
-        if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0)
-            SPIRTCSRAMEraseSector(dwWriteAddr);
-
-        // If not yet started, initiate AAI mode
+                      
         if(!isStarted)
         {
-            // Enable writing
-            _SendCmd(WREN);
-
-			// Select appropriate programming opcode.  The WRITE_WORD_STREAM 
-			// mode is the default if neither of these flags are set.
-	        if(deviceCaps.bits.bWriteByteStream)
-	            vOpcode = WRITE_BYTE_STREAM;
-			else if(deviceCaps.bits.bPageProgram)
-			{
-				// Note: Writing one byte at a time is extremely slow (ex: ~667 
-				// bytes/second write speed on SST SST25VF064C).  You can 
-				// improve this by over a couple of orders of magnitude by 
-				// writing a function to write full pages of up to 256 bytes at 
-				// a time.  This is implemented this way only because I don't 
-				// have an SST25VF064C handy to test with right now. -HS
-				while(wLen--)
-			        SPIRTCSRAMWrite(*vData++);
-				return;
-			}
-
             // Activate the chip select
             SPIRTCSRAM_CS_IO = 0;
             ClearSPIDoneFlag();
 
-            // Issue WRITE_xxx_STREAM command with address
-			SPIRTCSRAM_SSPBUF = vOpcode;
+            
+			// Send address
+            SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;//((BYTE*)&dwAddress)[2];
             WaitForDataByte();
             Dummy = SPIRTCSRAM_SSPBUF;
-
-            SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
-            WaitForDataByte();
-            Dummy = SPIRTCSRAM_SSPBUF;
-
-            SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
-            WaitForDataByte();
-            Dummy = SPIRTCSRAM_SSPBUF;
-
+        
             SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
             WaitForDataByte();
             Dummy = SPIRTCSRAM_SSPBUF;
-
-            isStarted = TRUE;
-        }
-        // Otherwise, just write the AAI command again
-        else
-        {
-            // Assert the chip select pin
+            SPIRTCSRAM_CS_IO = 1;
+            
+            for(i=0;i<16;i++){Nop();}  
+            
             SPIRTCSRAM_CS_IO = 0;
             ClearSPIDoneFlag();
-
-            // Issue the WRITE_STREAM command for continuation
-            SPIRTCSRAM_SSPBUF = vOpcode;
+            SPIRTCSRAM_SSPBUF = SRAM_DATA|WRITEMASK;
             WaitForDataByte();
             Dummy = SPIRTCSRAM_SSPBUF;
+            
+            isStarted = TRUE;
         }
-
-        // Write a byte or two
-        for(i = 0; i <= deviceCaps.bits.bWriteWordStream; i++)
-        {
-	        SPIRTCSRAM_SSPBUF = *vData++;
-	        dwWriteAddr++;
-	        wLen--;
-	        WaitForDataByte();
-	        Dummy = SPIRTCSRAM_SSPBUF;
-		}
+        
+        SPIRTCSRAM_SSPBUF = *vData++;
+        dwWriteAddr++;
+        wLen--;
+        WaitForDataByte();
+        Dummy = SPIRTCSRAM_SSPBUF;	
 
         // Release the chip select to begin the write
-        SPIRTCSRAM_CS_IO = 1;
-
-        // If a boundary was reached, end the write
-        if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0)
-        {
-            _WaitWhileBusy();
-            _SendCmd(WRDI);
-            isStarted = FALSE;
-        }
-    }
-
-    // Wait for write to complete, then exit AAI mode
-    _WaitWhileBusy();
-    _SendCmd(WRDI);
-
-    // If a byte remains, write the odd address
-    if(wLen)
-        SPIRTCSRAMWrite(*vData);
-
+        //SPIRTCSRAM_CS_IO = 1;        
+    }   
+    SPIRTCSRAM_CS_IO = 1; 
+    
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -658,171 +586,7 @@ void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
 }
 
 
-/*****************************************************************************
-  Function:
-    void SPIRTCSRAMEraseSector(DWORD dwAddr)
 
-  Summary:
-    Erases a sector.
-
-  Description:
-    This function erases a sector in the Flash part.  It is called
-    internally by the SPIRTCSRAMWrite functions whenever a write is attempted
-    on the first byte in a sector.
-
-  Precondition:
-    SPIRTCSRAMInit has been called.
-
-  Parameters:
-    dwAddr - The address of the sector to be erased.
-
-  Returns:
-    None
-
-  Remarks:
-    See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
-    memory parts.
-  ***************************************************************************/
-void SPIRTCSRAMEraseSector(DWORD dwAddr)
-{
-    volatile BYTE Dummy;
-    BYTE vSPIONSave;
-    #if defined(__18CXX)
-    BYTE SPICON1Save;
-    #elif defined(__C30__)
-    WORD SPICON1Save;
-    #else
-    DWORD SPICON1Save;
-    #endif
-
-    // Save SPI state (clock speed)
-    SPICON1Save = SPIRTCSRAM_SPICON1;
-    vSPIONSave = SPI_ON_BIT;
-
-    // Configure SPI
-    SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
-    SPI_ON_BIT = 1;
-
-    // Enable writing
-    _SendCmd(WREN);
-
-    // Activate the chip select
-    SPIRTCSRAM_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Issue ERASE command with address
-    SPIRTCSRAM_SSPBUF = ERASE_SECTOR;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddr)[2];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddr)[1];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddr)[0];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    // Deactivate chip select to perform the erase
-    SPIRTCSRAM_CS_IO = 1;
-
-    // Wait for erase to complete
-    _WaitWhileBusy();
-
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
-}
-
-
-/*****************************************************************************
-  Function:
-    static void _SendCmd(BYTE cmd)
-
-  Summary:
-    Sends a single-byte command to the SPI Flash part.
-
-  Description:
-    This function sends a single-byte command to the SPI Flash part.  It is
-    used for commands such as WREN, WRDI, and EWSR that must have the chip
-    select activated, then deactivated immediately after the command is
-    transmitted.
-
-  Precondition:
-    SPIRTCSRAMInit has been called.
-
-  Parameters:
-    cmd - The single-byte command code to send
-
-  Returns:
-    None
-  ***************************************************************************/
-static void _SendCmd(BYTE cmd)
-{
-    // Activate chip select
-    SPIRTCSRAM_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Send instruction
-    SPIRTCSRAM_SSPBUF = cmd;
-    WaitForDataByte();
-    cmd = SPIRTCSRAM_SSPBUF;
-
-    // Deactivate chip select
-    SPIRTCSRAM_CS_IO = 1;
-}
-
-
-/*****************************************************************************
-  Function:
-    static void _WaitWhileBusy(void)
-
-  Summary:
-    Waits for the SPI Flash part to indicate it is idle.
-
-  Description:
-    This function waits for the SPI Flash part to indicate it is idle.  It is
-    used in the programming functions to wait for operations to complete.
-
-  Precondition:
-    SPIRTCSRAMInit has been called.
-
-  Parameters:
-    None
-
-  Returns:
-    None
-  ***************************************************************************/
-static void _WaitWhileBusy(void)
-{
-    volatile BYTE Dummy;
-
-    // Activate chip select
-    SPIRTCSRAM_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Send Read Status Register instruction
-    SPIRTCSRAM_SSPBUF = RDSR;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    // Poll the BUSY bit
-    do
-    {
-        SPIRTCSRAM_SSPBUF = 0x00;
-        WaitForDataByte();
-        Dummy = SPIRTCSRAM_SSPBUF;
-    } while(Dummy & BUSY);
-
-    // Deactivate chip select
-    SPIRTCSRAM_CS_IO = 1;
-}
 
 /*****************************************************************************
   Function:
@@ -872,6 +636,6 @@ static void _WaitWhileBusy(void)
 //  if(status == &statuses[10])
 //      statuses[15] = 0;
 //}
-#endif
+
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

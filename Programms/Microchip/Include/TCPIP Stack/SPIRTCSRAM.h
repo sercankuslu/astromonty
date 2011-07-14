@@ -68,6 +68,10 @@
 	void SPISRAMBeginWrite(DWORD dwAddr);
 	void SPISRAMWrite(BYTE vData);
 	void SPISRAMWriteArray(BYTE *vData, WORD wLen);	
+	void SPIRTCGetTime(BYTE *vData);
+    void SPIRTCSetTime(BYTE *vData);
+	void SPIRTCGetAlarm(BYTE *vData);
+    void SPIRTCSetAlarm(BYTE *vData);
 #else
 	// If you get any of these linker errors, it means that you either have an 
 	// error in your HardwareProfile.h or TCPIPConfig.h definitions.  The code 

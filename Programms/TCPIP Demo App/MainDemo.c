@@ -324,6 +324,7 @@ int main(void)
         {
             t = TickGet();
             LED0_IO ^= 1;
+            SPIRTCSRAMInit();
         }
 
         // This task performs normal stack task including checking
@@ -848,6 +849,10 @@ static void InitializeBoard(void)
 	SPIFLASH_CS_IO = 1;
 	SPIFLASH_CS_TRIS = 0;
 #endif
+#if defined(SPIRTCRAM_CS_TRIS)
+	SPIRTCRAM_CS_IO = 1;
+	SPIRTCRAM_CS_TRIS = 0;
+#endif
 #if defined(WF_CS_TRIS)
 	WF_CS_IO = 1;
 	WF_CS_TRIS = 0;
@@ -961,6 +966,9 @@ static void InitializeBoard(void)
 #if defined(SPIFLASH_CS_TRIS)
 	SPIFlashInit();
 #endif
+#if defined(SPIRTCSRAM_CS_TRIS)
+	SPIRTCSRAMInit();
+#endif
 }
 
 /*********************************************************************
@@ -992,7 +1000,7 @@ static ROM BYTE SerializedMACAddress[6] = {MY_DEFAULT_MAC_BYTE1, MY_DEFAULT_MAC_
 
 static void InitAppConfig(void)
 {
-#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
+#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS) || defined(SPIRTCSRAM_CS_TRIS)
 	unsigned char vNeedToSaveDefaults = 0;
 #endif
 	
@@ -1108,7 +1116,7 @@ static void InitAppConfig(void)
 		// Compute the checksum of the AppConfig defaults as loaded from ROM
 		wOriginalAppConfigChecksum = CalcIPChecksum((BYTE*)&AppConfig, sizeof(AppConfig));
 
-		#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
+		#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)|| defined(SPIRTCSRAM_CS_TRIS)
 		{
 			NVM_VALIDATION_STRUCT NVMValidationStruct;
 
@@ -1125,9 +1133,14 @@ static void InitAppConfig(void)
 			}
 			#elif defined(SPIFLASH_CS_TRIS)
 			{
+				SPISRAMReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
+				SPISRAMReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig));
+			}
+			#elif defined(SPIFLASH_CS_TRIS)
+			{
 				SPIFlashReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
 				SPIFlashReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig));
-			}
+			}			
 			#endif
 	
 			// Check EEPROM/Flash validitity.  If it isn't valid, set a flag so 
@@ -1165,7 +1178,7 @@ static void InitAppConfig(void)
 	}
 }
 
-#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
+#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)|| defined(SPIRTCSRAM_CS_TRIS)
 void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
  {
 	NVM_VALIDATION_STRUCT NVMValidationStruct;
@@ -1174,7 +1187,7 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 	// store the entire AppConfig structure.  If you get stuck in this while(1) 
 	// trap, it means you have a design time misconfiguration in TCPIPConfig.h.
 	// You must increase MPFS_RESERVE_BLOCK to allocate more space.
-	#if defined(STACK_USE_MPFS) || defined(STACK_USE_MPFS2)
+	#if (defined(STACK_USE_MPFS) || defined(STACK_USE_MPFS2)) && !defined(SPIRTCSRAM_CS_TRIS)
 		if(sizeof(NVMValidationStruct) + sizeof(AppConfig) > MPFS_RESERVE_BLOCK)
 			while(1);
 	#endif
@@ -1190,10 +1203,15 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 	    XEEBeginWrite(0x0000);
 	    XEEWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
 		XEEWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));
+    #elif defined(SPIRTCSRAM_CS_TRIS)
+        SPISRAMBeginWrite(0x0000);
+		SPISRAMWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
+		SPISRAMWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));        
     #else
 		SPIFlashBeginWrite(0x0000);
 		SPIFlashWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
 		SPIFlashWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));
+		
     #endif
 }
 #endif
