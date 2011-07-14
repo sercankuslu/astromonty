@@ -136,7 +136,7 @@
  *   For MPFS Classic, this setting must match the Reserved setting
  *	 on the Advanced Settings page of the MPFS2 Utility.
  */
-#define MPFS_RESERVE_BLOCK				(4096ul)
+#define MPFS_RESERVE_BLOCK				(0ul)
 
 /* MPFS File Handles
  *   Maximum number of simultaneously open MPFS2 files.
