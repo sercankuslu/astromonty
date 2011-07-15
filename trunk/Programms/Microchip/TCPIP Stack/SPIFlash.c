@@ -89,15 +89,15 @@
 #define BPL     0x80    // Mask for Status Register BPL (BPx block protect bit read-only protect) bit
 
 #if defined(__PIC24F__) || defined(__PIC24FK__)
-    #define PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
+    #define FLASH_PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC33F__) || defined(__PIC24H__)
-    #define PROPER_SPICON1  (0x000F | 0x0120)   // 1:1 primary prescale, 5:1 secondary prescale, CKE=1, MASTER mode
+    #define FLASH_PROPER_SPICON1  (0x000F | 0x0120)   // 1:1 primary prescale, 5:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC30F__)
-    #define PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
+    #define FLASH_PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__PIC32MX__)
-    #define PROPER_SPICON1  (_SPI2CON_ON_MASK | _SPI2CON_FRZ_MASK | _SPI2CON_CKE_MASK | _SPI2CON_MSTEN_MASK)
+    #define FLASH_PROPER_SPICON1  (_SPI2CON_ON_MASK | _SPI2CON_FRZ_MASK | _SPI2CON_CKE_MASK | _SPI2CON_MSTEN_MASK)
 #else
-    #define PROPER_SPICON1  (0x20)              // SSPEN bit is set, SPI in master mode, FOSC/4, IDLE state is low level
+    #define FLASH_PROPER_SPICON1  (0x20)              // SSPEN bit is set, SPI in master mode, FOSC/4, IDLE state is low level
 #endif
 
 // Maximum speed of SPI Flash part in Hz
@@ -199,7 +199,7 @@ void SPIFlashInit(void)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = PROPER_SPICON1;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     ClearSPIDoneFlag();
@@ -334,7 +334,7 @@ void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = PROPER_SPICON1;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     // Activate chip select
@@ -464,7 +464,7 @@ void SPIFlashWrite(BYTE vData)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = PROPER_SPICON1;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     // If address is a boundary, erase a sector first
@@ -566,7 +566,7 @@ void SPIFlashWriteArray(BYTE* vData, WORD wLen)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = PROPER_SPICON1;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     // If starting at an odd address, write a single byte
@@ -731,7 +731,7 @@ void SPIFlashEraseSector(DWORD dwAddr)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = PROPER_SPICON1;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     // Enable writing

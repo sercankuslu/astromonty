@@ -85,15 +85,15 @@
 
 
 #if defined(__PIC24F__) || defined(__PIC24FK__)
-    #define PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
+    #define RTC_PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC33F__) || defined(__PIC24H__)
-    #define PROPER_SPICON1  (0x0016 | 0x0120)   // 4:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
+    #define RTC_PROPER_SPICON1  (0x0016 | 0x0120)   // 4:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC30F__)
-    #define PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
+    #define RTC_PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__PIC32MX__)
-    #define PROPER_SPICON1  (_SPI2CON_ON_MASK | _SPI2CON_FRZ_MASK | _SPI2CON_CKE_MASK | _SPI2CON_MSTEN_MASK)
+    #define RTC_PROPER_SPICON1  (_SPI2CON_ON_MASK | _SPI2CON_FRZ_MASK | _SPI2CON_CKE_MASK | _SPI2CON_MSTEN_MASK)
 #else
-    #define PROPER_SPICON1  (0x20)              // SSPEN bit is set, SPI in master mode, FOSC/4, IDLE state is low level
+    #define RTC_PROPER_SPICON1  (0x20)              // SSPEN bit is set, SPI in master mode, FOSC/4, IDLE state is low level
 #endif
 
 // Maximum speed of SPI Flash part in Hz
@@ -190,6 +190,7 @@ void SPIRTCSRAMInit(void)
     BYTE hours;
     BYTE temp_h;
     BYTE temp_l;
+    BYTE Data;
     volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
@@ -214,7 +215,7 @@ void SPIRTCSRAMInit(void)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     ClearSPIDoneFlag();
@@ -236,11 +237,20 @@ void SPIRTCSRAMInit(void)
         seconds = spi_read();
         minutes = spi_read();
         hours = spi_read();
-        SPIRTCSRAM_CS_IO = 1;                
+        SPIRTCSRAM_CS_IO = 1; 
+                       
         _WaitWhileBusy();         //check busy flag till clear
+        
         SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
         spi_write(0x8e);
-        spi_write(0x60);
+        spi_write(0x24);
+        SPIRTCSRAM_CS_IO = 1;
+        
+        for(i=0;i<16;i++){Nop();}
+        
+        SPIRTCSRAM_CS_IO = 0;       
+        spi_write(0x8F);
+        spi_write(0x00);
         SPIRTCSRAM_CS_IO = 1;
         
         for(i=0;i<16;i++){Nop();}
@@ -250,6 +260,34 @@ void SPIRTCSRAMInit(void)
         temp_h = spi_read();
         temp_l = spi_read();
     
+        SPIRTCSRAM_CS_IO = 1;        
+        
+        for(i=0;i<16;i++){Nop();}
+        
+        SPIRTCSRAM_CS_IO = 0;                     
+        spi_write(0x98);
+        spi_write(0x00);
+        SPIRTCSRAM_CS_IO = 1;
+        
+        for(i=0;i<16;i++){Nop();}
+        
+        SPIRTCSRAM_CS_IO = 0;                     
+        spi_write(0x99);
+        spi_write(0xFF);
+        SPIRTCSRAM_CS_IO = 1;
+        
+        for(i=0;i<16;i++){Nop();}
+        
+        SPIRTCSRAM_CS_IO = 0;                     
+        spi_write(0x18);
+        Address = spi_read();
+        SPIRTCSRAM_CS_IO = 1;
+        
+        for(i=0;i<16;i++){Nop();}
+        
+        SPIRTCSRAM_CS_IO = 0;                     
+        spi_write(0x19);
+        Data = spi_read();
         SPIRTCSRAM_CS_IO = 1;
         
         Dummy = minutes;
@@ -257,7 +295,7 @@ void SPIRTCSRAMInit(void)
         Dummy = hours;
         Dummy = temp_h;
         Dummy = temp_l;
-
+        Dummy = Data;
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -308,7 +346,7 @@ void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     // Activate chip select
@@ -445,7 +483,7 @@ void SPISRAMWrite(BYTE vData)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
     SPI_ON_BIT = 1;
 
     
@@ -541,7 +579,7 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
 
     // Configure SPI
     SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = PROPER_SPICON1;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
     SPI_ON_BIT = 1;
  
     isStarted = FALSE;
