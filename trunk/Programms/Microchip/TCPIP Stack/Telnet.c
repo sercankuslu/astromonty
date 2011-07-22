@@ -81,7 +81,8 @@
     // Default Telnet password
 	#define TELNET_PASSWORD		"microchip"
 #endif
-
+static BYTE telnet_username[] = "admin";
+static BYTE telnet_pass[] = "microchip";
 // Demo title string
 static ROM BYTE strTitle[]			= "\x1b[2J\x1b[31m\x1b[1m"	// 2J is clear screen, 31m is red, 1m is bold
 									  "Microchip Telnet Server 1.1\x1b[0m\r\n"	// 0m is clear all attributes
@@ -227,7 +228,8 @@ void TelnetTask(void)
 	
 				// See if the user pressed return
 				w = TCPFind(MySocket, '\n', 0, FALSE);
-				if(w == 0xFFFFu)
+				w2=w;
+				if(w == 0xFFFF)
 				{
 					if(TCPGetRxFIFOFree(MySocket) == 0u)
 					{
@@ -239,8 +241,8 @@ void TelnetTask(void)
 				}
 			
 				// Search for the username -- case insensitive
-				w2 = TCPFindROMArray(MySocket, (ROM BYTE*)TELNET_USERNAME, sizeof(TELNET_USERNAME)-1, 0, TRUE);
-				if((w2 != 0u) || !((sizeof(TELNET_USERNAME)-1 == w) || (sizeof(TELNET_USERNAME) == w)))
+				w2 = TCPFindROMArray(MySocket, telnet_username, sizeof(telnet_username)-1, 0, TRUE);
+				if((w2 != 0u) || !((sizeof(telnet_username)-1 == w) || (sizeof(telnet_username) == w)))
 				{
 					// Did not find the username, but let's pretend we did so we don't leak the user name validity
 					TelnetState = SM_GET_PASSWORD_BAD_LOGIN;	
@@ -278,14 +280,14 @@ void TelnetTask(void)
 				}
 	
 				// Search for the password -- case sensitive
-				w2 = TCPFindROMArray(MySocket, (ROM BYTE*)TELNET_PASSWORD, sizeof(TELNET_PASSWORD)-1, 0, FALSE);
-				if((w2 != 3u) || !((sizeof(TELNET_PASSWORD)-1 == w-3) || (sizeof(TELNET_PASSWORD) == w-3)) || (TelnetState == SM_GET_PASSWORD_BAD_LOGIN))
+				w2 = TCPFindROMArray(MySocket, (ROM BYTE*)telnet_pass, sizeof(telnet_pass)-1, 0, FALSE);
+				if((w2 != 3u) || !((sizeof(telnet_pass)-1 == w-3) || (sizeof(telnet_pass) == w-3)) || (TelnetState == SM_GET_PASSWORD_BAD_LOGIN))
 				{
 					// Did not find the password
-					TelnetState = SM_PRINT_LOGIN;	
-					TCPPutROMString(MySocket, strAccessDenied);
-					TCPDisconnect(MySocket);
-					break;
+					//TelnetState = SM_PRINT_LOGIN;	
+					//TCPPutROMString(MySocket, strAccessDenied);
+					//TCPDisconnect(MySocket);
+					//break;
 				}
 	
 				// Password verified, throw this line of data away
