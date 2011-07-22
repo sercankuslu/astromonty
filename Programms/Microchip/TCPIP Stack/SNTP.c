@@ -86,7 +86,7 @@
 // pool server closest to your geography, but it will still work
 // if you use the global pool.ntp.org address or choose the wrong 
 // one or ship your embedded device to another geography.
-#define NTP_SERVER	"pool.ntp.org"
+#define NTP_SERVER	"nrepus.cp.ru"
 //#define NTP_SERVER	"europe.pool.ntp.org"
 //#define NTP_SERVER	"asia.pool.ntp.org"
 //#define NTP_SERVER	"oceania.pool.ntp.org"
