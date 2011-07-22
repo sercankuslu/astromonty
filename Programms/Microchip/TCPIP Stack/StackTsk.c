@@ -238,9 +238,9 @@ void StackTask(void)
 		{
 			bLastLinkState = bCurrentLinkState;
 			if(!bCurrentLinkState)
-			{
-				AppConfig.MyIPAddr.Val = AppConfig.DefaultIPAddr.Val;
-				AppConfig.MyMask.Val = AppConfig.DefaultMask.Val;
+			{    			
+                AppConfig.MyIPAddr.Val = AppConfig.DefaultIPAddr.Val;
+                AppConfig.MyMask.Val = AppConfig.DefaultMask.Val;
 				AppConfig.Flags.bInConfigMode = TRUE;
 				DHCPInit(0);
 			}
