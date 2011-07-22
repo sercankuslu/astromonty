@@ -87,7 +87,7 @@
 #if defined(__PIC24F__) || defined(__PIC24FK__)
     #define RTC_PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC33F__) || defined(__PIC24H__)
-    #define RTC_PROPER_SPICON1  (0x0016 | 0x0120)   // 4:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
+    #define RTC_PROPER_SPICON1  (0x0016 | 0x0020)   // 4:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC30F__)
     #define RTC_PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__PIC32MX__)
@@ -126,19 +126,37 @@
 
 // Internal pointer to address being written
 static DWORD dwWriteAddr;
-//static void _SendCmd(BYTE cmd);
+
 static void _WaitWhileBusy(void);
+static void spi_write(BYTE x);
+static BYTE spi_read(void);
 //static void _GetStatus(void);
+static void Wait400ns()
+{
+    BYTE i;
+    for(i=0;i<8;i++){Nop();}
+}
 
+static void WriteAddressReg(BYTE Addr)
+{
+    volatile BYTE Dummy;
+    SPIRTCSRAM_CS_IO = 0;    
+    Dummy = SRAM_ADDRES | WRITEMASK;
+    spi_write(Dummy);
+    spi_write(Addr);
+    SPIRTCSRAM_CS_IO = 1;    
+    Wait400ns();
+}
 
-void spi_write(BYTE x){
+static void spi_write(BYTE x){
     volatile BYTE Dummy;
     SPIRTCSRAM_SSPBUF = x;
     WaitForDataByte();
     Dummy = SPIRTCSRAM_SSPBUF;    
 }
 
-BYTE spi_read(void){
+
+static BYTE spi_read(void){
     BYTE dat;
     SPIRTCSRAM_SSPBUF = 0x00;
     WaitForDataByte();
@@ -150,7 +168,7 @@ static void _WaitWhileBusy(void){
     BYTE x;
     BYTE i;
     do {    
-        for(i=0;i<16;i++){Nop();}
+        Wait400ns();
         SPIRTCSRAM_CS_IO = 0;
         spi_write(0x0f);    //control/status register
         x = spi_read();
@@ -191,6 +209,7 @@ void SPIRTCSRAMInit(void)
     BYTE temp_h;
     BYTE temp_l;
     BYTE Data;
+    BYTE Address;
     volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
@@ -233,7 +252,7 @@ void SPIRTCSRAMInit(void)
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
     
-        spi_write(0x00);
+        spi_write(RTC_SECONDS);
         seconds = spi_read();
         minutes = spi_read();
         hours = spi_read();
@@ -242,60 +261,58 @@ void SPIRTCSRAMInit(void)
         _WaitWhileBusy();         //check busy flag till clear
         
         SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
-        spi_write(0x8e);
+        spi_write(RTC_CONTROL | WRITEMASK);
         spi_write(0x24);
         SPIRTCSRAM_CS_IO = 1;
         
-        for(i=0;i<16;i++){Nop();}
+        
         
         SPIRTCSRAM_CS_IO = 0;       
-        spi_write(0x8F);
+        spi_write(RTC_STATUS | WRITEMASK);
         spi_write(0x00);
         SPIRTCSRAM_CS_IO = 1;
         
-        for(i=0;i<16;i++){Nop();}
+        Wait400ns();
         
         SPIRTCSRAM_CS_IO = 0;                     //read temp
-        spi_write(0x11);
+        spi_write(RTC_TEMP_MSB);
         temp_h = spi_read();
         temp_l = spi_read();
     
         SPIRTCSRAM_CS_IO = 1;        
+#ifdef D
+        Wait400ns();
+        //**********************
         
-        for(i=0;i<16;i++){Nop();}
+        WriteAddressReg(0x00);
         
-        SPIRTCSRAM_CS_IO = 0;                     
-        spi_write(0x98);
-        spi_write(0x00);
+        SPIRTCSRAM_CS_IO = 0;  
+        Dummy = SRAM_DATA | WRITEMASK;
+        spi_write(Dummy);
+        for(i=0;i<254;i++){        
+            spi_write(i);
+        }
         SPIRTCSRAM_CS_IO = 1;
         
-        for(i=0;i<16;i++){Nop();}
+        Wait400ns();
         
+        WriteAddressReg(0x00);
+                
         SPIRTCSRAM_CS_IO = 0;                     
-        spi_write(0x99);
-        spi_write(0xFF);
+        spi_write(SRAM_DATA);
+        for(i=0;i<254;i++){        
+            Data = spi_read();
+        }
+        
         SPIRTCSRAM_CS_IO = 1;
-        
-        for(i=0;i<16;i++){Nop();}
-        
-        SPIRTCSRAM_CS_IO = 0;                     
-        spi_write(0x18);
-        Address = spi_read();
-        SPIRTCSRAM_CS_IO = 1;
-        
-        for(i=0;i<16;i++){Nop();}
-        
-        SPIRTCSRAM_CS_IO = 0;                     
-        spi_write(0x19);
-        Data = spi_read();
-        SPIRTCSRAM_CS_IO = 1;
-        
+#endif
         Dummy = minutes;
         Dummy = seconds;
         Dummy = hours;
         Dummy = temp_h;
         Dummy = temp_l;
         Dummy = Data;
+        Dummy = Address;
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -352,37 +369,19 @@ void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     // Activate chip select
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
-
-    // Send READ opcode
-    //SPIRTCSRAM_SSPBUF = READ;
-    //WaitForDataByte();
-    //Dummy = SPIRTCSRAM_SSPBUF;
-
+    
+    
     // Send address
-    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;//((BYTE*)&dwAddress)[2];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
+    Dummy = ((BYTE*)&dwAddress)[0];
+    WriteAddressReg(Dummy);
 
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwAddress)[0];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    SPIRTCSRAM_CS_IO = 1;
-    
-    for(i=0;i<16;i++){Nop();}
-    
     SPIRTCSRAM_CS_IO = 0;
-    ClearSPIDoneFlag();
-    
-    SPIRTCSRAM_SSPBUF = SRAM_DATA;//((BYTE*)&dwAddress)[2];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    
+    spi_write(SRAM_DATA);
     // Read data
     while(wLength--)
-    {
-        SPIRTCSRAM_SSPBUF = 0;
-        WaitForDataByte();
-        *vData++ = SPIRTCSRAM_SSPBUF;
+    {        
+        Dummy = spi_read();
+        *vData++ = Dummy;
     }
 
     // Deactivate chip select
@@ -491,29 +490,15 @@ void SPISRAMWrite(BYTE vData)
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
 
-    // Issue WRITE command with address
-    SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-    SPIRTCSRAM_CS_IO = 1;    
     
-    for(i=0;i<16;i++){Nop();}
+    // Send address
+    Dummy = ((BYTE*)&dwWriteAddr)[0];
+    WriteAddressReg(Dummy);       
     
-    SPIRTCSRAM_CS_IO = 0;    
-    ClearSPIDoneFlag();
-    
-    SPIRTCSRAM_SSPBUF = SRAM_DATA|WRITEMASK;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
-
-    // Write the byte
-    SPIRTCSRAM_SSPBUF = vData;
-    WaitForDataByte();
-    Dummy = SPIRTCSRAM_SSPBUF;
+    SPIRTCSRAM_CS_IO = 0;
+    Dummy = SRAM_DATA | WRITEMASK;
+    spi_write(Dummy);
+    spi_write(vData);
     dwWriteAddr++;
 
     // Deactivate chip select and wait for write to complete
@@ -594,36 +579,19 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
             SPIRTCSRAM_CS_IO = 0;
             ClearSPIDoneFlag();
 
-            
-			// Send address
-            SPIRTCSRAM_SSPBUF = SRAM_ADDRES|WRITEMASK;//((BYTE*)&dwAddress)[2];
-            WaitForDataByte();
-            Dummy = SPIRTCSRAM_SSPBUF;
-        
-            SPIRTCSRAM_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
-            WaitForDataByte();
-            Dummy = SPIRTCSRAM_SSPBUF;
-            SPIRTCSRAM_CS_IO = 1;
-            
-            for(i=0;i<16;i++){Nop();}  
+            // Send address
+            Dummy = ((BYTE*)&dwWriteAddr)[0];
+            WriteAddressReg(Dummy);       
             
             SPIRTCSRAM_CS_IO = 0;
-            ClearSPIDoneFlag();
-            SPIRTCSRAM_SSPBUF = SRAM_DATA|WRITEMASK;
-            WaitForDataByte();
-            Dummy = SPIRTCSRAM_SSPBUF;
-            
+            Dummy = SRAM_DATA | WRITEMASK;
+            spi_write(Dummy);  
             isStarted = TRUE;
         }
-        
-        SPIRTCSRAM_SSPBUF = *vData++;
+        Dummy = *vData++;
+        spi_write(Dummy);
         dwWriteAddr++;
         wLen--;
-        WaitForDataByte();
-        Dummy = SPIRTCSRAM_SSPBUF;	
-
-        // Release the chip select to begin the write
-        //SPIRTCSRAM_CS_IO = 1;        
     }   
     SPIRTCSRAM_CS_IO = 1; 
     

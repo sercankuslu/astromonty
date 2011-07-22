@@ -62,12 +62,12 @@
 //#define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 
 
-#if defined(SPISRAM_CS_TRIS)
+#if defined(SPIRTCSRAM_CS_TRIS)
 	void SPISRAMInit(void);		
-	void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLen);
+	void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength);
 	void SPISRAMBeginWrite(DWORD dwAddr);
 	void SPISRAMWrite(BYTE vData);
-	void SPISRAMWriteArray(BYTE *vData, WORD wLen);	
+	void SPISRAMWriteArray(BYTE *vData, WORD wLength);	
 	void SPIRTCGetTime(BYTE *vData);
     void SPIRTCSetTime(BYTE *vData);
 	void SPIRTCGetAlarm(BYTE *vData);

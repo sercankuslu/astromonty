@@ -102,6 +102,7 @@
 
 // Include functions specific to this stack application
 #include "MainDemo.h"
+#include "TCPIP Stack/SPIRTCSRAM.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -1003,13 +1004,13 @@ static void InitAppConfig(void)
 #if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS) || defined(SPIRTCSRAM_CS_TRIS)
 	unsigned char vNeedToSaveDefaults = 0;
 #endif
-	
+	//static WORD SizeOfAppCfg;
+	//SizeOfAppCfg = sizeof(AppConfig);
 	while(1)
 	{
 		// Start out zeroing all AppConfig bytes to ensure all fields are 
-		// deterministic for checksum generation
-		memset((void*)&AppConfig, 0x00, sizeof(AppConfig));
-		
+		// deterministic for checksum generation		
+		memset((void*)&AppConfig, 0x00, sizeof(AppConfig));	
 		AppConfig.Flags.bIsDHCPEnabled = TRUE;
 		AppConfig.Flags.bInConfigMode = TRUE;
 		memcpypgm2ram((void*)&AppConfig.MyMACAddr, (ROM void*)SerializedMACAddress, sizeof(AppConfig.MyMACAddr));
