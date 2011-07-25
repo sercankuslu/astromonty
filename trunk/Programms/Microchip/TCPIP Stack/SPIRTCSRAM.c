@@ -59,6 +59,8 @@
 #if defined(SPIRTCSRAM_CS_TRIS)
 
 #include "TCPIP Stack/TCPIP.h"
+#include "TCPIP Stack/SPIRTCSRAM.h"
+
 #define WRITEMASK				0x80
 #define RTC_SECONDS				0x00
 #define RTC_MINUTES				0x01
@@ -126,10 +128,12 @@
 
 // Internal pointer to address being written
 static DWORD dwWriteAddr;
-
+static volatile RTC_TIME Time;
 static void _WaitWhileBusy(void);
 static void spi_write(BYTE x);
 static BYTE spi_read(void);
+
+
 //static void _GetStatus(void);
 static void Wait400ns()
 {
@@ -220,6 +224,13 @@ void SPIRTCSRAMInit(void)
     DWORD SPICON1Save;
     #endif
     
+    Time.b0.Val = 0x11;
+    Time.b1.Val = 0x22;
+    Time.b2.Val = 0x33;
+    Time.b3.Val = 0x44;
+    Time.b4.Val = 0x55;
+    Time.b5.Val = 0x66;
+    Time.b6.Val = 0x77;
 
     SPIRTCSRAM_CS_IO = 1;
     SPIRTCSRAM_CS_TRIS = 0;   // Drive SPI Flash chip select pin
@@ -253,9 +264,13 @@ void SPIRTCSRAMInit(void)
     ClearSPIDoneFlag();
     
         spi_write(RTC_SECONDS);
-        seconds = spi_read();
-        minutes = spi_read();
-        hours = spi_read();
+        Time.b0.Val = spi_read();
+        Time.b1.Val = spi_read();
+        Time.b2.Val = spi_read();
+        Time.b3.Val = spi_read();
+        Time.b4.Val = spi_read();
+        Time.b5.Val = spi_read();
+        Time.b6.Val = spi_read();
         SPIRTCSRAM_CS_IO = 1; 
                        
         _WaitWhileBusy();         //check busy flag till clear
@@ -280,39 +295,7 @@ void SPIRTCSRAMInit(void)
         temp_l = spi_read();
     
         SPIRTCSRAM_CS_IO = 1;        
-#ifdef D
-        Wait400ns();
-        //**********************
-        
-        WriteAddressReg(0x00);
-        
-        SPIRTCSRAM_CS_IO = 0;  
-        Dummy = SRAM_DATA | WRITEMASK;
-        spi_write(Dummy);
-        for(i=0;i<254;i++){        
-            spi_write(i);
-        }
-        SPIRTCSRAM_CS_IO = 1;
-        
-        Wait400ns();
-        
-        WriteAddressReg(0x00);
-                
-        SPIRTCSRAM_CS_IO = 0;                     
-        spi_write(SRAM_DATA);
-        for(i=0;i<254;i++){        
-            Data = spi_read();
-        }
-        
-        SPIRTCSRAM_CS_IO = 1;
-#endif
-        Dummy = minutes;
-        Dummy = seconds;
-        Dummy = hours;
-        Dummy = temp_h;
-        Dummy = temp_l;
-        Dummy = Data;
-        Dummy = Address;
+
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;

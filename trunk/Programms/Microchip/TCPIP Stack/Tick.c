@@ -110,8 +110,9 @@ void TickInit(void)
 
 #else
 	// Use Timer 1 for 16-bit and 32-bit processors
-	// 1:256 prescale
-	T1CONbits.TCKPS = 3;
+	// 1:1 prescale
+	//T1CONbits.TCKPS = 0;
+	T1CON = 0x0002;
 	// Base
 	PR1 = 0xFFFF;
 	// Clear counter
