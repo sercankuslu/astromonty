@@ -139,7 +139,7 @@ static DWORD dwWriteAddr;
 static DWORD dwRTCSeconds = 0;
 
 // Tick count of last update
-static DWORD dwLastUpdateTick = 0;
+static DWORD dwRTCLastUpdateTick = 0;
 // Time Struct
 static volatile RTC_TIME Time;
 
@@ -237,14 +237,7 @@ void SPIRTCSRAMInit(void)
     DWORD SPICON1Save;
     #endif
     
-    Time.b0.Val = 0x00;
-    Time.b1.Val = 0x35;
-    Time.b2.Val = 0x15;
-    Time.b3.Val = 0x02;
-    Time.b4.Val = 0x26;
-    Time.b5.Val = 0x07;
-    Time.b6.Val = 0x11; //2011
-
+    
     SPIRTCSRAM_CS_IO = 1;
     SPIRTCSRAM_CS_TRIS = 0;   // Drive SPI Flash chip select pin
 
@@ -276,9 +269,8 @@ void SPIRTCSRAMInit(void)
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
                    
-        //SPIRTCReadTime();      
-        dwRTCSeconds = RTCGetUTCSeconds();
-        
+        SPIRTCReadTime();   
+              
         Wait400ns();        
         _WaitWhileBusy();         //check busy flag till clear        
         SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
@@ -302,6 +294,15 @@ void SPIRTCSRAMInit(void)
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
+    
+    //interrupt every second
+    SPIRTCSetAlarm1PerSec();
+    TRISAbits.TRISA13 = 1;
+    INTCON2bits.INT2EP = 1; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
+    IPC7bits.INT2IP = 7; //111 = Interrupt is priority 7 (highest priority interrupt)
+    IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
+    
+    
 }
 
 
@@ -643,7 +644,16 @@ void SPIRTCWriteTime(void)
     
 }
 void SPIRTCReadTime()
-{        
+{     
+	BYTE s;
+    BYTE m;
+    BYTE h;
+    BYTE D;
+    BYTE M;
+    BYTE Y;
+    BYTE i;
+    DWORD DY = 0;
+    DWORD DM = 0;   
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -682,10 +692,39 @@ void SPIRTCReadTime()
         SPIRTCSRAM_CS_IO = 0;
         spi_write(RTC_SECONDS);
         seconds = spi_read();
-        SPIRTCSRAM_CS_IO = 1; 
-        Wait400ns();   
-    }    
+        SPIRTCSRAM_CS_IO = 1;         
+    }  
     
+    Y = Time.b6.years.Year10   * 10 + Time.b6.years.Year;
+    M = Time.b5.month.Month10  * 10 + Time.b5.month.Month;
+    D = Time.b4.date.Date10    * 10 + Time.b4.date.Date;
+    h = Time.b2.hours.Hour10   * 10 + Time.b2.hours.Hour;
+    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
+    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
+    for(i = 1;i<M;i++){
+        switch (i){        
+            case 4:case 6: case 9: case 11: 
+                DM += 30;
+            break;
+            case 2:
+                DM += 28;
+                if((Y % 4) == 0){
+                    DM++;                    
+                }
+            break;
+            default:
+            DM += 31;        
+        }
+    }
+    for(i=0;i<Y;i++){
+        DY+=365;
+		if((i % 4) == 0){
+            DY++;                    
+        }
+    }
+    dwRTCSeconds = (((DY + DM + D) * 24 + h) * 60 + m)*60 + s + SEC_1970_2000;   
+    RTCGetUTCSeconds();
+	
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -718,40 +757,21 @@ void SPIRTCReadTime()
   ***************************************************************************/
 DWORD RTCGetUTCSeconds(void)
 {
-    volatile DWORD Seconds;
-    BYTE s;
-    BYTE m;
-    BYTE h;
-    BYTE D;
-    BYTE M;
-    BYTE Y;
-    BYTE i;
-    DWORD DY = 365;
-    DWORD DM = 0;
-    Y = Time.b6.years.Year10  * 10 + Time.b6.years.Year;
-    M = Time.b5.month.Month10 * 10 + Time.b5.month.Month;
-    D = Time.b4.date.Date10   * 10 + Time.b4.date.Date;
-    h = Time.b2.hours.Hour10  * 10 + Time.b2.hours.Hour;
-    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
-    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
-    for(i = 1;i<M;i++){
-        switch (i){        
-            case 4:case 6: case 9: case 11: 
-                DM += 30;
-            break;
-            case 2:
-                DM += 28;
-                if((Y % 4) == 0){
-                    DM++;
-                    DY++;
-                }
-            break;
-            default:
-            DM += 31;        
-        }
-    }
-    Seconds = (((DY * (Y + 30) + DM + D) * 24 + h) * 60 + m)*60 + s; 
-    return Seconds;
+    DWORD dwTickDelta;
+	DWORD dwTick;
+    
+    // Update the dwRTCSeconds variable with the number of seconds 
+	// that has elapsed
+	dwTick = TickGet();
+	dwTickDelta = dwTick - dwRTCLastUpdateTick;
+	while(dwTickDelta > TICK_SECOND)
+	{
+		dwRTCSeconds++;
+		dwTickDelta -= TICK_SECOND;
+	}	
+	// Save the tick and residual fractional seconds for the next call
+	dwLastUpdateTick = dwTick - dwTickDelta;
+    return dwRTCSeconds;
 }    
 
 void RTCSetUTCSeconds(DWORD Seconds)
@@ -775,7 +795,47 @@ void RTCSetUTCSeconds(DWORD Seconds)
     }
 }
      
+#if __C30_VERSION__ >= 300
+void _ISR __attribute__((__no_auto_psv__)) _INT2Interrupt(void)
+#else
+void _ISR _INT2Interrupt(void)
+#endif
+{
+	// Increment internal high tick counter
+	dwRTCSeconds++;
 
+	// Reset interrupt flag
+	 IFS1bits.INT2IF =  0;
+}
+#endif
 
+void SPIRTCSetAlarm1PerSec(void)
+{
+	volatile BYTE Dummy;
+	// Save SPI state (clock speed)
+    SPICON1Save = SPIRTCSRAM_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
+
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+     
+    // Activate chip select
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+        
+    Dummy = RTC_SECONDS_ALARM1 | WRITEMASK;    
+    spi_write(Dummy);
+    spi_write(0x80);
+    spi_write(0x80);
+    spi_write(0x80);
+    spi_write(0x80);
+	SPIRTCSRAM_CS_IO = 1;
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
+}
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

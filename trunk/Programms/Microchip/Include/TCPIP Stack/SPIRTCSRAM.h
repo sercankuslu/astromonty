@@ -145,6 +145,16 @@ typedef struct
     YEARS   b6;
 } RTC_TIME;
 
+typedef struct
+{
+    SECONDS b0;
+    MINUTES b1;
+    HOURS   b2;
+    DAY     b3;
+    DATE    b4;
+    MONTH   b5;
+    YEARS   b6;
+} RTC_ALARM1;
 
 #if defined(SPIRTCSRAM_CS_TRIS)
 	void SPIRTCSRAMInit(void);	
@@ -158,6 +168,7 @@ typedef struct
     void SPIRTCReadTime(void);
     DWORD RTCGetUTCSeconds(void);
     void RTCSetUTCSeconds(DWORD Seconds);
+    void SPIRTCSetAlarm1PerSec(void);
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
     //void SPIRTCReadAlarm(RTC_ALARM *vData);
 #else

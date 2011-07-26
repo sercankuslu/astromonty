@@ -161,6 +161,8 @@
 	#define ENC_SPICON1			(SPI2CON1)
 	#define ENC_SPICON1bits		(SPI2CON1bits)
 	#define ENC_SPICON2			(SPI2CON2)
+	//#define ENC_INT_TRIS		(TRISAbits.TRISA13)
+	//#define ENC_INT_IF  		
 #endif
 
 
