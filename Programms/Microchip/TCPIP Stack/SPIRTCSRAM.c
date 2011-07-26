@@ -58,8 +58,10 @@
 
 #if defined(SPIRTCSRAM_CS_TRIS)
 
+#include "TCPIPConfig.h"
 #include "TCPIP Stack/TCPIP.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
+
 
 #define WRITEMASK				0x80
 #define RTC_SECONDS				0x00
@@ -84,6 +86,10 @@
 #define RTC_TEMP_CONTROL		0x13
 #define SRAM_ADDRES				0x18
 #define SRAM_DATA				0x19
+
+#define SEC_IN_365_DAY 31536000
+#define SEC_IN_366_DAY 31622400
+#define SEC_1970_2000 978307200
 
 
 #if defined(__PIC24F__) || defined(__PIC24FK__)
@@ -128,7 +134,15 @@
 
 // Internal pointer to address being written
 static DWORD dwWriteAddr;
+
+// Seconds value obtained by last update
+static DWORD dwRTCSeconds = 0;
+
+// Tick count of last update
+static DWORD dwLastUpdateTick = 0;
+// Time Struct
 static volatile RTC_TIME Time;
+
 static void _WaitWhileBusy(void);
 static void spi_write(BYTE x);
 static BYTE spi_read(void);
@@ -169,8 +183,7 @@ static BYTE spi_read(void){
 }        
 
 static void _WaitWhileBusy(void){
-    BYTE x;
-    BYTE i;
+    BYTE x;   
     do {    
         Wait400ns();
         SPIRTCSRAM_CS_IO = 0;
@@ -206,15 +219,15 @@ static void _WaitWhileBusy(void){
   ***************************************************************************/
 void SPIRTCSRAMInit(void)
 {
-	BYTE i;
-	BYTE seconds;
-	BYTE minutes;
-    BYTE hours;
+	//BYTE i;
+	//BYTE seconds;
+	//BYTE minutes;
+    //BYTE hours;
     BYTE temp_h;
     BYTE temp_l;
-    BYTE Data;
-    BYTE Address;
-    volatile BYTE Dummy;
+    //BYTE Data;
+    //BYTE Address;
+    //volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -224,13 +237,13 @@ void SPIRTCSRAMInit(void)
     DWORD SPICON1Save;
     #endif
     
-    Time.b0.Val = 0x11;
-    Time.b1.Val = 0x22;
-    Time.b2.Val = 0x33;
-    Time.b3.Val = 0x44;
-    Time.b4.Val = 0x55;
-    Time.b5.Val = 0x66;
-    Time.b6.Val = 0x77;
+    Time.b0.Val = 0x00;
+    Time.b1.Val = 0x35;
+    Time.b2.Val = 0x15;
+    Time.b3.Val = 0x02;
+    Time.b4.Val = 0x26;
+    Time.b5.Val = 0x07;
+    Time.b6.Val = 0x11; //2011
 
     SPIRTCSRAM_CS_IO = 1;
     SPIRTCSRAM_CS_TRIS = 0;   // Drive SPI Flash chip select pin
@@ -262,33 +275,22 @@ void SPIRTCSRAMInit(void)
 
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
-    
-        spi_write(RTC_SECONDS);
-        Time.b0.Val = spi_read();
-        Time.b1.Val = spi_read();
-        Time.b2.Val = spi_read();
-        Time.b3.Val = spi_read();
-        Time.b4.Val = spi_read();
-        Time.b5.Val = spi_read();
-        Time.b6.Val = spi_read();
-        SPIRTCSRAM_CS_IO = 1; 
-                       
-        _WaitWhileBusy();         //check busy flag till clear
+                   
+        //SPIRTCReadTime();      
+        dwRTCSeconds = RTCGetUTCSeconds();
         
+        Wait400ns();        
+        _WaitWhileBusy();         //check busy flag till clear        
         SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
         spi_write(RTC_CONTROL | WRITEMASK);
         spi_write(0x24);
         SPIRTCSRAM_CS_IO = 1;
-        
-        
-        
+        Wait400ns();
         SPIRTCSRAM_CS_IO = 0;       
         spi_write(RTC_STATUS | WRITEMASK);
         spi_write(0x00);
         SPIRTCSRAM_CS_IO = 1;
-        
-        Wait400ns();
-        
+        Wait400ns();        
         SPIRTCSRAM_CS_IO = 0;                     //read temp
         spi_write(RTC_TEMP_MSB);
         temp_h = spi_read();
@@ -334,7 +336,7 @@ void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     #else
     DWORD SPICON1Save;
     #endif
-    BYTE i;
+    //BYTE i;
 
     // Ignore operations when the destination is NULL or nothing to read
     if(vData == NULL || wLength == 0)
@@ -448,7 +450,7 @@ void SPISRAMBeginWrite(DWORD dwAddr)
   ***************************************************************************/
 void SPISRAMWrite(BYTE vData)
 {
-    BYTE i;
+    //BYTE i;
     volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
@@ -535,7 +537,7 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
     DWORD SPICON1Save;
     #endif
     BOOL isStarted;    
-    BYTE i;
+    //BYTE i;
 
 	// Do nothing if no data to process
 	if(wLen == 0u)
@@ -635,6 +637,145 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
 //  if(status == &statuses[10])
 //      statuses[15] = 0;
 //}
+
+void SPIRTCWriteTime(void)
+{
+    
+}
+void SPIRTCReadTime()
+{        
+    BYTE vSPIONSave;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif     
+   
+    BYTE seconds = 0;
+
+    // Save SPI state (clock speed)
+    SPICON1Save = SPIRTCSRAM_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
+
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+     
+    // Activate chip select
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+    while(Time.b0.Val != seconds){
+        dwLastUpdateTick = TickGet();
+        spi_write(RTC_SECONDS);
+        Time.b0.Val = spi_read();
+        Time.b1.Val = spi_read();
+        Time.b2.Val = spi_read();
+        Time.b3.Val = spi_read();
+        Time.b4.Val = spi_read();
+        Time.b5.Val = spi_read();
+        Time.b6.Val = spi_read();
+        SPIRTCSRAM_CS_IO = 1; 
+        Wait400ns();
+        SPIRTCSRAM_CS_IO = 0;
+        spi_write(RTC_SECONDS);
+        seconds = spi_read();
+        SPIRTCSRAM_CS_IO = 1; 
+        Wait400ns();   
+    }    
+    
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
+}
+/*****************************************************************************
+  Function:
+	DWORD RTCGetUTCSeconds(void)
+
+  Summary:
+	Obtains the current time from the RTC module.
+
+  Description:
+	This function obtains the current time as reported by the SNTP module.  
+	Use this value for absolute time stamping.  The value returned is (by
+	default) the number of seconds since 01-Jan-1970 00:00:00.
+
+  Precondition:
+	None
+
+  Parameters:
+	None
+
+  Returns:
+  	The number of seconds since the Epoch.  (Default 01-Jan-1970 00:00:00)
+  	
+  Remarks:
+	Do not use this function for time difference measurements.  The Tick
+	module is more appropriate for those requirements.
+  ***************************************************************************/
+DWORD RTCGetUTCSeconds(void)
+{
+    volatile DWORD Seconds;
+    BYTE s;
+    BYTE m;
+    BYTE h;
+    BYTE D;
+    BYTE M;
+    BYTE Y;
+    BYTE i;
+    DWORD DY = 365;
+    DWORD DM = 0;
+    Y = Time.b6.years.Year10  * 10 + Time.b6.years.Year;
+    M = Time.b5.month.Month10 * 10 + Time.b5.month.Month;
+    D = Time.b4.date.Date10   * 10 + Time.b4.date.Date;
+    h = Time.b2.hours.Hour10  * 10 + Time.b2.hours.Hour;
+    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
+    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
+    for(i = 1;i<M;i++){
+        switch (i){        
+            case 4:case 6: case 9: case 11: 
+                DM += 30;
+            break;
+            case 2:
+                DM += 28;
+                if((Y % 4) == 0){
+                    DM++;
+                    DY++;
+                }
+            break;
+            default:
+            DM += 31;        
+        }
+    }
+    Seconds = (((DY * (Y + 30) + DM + D) * 24 + h) * 60 + m)*60 + s; 
+    return Seconds;
+}    
+
+void RTCSetUTCSeconds(DWORD Seconds)
+{
+    BYTE Y = 70;
+    DWORD DY = SEC_IN_366_DAY; //2000 год 
+    
+    if(Seconds>=SEC_1970_2000){
+        Seconds -= SEC_1970_2000;
+        Y = 0; //2000
+    }
+    
+    while(Seconds >= DY){
+        if((Y % 4)==0){
+            DY = SEC_IN_366_DAY; //366 дней
+        } else {
+            DY = SEC_IN_365_DAY; //365 дней
+        }
+        Y++;
+        Seconds -= DY;        
+    }
+}
+     
+
 
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

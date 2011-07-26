@@ -205,11 +205,11 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
 	LATFbits.LATF4 = 0;
-	TRISFbits.TRISF4 = 0;
-	SPIRTCSRAMInit();
+	TRISFbits.TRISF4 = 0;	
 	// Initialize application specific hardware
+	SPIRTCSRAMInit();
 	InitializeBoard();
-
+    
 	#if defined(USE_LCD)
 	// Initialize and display the stack version on the LCD
 	LCDInit();
