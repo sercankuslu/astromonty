@@ -147,15 +147,17 @@ typedef struct
 
 
 #if defined(SPIRTCSRAM_CS_TRIS)
-	void SPISRAMInit(void);		
+	void SPIRTCSRAMInit(void);	
 	//SRAM
 	void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength);
 	void SPISRAMBeginWrite(DWORD dwAddr);
 	void SPISRAMWrite(BYTE vData);
 	void SPISRAMWriteArray(BYTE *vData, WORD wLength);	
 	//RTC
-	void SPIRTCWriteTime(RTC_TIME *Time);
-    void SPIRTCReadTime(RTC_TIME *vData);
+	void SPIRTCWriteTime(void);
+    void SPIRTCReadTime(void);
+    DWORD RTCGetUTCSeconds(void);
+    void RTCSetUTCSeconds(DWORD Seconds);
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
     //void SPIRTCReadAlarm(RTC_ALARM *vData);
 #else
