@@ -678,7 +678,7 @@ void SPIRTCReadTime()
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
     while(Time.b0.Val != seconds){
-        dwLastUpdateTick = TickGet();
+        dwRTCLastUpdateTick = TickGet();
         spi_write(RTC_SECONDS);
         Time.b0.Val = spi_read();
         Time.b1.Val = spi_read();
@@ -770,26 +770,28 @@ DWORD RTCGetUTCSeconds(void)
 		dwTickDelta -= TICK_SECOND;
 	}	
 	// Save the tick and residual fractional seconds for the next call
-	dwLastUpdateTick = dwTick - dwTickDelta;
+	dwRTCLastUpdateTick = dwTick - dwTickDelta;
     return dwRTCSeconds;
 }    
 
 void RTCSetUTCSeconds(DWORD Seconds)
 {
     BYTE Y = 70;
-    DWORD DY = SEC_IN_366_DAY; //2000 год 
-    
+    DWORD DY;
+    BYTE HY;
     if(Seconds>=SEC_1970_2000){
         Seconds -= SEC_1970_2000;
         Y = 0; //2000
     }
-    
+    HY = 4;
     while(Seconds >= DY){
-        if((Y % 4)==0){
+        if(HY == 4){
             DY = SEC_IN_366_DAY; //366 дней
+            HY = 0;
         } else {
             DY = SEC_IN_365_DAY; //365 дней
         }
+        HY++;
         Y++;
         Seconds -= DY;        
     }
@@ -807,11 +809,19 @@ void _ISR _INT2Interrupt(void)
 	// Reset interrupt flag
 	 IFS1bits.INT2IF =  0;
 }
-#endif
+
 
 void SPIRTCSetAlarm1PerSec(void)
 {
 	volatile BYTE Dummy;
+	BYTE vSPIONSave;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif     
 	// Save SPI state (clock speed)
     SPICON1Save = SPIRTCSRAM_SPICON1;
     vSPIONSave = SPI_ON_BIT;
