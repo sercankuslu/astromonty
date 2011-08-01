@@ -90,6 +90,17 @@
 #define SEC_IN_365_DAY 31536000
 #define SEC_IN_366_DAY 31622400
 #define SEC_1970_2000 978307200
+#define SEC_IN_4_YEAR 126230400
+#define SEC_IN_31DAY    2678400
+#define SEC_IN_30DAY    2592000
+#define SEC_IN_29DAY    2505600
+#define SEC_IN_28DAY    2419200
+#define SEC_IN_WEEK      604800
+#define SEC_IN_DAY        86400
+#define SEC_IN_HOUR        3600
+  
+
+// 1 января 2000 года, суббота
 
 
 #if defined(__PIC24F__) || defined(__PIC24FK__)
@@ -641,19 +652,46 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
 
 void SPIRTCWriteTime(void)
 {
+    BYTE vSPIONSave;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif       
     
+
+    // Save SPI state (clock speed)
+    SPICON1Save = SPIRTCSRAM_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
+
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+     
+    // Activate chip select
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+    spi_write(RTC_SECONDS| WRITEMASK);
+    spi_write(Time.b0.Val);
+    spi_write(Time.b1.Val);
+    spi_write(Time.b2.Val);
+    spi_write(Time.b3.Val);
+    spi_write(Time.b4.Val);
+    spi_write(Time.b5.Val);
+    spi_write(Time.b6.Val);
+    SPIRTCSRAM_CS_IO = 1;
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
 }
 void SPIRTCReadTime()
 {     
-	BYTE s;
-    BYTE m;
-    BYTE h;
-    BYTE D;
-    BYTE M;
-    BYTE Y;
+	
     BYTE i;
-    DWORD DY = 0;
-    DWORD DM = 0;   
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -693,36 +731,12 @@ void SPIRTCReadTime()
         spi_write(RTC_SECONDS);
         seconds = spi_read();
         SPIRTCSRAM_CS_IO = 1;         
-    }  
+    }   
     
-    Y = Time.b6.years.Year10   * 10 + Time.b6.years.Year;
-    M = Time.b5.month.Month10  * 10 + Time.b5.month.Month;
-    D = Time.b4.date.Date10    * 10 + Time.b4.date.Date;
-    h = Time.b2.hours.Hour10   * 10 + Time.b2.hours.Hour;
-    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
-    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
-    for(i = 1;i<M;i++){
-        switch (i){        
-            case 4:case 6: case 9: case 11: 
-                DM += 30;
-            break;
-            case 2:
-                DM += 28;
-                if((Y % 4) == 0){
-                    DM++;                    
-                }
-            break;
-            default:
-            DM += 31;        
-        }
-    }
-    for(i=0;i<Y;i++){
-        DY+=365;
-		if((i % 4) == 0){
-            DY++;                    
-        }
-    }
-    dwRTCSeconds = (((DY + DM + D) * 24 + h) * 60 + m)*60 + s + SEC_1970_2000;   
+    
+    dwRTCSeconds = GetTimeFromRTC();
+    
+       
     RTCGetUTCSeconds();
 	
     // Restore SPI state
@@ -774,27 +788,154 @@ DWORD RTCGetUTCSeconds(void)
     return dwRTCSeconds;
 }    
 
-void RTCSetUTCSeconds(DWORD Seconds)
+DWORD GetTimeFromRTC()
+{
+    BYTE Y;
+    BYTE M;
+    BYTE D;
+    BYTE d;//день недели
+    BYTE h;
+    BYTE m;
+    BYTE s;
+    BYTE i;
+    DWORD DY = 0;
+    DWORD DM = 0;   
+
+    
+    Y = Time.b6.years.Year10   * 10 + Time.b6.years.Year;
+    M = Time.b5.month.Month10  * 10 + Time.b5.month.Month;
+    D = Time.b4.date.Date10    * 10 + Time.b4.date.Date;
+    h = Time.b2.hours.Hour10   * 10 + Time.b2.hours.Hour;
+    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
+    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
+    
+    for(i = 1;i<M;i++){
+        switch (i){        
+            case 4:case 6: case 9: case 11: 
+                DM += 30;
+            break;
+            case 2:
+                DM += 28;
+                if((Y % 4) == 0){
+                    DM++;                    
+                }
+            break;
+            default:
+            DM += 31;        
+        }
+    }
+    for(i=70;i<(Y+100);i++){
+        DY+=365;
+		if((i & 0xFC) == 0){
+            DY++;                    
+        }
+    }   
+    
+    dwRTCSeconds = (((DY + DM + D) * 24 + h) * 60 + m)*60 + s;
+}
+void SetTimeFromUTC(DWORD Seconds)
 {
     BYTE Y = 70;
-    DWORD DY;
-    BYTE HY;
+    BYTE Y10 = 0;
+    DWORD DY = SEC_IN_365_DAY;
+    BYTE M = 1;
+    BYTE M10 = 0;
+    BYTE D = 1;
+    BYTE D10 = 0;    
+    BYTE d = 1;//день недели
+    BYTE h = 0;
+    BYTE h10 = 0;   
+    BYTE m = 0;
+    BYTE m10 = 0;
+    BYTE s = 0;
+    BYTE s10 = 0;
+    DWORD DM = SEC_IN_31DAY;     
+    double s1; 
+    DWORD dd;
+      
+    
     if(Seconds>=SEC_1970_2000){
         Seconds -= SEC_1970_2000;
-        Y = 0; //2000
+        Y = 100; //2000
+        DY = SEC_IN_366_DAY;
+    }    
+    s1 = Seconds/SEC_IN_WEEK;
+    dd = s1;
+    d = ((Seconds - dd*SEC_IN_WEEK)/SEC_IN_DAY) + 6;
+    while(d>=7){d-=7;}
+    while(Seconds>=SEC_IN_4_YEAR){
+        Seconds -= SEC_IN_4_YEAR;
+        Y+=4;
     }
-    HY = 4;
+    
     while(Seconds >= DY){
-        if(HY == 4){
-            DY = SEC_IN_366_DAY; //366 дней
-            HY = 0;
+        if((Y & 0xFC) == 0){
+            DY = SEC_IN_366_DAY; //366 дней           
         } else {
             DY = SEC_IN_365_DAY; //365 дней
-        }
-        HY++;
+        }        
         Y++;
-        Seconds -= DY;        
-    }
+        Seconds -= DY;           
+    }   
+    
+    while(Seconds>=DM){        
+        switch (M){        
+            case 4:case 6: case 9: case 11: 
+                DM = SEC_IN_30DAY;
+            break;
+            case 2:
+                DM = SEC_IN_28DAY;
+                if((Y & 0xFC) == 0){
+                    DM = SEC_IN_29DAY;                    
+                }
+            break;
+            default:
+            DM = SEC_IN_31DAY;        
+        }
+        Seconds -= DM;       
+        M++;
+    }   
+
+    s1 = Seconds / SEC_IN_DAY;
+    D = s1;
+    Seconds -= (DWORD)D * SEC_IN_DAY;
+    
+    s1 = Seconds / 3600;
+    h = s1;
+    Seconds -= (DWORD)h * 3600;
+    
+    s1 = Seconds / 60;
+    m = s1;
+    Seconds -= (DWORD)m * 60;
+       
+    s = Seconds;
+    
+    Y10 = Y/10;
+    Y -= Y10*10;
+    M10 = M/10;
+    M -= M10*10;
+    D10 = D/10;
+    D -= D10*10;
+    h10 = h/10;
+    h -= h10*10;
+    m10 = m/10;
+    m -= m10*10;
+    s10 = s/10;
+    s -= s10*10;
+    
+    Time.b0.seconds.Sec10 = s10;
+    Time.b0.seconds.Sec = s;
+    Time.b1.minutes.Min10 = m10;
+    Time.b1.minutes.Min = m;
+    Time.b2.hours.Hour10 = h10;
+    Time.b2.hours.Hour = h;
+    Time.b3.day.Day = d;
+    Time.b4.date.Date10 = D10;
+    Time.b4.date.Date = D;
+    Time.b5.month.Month10 = M10;
+    Time.b5.month.Month = M;
+    Time.b6.years.Year10 = Y10;
+    Time.b6.years.Year = Y;    
 }
      
 #if __C30_VERSION__ >= 300
@@ -847,5 +988,24 @@ void SPIRTCSetAlarm1PerSec(void)
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
 }
+
+
+void SetTime()
+{
+    Time.b0.seconds.Sec10 = 3;
+    Time.b0.seconds.Sec = 5;
+    Time.b1.minutes.Min10 = 3;
+    Time.b1.minutes.Min = 8;
+    Time.b2.hours.Hour10 = 1;
+    Time.b2.hours.Hour = 8;
+    Time.b3.day.Day = 2;
+    Time.b4.date.Date10 = 0;
+    Time.b4.date.Date = 1;
+    Time.b5.month.Month10 = 0;
+    Time.b5.month.Month = 8;
+    Time.b6.years.Year10 = 1;
+    Time.b6.years.Year = 1;   
+}
+
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

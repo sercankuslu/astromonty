@@ -164,11 +164,14 @@ typedef struct
 	void SPISRAMWrite(BYTE vData);
 	void SPISRAMWriteArray(BYTE *vData, WORD wLength);	
 	//RTC
-	void SPIRTCWriteTime(void);
-    void SPIRTCReadTime(void);
+	void SPIRTCWriteTime(void);    
+	void SPIRTCReadTime(void);
+    DWORD GetTimeFromRTC(void);
+    void SetTimeFromUTC(DWORD Seconds);
     DWORD RTCGetUTCSeconds(void);
-    void RTCSetUTCSeconds(DWORD Seconds);
     void SPIRTCSetAlarm1PerSec(void);
+    
+    void SetTime();
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
     //void SPIRTCReadAlarm(RTC_ALARM *vData);
 #else

@@ -204,10 +204,19 @@ int main(void)
 {
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
+	DWORD UTCT = 1576812345;
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;	
 	// Initialize application specific hardware
-	SPIRTCSRAMInit();
+	//TODO: убрать 
+	//TickInit();
+	SetTime();
+    UTCT = GetTimeFromRTC();
+	SetTimeFromUTC(UTCT);
+    
+	//SPIRTCSRAMInit();	
+	
+	
 	InitializeBoard();
     
 	#if defined(USE_LCD)
