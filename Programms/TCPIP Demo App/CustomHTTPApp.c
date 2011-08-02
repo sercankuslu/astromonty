@@ -483,6 +483,8 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 	// Use current config in non-volatile memory as defaults
 	#if defined(EEPROM_CS_TRIS)
 		XEEReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
+	#elif defined(SPIRTCSRAM_CS_TRIS)
+		SPISRAMReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
 	#elif defined(SPIFLASH_CS_TRIS)
 		SPIFlashReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
 	#endif

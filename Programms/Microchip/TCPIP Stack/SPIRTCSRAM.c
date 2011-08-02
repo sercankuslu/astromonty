@@ -1,9 +1,7 @@
 /*********************************************************************
  *
- *  SPI Flash Memory Driver
- *  - Tested with SST 25VF016B 
- *  - Expected compatibility with other SST (Microchip) SST25 series 
- *    devices
+ *  SPI RTC/SRAM Memory Driver
+ *  - Tested with Maxim DS3234S
  *
  *********************************************************************
  * FileName:        SPIRTCSRAM.c
@@ -13,45 +11,13 @@
  *					Microchip C30 v3.23 or higher
  *					Microchip C18 v3.30 or higher
  *					HI-TECH PICC-18 PRO 9.63PL2 or higher
- * Company:         Microchip Technology, Inc.
- *
- * Software License Agreement
- *
- * Copyright (C) 2002-2010 Microchip Technology Inc.  All rights
- * reserved.
- *
- * Microchip licenses to you the right to use, modify, copy, and
- * distribute:
- * (i)  the Software when embedded on a Microchip microcontroller or
- *      digital signal controller product ("Device") which is
- *      integrated into Licensee's product; or
- * (ii) ONLY the Software driver source files ENC28J60.c, ENC28J60.h,
- *		ENCX24J600.c and ENCX24J600.h ported to a non-Microchip device
- *		used in conjunction with a Microchip ethernet controller for
- *		the sole purpose of interfacing with the ethernet controller.
- *
- * You should refer to the license agreement accompanying this
- * Software for additional information regarding your rights and
- * obligations.
- *
- * THE SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT
- * WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
- * LIMITATION, ANY WARRANTY OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * MICROCHIP BE LIABLE FOR ANY INCIDENTAL, SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF
- * PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY OR SERVICES, ANY CLAIMS
- * BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY DEFENSE
- * THEREOF), ANY CLAIMS FOR INDEMNITY OR CONTRIBUTION, OR OTHER
- * SIMILAR COSTS, WHETHER ASSERTED ON THE BASIS OF CONTRACT, TORT
- * (INCLUDING NEGLIGENCE), BREACH OF WARRANTY, OR OTHERWISE.
+ * Company:         
  *
  *
  * Author               		Date    Comment
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * E. Wood              		3/20/08 Original
- * Dave Collier/H. Schlunder	6/09/10	Update for SST25VF010A
-********************************************************************/
+ * D.Mosh              		   02/08/11 Original 
+ ********************************************************************/
 #define __SPIRTCSRAM_C
 
 #include "HardwareProfile.h"
@@ -153,6 +119,8 @@ static DWORD dwRTCSeconds = 0;
 static DWORD dwRTCLastUpdateTick = 0;
 // Time Struct
 static volatile RTC_TIME Time;
+
+static BYTE bIsRTCTimeValid = 0;
 
 static void _WaitWhileBusy(void);
 static void spi_write(BYTE x);
@@ -395,10 +363,10 @@ void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     void SPIRTCSRAMBeginWrite(DWORD dwAddr)
 
   Summary:
-    Prepares the SPI Flash module for writing.
+    Prepares the SPI SRAM module for writing.
 
   Description:
-    Prepares the SPI Flash module for writing.  Subsequent calls to
+    Prepares the SPI SRAM module for writing.  Subsequent calls to
     SPIRTCSRAMWrite or SPIRTCSRAMWriteArray will begin at this location and
     continue sequentially.
 
@@ -411,20 +379,7 @@ void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     dwAddr - Address where the writing will begin
 
   Returns:
-    None
-
-  Remarks:
-    Flash parts have large sector sizes, and can only erase entire sectors
-    at once.  The SST parts for which this library was written have sectors
-    that are 4kB in size.  Your application must ensure that writes begin on
-    a sector boundary so that the SPIRTCSRAMWrite functions will erase the
-    sector before attempting to write.  Entire sectors need not be written
-    at once, so applications can begin writing to the front of a sector,
-    perform other tasks, then later call SPIRTCSRAMBeginWrite and point to an
-    address in this sector that has not yet been programmed.  However, care
-    must taken to ensure that writes are not attempted on addresses that are
-    not in the erased state.  The chip will provide no indication that the
-    write has failed, and will silently ignore the command.
+    None  
   ***************************************************************************/
 void SPISRAMBeginWrite(DWORD dwAddr)
 {
@@ -436,19 +391,13 @@ void SPISRAMBeginWrite(DWORD dwAddr)
     void SPIRTCSRAMWrite(BYTE vData)
 
   Summary:
-    Writes a byte to the SPI Flash part.
+    Writes a byte to the SPI SRAM part.
 
   Description:
-    This function writes a byte to the SPI Flash part.  If the current
-    address pointer indicates the beginning of a 4kB sector, the entire
-    sector will first be erased to allow writes to proceed.  If the current
-    address pointer indicates elsewhere, it will be assumed that the sector
-    has already been erased.  If this is not true, the chip will silently
-    ignore the write command.
+    This function writes a byte to the SPI SRAM part.  
 
   Precondition:
-    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called, and the current
-    address is either the front of a 4kB sector or has already been erased.
+    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called
 
   Parameters:
     vData - The byte to write to the next memory location.
@@ -456,9 +405,7 @@ void SPISRAMBeginWrite(DWORD dwAddr)
   Returns:
     None
 
-  Remarks:
-    See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
-    memory parts.
+  Remarks:    
   ***************************************************************************/
 void SPISRAMWrite(BYTE vData)
 {
@@ -515,16 +462,10 @@ void SPISRAMWrite(BYTE vData)
     Writes an array of bytes to the SPI Flash part.
 
   Description:
-    This function writes an array of bytes to the SPI Flash part.  When the
-    address pointer crosses a sector boundary (and has more data to write),
-    the next sector will automatically be erased.  If the current address
-    pointer indicates an address that is not a sector boundary and is not
-    already erased, the chip will silently ignore the write command until the
-    next sector boundary is crossed.
+    This function writes an array of bytes to the SPI SRAM part. 
 
   Precondition:
-    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called, and the current
-    address is either the front of a sector or has already been erased.
+    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called.
 
   Parameters:
     vData - The array to write to the next memory location
@@ -598,57 +539,28 @@ void SPISRAMWriteArray(BYTE* vData, WORD wLen)
     SPI_ON_BIT = vSPIONSave;
 }
 
-
-
-
 /*****************************************************************************
   Function:
-    static void _GetStatus()
+    void SPIRTCWriteTime(void)
 
   Summary:
-    Reads the status register of the part.
+    Writes Time to the SPI RTC part.
 
   Description:
-    This function reads the status register of the part.  It was written
-    for debugging purposes, and is not needed for normal operation.  Place
-    a breakpoint at the last instruction and check the "status" variable to
-    see the result.
+    This function writes Time to the SPI SRAM part. 
 
   Precondition:
-    SPIRTCSRAMInit has been called.
+    SPIRTCSRAMInit have been called.
 
   Parameters:
     None
-
+    
   Returns:
     None
+
+  Remarks:
+    
   ***************************************************************************/
-//static void _GetStatus()
-//{
-//	volatile BYTE Dummy;
-//  static BYTE statuses[16];
-//  static BYTE *status = statuses;
-//
-//  // Activate chip select
-//  SPIRTCSRAM_CS_IO = 0;
-//  ClearSPIDoneFlag();
-//
-//  // Send Read Status Register instruction
-//  SPIRTCSRAM_SSPBUF = RDSR;
-//  WaitForDataByte();
-//  Dummy = SPIRTCSRAM_SSPBUF;
-//
-//  SPIRTCSRAM_SSPBUF = 0x00;
-//  WaitForDataByte();
-//  *status = SPIRTCSRAM_SSPBUF;
-//  status++;
-//
-//  // Deactivate chip select
-//  SPIRTCSRAM_CS_IO = 1;
-//
-//  if(status == &statuses[10])
-//      statuses[15] = 0;
-//}
 
 void SPIRTCWriteTime(void)
 {
@@ -688,10 +600,29 @@ void SPIRTCWriteTime(void)
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
 }
+/*****************************************************************************
+  Function:
+    void SPIRTCReadTime(void)
+
+  Summary:
+    Read Time to the SPI RTC part.
+
+  Description:
+    Read Time to the SPI RTC part.
+
+  Precondition:
+    SPIRTCSRAMInit have been called.
+
+  Parameters:
+    
+  Returns:
+    None
+
+  Remarks:
+   
+  ***************************************************************************/
 void SPIRTCReadTime()
 {     
-	
-    BYTE i;
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -731,14 +662,8 @@ void SPIRTCReadTime()
         spi_write(RTC_SECONDS);
         seconds = spi_read();
         SPIRTCSRAM_CS_IO = 1;         
-    }   
+    }       
     
-    
-    dwRTCSeconds = GetTimeFromRTC();
-    
-       
-    RTCGetUTCSeconds();
-	
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
@@ -787,13 +712,30 @@ DWORD RTCGetUTCSeconds(void)
 	dwRTCLastUpdateTick = dwTick - dwTickDelta;
     return dwRTCSeconds;
 }    
+/*****************************************************************************
+  Function:
+    DWORD GetTimeFromRTC(void)
 
+  Summary:
+    Return RTC local Time in seconds. 
+
+  Description:    
+
+  Precondition:
+    SPIRTCSRAMInit have been called.
+
+  Parameters:
+  
+  Returns:
+    The number of seconds since the Epoch.  (Default 01-Jan-1970 00:00:00)
+
+  Remarks:   
+  ***************************************************************************/
 DWORD GetTimeFromRTC()
 {
     BYTE Y;
     BYTE M;
     BYTE D;
-    BYTE d;//день недели
     BYTE h;
     BYTE m;
     BYTE s;
@@ -801,8 +743,9 @@ DWORD GetTimeFromRTC()
     DWORD DY = 0;
     DWORD DM = 0;   
 
-    
-    Y = Time.b6.years.Year10   * 10 + Time.b6.years.Year;
+    SPIRTCReadTime();
+        
+    Y = Time.b5.month.Century * 100 + Time.b6.years.Year10   * 10 + Time.b6.years.Year;
     M = Time.b5.month.Month10  * 10 + Time.b5.month.Month;
     D = Time.b4.date.Date10    * 10 + Time.b4.date.Date;
     h = Time.b2.hours.Hour10   * 10 + Time.b2.hours.Hour;
@@ -824,81 +767,90 @@ DWORD GetTimeFromRTC()
             DM += 31;        
         }
     }
-    for(i=70;i<(Y+100);i++){
-        DY+=365;
-		if((i & 0xFC) == 0){
-            DY++;                    
+    for(i=70;i < Y;i++){        
+		if((i & 0x03) == 0){
+            DY+=366;                    
+        } else {
+            DY+=365;
         }
     }   
-    
-    dwRTCSeconds = (((DY + DM + D) * 24 + h) * 60 + m)*60 + s;
+    DY = DY + DM + D - 1;
+    dwRTCSeconds = ((DY * 24 + h) * 60 + m)*60 + s;
+    dwRTCLastUpdateTick = TickGet();
+    return dwRTCSeconds;
 }
+/*****************************************************************************
+  Function:
+    void SetTimeFromUTC(DWORD Seconds)
+
+  Summary:
+    
+  Description:
+    
+  Precondition:
+    SPIRTCSRAMInit have been called.
+
+  Parameters:
+    
+  Returns:
+    None
+
+  Remarks:
+ ***************************************************************************/
 void SetTimeFromUTC(DWORD Seconds)
 {
     BYTE Y = 70;
-    BYTE Y10 = 0;
-    DWORD DY = SEC_IN_365_DAY;
+    DWORD DY;
     BYTE M = 1;
-    BYTE M10 = 0;
     BYTE D = 1;
-    BYTE D10 = 0;    
     BYTE d = 1;//день недели
     BYTE h = 0;
-    BYTE h10 = 0;   
     BYTE m = 0;
-    BYTE m10 = 0;
     BYTE s = 0;
-    BYTE s10 = 0;
-    DWORD DM = SEC_IN_31DAY;     
+    DWORD DM = 31;     
     double s1; 
     DWORD dd;
-      
+    volatile DWORD Days;  
     
-    if(Seconds>=SEC_1970_2000){
-        Seconds -= SEC_1970_2000;
-        Y = 100; //2000
-        DY = SEC_IN_366_DAY;
-    }    
-    s1 = Seconds/SEC_IN_WEEK;
+    Days = Seconds/86400;
+    Seconds -= (DWORD)Days*86400;
+    s1 = Days/7;
     dd = s1;
-    d = ((Seconds - dd*SEC_IN_WEEK)/SEC_IN_DAY) + 6;
+    d = (Days - dd*7) + 5;
     while(d>=7){d-=7;}
-    while(Seconds>=SEC_IN_4_YEAR){
-        Seconds -= SEC_IN_4_YEAR;
-        Y+=4;
-    }
     
-    while(Seconds >= DY){
-        if((Y & 0xFC) == 0){
-            DY = SEC_IN_366_DAY; //366 дней           
+    dd  = Days/1461;
+    Days -= (dd * 1461); //
+    Y = dd*4 + 70;
+    DY = 365; //1970
+    while(Days >= DY){
+        if((Y & 0x03) == 0){
+            DY = 366; //366 дней           
         } else {
-            DY = SEC_IN_365_DAY; //365 дней
+            DY = 365; //365 дней
         }        
         Y++;
-        Seconds -= DY;           
+        Days -= DY;           
     }   
-    
-    while(Seconds>=DM){        
+    M = 1;
+    while(Days>=DM){        
         switch (M){        
             case 4:case 6: case 9: case 11: 
-                DM = SEC_IN_30DAY;
+                DM = 30;
             break;
             case 2:
-                DM = SEC_IN_28DAY;
-                if((Y & 0xFC) == 0){
-                    DM = SEC_IN_29DAY;                    
+                DM = 28;
+                if((Y & 0x03) == 0){
+                    DM = 29;                    
                 }
             break;
             default:
-            DM = SEC_IN_31DAY;        
+            DM = 31;        
         }
-        Seconds -= DM;       
+        Days -= DM;       
         M++;
     }   
-
-    s1 = Seconds / SEC_IN_DAY;
-    D = s1;
-    Seconds -= (DWORD)D * SEC_IN_DAY;
+    D = Days + 1;
     
     s1 = Seconds / 3600;
     h = s1;
@@ -908,34 +860,23 @@ void SetTimeFromUTC(DWORD Seconds)
     m = s1;
     Seconds -= (DWORD)m * 60;
        
-    s = Seconds;
-    
-    Y10 = Y/10;
-    Y -= Y10*10;
-    M10 = M/10;
-    M -= M10*10;
-    D10 = D/10;
-    D -= D10*10;
-    h10 = h/10;
-    h -= h10*10;
-    m10 = m/10;
-    m -= m10*10;
-    s10 = s/10;
-    s -= s10*10;
-    
-    Time.b0.seconds.Sec10 = s10;
-    Time.b0.seconds.Sec = s;
-    Time.b1.minutes.Min10 = m10;
-    Time.b1.minutes.Min = m;
-    Time.b2.hours.Hour10 = h10;
-    Time.b2.hours.Hour = h;
-    Time.b3.day.Day = d;
-    Time.b4.date.Date10 = D10;
-    Time.b4.date.Date = D;
-    Time.b5.month.Month10 = M10;
-    Time.b5.month.Month = M;
-    Time.b6.years.Year10 = Y10;
-    Time.b6.years.Year = Y;    
+    s = Seconds;    
+   
+    Time.b0.seconds.Sec10 = s/10;
+    Time.b0.seconds.Sec = s - Time.b0.seconds.Sec10*10;
+    Time.b1.minutes.Min10 = m/10;
+    Time.b1.minutes.Min = m - Time.b1.minutes.Min10*10;
+    Time.b2.hours.Hour10  = h/10;
+    Time.b2.hours.Hour  = h - Time.b2.hours.Hour10*10;
+    Time.b3.day.Day       = d;
+    Time.b4.date.Date10   = D/10;
+    Time.b4.date.Date   = D - Time.b4.date.Date10*10;
+    Time.b5.month.Month10 = M/10;
+    Time.b5.month.Month = M - Time.b5.month.Month10*10;
+    Time.b5.month.Century = Y/100; 
+    Time.b6.years.Year10 = (Y - Time.b5.month.Century*100)/10;
+    Time.b6.years.Year = Y - Time.b6.years.Year10*10; 
+    SPIRTCWriteTime();   
 }
      
 #if __C30_VERSION__ >= 300
@@ -946,12 +887,36 @@ void _ISR _INT2Interrupt(void)
 {
 	// Increment internal high tick counter
 	dwRTCSeconds++;
+	dwRTCLastUpdateTick = TickGet();
 
 	// Reset interrupt flag
 	 IFS1bits.INT2IF =  0;
 }
 
+/*****************************************************************************
+  Function:
+    void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
 
+  Summary:
+    Writes an array of bytes to the SPI Flash part.
+
+  Description:
+    This function writes an array of bytes to the SPI SRAM part. 
+
+  Precondition:
+    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called.
+
+  Parameters:
+    vData - The array to write to the next memory location
+    wLen - The length of the data to be written
+
+  Returns:
+    None
+
+  Remarks:
+    See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
+    memory parts.
+  ***************************************************************************/
 void SPIRTCSetAlarm1PerSec(void)
 {
 	volatile BYTE Dummy;
@@ -992,20 +957,49 @@ void SPIRTCSetAlarm1PerSec(void)
 
 void SetTime()
 {
-    Time.b0.seconds.Sec10 = 3;
-    Time.b0.seconds.Sec = 5;
-    Time.b1.minutes.Min10 = 3;
-    Time.b1.minutes.Min = 8;
-    Time.b2.hours.Hour10 = 1;
-    Time.b2.hours.Hour = 8;
-    Time.b3.day.Day = 2;
-    Time.b4.date.Date10 = 0;
-    Time.b4.date.Date = 1;
+    Time.b5.month.Century = 1;
+    Time.b6.years.Year10 = 1;    
+    Time.b6.years.Year = 1;       
     Time.b5.month.Month10 = 0;
     Time.b5.month.Month = 8;
-    Time.b6.years.Year10 = 1;
-    Time.b6.years.Year = 1;   
+    Time.b3.day.Day = 3;
+    Time.b4.date.Date10 = 0;
+    Time.b4.date.Date = 3;
+    Time.b2.hours.Hour10 = 1;
+    Time.b2.hours.Hour = 0;
+    Time.b1.minutes.Min10 = 0;
+    Time.b1.minutes.Min = 4;
+    Time.b0.seconds.Sec10 = 3;
+    Time.b0.seconds.Sec = 6;
+
 }
 
+/*****************************************************************************
+  Function:
+    void SPIRTCSRAMWriteArray(BYTE* vData, WORD wLen)
+
+  Summary:
+    Writes an array of bytes to the SPI Flash part.
+
+  Description:
+    This function writes an array of bytes to the SPI SRAM part. 
+
+  Precondition:
+    SPIRTCSRAMInit and SPIRTCSRAMBeginWrite have been called.
+
+  Parameters:
+    vData - The array to write to the next memory location
+    wLen - The length of the data to be written
+
+  Returns:
+    None
+
+  Remarks:
+    See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
+    memory parts.
+  ***************************************************************************/
+BYTE RTCIsTimeValid(void){
+    return bIsRTCTimeValid;
+}
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

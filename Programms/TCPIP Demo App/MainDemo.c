@@ -204,18 +204,10 @@ int main(void)
 {
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
-	DWORD UTCT = 1576812345;
+	//volatile DWORD UTCT;
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;	
 	// Initialize application specific hardware
-	//TODO: убрать 
-	//TickInit();
-	SetTime();
-    UTCT = GetTimeFromRTC();
-	SetTimeFromUTC(UTCT);
-    
-	//SPIRTCSRAMInit();	
-	
 	
 	InitializeBoard();
     
@@ -334,7 +326,7 @@ int main(void)
         {
             t = TickGet();
             LED0_IO ^= 1;
-            SPIRTCSRAMInit();
+            AdjustLocalRTCTime();
         }
 
         // This task performs normal stack task including checking
@@ -428,6 +420,36 @@ int main(void)
 		}
 	}
 }
+void AdjustLocalRTCTime()
+{
+    DWORD RTCSeconds;
+    DWORD SNTPSeconds;
+#if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
+    //имеет смысл только при работающем модуле SNTP
+    if(SNTPIsTimeValid())
+    {
+        RTCSeconds = RTCGetUTCSeconds();  
+        SNTPSeconds = SNTPGetUTCSeconds();
+        if((RTCSeconds>SNTPSeconds+2)||(RTCSeconds<SNTPSeconds-2)){
+            SetTimeFromUTC(SNTPSeconds);            
+        }
+    }    
+#endif
+}
+
+DWORD UTCGetTime(void)
+{
+#if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
+    if(SNTPIsTimeValid())
+    {
+        //получаем время из SNTP модуля
+        return SNTPGetUTCSeconds();
+    } else {
+        return RTCGetUTCSeconds();
+    }
+#endif
+}
+
 
 #if defined(WF_CS_TRIS)
 /*****************************************************************************
@@ -1141,7 +1163,7 @@ static void InitAppConfig(void)
 				XEEReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
 				XEEReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig));
 			}
-			#elif defined(SPIFLASH_CS_TRIS)
+			#elif defined(SPIRTCSRAM_CS_TRIS)
 			{
 				SPISRAMReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
 				SPISRAMReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig));
