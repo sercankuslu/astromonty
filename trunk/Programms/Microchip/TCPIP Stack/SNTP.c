@@ -126,6 +126,7 @@ static DWORD dwSNTPSeconds = 0;
 // Tick count of last update
 static DWORD dwLastUpdateTick = 0;
 
+static BYTE bIsTimeValid = 0;
 
 /*****************************************************************************
   Function:
@@ -303,7 +304,7 @@ void SNTPClient(void)
 			// Do rounding.  If the partial seconds is > 0.5 then add 1 to the seconds count.
 			if(((BYTE*)&pkt.tx_ts_fraq)[0] & 0x80)
 				dwSNTPSeconds++;
-
+            bIsTimeValid = 1;
 			break;
 
 		case SM_SHORT_WAIT:
@@ -367,5 +368,7 @@ DWORD SNTPGetUTCSeconds(void)
 
 	return dwSNTPSeconds;
 }
-
+BYTE SNTPIsTimeValid(void){
+    return bIsTimeValid;
+}
 #endif  //if defined(STACK_USE_SNTP_CLIENT)

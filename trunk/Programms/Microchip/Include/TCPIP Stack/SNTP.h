@@ -53,6 +53,7 @@
 
 void SNTPClient(void);
 DWORD SNTPGetUTCSeconds(void);
+BYTE SNTPIsTimeValid(void);
 
 #endif
 
