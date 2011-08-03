@@ -59,6 +59,7 @@
 
 #include "TCPIP Stack/TCPIP.h"
 #include "MainDemo.h"		// Needed for SaveAppConfig() prototype
+#include "TCPIP Stack/SPIRTCSRAM.h"
 
 /****************************************************************************
   Section:
@@ -1496,8 +1497,9 @@ void HTTPPrint_ledSelected(WORD num, WORD state)
 
 void HTTPPrint_pot(void)
 {
-	BYTE AN0String[8];
+	BYTE AN0String[40];
 	WORD ADval;
+	DWORD UTCTime;
 
 #if defined(__18CXX)
     // Wait until A/D conversion is done
@@ -1510,10 +1512,15 @@ void HTTPPrint_pot(void)
     //ADval /= (WORD)102;
     uitoa(ADval, AN0String);
 #else
+	//ADval = (WORD)ADC1BUF0;
 	ADval = (WORD)ADC1BUF0;
 	//ADval *= (WORD)10;
 	//ADval /= (WORD)102;
-    uitoa(ADval, (BYTE*)AN0String);
+	//UTCTime = UTCGetTime();
+	UTCTime = RTCGetUTCSeconds();
+	//ultoa(UTCTime, (BYTE*)AN0String);
+	RTCGetFormatTime((BYTE*)AN0String);
+    //uitoa(ADval, (BYTE*)AN0String);
 #endif
 
    	TCPPutString(sktHTTP, AN0String);

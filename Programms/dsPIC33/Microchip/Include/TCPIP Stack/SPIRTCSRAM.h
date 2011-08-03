@@ -137,6 +137,8 @@ typedef struct
     void SetTimeFromUTC(DWORD Seconds);
     DWORD RTCGetUTCSeconds(void);
     void SPIRTCSetAlarm1PerSec(void);
+    void RTCGetFormatTime(BYTE* time);
+    
     
     void SetTime();
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
