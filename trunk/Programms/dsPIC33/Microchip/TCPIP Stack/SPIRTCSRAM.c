@@ -125,6 +125,8 @@ static BYTE bIsRTCTimeValid = 0;
 static void _WaitWhileBusy(void);
 static void spi_write(BYTE x);
 static BYTE spi_read(void);
+static void SPIRTCWriteReg(BYTE Reg, BYTE Data);
+static BYTE SPIRTCReadReg(BYTE Reg);
 
 
 //static void _GetStatus(void);
@@ -206,7 +208,7 @@ void SPIRTCSRAMInit(void)
     BYTE temp_l;
     //BYTE Data;
     //BYTE Address;
-    //volatile BYTE Dummy;
+    volatile BYTE Dummy;
     BYTE vSPIONSave;
     #if defined(__18CXX)
     BYTE SPICON1Save;
@@ -248,40 +250,27 @@ void SPIRTCSRAMInit(void)
     SPIRTCSRAM_CS_IO = 0;
     ClearSPIDoneFlag();
                    
-        GetTimeFromRTC();   
-              
-        Wait400ns();        
-        _WaitWhileBusy();         //check busy flag till clear        
-        SPIRTCSRAM_CS_IO = 0;       //do temperature conversion
-        spi_write(RTC_CONTROL | WRITEMASK);
-        spi_write(0x65);
-        SPIRTCSRAM_CS_IO = 1;
-        Wait400ns();
-        SPIRTCSRAM_CS_IO = 0;       
-        spi_write(RTC_STATUS | WRITEMASK);
-        spi_write(0x48); //65
-        SPIRTCSRAM_CS_IO = 1;
-        Wait400ns();        
-        SPIRTCSRAM_CS_IO = 0;                     //read temp
-        spi_write(RTC_TEMP_MSB);
-        temp_h = spi_read();
-        temp_l = spi_read();
+    GetTimeFromRTC();   
+      
+    _WaitWhileBusy();         //check busy flag till clear        
+    Dummy = SPIRTCReadReg(RTC_CONTROL);
+    Wait400ns();
+    Dummy = SPIRTCReadReg(RTC_STATUS);
+    Wait400ns();
+    SPIRTCWriteReg(RTC_CONTROL, 0x40);            
+    //interrupt every second
+    SPIRTCSetAlarm1PerSec();
+    TRISAbits.TRISA13 = 1;
+    INTCON2bits.INT2EP = 1; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
+    IPC7bits.INT2IP = 7; //111 = Interrupt is priority 7 (highest priority interrupt)
+    IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
+    SPIRTCWriteReg(RTC_STATUS, 0x08);           
     
-        SPIRTCSRAM_CS_IO = 1;        
-
+    SPIRTCSRAM_CS_IO = 1;   
     // Restore SPI state
     SPI_ON_BIT = 0;
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
-    
-    //interrupt every second
-    SPIRTCSetAlarm1PerSec();
-    TRISAbits.TRISA13 = 1;
-    INTCON2bits.INT2EP = 0; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
-    IPC7bits.INT2IP = 7; //111 = Interrupt is priority 7 (highest priority interrupt)
-    IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
-    
-    
 }
 
 
@@ -895,9 +884,10 @@ void _ISR _INT2Interrupt(void)
 	// Increment internal high tick counter
 	dwRTCSeconds++;
 	dwRTCLastUpdateTick = TickGet();
-
+    SPIRTCWriteReg(RTC_CONTROL, 0x08);  
 	// Reset interrupt flag
 	 IFS1bits.INT2IF =  0;
+	 
 }
 
 /*****************************************************************************
@@ -960,7 +950,73 @@ void SPIRTCSetAlarm1PerSec(void)
     SPIRTCSRAM_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
 }
+static void SPIRTCWriteReg(BYTE Reg, BYTE Data)
+{
+	volatile BYTE Dummy;
+	BYTE vSPIONSave;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif     
+	// Save SPI state (clock speed)
+    SPICON1Save = SPIRTCSRAM_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
 
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+     
+    // Activate chip select
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+        
+    Dummy = Reg | WRITEMASK;    
+    spi_write(Dummy);
+    spi_write(Data);    
+	SPIRTCSRAM_CS_IO = 1;
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
+}
+static BYTE SPIRTCReadReg(BYTE Reg)
+{
+	volatile BYTE Dummy;
+	BYTE vSPIONSave;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif     
+	// Save SPI state (clock speed)
+    SPICON1Save = SPIRTCSRAM_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
+
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = RTC_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+     
+    // Activate chip select
+    SPIRTCSRAM_CS_IO = 0;
+    ClearSPIDoneFlag();
+        
+    Dummy = Reg;    
+    spi_write(Dummy);
+    Dummy = spi_read();    
+	SPIRTCSRAM_CS_IO = 1;
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIRTCSRAM_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
+    return Dummy;
+}
 
 void SetTime()
 {
@@ -1007,6 +1063,73 @@ void SetTime()
   ***************************************************************************/
 BYTE RTCIsTimeValid(void){
     return bIsRTCTimeValid;
+}
+//03.08.2011 14:49:36, sunday 
+void RTCGetFormatTime(BYTE* time){     
+     //static BYTE time[30];
+     BYTE i = 0;
+     SPIRTCReadTime();
+     
+     time[i++] = Time.b4.date.Date10 + '0';
+     time[i++] = Time.b4.date.Date   + '0';
+     time[i++] = '.';     
+     time[i++] = Time.b5.month.Month10 + '0';
+     time[i++] = Time.b5.month.Month + '0';
+     time[i++] = '.';     
+     if(Time.b5.month.Century == 0){
+         time[i++] = '1';
+         time[i++] = '9';         
+     } else {
+         time[i++] = '2';
+         time[i++] = '0';         
+     }
+     time[i++] = Time.b6.years.Year10 + '0';
+     time[i++] = Time.b6.years.Year   + '0';
+     time[i++] = ' ';     
+     time[i++] = Time.b2.hours.Hour10 + '0';
+     time[i++] = Time.b2.hours.Hour   + '0';
+     time[i++] = ':';     
+     time[i++] = Time.b1.minutes.Min10 + '0';
+     time[i++] = Time.b1.minutes.Min   + '0';
+     time[i++] = ':';     
+     time[i++] = Time.b0.seconds.Sec10 + '0';
+     time[i++] = Time.b0.seconds.Sec   + '0';
+     time[i++] = ',';     
+     time[i++] = ' ';
+     switch(Time.b3.day.Day){
+         case 1:
+            memcpy((void*)&time[i], "Sunday", 6);
+            i+=6;
+         break;
+         case 2:
+            memcpy((void*)&time[i], "Monday", 6);
+            i+=6;
+         break;
+         case 3:
+            memcpy((void*)&time[i], "Tuesday", 7);
+            i+=7;
+         break;
+         case 4:
+            memcpy(&(time[i]),      "Wednesday", 9);
+            i+=9;
+         break;
+         case 5:
+            memcpy((void*)&time[i], "Thursday", 8);
+            i+=8;
+         break;
+         case 6:
+            memcpy((void*)&time[i], "Friday", 6);
+            i+=6;
+         break;
+         case 7:
+            memcpy((void*)&time[i], "Saturday", 8);
+            i+=8;
+         break;
+         default:
+            time[i] = 0;
+     }
+     time[i++] = 0;     
+     
 }
 #endif //#if defined(SPIRTCSRAM_CS_TRIS)
 

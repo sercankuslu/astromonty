@@ -75,6 +75,7 @@ void BerkeleyTCPClientDemo(void);
 void BerkeleyTCPServerDemo(void);
 void BerkeleyUDPClientDemo(void);
 void AdjustLocalRTCTime(void);
+DWORD UTCGetTime(void);
 
 
 // Define a header structure for validating the AppConfig data structure in EEPROM/Flash
