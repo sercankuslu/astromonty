@@ -208,7 +208,8 @@ int main(void)
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;	
 	// Initialize application specific hardware
-	
+	TRISAbits.TRISA13 = 1;
+	TRISAbits.TRISA12 = 1;
 	InitializeBoard();
     
 	#if defined(USE_LCD)
