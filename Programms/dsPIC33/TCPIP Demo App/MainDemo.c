@@ -191,7 +191,56 @@ static void ProcessIO(void);
 		Nop();
 	}
 #endif
+static const DWORD Interval = 2000000;
+static const DWORD StepPulse = 1000000;
+static DWORD_VAL OC1R_;
+static DWORD_VAL OC1RS_;
+static BYTE OC1Mode = 0b011;
+static BYTE Toggle = 0;
 
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
+{
+    /* Interrupt Service Routine code goes here */
+    if(OC1Mode == 0b011){
+        
+        if(Toggle){
+            OC1R_.Val += Interval;              
+            Toggle = 0;  
+        } else {
+            Toggle = 1;
+            OC1R_.Val += StepPulse;
+        }     
+        LATDbits.LATD0 = Toggle;      
+        if(OC1R_.word.HW == 0 ){
+            OC1R = OC1R_.word.LW;          
+        } else {           
+            OC1CONbits.OCM = 0b000; // Disable Output Compare Module     
+        }    
+    } else 
+    if (OC1Mode == 0b101){
+        OC1R  = OC1R_.word.LW;
+        OC1RS = OC1RS_.word.LW;
+    }    
+    
+    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
+}
+void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
+{
+/* Interrupt Service Routine code goes here */
+    if(OC1Mode == 0b011){
+        if(OC1R_.word.HW>0)
+        {
+            OC1R_.word.HW--;
+        } 
+        if(OC1R_.word.HW == 0){
+            OC1R = OC1R_.word.LW;                                
+            IFS0bits.OC1IF = 0;     // Clear Output Compare 1 Interrupt Flag
+            OC1CONbits.OCM = OC1Mode; // Select the Output Compare mode 
+            IEC0bits.OC1IE = 1;     // Enable Output Compare 1 interrupt
+        }
+    }   
+    IFS0bits.T2IF = 0; // Clear OC1 interrupt flag
+}
 
 //
 // Main application entry point.
@@ -210,6 +259,58 @@ int main(void)
 	// Initialize application specific hardware
 	TRISAbits.TRISA13 = 1;
 	TRISAbits.TRISA12 = 1;
+	
+	TRISDbits.TRISD0 = 0;
+	LATDbits.LATD0 = 0;
+	OC1R_.Val = Interval; 
+	OC1RS_.Val = OC1R_.Val + StepPulse;
+	
+	// Initialize Output Compare Module
+    OC1CONbits.OCM = 0b000; // Disable Output Compare Module
+    OC1CONbits.OCTSEL = 0;  // Select Timer 2 as output compare time base
+     // Load the Compare Register Value for rising edge
+    if(OC1R_.word.HW == 0){
+        OC1R = OC1R_.word.LW;         
+    } else {
+        OC1R = 0;
+    }    
+    // Load the Compare Register Value for falling edge
+    if(OC1RS_.word.HW == 0){           
+        OC1RS = OC1RS_.word.LW;            
+    } else {
+        OC1RS = 0;
+    } 
+    
+    IPC0bits.OC1IP = 0x01;  // Set Output Compare 1 Interrupt Priority Level
+    IFS0bits.OC1IF = 0;     // Clear Output Compare 1 Interrupt Flag
+    if((OC1R_.word.HW == 0)&&(OC1RS_.word.HW == 0)){
+        OC1Mode = 0b101;     //Continuous Pulse mode
+        OC1CONbits.OCM =  OC1Mode; // Select the Output Compare mode     
+    }else{
+        OC1Mode = 0b011;    //Toggle mode
+    }
+   
+    
+    IEC0bits.OC1IE = 1;     // Enable Output Compare 1 interrupt
+    
+                            // Initialize and enable Timer2
+    T2CONbits.TON = 0; // Disable Timer
+    T2CONbits.TCS = 0; // Select internal instruction cycle clock
+    T2CONbits.TGATE = 0; // Disable Gated Timer mode
+    T2CONbits.TCKPS = 0b01; // Select 8:1 Prescaler
+    TMR2 = 0x00; // Clear timer register
+    PR2 = 0xFFFF; // Load the period value
+    IPC1bits.T2IP = 0x01; // Set Timer1 Interrupt Priority Level
+    IFS0bits.T2IF = 0; // Clear Timer1 Interrupt Flag
+    IEC0bits.T2IE = 1; // Enable Timer1 interrupt
+    T2CONbits.TON = 1; // Start Timer                            
+                            
+    while(1){
+        Nop();
+        Nop();
+    }
+    
+    
 	InitializeBoard();
     
 	#if defined(USE_LCD)
