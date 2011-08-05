@@ -769,7 +769,7 @@ DWORD GetTimeFromRTC()
     }   
     DY = DY + DM + D - 1;
     dwRTCSeconds = ((DY * 24 + h) * 60 + m)*60 + s;
-    dwRTCLastUpdateTick = TickGet();
+    //dwRTCLastUpdateTick = TickGet();
     return dwRTCSeconds;
 }
 /*****************************************************************************
