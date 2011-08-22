@@ -87,7 +87,8 @@
 // if you use the global pool.ntp.org address or choose the wrong 
 // one or ship your embedded device to another geography.
 //#define NTP_SERVER	"nrepus.cp.ru"
-#define NTP_SERVER	"europe.pool.ntp.org"
+#define NTP_SERVER	"ntp.mobatime.ru"
+//#define NTP_SERVER	"europe.pool.ntp.org"
 //#define NTP_SERVER	"asia.pool.ntp.org"
 //#define NTP_SERVER	"oceania.pool.ntp.org"
 //#define NTP_SERVER	"north-america.pool.ntp.org"
