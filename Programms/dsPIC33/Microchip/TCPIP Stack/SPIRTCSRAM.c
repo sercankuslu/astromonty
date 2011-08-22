@@ -204,8 +204,8 @@ void SPIRTCSRAMInit(void)
 	//BYTE seconds;
 	//BYTE minutes;
     //BYTE hours;
-    BYTE temp_h;
-    BYTE temp_l;
+    //BYTE temp_h;
+    //BYTE temp_l;
     //BYTE Data;
     //BYTE Address;
     volatile BYTE Dummy;
@@ -262,8 +262,9 @@ void SPIRTCSRAMInit(void)
     SPIRTCSetAlarm1PerSec();
     TRISAbits.TRISA13 = 1;
     INTCON2bits.INT2EP = 1; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
-    IPC7bits.INT2IP = 7; //111 = Interrupt is priority 7 (highest priority interrupt)
+    IPC7bits.INT2IP = 2; //111 = Interrupt is priority 7 (highest priority interrupt)
     IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
+    IFS1bits.INT2IF =  0;
     SPIRTCWriteReg(RTC_STATUS, 0x08);           
     
     SPIRTCSRAM_CS_IO = 1;   
