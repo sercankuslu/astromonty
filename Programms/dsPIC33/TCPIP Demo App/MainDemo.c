@@ -257,14 +257,21 @@ int main(void)
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;	
 	// Initialize application specific hardware
-	TRISAbits.TRISA13 = 1;
-	TRISAbits.TRISA12 = 1;
+	// Для работы A13  его нужно отключить от ADC
+	{
+		TRISAbits.TRISA12 = 1;
+		AD1CON1 = 0;
+		AD2CON1 = 0;
+		AD1PCFGH = 0xFFFF;
+		AD1PCFGL = 0xFFFF;
+		AD2PCFGL = 0xFFFF;
+	}
 	
 	TRISDbits.TRISD0 = 0;
 	LATDbits.LATD0 = 0;
 	OC1R_.Val = Interval; 
 	OC1RS_.Val = OC1R_.Val + StepPulse;
-	
+	/*
 	// Initialize Output Compare Module
     OC1CONbits.OCM = 0b000; // Disable Output Compare Module
     OC1CONbits.OCTSEL = 0;  // Select Timer 2 as output compare time base
@@ -304,12 +311,12 @@ int main(void)
     IFS0bits.T2IF = 0; // Clear Timer1 Interrupt Flag
     IEC0bits.T2IE = 1; // Enable Timer1 interrupt
     T2CONbits.TON = 1; // Start Timer                            
-                            
+     * /                      
     while(1){
         Nop();
         Nop();
     }
-    
+    */
     
 	InitializeBoard();
     
@@ -424,13 +431,20 @@ int main(void)
     while(1)
     {
         // Blink LED0 (right most one) every second.
+        /*
         if(TickGet() - t >= TICK_SECOND/2ul)
         {
             t = TickGet();
             LED0_IO ^= 1;
             AdjustLocalRTCTime();
         }
-
+		*/	
+		//LED0_IO = PORTAbits.RA13;
+		if(PORTAbits.RA13 != t){
+			t = PORTAbits.RA13;
+            LED0_IO ^= 1;
+            AdjustLocalRTCTime();
+		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
@@ -543,8 +557,10 @@ void AdjustLocalRTCTime()
 DWORD UTCGetTime(void)
 {
 #if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
-    if(SNTPIsTimeValid())
-    {
+	if(RTCIsTimeValid()){
+		return RTCGetUTCSeconds();
+	} else
+    if(SNTPIsTimeValid()) {
         //получаем время из SNTP модуля
         return SNTPGetUTCSeconds();
     } else {

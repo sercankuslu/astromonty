@@ -83,7 +83,7 @@
 
 // Maximum speed of SPI Flash part in Hz
 // Should theoretically operate at 25MHz, but need to account for level-shifting delays
-#define SPIRTCSRAM_MAX_SPI_FREQ       (16000000ul)
+#define SPIRTCSRAM_MAX_SPI_FREQ       (4000000ul)
 
 #if defined (__18CXX)
     #define ClearSPIDoneFlag()  {SPIRTCSRAM_SPI_IF = 0;}
@@ -257,15 +257,15 @@ void SPIRTCSRAMInit(void)
     Wait400ns();
     Dummy = SPIRTCReadReg(RTC_STATUS);
     Wait400ns();
-    SPIRTCWriteReg(RTC_CONTROL, 0x40);            
+    SPIRTCWriteReg(RTC_CONTROL, 0x00);            
     //interrupt every second
-    SPIRTCSetAlarm1PerSec();
+    //SPIRTCSetAlarm1PerSec();
     TRISAbits.TRISA13 = 1;
     INTCON2bits.INT2EP = 1; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
     IPC7bits.INT2IP = 2; //111 = Interrupt is priority 7 (highest priority interrupt)
     IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
     IFS1bits.INT2IF =  0;
-    SPIRTCWriteReg(RTC_STATUS, 0x08);           
+    //SPIRTCWriteReg(RTC_STATUS, 0x08);           
     
     SPIRTCSRAM_CS_IO = 1;   
     // Restore SPI state
@@ -885,7 +885,7 @@ void _ISR _INT2Interrupt(void)
 	// Increment internal high tick counter
 	dwRTCSeconds++;
 	dwRTCLastUpdateTick = TickGet();
-    SPIRTCWriteReg(RTC_CONTROL, 0x08);  
+    //SPIRTCWriteReg(RTC_CONTROL, 0x08);  
 	// Reset interrupt flag
 	 IFS1bits.INT2IF =  0;
 	 
