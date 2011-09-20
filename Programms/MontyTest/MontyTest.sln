@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MontyTest", "MontyTest\MontyTest.vcproj", "{1977AB83-B973-4417-9E4E-ED93E226D836}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1977AB83-B973-4417-9E4E-ED93E226D836}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1977AB83-B973-4417-9E4E-ED93E226D836}.Debug|Win32.Build.0 = Debug|Win32
+		{1977AB83-B973-4417-9E4E-ED93E226D836}.Release|Win32.ActiveCfg = Release|Win32
+		{1977AB83-B973-4417-9E4E-ED93E226D836}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
