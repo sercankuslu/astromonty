@@ -47,7 +47,7 @@ void CMontyTestView::OnDraw(CDC* pDC)
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
-
+	
 	// TODO: добавьте здесь код отрисовки для собственных данных
         POINT Center = {100,100};
         pDC->SetPixel(Center, 0x000000);
