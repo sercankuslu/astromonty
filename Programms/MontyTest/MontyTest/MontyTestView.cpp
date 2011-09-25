@@ -41,7 +41,7 @@ BOOL CMontyTestView::PreCreateWindow(CREATESTRUCT& cs)
 
 // рисование CMontyTestView
 
-void CMontyTestView::OnDraw(CDC* /*pDC*/)
+void CMontyTestView::OnDraw(CDC* pDC)
 {
 	CMontyTestDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -49,6 +49,9 @@ void CMontyTestView::OnDraw(CDC* /*pDC*/)
 		return;
 
 	// TODO: добавьте здесь код отрисовки для собственных данных
+        POINT Center = {100,100};
+        pDC->SetPixel(Center, 0x000000);
+        
 }
 
 
