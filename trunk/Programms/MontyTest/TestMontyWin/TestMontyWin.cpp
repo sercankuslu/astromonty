@@ -4,7 +4,9 @@
 #include "stdafx.h"
 #include "TestMontyWin.h"
 #include <my_global.h>
+//#include <mysql.h>
 #include <mysql.h>
+
 
 
 #define MAX_LOADSTRING 100
@@ -76,8 +78,17 @@ static REQ_DATA_TYPE* pData;/*[] = {
 	{00.0, 	21.1, 	-02.0, 	21.0,  9.537},
 };*/
 DATA_TYPE* phData;
-unsigned long DataLen;
+unsigned long DataLen = 0;
 RECT DataMaxSize;
+int StarMaxSize = -5;
+RECT ViewRect = {
+    50,50,800,600
+};
+
+// ViewRect.top = 5;
+// ViewRect.left = 5;
+// ViewRect.bottom = 605;
+// ViewRect.right = 805;
    
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -193,7 +204,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    {
 	   // Если дескриптор не получен - выводим сообщение об ошибке
 	   //fprintf(stderr, "Error: can't create MySQL-descriptor\n");
-	   MessageBox(hWnd,_T("Error: can't create MySQL-descriptor\n"),_T("Error"),0);
+	   //MessageBox(hWnd,_T("Error: can't create MySQL-descriptor\n"),_T("Error"),0);
 	   return FALSE;
    }
    // Подключаемся к серверу
@@ -209,70 +220,73 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    {
 	   // Если нет возможности установить соединение с сервером 
 	   // базы данных выводим сообщение об ошибке
-	   MessageBox(hWnd,_T("Error: can't connect to database %s\n"),_T("Error"),0);
+	   //MessageBox(hWnd,_T("Error: can't connect to database %s\n"),_T("Error"),0);
 	    return FALSE;
-   }
-   else
-   {
-	   // Если соединение успешно установлено выводим фразу - "Success!"
-	   //fprintf(stdout, "Success!\n"); // Выполняем SQL-запрос
-	   if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars WHERE W<4") != 0)
-	   //if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars where HD=39801") != 0)
-		   MessageBox(hWnd,_T("Error: can't execute SQL-query\n"),_T("Error"),0);
+    }
+    else  {
+        // Если соединение успешно установлено выводим фразу - "Success!"
+        //fprintf(stdout, "Success!\n"); // Выполняем SQL-запрос
+        //if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars ") != 0)
+        if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars WHERE W<8") != 0)
+        //if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars WHERE W<4 and Alpha_grad>2 AND Alpha_grad<8") != 0)
+        //if(mysql_query(conn, "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars where HD=39801") != 0)
+           //MessageBox(hWnd,_T("Error: can't execute SQL-query\n"),_T("Error"),0);
+           return FALSE;
 
-	   // Получаем дескриптор результирующей таблицы
-	   res = mysql_store_result(conn);
-	   if(res == NULL) MessageBox(hWnd,_T("Error: can't get the result description\n"),_T("Error"),0);
+        // Получаем дескриптор результирующей таблицы
+        res = mysql_store_result(conn);
+        if(res == NULL) return FALSE;
+            //MessageBox(hWnd,_T("Error: can't get the result description\n"),_T("Error"),0);
 
-	   // Если имеется хотя бы одна запись - выводим	  
-	   DataLen = mysql_num_rows(res);
-	   if(DataLen > 0)
-	   {
-		   pData = new REQ_DATA_TYPE[DataLen];
-		   // В цикле перебираем все записи
-		   // результирующей таблицы
-		   UINT i = 0;
-		   while((row = mysql_fetch_row(res)) != NULL)
-		   {
-			   // Выводим результат в стандартный поток
-			   sscanf_s(row[0],"%lu", &pData[i].HD);
-			   sscanf_s(row[1],"%f", &pData[i].Alpha);
-			   sscanf_s(row[2],"%f", &pData[i].Alpha_m);
-			   sscanf_s(row[3],"%f", &pData[i].Delta);
-			   sscanf_s(row[4],"%f", &pData[i].Delta_m);
-			   sscanf_s(row[5],"%f", &pData[i].Size);
-			   i++;
-		   }
-	   }
-
-	   // Освобождаем память, занятую результирующей таблицей
-	   mysql_free_result(res);
-
-   }      
-   DataMaxSize.top = 0;
-   DataMaxSize.bottom = 0;
-   DataMaxSize.left = 0;
+        // Если имеется хотя бы одна запись - выводим	  
+        DataLen = mysql_num_rows(res);
+        if(DataLen > 0) {
+            pData = new REQ_DATA_TYPE[DataLen];
+            // В цикле перебираем все записи
+            // результирующей таблицы
+            UINT i = 0;
+            while((row = mysql_fetch_row(res)) != NULL) {
+                // Выводим результат в стандартный поток
+                sscanf_s(row[0],"%lu", &pData[i].HD);
+                sscanf_s(row[1],"%f", &pData[i].Alpha);
+                sscanf_s(row[2],"%f", &pData[i].Alpha_m);
+                sscanf_s(row[3],"%f", &pData[i].Delta);
+                sscanf_s(row[4],"%f", &pData[i].Delta_m);
+                sscanf_s(row[5],"%f", &pData[i].Size);
+                i++;
+            }
+	    // Освобождаем память, занятую результирующей таблицей
+	        mysql_free_result(res);
+        }
+   }   
+   if(DataLen==0) return FALSE;
+   DataMaxSize.top = 90;
+   DataMaxSize.bottom = -90;
+   DataMaxSize.left = 24*15;
    DataMaxSize.right = 0;
 
    phData = new DATA_TYPE[DataLen];
-   
+   memset(phData, 0, DataLen*sizeof(DATA_TYPE));
+
    for(UINT i = 0; i< DataLen; i++){
-	   if(pData[i].Alpha>=0) phData[i].Alpha = pData[i].Alpha + pData[i].Alpha_m/60;
-	   else phData[i].Alpha = pData[i].Alpha - pData[i].Alpha_m/60;
+	   if(pData[i].Alpha>=0) phData[i].Alpha = (pData[i].Alpha + pData[i].Alpha_m/60)*15;
+	   else phData[i].Alpha = (pData[i].Alpha - pData[i].Alpha_m/60)*15;
 	   if(pData[i].Delta>=0) phData[i].Delta = (pData[i].Delta + pData[i].Delta_m/60);
 	   else phData[i].Delta = (pData[i].Delta - pData[i].Delta_m/60);
-	   phData[i].Size =  8 - pData[i].Size;
+	   phData[i].Size =  pData[i].Size;
 	   phData[i].HD = pData[i].HD;
-	   if(phData[i].Alpha< DataMaxSize.left) DataMaxSize.left = phData[i].Alpha;
-	   if(phData[i].Alpha> DataMaxSize.right) DataMaxSize.right = phData[i].Alpha;
-	   if(phData[i].Delta< DataMaxSize.top) DataMaxSize.top = phData[i].Delta;
+
+	   if(phData[i].Alpha< DataMaxSize.left)   DataMaxSize.left   = phData[i].Alpha;
+	   if(phData[i].Alpha> DataMaxSize.right)  DataMaxSize.right  = phData[i].Alpha;
+	   if(phData[i].Delta< DataMaxSize.top)    DataMaxSize.top    = phData[i].Delta;
 	   if(phData[i].Delta> DataMaxSize.bottom) DataMaxSize.bottom = phData[i].Delta;
+           if(phData[i].Size > StarMaxSize) StarMaxSize = phData[i].Size;
    }
    delete [] pData;
-   CirclePos.top = 0;
-   CirclePos.left = 0;
-   CirclePos.right = 810;
-   CirclePos.bottom=610;
+   CirclePos.top = ViewRect.top - 10;
+   CirclePos.left = ViewRect.left - 10;
+   CirclePos.right = ViewRect.right + 10;
+   CirclePos.bottom=ViewRect.bottom + 10;
    //SetTimer(hWnd, 1,  1000 , NULL);
    InvalidateRect(hWnd, &CirclePos, TRUE);
    return TRUE;
@@ -357,35 +371,75 @@ void MyDraw(HWND hWnd)
 {
     PAINTSTRUCT ps;
     HDC hdc;   	
-	RECT lpRect;
-	UINT size;
-	double aspectX = 800/(DataMaxSize.right - DataMaxSize.left);
-	double aspectY = 600/(DataMaxSize.bottom - DataMaxSize.top);
-
+    RECT lpRect;
+    UINT size;
+    double aspectX = (ViewRect.right-ViewRect.left)/(DataMaxSize.right - DataMaxSize.left);
+    double aspectY = (ViewRect.bottom-ViewRect.top)/(DataMaxSize.bottom - DataMaxSize.top);
+    
 
     hdc = BeginPaint(hWnd, &ps);  	
-	Rectangle(hdc, 0,0,810,610);	
 
+    Rectangle(hdc, ViewRect.left-5,ViewRect.top-5,ViewRect.right+5,ViewRect.bottom+5);
 
-	for(UINT i = 0; i< DataLen; i++){
-		size = phData[i].Size;
-		lpRect.top =    10+(DataMaxSize.bottom - phData[i].Delta)*aspectY - size/2;
-		lpRect.bottom = 10+(DataMaxSize.bottom - phData[i].Delta)*aspectY + size/2;
-		lpRect.left =   10+(DataMaxSize.right - phData[i].Alpha)*aspectX - size/2;
-		lpRect.right =  10+(DataMaxSize.right - phData[i].Alpha)*aspectX + size/2;
+    HPEN hPen = CreatePen (PS_SOLID, 1, RGB(255, 255, 255));
+    HPEN hOldPen = (HPEN)SelectObject (hdc, hPen);    
+    HBRUSH hBrush = CreateSolidBrush(0x000000); 
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+    
+    FillRect( hdc, &ViewRect, hBrush);
+       
+    SelectObject(hdc, hOldBrush);
+    
+    UINT X;
+    UINT Y;
+    for(UINT i = 0; i< DataLen; i++){
+        size = StarMaxSize - phData[i].Size + 1;
+        Y = ViewRect.top  + (DataMaxSize.bottom - phData[i].Delta)*aspectY;
+        X = 20+ViewRect.left + (DataMaxSize.right  - phData[i].Alpha)*aspectX;
+        
+        /*lpRect.top    = Y - size/2;
+        lpRect.bottom = Y + size/2;
+        lpRect.left   = X - size/2;
+        lpRect.right  = X + size/2;*/
+        switch(size){
+            case 3:
+                SetPixel(hdc, X+1, Y-1, 0xFFFFFF);
+                SetPixel(hdc, X-1, Y+1, 0xFFFFFF);
+                SetPixel(hdc, X-1, Y-1, 0xFFFFFF);
+                SetPixel(hdc, X+1, Y+1, 0xFFFFFF);
+            case 2: 
+                SetPixel(hdc, X, Y-1, 0xFFFFFF);
+                SetPixel(hdc, X, Y+1, 0xFFFFFF);
+                SetPixel(hdc, X-1, Y, 0xFFFFFF);
+                SetPixel(hdc, X+1, Y, 0xFFFFFF);
+            case 0:
+            case 1: SetPixel(hdc, X, Y, 0xFFFFFF);
+                break;
+            default:
+                Ellipse(hdc, X - size/2, Y - size/2, X + size/2, Y + size/2);
+            
+        }
+            //if((phData[i].HD == 39801)||    //бетельгейзе
+            //    //(phData[i].HD == 8890)||  // Альфа малой медведицы
+            //    (phData[i].HD == 37742)||   //Алнитак
+            //    (phData[i].HD == 35468)||   //Белатрикс
+            //    (phData[i].HD == 37128)||   //Алнилам
+            //    (phData[i].HD == 36486)||   //Минтака	62509	
+            //    (phData[i].HD == 29139)     //Альдебаран
+            //    //(phData[i].HD == 148478)  //Антарес
+            //    //(phData[i].HD == 48915)   // сириус
+            //    ){ 
+            //    Rectangle(hdc, lpRect.left, lpRect.top, lpRect.right, lpRect.bottom); 
+            //}            
+            //    Ellipse(hdc, lpRect.left, lpRect.top, lpRect.right, lpRect.bottom);	
+            //}
+    
+    }   
+    SelectObject(hdc, hOldPen);
+   
 
-		if((phData[i].HD == 39801)|| //бетельгейзе
-		   //(phData[i].HD == 8890)||  // Альфа малой медведицы
-		   (phData[i].HD == 37742)|| //Алнитак
-		   (phData[i].HD == 35468)|| //Белатрикс
-		   (phData[i].HD == 37128)|| //Алнилам
-		   (phData[i].HD == 36486)|| //Минтака	62509	
-		   (phData[i].HD == 29139)   //Альдебаран
-		   //(phData[i].HD == 148478) //Антарес
-		   //(phData[i].HD == 48915)   // сириус
-		   ) Rectangle(hdc, lpRect.left, lpRect.top, lpRect.right, lpRect.bottom); 
-		Ellipse(hdc, lpRect.left, lpRect.top, lpRect.right, lpRect.bottom);	
-	}    
+    // Удаляем Pen
+    DeleteObject (hPen);
     EndPaint(hWnd, &ps);	
    
 }
