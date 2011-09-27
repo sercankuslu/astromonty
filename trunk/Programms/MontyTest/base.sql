@@ -22,7 +22,26 @@ CREATE TABLE Stars (
 	PRIMARY KEY (HD)	
 );
 
-LOAD DATA LOCAL INFILE "F:\\astromonty\\Programms\\MontyTest\\WBVR.DAT" INTO TABLE Stars;
+LOAD DATA LOCAL INFILE "E:\\astromonty\\Programms\\MontyTest\\WBVR.DAT" INTO TABLE Stars;
+
+DROP TABLE IF EXISTS Tycho2main;
+CREATE TABLE Tycho2main (
+	recno 	INT UNSIGNED NOT NULL AUTO_INCREMENT, #поле ключа
+	TYC1  	INT UNSIGNED,
+	TYC2  	INT UNSIGNED,
+	TYC3  	INT UNSIGNED,
+	pmRA  	DOUBLE NOT NULL,
+	pmDE	DOUBLE NOT NULL,
+	BTmag	DOUBLE NOT NULL,	
+	VTmag	DOUBLE NOT NULL,
+	RA		DOUBLE NOT NULL,
+	DE		DOUBLE NOT NULL,	
+	PRIMARY KEY (recno),
+	INDEX mag (BTmag,VTmag),
+	INDEX pos (RA,DE)
+);
+LOAD DATA LOCAL INFILE "E:\\astromonty\\Programms\\MontyTest\\Tyho2.tsv" INTO TABLE Tycho2main;
+DELETE FROM Tycho2main WHERE RA=0 AND DE=0;
 
 DROP TABLE IF EXISTS Tycho2;
 CREATE TABLE Tycho2 (
@@ -36,6 +55,27 @@ CREATE TABLE Tycho2 (
 	VTmag	DOUBLE NOT NULL,
 	RA		DOUBLE NOT NULL,
 	DE		DOUBLE NOT NULL,	
-	PRIMARY KEY (recno)	
+	PRIMARY KEY (recno),
+	INDEX mag (BTmag,VTmag),
+	INDEX pos (RA,DE)
 );
-LOAD DATA LOCAL INFILE "F:\\astromonty\\Programms\\MontyTest\\Tyho2.tsv" INTO TABLE Tycho2;
+INSERT INTO `Tycho2` SELECT * FROM `Tycho2main` WHERE Tycho2main.BTmag<8;
+
+DROP TABLE IF EXISTS WBVRasTycho2;
+CREATE TABLE WBVRasTycho2 (
+	recno 	INT UNSIGNED NOT NULL AUTO_INCREMENT, #поле ключа
+	TYC1  	INT UNSIGNED,
+	TYC2  	INT UNSIGNED,
+	TYC3  	INT UNSIGNED,
+	pmRA  	DOUBLE NOT NULL,
+	pmDE	DOUBLE NOT NULL,
+	BTmag	DOUBLE NOT NULL,	
+	VTmag	DOUBLE NOT NULL,
+	RA		DOUBLE NOT NULL,
+	DE		DOUBLE NOT NULL,	
+	PRIMARY KEY (recno),
+	INDEX mag (BTmag,VTmag),
+	INDEX pos (RA,DE)
+);
+INSERT INTO `WBVRasTycho2` SELECT 0,0,0,0,0,0,W,V,(Alpha_Grad+Alpha_min/60)*15,if(Delta_Grad>=0,Delta_Grad+Delta_min/60,Delta_grad-Delta_min/60) FROM `Stars`;
+
