@@ -44,14 +44,19 @@ struct DATA_TYPE {
 	double Delta;
 	double Size;
 };
-
+struct DOUBLE_RECT {
+	double top;
+	double bottom;
+	double left;
+	double right;
+};
 
 DATA_TYPE* phData;
 unsigned long DataLen = 0;
-RECT DataMaxSize;
+DOUBLE_RECT DataMaxSize;
 int StarMaxSize = -5;
 RECT ViewRect = {
-    50,50,800,600
+    0,0,1280,900
 };
 
 // ViewRect.top = 5;
@@ -199,8 +204,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
-        char condition[256];
-        static float T = 0;
+    //char condition[256];
+    static float T = 0;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -226,13 +231,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
         case WM_TIMER:
-            T+=0.1;
+            /*T+= 1.0;
             if(T>24) T=0;
-            sprintf(condition,"W<6 AND Alpha_grad > %f AND Alpha_grad < %f", T, T+4);
+            sprintf(condition,"W<6 AND Alpha_grad > %f AND Alpha_grad < %f", T, T+1.0);
             if(DataLen>0) delete [] phData;
             DataLen = 0;
             RequestData(conn, &phData, &DataLen, condition);
-            InvalidateRect(hWnd, &CirclePos, TRUE);
+            InvalidateRect(hWnd, &CirclePos, TRUE);*/
 			//DrawPos.top = CirclePos.top-2;
 			//DrawPos.left = CirclePos.left-2;
 			//DrawPos.right = CirclePos.right+2;
@@ -280,7 +285,7 @@ void MyDraw(HWND hWnd)
 
     hdc = BeginPaint(hWnd, &ps);  	
 
-    Rectangle(hdc, ViewRect.left-5,ViewRect.top-5,ViewRect.right+5,ViewRect.bottom+5);
+    Rectangle(hdc, ViewRect.left-1,ViewRect.top-1,ViewRect.right+1,ViewRect.bottom+1);
 
     HPEN hPen = CreatePen (PS_SOLID, 1, RGB(255, 255, 255));
     HPEN hOldPen = (HPEN)SelectObject (hdc, hPen);    
@@ -296,28 +301,40 @@ void MyDraw(HWND hWnd)
     for(UINT i = 0; i< DataLen; i++){
         size = StarMaxSize - phData[i].Size + 1;
         Y = ViewRect.top  + (DataMaxSize.bottom - phData[i].Delta)*aspectY;
-        X = 20+ViewRect.left + (DataMaxSize.right  - phData[i].Alpha)*aspectX;
+        X = ViewRect.left + (DataMaxSize.right  - phData[i].Alpha)*aspectX;
         
         /*lpRect.top    = Y - size/2;
         lpRect.bottom = Y + size/2;
         lpRect.left   = X - size/2;
         lpRect.right  = X + size/2;*/
+		COLORREF StarColor = RGB(phData[i].Size*17, phData[i].Size*17, phData[i].Size*17);
         switch(size){
+			/*case 5:
+				SetPixel(hdc, X+2, Y-2, StarColor);
+				SetPixel(hdc, X-2, Y+2, StarColor);
+				SetPixel(hdc, X-2, Y-2, StarColor);
+				SetPixel(hdc, X+2, Y+2, StarColor);* /
+			case 4:
+				SetPixel(hdc, X, Y-2, StarColor);
+				SetPixel(hdc, X, Y+2, StarColor);
+				SetPixel(hdc, X-2, Y, StarColor);
+				SetPixel(hdc, X+2, Y, StarColor);
             case 3:
-                SetPixel(hdc, X+1, Y-1, 0xFFFFFF);
-                SetPixel(hdc, X-1, Y+1, 0xFFFFFF);
-                SetPixel(hdc, X-1, Y-1, 0xFFFFFF);
-                SetPixel(hdc, X+1, Y+1, 0xFFFFFF);
+                SetPixel(hdc, X+1, Y-1, StarColor);
+                SetPixel(hdc, X-1, Y+1, StarColor);
+                SetPixel(hdc, X-1, Y-1, StarColor);
+                SetPixel(hdc, X+1, Y+1, StarColor);
             case 2: 
-                SetPixel(hdc, X, Y-1, 0xFFFFFF);
-                SetPixel(hdc, X, Y+1, 0xFFFFFF);
-                SetPixel(hdc, X-1, Y, 0xFFFFFF);
-                SetPixel(hdc, X+1, Y, 0xFFFFFF);
-            case 0:
-            case 1: SetPixel(hdc, X, Y, 0xFFFFFF);
+                SetPixel(hdc, X, Y-1, StarColor);
+                SetPixel(hdc, X, Y+1, StarColor);
+                SetPixel(hdc, X-1, Y, StarColor);
+                SetPixel(hdc, X+1, Y, StarColor);
+            case 0:*/
+            case 1: SetPixel(hdc, X, Y, StarColor);
                 break;
-            default:
-                Ellipse(hdc, X - size/2, Y - size/2, X + size/2, Y + size/2);
+            default:				
+                //Ellipse(hdc, X - size/2, Y - size/2, X + size/2, Y + size/2);
+				SetPixel(hdc, X, Y, StarColor);
             
         }
             //if((phData[i].HD == 39801)||    //бетельгейзе
@@ -340,13 +357,14 @@ void MyDraw(HWND hWnd)
    
 
     // Удаляем Pen
-    DeleteObject (hPen);
+    //DeleteObject (hPen);
     EndPaint(hWnd, &ps);	
    
 }
 bool RequestData(MYSQL *conn, DATA_TYPE** phData, ULONG *DataLen, char* Condition)
 {
-    char sqlSelect[] = "SELECT HD, Alpha_grad, Alpha_Min, Delta_grad, Delta_Min, W FROM Stars";
+	//recno	TYC1	TYC2	TYC3	pmRA	pmDE	BTmag	VTmag	RA	DE
+    char sqlSelect[] = "SELECT RA, DE, BTmag FROM Tycho2";
     char sqlWhere[] = "WHERE";
     static char Req[32768];
     // Дескриптор результирующей таблицы
@@ -392,18 +410,29 @@ bool RequestData(MYSQL *conn, DATA_TYPE** phData, ULONG *DataLen, char* Conditio
         // Если имеется хотя бы одна запись - выводим	  
         (*DataLen) = mysql_num_rows(res);
         if((*DataLen) > 0) {
-            pData = new REQ_DATA_TYPE[(*DataLen)];
+            //pData = new REQ_DATA_TYPE[(*DataLen)];
+			(*phData) = new DATA_TYPE[(*DataLen)];
+			memset((*phData), 0, (*DataLen)*sizeof(DATA_TYPE));
             // В цикле перебираем все записи
             // результирующей таблицы
             UINT i = 0;
             while((row = mysql_fetch_row(res)) != NULL) {
                 // Выводим результат в стандартный поток
-                sscanf_s(row[0],"%lu", &pData[i].HD);
+                /*sscanf_s(row[0],"%lu", &pData[i].HD);
                 sscanf_s(row[1],"%f", &pData[i].Alpha);
                 sscanf_s(row[2],"%f", &pData[i].Alpha_m);
                 sscanf_s(row[3],"%f", &pData[i].Delta);
                 sscanf_s(row[4],"%f", &pData[i].Delta_m);
-                sscanf_s(row[5],"%f", &pData[i].Size);
+                sscanf_s(row[5],"%f", &pData[i].Size);*/
+				float Alpha;
+				float Delta;
+				float Size;
+				sscanf_s(row[0],"%f", &Alpha);
+				sscanf_s(row[1],"%f", &Delta);
+				sscanf_s(row[2],"%f", &Size);
+				(*phData)[i].Alpha = Alpha;
+				(*phData)[i].Delta = Delta;
+				(*phData)[i].Size  = Size;
                 i++;
             }
             // Освобождаем память, занятую результирующей таблицей
@@ -416,16 +445,16 @@ bool RequestData(MYSQL *conn, DATA_TYPE** phData, ULONG *DataLen, char* Conditio
     DataMaxSize.left = 24*15;
     DataMaxSize.right = 0;
 
-    (*phData) = new DATA_TYPE[(*DataLen)];
-    memset((*phData), 0, (*DataLen)*sizeof(DATA_TYPE));
+    //(*phData) = new DATA_TYPE[(*DataLen)];
+    //memset((*phData), 0, (*DataLen)*sizeof(DATA_TYPE));
 
     for(UINT i = 0; i< (*DataLen); i++){
-        if(pData[i].Alpha>=0) (*phData)[i].Alpha = (pData[i].Alpha + pData[i].Alpha_m/60)*15;
+        /*if(pData[i].Alpha>=0) (*phData)[i].Alpha = (pData[i].Alpha + pData[i].Alpha_m/60)*15;
         else (*phData)[i].Alpha = (pData[i].Alpha - pData[i].Alpha_m/60)*15;
         if(pData[i].Delta>=0) (*phData)[i].Delta = (pData[i].Delta + pData[i].Delta_m/60);
-        else (*phData)[i].Delta = (pData[i].Delta - pData[i].Delta_m/60);
-        (*phData)[i].Size =  pData[i].Size;
-        (*phData)[i].HD = pData[i].HD;
+        else (*phData)[i].Delta = (pData[i].Delta - pData[i].Delta_m/60);*/
+        //(*phData)[i].Size =  pData[i].Size;
+        //(*phData)[i].HD = pData[i].HD;
 
         if((*phData)[i].Alpha< DataMaxSize.left)   DataMaxSize.left   = (*phData)[i].Alpha;
         if((*phData)[i].Alpha> DataMaxSize.right)  DataMaxSize.right  = (*phData)[i].Alpha;
@@ -433,6 +462,6 @@ bool RequestData(MYSQL *conn, DATA_TYPE** phData, ULONG *DataLen, char* Conditio
         if((*phData)[i].Delta> DataMaxSize.bottom) DataMaxSize.bottom = (*phData)[i].Delta;
         if((*phData)[i].Size > StarMaxSize) StarMaxSize = (*phData)[i].Size;
     }
-    delete [] pData;
+    //delete [] pData;
     return TRUE;
 }
