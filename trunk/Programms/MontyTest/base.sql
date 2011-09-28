@@ -79,3 +79,4 @@ CREATE TABLE WBVRasTycho2 (
 );
 INSERT INTO `WBVRasTycho2` SELECT 0,0,0,0,0,0,W,V,(Alpha_Grad+Alpha_min/60)*15,if(Delta_Grad>=0,Delta_Grad+Delta_min/60,Delta_grad-Delta_min/60) FROM `Stars`;
 
+INSERT INTO `WBVRasTycho2` VALUES (0,0,0,0,0,0, 1.42, 1.42, 101.2871554, -15.28388417);
