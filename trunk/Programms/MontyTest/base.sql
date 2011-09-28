@@ -22,7 +22,7 @@ CREATE TABLE Stars (
 	PRIMARY KEY (HD)	
 );
 
-LOAD DATA LOCAL INFILE "E:\\astromonty\\Programms\\MontyTest\\WBVR.DAT" INTO TABLE Stars;
+LOAD DATA LOCAL INFILE "F:\\astromonty\\Programms\\MontyTest\\WBVR.DAT" INTO TABLE Stars;
 
 DROP TABLE IF EXISTS Tycho2main;
 CREATE TABLE Tycho2main (
@@ -40,7 +40,7 @@ CREATE TABLE Tycho2main (
 	INDEX mag (BTmag,VTmag),
 	INDEX pos (RA,DE)
 );
-LOAD DATA LOCAL INFILE "E:\\astromonty\\Programms\\MontyTest\\Tyho2.tsv" INTO TABLE Tycho2main;
+LOAD DATA LOCAL INFILE "F:\\astromonty\\Programms\\MontyTest\\Tyho2.tsv" INTO TABLE Tycho2main;
 DELETE FROM Tycho2main WHERE RA=0 AND DE=0;
 
 DROP TABLE IF EXISTS Tycho2;
