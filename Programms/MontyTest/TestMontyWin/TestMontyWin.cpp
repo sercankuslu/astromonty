@@ -354,7 +354,7 @@ void MyDraw(HWND hWnd)
 bool RequestData(MYSQL *conn, DATA_TYPE** phData, ULONG *DataLen, char* Condition)
 {
 	//recno	TYC1	TYC2	TYC3	pmRA	pmDE	BTmag	VTmag	RA	DE
-    char sqlSelect[] = "SELECT RA, DE, BTmag FROM WBVRasTycho2";
+    char sqlSelect[] = "SELECT RA, DE, BTmag FROM Tycho2";
     char sqlWhere[] = "WHERE";
     static char Req[32768];
     // Дескриптор результирующей таблицы
