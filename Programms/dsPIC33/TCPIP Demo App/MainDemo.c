@@ -103,6 +103,7 @@
 // Include functions specific to this stack application
 #include "MainDemo.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
+//#include "OCTimer.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -191,56 +192,6 @@ static void ProcessIO(void);
 		Nop();
 	}
 #endif
-static const DWORD Interval = 2000000;
-static const DWORD StepPulse = 1000000;
-static DWORD_VAL OC1R_;
-static DWORD_VAL OC1RS_;
-static BYTE OC1Mode = 0b011;
-static BYTE Toggle = 0;
-
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
-{
-    /* Interrupt Service Routine code goes here */
-    if(OC1Mode == 0b011){
-        
-        if(Toggle){
-            OC1R_.Val += Interval;              
-            Toggle = 0;  
-        } else {
-            Toggle = 1;
-            OC1R_.Val += StepPulse;
-        }     
-        LATDbits.LATD0 = Toggle;      
-        if(OC1R_.word.HW == 0 ){
-            OC1R = OC1R_.word.LW;          
-        } else {           
-            OC1CONbits.OCM = 0b000; // Disable Output Compare Module     
-        }    
-    } else 
-    if (OC1Mode == 0b101){
-        OC1R  = OC1R_.word.LW;
-        OC1RS = OC1RS_.word.LW;
-    }    
-    
-    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
-}
-void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
-{
-/* Interrupt Service Routine code goes here */
-    if(OC1Mode == 0b011){
-        if(OC1R_.word.HW>0)
-        {
-            OC1R_.word.HW--;
-        } 
-        if(OC1R_.word.HW == 0){
-            OC1R = OC1R_.word.LW;                                
-            IFS0bits.OC1IF = 0;     // Clear Output Compare 1 Interrupt Flag
-            OC1CONbits.OCM = OC1Mode; // Select the Output Compare mode 
-            IEC0bits.OC1IE = 1;     // Enable Output Compare 1 interrupt
-        }
-    }   
-    IFS0bits.T2IF = 0; // Clear OC1 interrupt flag
-}
 
 //
 // Main application entry point.
@@ -252,6 +203,7 @@ int main(void)
 #endif
 {
 	static DWORD t = 0;
+	static DWORD d = 0;
 	static DWORD dwLastIP = 0;
 	//volatile DWORD UTCT;
 	LATFbits.LATF4 = 0;
@@ -267,10 +219,8 @@ int main(void)
 		AD2PCFGL = 0xFFFF;
 	}
 	
-	TRISDbits.TRISD0 = 0;
-	LATDbits.LATD0 = 0;
-	OC1R_.Val = Interval; 
-	OC1RS_.Val = OC1R_.Val + StepPulse;
+	//OC1R_.Val = Interval; 
+	//OC1RS_.Val = OC1R_.Val + StepPulse;
 	/*
 	// Initialize Output Compare Module
     OC1CONbits.OCM = 0b000; // Disable Output Compare Module
@@ -301,23 +251,7 @@ int main(void)
     IEC0bits.OC1IE = 1;     // Enable Output Compare 1 interrupt
     
                             // Initialize and enable Timer2
-    T2CONbits.TON = 0; // Disable Timer
-    T2CONbits.TCS = 0; // Select internal instruction cycle clock
-    T2CONbits.TGATE = 0; // Disable Gated Timer mode
-    T2CONbits.TCKPS = 0b01; // Select 8:1 Prescaler
-    TMR2 = 0x00; // Clear timer register
-    PR2 = 0xFFFF; // Load the period value
-    IPC1bits.T2IP = 0x01; // Set Timer1 Interrupt Priority Level
-    IFS0bits.T2IF = 0; // Clear Timer1 Interrupt Flag
-    IEC0bits.T2IE = 1; // Enable Timer1 interrupt
-    T2CONbits.TON = 1; // Start Timer                            
-     * /                      
-    while(1){
-        Nop();
-        Nop();
-    }
-    */
-    
+    */    
 	InitializeBoard();
     
 	#if defined(USE_LCD)
@@ -431,19 +365,21 @@ int main(void)
     while(1)
     {
         // Blink LED0 (right most one) every second.
-        /*
-        if(TickGet() - t >= TICK_SECOND/2ul)
-        {
-            t = TickGet();
-            LED0_IO ^= 1;
-            AdjustLocalRTCTime();
-        }
-		*/	
-		//LED0_IO = PORTAbits.RA13;
+        
+        //if(TickGet() - d >= TICK_SECOND/16000ul)
+        //{
+        //    d = TickGet();
+        //   	LATDbits.LATD0 ^= 1; // выход STEP
+            
+        //}
+		
+		
+		
 		if(PORTAbits.RA13 != t){
 			t = PORTAbits.RA13;
             LED0_IO ^= 1;
             AdjustLocalRTCTime();
+            
 		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
