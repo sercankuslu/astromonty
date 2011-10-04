@@ -62,26 +62,29 @@ int OCInit(void)
 {
 	BYTE i;	
 	for(i = 0; i < 8; i++){
-		OCTimers[i].Flags = 0;			
-		OCTimers[i].PeriodsLeft = 0;
-		OCTimers[i].OCxCON = 0;
-		OCTimers[i].StepsLeft.Val = 0;
-		OCTimers[i].Period.Val = 0;
-		OCTimers[i].Pulse.Val = 0;
-		OCTimers[i].Periods = NULL; 
-		OCTimers[i].Pulses = NULL;
+		OCTimers[i].OCTFlags        = 0;			
+		OCTimers[i].PeriodsLeft     = 0;
+		OCTimers[i].OCMFlags        = 0;
 		
+		OCTimers[i].StepsCurrent    = 0;
+		OCTimers[i].StepsLeft       = 0;
+		
+		OCTimers[i].Low.Val         = 0;
+		OCTimers[i].High.Val        = 0;
+		OCTimers[i].Periods         = NULL; 
+		OCTimers[i].Pulses          = NULL;
 	}
-	// MS1 = 1; MS2 = 1; 1/16
-	MS1 = 1; 		 // выход MS1  
-	MS2 = 1; 		 // выход MS2  
-	SLEEP = 0; 		 // выход SLEEP
-	RESET = 0; 		 // выход RESET
 	
-	MS1_Tris = 0; 	 // выход MS1
-	MS2_Tris = 0; 	 // выход MS2
-	SLEEP_Tris = 0;	 // выход SLEEP		
-	RESET_Tris = 0;	 // выход RESET	
+	// MS1 = 1; MS2 = 1; 1/16
+	MS1         = 1;    // выход MS1  
+	MS2         = 1; 	// выход MS2  
+	SLEEP       = 0; 	// выход SLEEP
+	RESET       = 0; 	// выход RESET
+	
+	MS1_Tris    = 0; 	// выход MS1
+	MS2_Tris    = 0; 	// выход MS2
+	SLEEP_Tris  = 0;	// выход SLEEP		
+	RESET_Tris  = 0;	// выход RESET	
 	
 	return 0;
 }
@@ -131,10 +134,10 @@ int TimerOverflow(BYTE TmrNum)
 {
 	BYTE i;
 	for(i=0;i<8;i++){
-		if(OCTimers[i].Flags&&OC_TIMER_IS_USE){
+		if(OCTimers[i].OCFlags&&OC_TIMER_IS_USE){
 			switch(TmrNum){
 			case 3:
-				if(OCTimers[i].Flags&OC_TIMER_USE_TMR3){
+				if(OCTimers[i].OCFlags&OC_TIMER_USE_TMR3){
 					if(OCTimers[i].Period.word.HW != 0){
 						OCTimers[i].Period.word.HW--;
 						if(OCTimers[i].Period.word.HW ==0) EnableOCTimer(i);
