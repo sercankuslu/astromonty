@@ -5,11 +5,6 @@
 	
 //};
 
-// описание значений флага
-#define OC_TIMER_USE_TMR3		0x01	// 0 - используетс€ таймер 2; 1 - таймер 3
-#define OC_TIMER_IS_USE 		0x80	// Ётот таймер используетс€
-#define OC_TIMER_ONE_SPEED		0x40	// “аймер работает на одной скорости(не используетс€ буфер)
-#define OC_TIMER_CONTINUED		0x20	// “аймер работает посто€нно (игнорируетс€ значени€ StepsLeft)
 
 #define OCM_MODULE_DISABLED		0x00	//000 Module Disabled Controlled by GPIO register Ч
 #define OCM_ONE_SHOT_LOW		0x01	//001 Active-Low One-Shot 0 OCx rising edge
@@ -22,16 +17,24 @@
 #define OCM_PWM_WO_FAULT		0x06	//110 PWM without Fault Protection С0Т, if OCxR is zero С1Т, if OCxR is non-zero No interrupt
 #define OCM_PWM_W_FAULT			0x07	//111 PWM with Fault Protection С0Т, if OCxR is zero С1Т, if OCxR is non-zero OCFA falling edge for OC1 to OC4
 
+// описание значений флага
+#define OCT_USE_TMR3		    0x01	// 0 - используетс€ таймер 2; 1 - таймер 3
+#define OCT_USE_PERIOD_BUFFER	0x02	// 1 - используем буффер периода. 0 - в буфере периода только 1 значение
+#define OCT_USE_PULSE_BUFFER	0x04	// 1 - используем буффер пульса. 0 - в буфере пульса только 1 значение
+#define OCT_USE_STEPS_LEFT	    0x08	// 1 - используем StepsLeft(). 0 - ѕродолжающеес€ движение до достижени€ максимального значени€
+#define OCT_IS_USE 		        0x80	// Ётот таймер используетс€
+
+
 struct OC_TIMER_TYPE {
-	BYTE Flags;					// флаги режима 		
+	BYTE OCTFlags;				// флаги режима 		
 	BYTE PeriodsLeft; 			// оставшеес€ количество периодов в буфере
-	WORD OCxCON;				// настройки OC
+	WORD OCMFlags;				// настройки OC
 	DWORD StepsCurrent;			// количество пройденных шагов
-	DWORD StepsLeft;		    // осталось шагов
-	DWORD_VAL Period;			// текущий период
-	DWORD_VAL Pulse;			// текущий пульс	
+	DWORD StepsLeft;		    // осталось шагов до остановки
+	DWORD_VAL Low;			    // число интервалов от спада импульса до фронта
+	DWORD_VAL High;			    // число интервалов от фронта импульса до спада 
 	DWORD * Periods;			// буфер периодов
-	DWORD * Pulses;
+	DWORD * Pulses;             // буфер импульсов
 } OCTimers[8];
 
 
