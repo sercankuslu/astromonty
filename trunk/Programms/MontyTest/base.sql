@@ -13,10 +13,10 @@ CREATE TABLE Stars (
 	Delta_grad INT NOT NULL,
 	Delta_Min DOUBLE NOT NULL,
 	Sp CHAR(16) default NULL, 
-	W DOUBLE,
-	B DOUBLE,
 	V DOUBLE,
-	R DOUBLE,
+	W_B DOUBLE,
+	B_V DOUBLE,
+	V_R DOUBLE,
 	N INT,
 	c CHAR(16),
 	PRIMARY KEY (HD)	
@@ -77,6 +77,18 @@ CREATE TABLE WBVRasTycho2 (
 	INDEX mag (BTmag,VTmag),
 	INDEX pos (RA,DE)
 );
-INSERT INTO `WBVRasTycho2` SELECT 0,0,0,0,0,0,W,V,(Alpha_Grad+Alpha_min/60)*15,if(Delta_Grad>=0,Delta_Grad+Delta_min/60,Delta_grad-Delta_min/60) FROM `Stars`;
+INSERT INTO `WBVRasTycho2` SELECT 0,0,0,0,0,0,V,V_R,(Alpha_Grad+Alpha_min/60)*15,if(Delta_Grad>=0,Delta_Grad+Delta_min/60,Delta_grad-Delta_min/60) FROM `Stars`;
 
 INSERT INTO `WBVRasTycho2` VALUES (0,0,0,0,0,0, 1.42, 1.42, 101.2871554, -15.28388417);
+
+DROP TABLE IF EXISTS HDtoTycho2;
+CREATE TABLE HDtoTycho2 (
+	HD INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	TYC1  	INT UNSIGNED,
+	TYC2  	INT UNSIGNED,
+	TYC3  	INT UNSIGNED,
+PRIMARY KEY (HD)	
+);
+LOAD DATA LOCAL INFILE "F:\\astromonty\\Programms\\MontyTest\\catalogtyh_1.txt" INTO TABLE HDtoTycho2;
+
+SELECT hd.HD, tm.TYC1, tm.TYC2, tm.TYC3, tm.RA, tm.DE FROM Tycho2main as tm, HDtoTycho2 as hd where  tm.TYC1==hd.TYC1 AND tm.TYC2==hd.TYC2 AND tm.TYC3==hd.TYC3;
