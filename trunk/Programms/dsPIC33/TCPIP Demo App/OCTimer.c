@@ -132,7 +132,7 @@ int UpdateOCTimer(BYTE Num)
 }
 int TimerOverflow(BYTE TmrNum)
 {
-	BYTE i;
+	BYTE i;/*
 	for(i=0;i<8;i++){
 		if(OCTimers[i].OCFlags&&OC_TIMER_IS_USE){
 			switch(TmrNum){
@@ -156,7 +156,7 @@ int TimerOverflow(BYTE TmrNum)
 				return -1;				
 			}	
 		}
-	}	
+	}	*/
 	return 0;
 }
 

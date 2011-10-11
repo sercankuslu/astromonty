@@ -192,7 +192,12 @@ static void ProcessIO(void);
 		Nop();
 	}
 #endif
-
+double LinInt(double x1,double y1,double x2,double y2, double x)
+{
+	if(x1!=x2) {
+		return y1+(y2-y1)*(x-x1)/(x2-x1);
+	}else return y1;
+}
 //
 // Main application entry point.
 //
@@ -205,6 +210,10 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD d = 0;
 	static DWORD dwLastIP = 0;
+	
+	
+	
+	
 	//volatile DWORD UTCT;
 	LATFbits.LATF4 = 0;
 	TRISFbits.TRISF4 = 0;	
@@ -217,6 +226,46 @@ int main(void)
 		AD1PCFGH = 0xFFFF;
 		AD1PCFGL = 0xFFFF;
 		AD2PCFGL = 0xFFFF;
+	}
+	
+	
+	{
+		static double PI = 3.1415926536f;
+		static double Mass = 500.0f;
+		static double Radius = 2.0f;
+		static double pMPower[] = {
+			303.3428571429f,
+			275.2714285714f,
+			241.2f,
+			216.0f,
+			190.8f,
+			165.6f,
+			144.0f,
+			118.8f,
+			79.2f,
+			36.0f
+		};
+		static double MaxV[] = {
+			0.004166667,
+			0.5,
+			1.25,
+			2.5,
+			3.75,
+			5.0,
+			6.25,
+			7.5,
+			8.75,
+			10.0,
+		};
+		static double MaxA[10];
+		double RdivMassR2PI = 360.0f/(Mass*Radius*Radius*PI);
+		int i;
+		static double resY;
+		for(i=0;i<10;i++){
+			MaxA[i]=pMPower[i]*RdivMassR2PI;
+		}
+		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
+		
 	}
 	
 	//OC1R_.Val = Interval; 
