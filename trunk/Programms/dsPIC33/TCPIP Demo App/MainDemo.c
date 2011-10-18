@@ -184,7 +184,10 @@ static void ProcessIO(void);
 	    Nop();
 		Nop();
 	}
-	
+void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
+{	
+    IFS2bits.T6IF = 0; // Clear T3 interrupt flag
+}	
 #elif defined(__C32__)
 	void _general_exception_handler(unsigned cause, unsigned status)
 	{
@@ -210,8 +213,6 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD d = 0;
 	static DWORD dwLastIP = 0;
-	
-	
 	
 	
 	//volatile DWORD UTCT;
@@ -301,8 +302,22 @@ int main(void)
     
                             // Initialize and enable Timer2
     */    
-	InitializeBoard();
-    
+	InitializeBoard();	
+	
+    T6CON = 0x0002;
+	T8CON = 0x0008;
+	T9CON = 0x0000;
+	PR8=0xFFFF;
+	PR9=0xFFFF;
+	TMR6 = 0x0000;
+	TMR8 = 0x0000;
+	TMR9 = 0x0000;	
+	IFS2bits.T6IF = 0;
+	IEC2bits.T6IE = 1;
+	IPC11bits.T6IP = 7;
+	T6CONbits.TON = 1;
+	T8CONbits.TON = 1;	
+	
 	#if defined(USE_LCD)
 	// Initialize and display the stack version on the LCD
 	LCDInit();
@@ -884,9 +899,9 @@ static void InitializeBoard(void)
 	#endif
 
 	#if defined(__dsPIC33F__) || defined(__PIC24H__)
-		// Crank up the core frequency
-		PLLFBD = 38;				// Multiply by 40 for 160MHz VCO output (8MHz XT oscillator)
-		CLKDIV = 0x0000;			// FRC: divide by 2, PLLPOST: divide by 2, PLLPRE: divide by 2
+		PLLFBD = 0x7f;				// Multiply by 40 for 160MHz VCO output (8MHz XT oscillator)
+		CLKDIV = 0x0004;			// FRC: divide by 2, PLLPOST: divide by 2, PLLPRE: divide by 2
+		OSCCON = 0x0301;	
 	
 		// Port I/O
 		AD1PCFGHbits.PCFG23 = 1;	// Make RA7 (BUTTON1) a digital input
