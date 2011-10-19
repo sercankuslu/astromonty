@@ -13,7 +13,7 @@ BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE ulAttribute, BYTE* Block, BYTE* 
         if(pAttribute[i].ulValueLen!=0){
             memcpy(BlockPtr, pAttribute[i].pValue, pAttribute[i].ulValueLen);
             BlockPtr+=pAttribute[i].ulValueLen;  
-        }      
+        }     
     }
     *ulBlockLen = BlockPtr - Block;
     return STR_OK;
@@ -32,6 +32,9 @@ BYTE ParseBlob(BYTE* Block, BYTE ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE u
             pAttribute[i].pValue = (*MemPtr);
             (*MemPtr)+=pAttribute[i].ulValueLen;
             BlockPtr+=pAttribute[i].ulValueLen;  
-        }            
+        } else pAttribute[i].pValue = NULL;            
     }    
 }
+
+
+
