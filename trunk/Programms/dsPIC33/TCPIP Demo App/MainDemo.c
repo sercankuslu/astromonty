@@ -104,6 +104,7 @@
 #include "MainDemo.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
 //#include "OCTimer.h"
+#include "../protocol.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -186,6 +187,9 @@ static void ProcessIO(void);
 	}
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
+    TMR6 = 0x0000;
+	TMR8 = 0x0000;
+	TMR9 = 0x0000;
     IFS2bits.T6IF = 0; // Clear T3 interrupt flag
 }	
 #elif defined(__C32__)
@@ -213,7 +217,6 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD d = 0;
 	static DWORD dwLastIP = 0;
-	
 	
 	//volatile DWORD UTCT;
 	LATFbits.LATF4 = 0;
@@ -268,42 +271,30 @@ int main(void)
 		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 		
 	}
+	{
+    	char label[] = "qwerterywy";
+    	BYTE address[] = {192,168,1,55};
+    	BYTE block[64];
+    	BYTE len;
+    	BYTE res = 0;
+    	BYTE Mem[64];
+    	BYTE* MemPtr = Mem;
+        memset(Mem,0,sizeof(Mem));
+    
+    	ST_ATTRIBUTE Data[] = {
+        	{STA_NETWORK_NAME, label, strlen(label)},
+        	{STA_NETWORK_ADDRESS, address, 4},
+    	};
+    	ST_ATTRIBUTE DataOut[10];
+        memset(Mem,0,sizeof(DataOut));
+    	res = FormBlob(Data, 2, block, &len);
+    	res = ParseBlob(block, len, DataOut, 10, &MemPtr);
+    	
+	}
 	
-	//OC1R_.Val = Interval; 
-	//OC1RS_.Val = OC1R_.Val + StepPulse;
-	/*
-	// Initialize Output Compare Module
-    OC1CONbits.OCM = 0b000; // Disable Output Compare Module
-    OC1CONbits.OCTSEL = 0;  // Select Timer 2 as output compare time base
-     // Load the Compare Register Value for rising edge
-    if(OC1R_.word.HW == 0){
-        OC1R = OC1R_.word.LW;         
-    } else {
-        OC1R = 0;
-    }    
-    // Load the Compare Register Value for falling edge
-    if(OC1RS_.word.HW == 0){           
-        OC1RS = OC1RS_.word.LW;            
-    } else {
-        OC1RS = 0;
-    } 
     
-    IPC0bits.OC1IP = 0x01;  // Set Output Compare 1 Interrupt Priority Level
-    IFS0bits.OC1IF = 0;     // Clear Output Compare 1 Interrupt Flag
-    if((OC1R_.word.HW == 0)&&(OC1RS_.word.HW == 0)){
-        OC1Mode = 0b101;     //Continuous Pulse mode
-        OC1CONbits.OCM =  OC1Mode; // Select the Output Compare mode     
-    }else{
-        OC1Mode = 0b011;    //Toggle mode
-    }
-   
-    
-    IEC0bits.OC1IE = 1;     // Enable Output Compare 1 interrupt
-    
-                            // Initialize and enable Timer2
-    */    
-	InitializeBoard();	
-	
+    /*
+    // calculate CPU speed  
     T6CON = 0x0002;
 	T8CON = 0x0008;
 	T9CON = 0x0000;
@@ -317,6 +308,11 @@ int main(void)
 	IPC11bits.T6IP = 7;
 	T6CONbits.TON = 1;
 	T8CONbits.TON = 1;	
+	*/
+     
+	InitializeBoard();	
+	
+    
 	
 	#if defined(USE_LCD)
 	// Initialize and display the stack version on the LCD
