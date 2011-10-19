@@ -53,8 +53,9 @@
 #define STA_DELTA_TARGET                     26   //
 #define STA_DELTA_NUL                        27   //
 */
-typedef unsigned short ST_ATTRIBUTE_TYPE;
 
+#define MAX_ATTRIBUTE 10
+typedef BYTE ST_ATTRIBUTE_TYPE;
 typedef struct ST_ATTRIBUTE {
     ST_ATTRIBUTE_TYPE   type;
     void*               pValue;    
@@ -81,6 +82,7 @@ typedef struct ST_PACKET {
 */
 static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 255
-BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE ulAttribute, BYTE* Block, BYTE* ulBlockLen);
-BYTE ParseBlob(BYTE* Block, BYTE ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE ulAttribute, BYTE** Mem);
+BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE ulAttribute, BYTE* Block, WORD* ulBlockLen);
+BYTE ParseBlob(BYTE* Block, WORD ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *ulAttribute, BYTE** Mem);
+BYTE ProcessAttributes(BYTE ConnectionID, BYTE* Blob, WORD* BlobLen);
 #endif
