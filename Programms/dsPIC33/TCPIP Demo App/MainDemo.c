@@ -271,27 +271,9 @@ int main(void)
 		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 		
 	}
-	{
-    	char label[] = "qwerterywy";
-    	BYTE address[] = {192,168,1,55};
-    	BYTE block[64];
-    	BYTE len;
-    	BYTE res = 0;
-    	BYTE Mem[64];
-    	BYTE* MemPtr = Mem;
-        memset(Mem,0,sizeof(Mem));
-    
-    	ST_ATTRIBUTE Data[] = {
-        	{STA_NETWORK_NAME, label, strlen(label)},
-        	{STA_NETWORK_ADDRESS, address, 4},
-    	};
-    	ST_ATTRIBUTE DataOut[10];
-        memset(Mem,0,sizeof(DataOut));
-    	res = FormBlob(Data, 2, block, &len);
-    	res = ParseBlob(block, len, DataOut, 10, &MemPtr);
-    	
-	}
-	
+	BYTE Blob[] = {0x01,0x01,0x00,0x80};
+	WORD BlobLen = sizeof(Blob);
+	ProcessAttributes(0, Blob, &BlobLen);
     
     /*
     // calculate CPU speed  
