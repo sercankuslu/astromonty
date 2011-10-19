@@ -154,14 +154,14 @@
  *   To clear EEPROM, hold BUTTON0, reset the board, and continue
  *   holding until the LEDs flash.  Release, and reset again.
  */
-#define MY_DEFAULT_HOST_NAME			"MCHPBOARD"
+#define MY_DEFAULT_HOST_NAME			"ASTROMONTY"
 
 #define MY_DEFAULT_MAC_BYTE1            (0x00)	// Use the default of 00-04-A3-00-00-00
 #define MY_DEFAULT_MAC_BYTE2            (0x04)	// if using an ENCX24J600, MRF24WB0M, or
 #define MY_DEFAULT_MAC_BYTE3            (0xA3)	// PIC32MX6XX/7XX internal Ethernet 
 #define MY_DEFAULT_MAC_BYTE4            (0xF3)	// controller and wish to use the 
 #define MY_DEFAULT_MAC_BYTE5            (0x00)	// internal factory programmed MAC
-#define MY_DEFAULT_MAC_BYTE6            (0x00)	// address instead.
+#define MY_DEFAULT_MAC_BYTE6            (0x44)	// address instead.
 
 #define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
 #define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
@@ -239,7 +239,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(2860ul)
+	#define TCP_ETH_RAM_SIZE					(3932ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -286,8 +286,8 @@
 			//{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_FTP_COMMAND, TCP_ETH_RAM, 100, 40},
 			//{TCP_PURPOSE_FTP_DATA, TCP_ETH_RAM, 0, 128},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
@@ -298,10 +298,10 @@
 			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
 			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
 		};
 		#define END_OF_TCP_CONFIGURATION
@@ -312,7 +312,7 @@
  *   or not to include a checksum on packets being transmitted.
  */
 #define MAX_UDP_SOCKETS     (10u)
-#define UDP_USE_TX_CHECKSUM		// This slows UDP TX performance by nearly 50%, except when using the ENCX24J600 or PIC32MX6XX/7XX, which have a super fast DMA and incurs virtually no speed pentalty.
+//#define UDP_USE_TX_CHECKSUM		// This slows UDP TX performance by nearly 50%, except when using the ENCX24J600 or PIC32MX6XX/7XX, which have a super fast DMA and incurs virtually no speed pentalty.
 
 
 /* Berkeley API Sockets Configuration
@@ -407,7 +407,7 @@
 	// connections to work.  If fewer sockets are available than this
 	// definition, then the the lesser of the two quantities will be the
 	// actual limit.
-	#define MAX_TELNET_CONNECTIONS	(4u)
+	#define MAX_TELNET_CONNECTIONS	(2u)
 
 	// Default local listening port for the Telnet server.  Port 23 is the
 	// protocol default.
