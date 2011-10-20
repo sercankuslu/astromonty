@@ -1,9 +1,21 @@
 #ifndef __PROTOCOL_H_
 #define __PROTOCOL_H_
 #include "TCPIP Stack/TCPIP.h"
-#define STR_OK                              0
-#define STR_FUNCTOIN_FAILED                 6
 
+// коды ошибок
+#define STR_OK                              0
+#define STR_NEED_ANSWER                     1
+#define STR_NEED_DISCONNECT                 2
+#define STR_FUNCTOIN_FAILED                 6
+#define STR_BUFFER_TOO_SMALL                7
+#define STR_COMMAND_UNKNOWN                 8
+// состояние соединения
+#define STS_NO_CONNECT                      0
+#define STS_CONNECT_REQ                     1
+#define STS_AUTH_REQ                        2
+#define STS_CONNECTED                       3
+
+// параметры
 // работа с подключением
 #define STA_COMMAND                         0x01    // команды
 #   define STC_REQEST_CONNECT               0x80    // запрос подключения
@@ -13,12 +25,13 @@
 
 #define STA_FLAG                            0x02    // флаг подключения
 #   define STF_ACCEPTED                     0x81    // подключение установлено
-#   define STF_DECLINED                     0x82    // подключение отклонено
+#   define STF_DECLINED                     0x82    // подключение отклонено (ошибка, разрыв подключения)
 #   define STF_AUTH_NEEDED                  0x83    // требуется проверка подлинности
 #   define STF_AUTH_NOT_NEEDED              0x84    // проверка подлинности не требуется 
 #   define STF_TOO_MANY_DATA                0x40    // слишком много параметров 
-#   define STF_INCORRECT_COMMAND            0x41    // неправильная комманда
-
+#   define STF_INCORRECT_COMMAND            0x41    // неправильная комманда (ошибка, разрыв подключения)
+#   define STF_COMMAND_INCOMPLETE           0x42    // команда неполна (ошибка, разрыв подключения)
+#   define STF_COMMAND_UNKNOWN              0x43
 #define STA_LOGIN                           0x03    // логин
 #define STA_PASSWORD                        0x04    // пароль
 
@@ -82,7 +95,7 @@ typedef struct ST_PACKET {
 */
 static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 255
-BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE ulAttribute, BYTE* Block, WORD* ulBlockLen);
-BYTE ParseBlob(BYTE* Block, WORD ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *ulAttribute, BYTE** Mem);
-BYTE ProcessAttributes(BYTE ConnectionID, BYTE* Blob, WORD* BlobLen);
+BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttribute, BYTE* Block, WORD* wBlockLen);
+BYTE ParseBlob(BYTE* Block, WORD ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** Mem);
+BYTE ProcessClients(BYTE ConnectionID, BYTE* Blob, WORD* BlobLen);
 #endif
