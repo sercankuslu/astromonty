@@ -2,56 +2,57 @@
 #define __PROTOCOL_H_
 #include "TCPIP Stack/TCPIP.h"
 
-// коды ошибок
+// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 #define STR_OK                              0
 #define STR_NEED_ANSWER                     1
 #define STR_NEED_DISCONNECT                 2
 #define STR_FUNCTOIN_FAILED                 6
 #define STR_BUFFER_TOO_SMALL                7
 #define STR_COMMAND_UNKNOWN                 8
-// состояние соединения
+#define STR_DATA_CORRUPTED		         9
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 #define STS_NO_CONNECT                      0
 #define STS_CONNECT_REQ                     1
 #define STS_AUTH_REQ                        2
 #define STS_CONNECTED                       3
 
-// параметры
-// работа с подключением
-#define STA_COMMAND                         0x01    // команды
-#   define STC_REQEST_CONNECT               0x80    // запрос подключения
-#   define STC_REQEST_AUTH                  0x81    // запрос проверки подлинности
-#   define STC_REQEST_DATA                  0x40    // запрос данных
-#   define STC_SEND_DATA                    0x41    // отправка данных
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define STA_COMMAND                         0x01    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STC_REQEST_CONNECT               0x80    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STC_REQEST_AUTH                  0x81    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STC_REQEST_DATA                  0x40    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STC_SEND_DATA                    0x41    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
-#define STA_FLAG                            0x02    // флаг подключения
-#   define STF_ACCEPTED                     0x81    // подключение установлено
-#   define STF_DECLINED                     0x82    // подключение отклонено (ошибка, разрыв подключения)
-#   define STF_AUTH_NEEDED                  0x83    // требуется проверка подлинности
-#   define STF_AUTH_NOT_NEEDED              0x84    // проверка подлинности не требуется 
-#   define STF_TOO_MANY_DATA                0x40    // слишком много параметров 
-#   define STF_INCORRECT_COMMAND            0x41    // неправильная комманда (ошибка, разрыв подключения)
-#   define STF_COMMAND_INCOMPLETE           0x42    // команда неполна (ошибка, разрыв подключения)
+#define STA_FLAG                            0x02    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STF_ACCEPTED                     0x81    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STF_DECLINED                     0x82    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+#   define STF_AUTH_NEEDED                  0x83    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STF_AUTH_NOT_NEEDED              0x84    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+#   define STF_TOO_MANY_DATA                0x40    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+#   define STF_INCORRECT_COMMAND            0x41    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+#   define STF_COMMAND_INCOMPLETE           0x42    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 #   define STF_COMMAND_UNKNOWN              0x43
-#define STA_LOGIN                           0x03    // логин
-#define STA_PASSWORD                        0x04    // пароль
+#define STA_LOGIN                           0x03    // пїЅпїЅпїЅпїЅпїЅ
+#define STA_PASSWORD                        0x04    // пїЅпїЅпїЅпїЅпїЅпїЅ
 
 /*
-// параметры
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 #define STA_NETWORK_ADDRESS  		         1   // 
 #define STA_NETWORK_MASK                     2   //
 #define STA_NETWORK_DNS1                     3   //
 #define STA_NETWORK_DNS2                     4   //
 #define STA_NETWORK_GATE                     5   //
 #define STA_NETWORK_MODE                     6   //
-#   define STM_MODE_AUTO                     7   // сеть в автоматическом режиме ( DHCP сервер включается, если нет DHCP в сети)
-#   define STM_MODE_DHCP                     8   // адрес получается от DHCP сервера
-#   define STM_MODE_STATIC                   9   // настроен статический адрес
+#   define STM_MODE_AUTO                     7   // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ( DHCP пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ DHCP пїЅ пїЅпїЅпїЅпїЅ)
+#   define STM_MODE_DHCP                     8   // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ DHCP пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#   define STM_MODE_STATIC                   9   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 #define STA_NETWORK_NAME                     10  //
 #define STA_NETWORK_MAC                      11  //
-#define STA_TIME_SNTP                        12   // время из SNTP модуля
-#define STA_TIME_RTC                         13   // время из RTC модуля
+#define STA_TIME_SNTP                        12   // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ SNTP пїЅпїЅпїЅпїЅпїЅпїЅ
+#define STA_TIME_RTC                         13   // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ RTC пїЅпїЅпїЅпїЅпїЅпїЅ
 #define STA_TIME_SELECT                      14   // 
-// управление двигателями
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 #define STA_ALPHA_GRAD_CURRENT               15   //
 #define STA_ALPHA_GRAD_TARGET                16   //
 #define STA_ALPHA_GRAD_MIN                   17   //
@@ -75,22 +76,22 @@ typedef struct ST_ATTRIBUTE {
     void*               pValue;    
 } ST_ATTRIBUTE;
 typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
-/* алгоритм подключения:
- * 1. установление связи по протоколу TCP
- * 2. отправить атрибут STA_CONNECT_COMMAND = STF_REQEST_CONNECT
- *    если нужна проверка пароля, сервер пришлёт пакет с атрибутом STA_CONNECT_FLAG = STF_NEEDAUTH
- * 2.1 в ответ на этот запрос надо отправить атрибуты: 
+/* пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
+ * 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TCP
+ * 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ STA_CONNECT_COMMAND = STF_REQEST_CONNECT
+ *    пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ STA_CONNECT_FLAG = STF_NEEDAUTH
+ * 2.1 пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: 
  *      STA_CONNECT_COMMAND = STC_REQEST_AUTH,STA_CONNECT_LOGIN, STA_CONNECT_PASSWORD 
- * 2.2 в случае успеха, сервер пришлёт атрибут STA_CONNECT_FLAG = STF_ACCEPTED
- * 3. запрос данных
+ * 2.2 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ STA_CONNECT_FLAG = STF_ACCEPTED
+ * 3. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
  * 3.1 STA_CONNECT_COMMAND
  */
 /*
 typedef struct ST_PACKET {
-    WORD                wAttributeCount;        // количество атрибутов
-    ST_ATTRIBUTE*       Attributes;             // массив атрибутов
-    WORD                DataLen;                // размер массива данных(сумма размеров всех данных, входящих в атрибуты)
-    BYTE*               Data;                   // массив данных
+    WORD                wAttributeCount;        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    ST_ATTRIBUTE*       Attributes;             // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    WORD                DataLen;                // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ(пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+    BYTE*               Data;                   // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 } ST_PACKET;
 */
 static BYTE SendAttributes();
