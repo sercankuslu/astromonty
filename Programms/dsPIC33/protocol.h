@@ -66,13 +66,13 @@
 #define STA_DELTA_TARGET                     26   //
 #define STA_DELTA_NUL                        27   //
 */
-
+#define MEM_BUFFER_LEN 64
 #define MAX_ATTRIBUTE 10
 typedef BYTE ST_ATTRIBUTE_TYPE;
 typedef struct ST_ATTRIBUTE {
     ST_ATTRIBUTE_TYPE   type;
+    BYTE                ulValueLen;  /* in bytes */
     void*               pValue;    
-    WORD                ulValueLen;  /* in bytes */
 } ST_ATTRIBUTE;
 typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 /* алгоритм подключения:
@@ -95,7 +95,7 @@ typedef struct ST_PACKET {
 */
 static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 255
-BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttribute, BYTE* Block, WORD* wBlockLen);
-BYTE ParseBlob(BYTE* Block, WORD ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** Mem);
-BYTE ProcessClients(BYTE ConnectionID, BYTE* Blob, WORD* BlobLen);
+BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE* pbBlockLen);
+BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMem, BYTE bMemLen);
+BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 #endif

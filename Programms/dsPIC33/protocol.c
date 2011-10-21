@@ -6,44 +6,44 @@ typedef struct ST_CONNECTION {
 #define MAX_CONNECTIONS 5
 ST_CONNECTION Connection[MAX_CONNECTIONS];
 
-BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttribute, BYTE* Block, WORD* wBlockLen)
+BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE* pbBlockLen)
 {
     BYTE i = 0;
-    BYTE* BlockPtr = Block;    
-    for(i = 0; i < bAttribute; i++){
+    BYTE* BlockPtr = pbBlock;    
+    for(i = 0; i < bAttributeLen; i++){
         memcpy(BlockPtr, &pAttribute[i].type, sizeof(ST_ATTRIBUTE_TYPE));
         BlockPtr+=sizeof(ST_ATTRIBUTE_TYPE);
-        if(BlockPtr >= Block+wBlockLen) return STR_BUFFER_TOO_SMALL;
-        memcpy(BlockPtr, &pAttribute[i].ulValueLen, sizeof(WORD));
-        BlockPtr+=sizeof(WORD);
-        if(BlockPtr >= Block+wBlockLen) return STR_BUFFER_TOO_SMALL;
+        if(BlockPtr >= pbBlock+pbBlockLen) return STR_BUFFER_TOO_SMALL;
+        memcpy(BlockPtr, &pAttribute[i].ulValueLen, sizeof(BYTE));
+        BlockPtr+=sizeof(BYTE);
+        if(BlockPtr >= pbBlock+pbBlockLen) return STR_BUFFER_TOO_SMALL;
         if(pAttribute[i].ulValueLen!=0){
             memcpy(BlockPtr, pAttribute[i].pValue, pAttribute[i].ulValueLen);
             BlockPtr+=pAttribute[i].ulValueLen;  
-            if(BlockPtr >= Block+wBlockLen) return STR_BUFFER_TOO_SMALL;
+            if(BlockPtr >= pbBlock+pbBlockLen) return STR_BUFFER_TOO_SMALL;
         }     
     }
-    *wBlockLen = BlockPtr - Block;
+    *pbBlockLen = BlockPtr - pbBlock;
     return STR_OK;
 }
-BYTE ParseBlob(BYTE* Block, WORD ulBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMemPtr, WORD wMemLen)
+BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMemPtr, BYTE bMemLen)
 {
     BYTE i = 0;
-    BYTE* BlockPtr = Block;
+    BYTE* BlockPtr = pbBlock;
     *pbAttribute=0;
-    for(; BlockPtr < Block+ulBlockLen; i++){
+    for(; BlockPtr < pbBlock+bBlockLen; i++){
         memcpy(&pAttribute[i].type, BlockPtr, sizeof(ST_ATTRIBUTE_TYPE)); 
         BlockPtr+=sizeof(ST_ATTRIBUTE_TYPE);
-        if(BlockPtr >= Block+ulBlockLen) return STR_FUNCTOIN_FAILED;
-        memcpy(&pAttribute[i].ulValueLen, BlockPtr, sizeof(WORD));           
-        BlockPtr+=sizeof(WORD);
-        if(BlockPtr >= Block+ulBlockLen) return STR_FUNCTOIN_FAILED;
+        if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
+        memcpy(&pAttribute[i].ulValueLen, BlockPtr, sizeof(BYTE));           
+        BlockPtr+=sizeof(BYTE);
+        if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
         if(pAttribute[i].ulValueLen!=0){ // если длинна данных равна 0, то не считываем данные
             memcpy((*pbMemPtr), BlockPtr, pAttribute[i].ulValueLen);
             pAttribute[i].pValue = (*pbMemPtr);
             (*pbMemPtr)+=pAttribute[i].ulValueLen;
             BlockPtr+=pAttribute[i].ulValueLen;  
-            if(BlockPtr >= Block+ulBlockLen) return STR_FUNCTOIN_FAILED;
+            if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
         } 
         else pAttribute[i].pValue = NULL;            
         *pbAttribute++;
@@ -57,7 +57,7 @@ BYTE Init()
         Connection[i].Mode = STS_NO_CONNECT;
     }
 }
-BYTE findparam(BYTE* pbData, BYTE bDataLen, ST_ATTRIBUTE_TYPE Type)
+BYTE findparam(BYTE* pbData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType)
 {
     BYTE i;
     for(i = 0; i < bDataLen; i++) {
@@ -67,28 +67,31 @@ BYTE findparam(BYTE* pbData, BYTE bDataLen, ST_ATTRIBUTE_TYPE Type)
     }   
     return 255;
 } 
-BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, WORD* pwBlobLen)
+BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
 {
-    BYTE Mem[64];
-    BYTE* MemPtr = Mem;
-    memset(Mem,0,sizeof(Mem));
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
+    BYTE res = 0;
+    BYTE i = 0;
+    BYTE Command = 0;
     BOOL NeedAnswer = false;
     BYTE Answers = 0;
+
+    BYTE bAttributeLen = 0;
+    BYTE bBlobLen = 0;
+    BYTE pbMem[MEM_BUFFER_LEN];
+    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
+    BYTE* pbBlobPtr = pbBlob; // нужно для последовательного формирования блоба
+    BYTE* pbMemPtr = pbMem;    
+
+    
     static ST_ATTRIBUTE Answer[] = {
         {STA_FLAG, &Answers, sizeof(BYTE) }
     };
-    memset(Data,0,sizeof(Data));
-    BYTE bAttributeLen=0;
-    BYTE res = 0;
-    res = ParseBlob(pbBlob, *pwBlobLen, Data, &bAttributeLen, &MemPtr);
-    if(res!=STR_OK) return res;
-    BYTE i;
-    BYTE Command=0;
-    BYTE* pbBlobPtr = pbBlob; // нужно для последовательного формирования блоба
-    WORD  wBlobLen;
-    // ищем командный атрибут    
 
+    memset(pbMem,0,sizeof(pbMem));
+    memset(Data,0,sizeof(Data));
+    res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, &pbMemPtr);
+    if(res!=STR_OK) return res;
+    // ищем командный атрибут    
     i = findparam(Data, bAttributeLen, STA_COMMAND); 
     if(i==255) return STR_COMMAND_UNKNOWN;
     Command = *((BYTE*)Data[i].pValue);	
@@ -141,9 +144,9 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, WORD* pwBlobLen)
         res = STR_COMMAND_UNKNOWN;  
     }
     if(NeedAnswer) {        
-        res = FormBlob(Answer, 1, &pbBlobPtr, &wBlobLen);
-        pbBlobPtr+=wBlobLen; // увеличиваем указатель
-        *pwBlobLen+=wBlobLen; // увеличиваем размер
+        res = FormBlob(Answer, 1, &pbBlobPtr, &bBlobLen);
+        pbBlobPtr+=bBlobLen; // увеличиваем указатель
+        *pbBlobLen+=bBlobLen; // увеличиваем размер
         if(res!=STR_OK) return res;
         if(Connection[bConnectionID].Mode == STS_NO_CONNECT) {
             res = STR_NEED_DISCONNECT;
