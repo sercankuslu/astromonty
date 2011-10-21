@@ -26,24 +26,26 @@ BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BY
     *pbBlockLen = BlockPtr - pbBlock;
     return STR_OK;
 }
-BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMemPtr, BYTE bMemLen)
+BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMemPtr, BYTE* pbMemEnd)
 {
     BYTE i = 0;
     BYTE* BlockPtr = pbBlock;
+    BYTE* pbBlockLast = pbBlock + bBlockLen;
     *pbAttribute=0;
-    for(; BlockPtr < pbBlock+bBlockLen; i++){
-        memcpy(&pAttribute[i].type, BlockPtr, sizeof(ST_ATTRIBUTE_TYPE)); 
-        BlockPtr+=sizeof(ST_ATTRIBUTE_TYPE);
-        if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
-        memcpy(&pAttribute[i].ulValueLen, BlockPtr, sizeof(BYTE));           
-        BlockPtr+=sizeof(BYTE);
-        if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
-        if(pAttribute[i].ulValueLen!=0){ // если длинна данных равна 0, то не считываем данные
+    BYTE bHead = sizeof(ST_ATTRIBUTE_TYPE) + sizeof(BYTE);
+    for(i = 0; BlockPtr < pbBlockLast; i++){
+        if(BlockPtr + bHead >= pbBlockLast) return STR_DATA_CORRUPTED;
+        memcpy(pAttribute[i], BlockPtr, bHead); 
+        BlockPtr += bHead;
+        if(pAttribute[i].ulValueLen != 0){ 
+            if(pbMemPtr + pAttribute[i].ulValueLen >= pbMemEnd) return 
+                STR_BUFFER_TOO_SMALL;
+            if(BlockPtr + pAttribute[i].ulValueLen >= pbBlockLast) return
+                STR_DATA_CORRUPTED;
             memcpy((*pbMemPtr), BlockPtr, pAttribute[i].ulValueLen);
             pAttribute[i].pValue = (*pbMemPtr);
-            (*pbMemPtr)+=pAttribute[i].ulValueLen;
-            BlockPtr+=pAttribute[i].ulValueLen;  
-            if(BlockPtr >= pbBlock+bBlockLen) return STR_FUNCTOIN_FAILED;
+            (*pbMemPtr) += pAttribute[i].ulValueLen;
+            BlockPtr += pAttribute[i].ulValueLen;  
         } 
         else pAttribute[i].pValue = NULL;            
         *pbAttribute++;
@@ -53,7 +55,7 @@ BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE 
 BYTE Init()
 {
     BYTE i;
-    for(i=0;i<MAX_CONNECTIONS;i++){
+    for(i = 0; i < MAX_CONNECTIONS; i++){
         Connection[i].Mode = STS_NO_CONNECT;
     }
 }
@@ -61,7 +63,7 @@ BYTE findparam(BYTE* pbData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType)
 {
     BYTE i;
     for(i = 0; i < bDataLen; i++) {
-        if(pbData[i].type==Type){
+        if(pbData[i].type == Type){
             return i;			            
         }  
     }   
@@ -79,7 +81,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     BYTE bBlobLen = 0;
     BYTE pbMem[MEM_BUFFER_LEN];
     ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE* pbBlobPtr = pbBlob; // нужно для последовательного формирования блоба
+    BYTE* pbBlobPtr = pbBlob; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     BYTE* pbMemPtr = pbMem;    
 
     
@@ -91,7 +93,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     memset(Data,0,sizeof(Data));
     res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, &pbMemPtr);
     if(res!=STR_OK) return res;
-    // ищем командный атрибут    
+    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ    
     i = findparam(Data, bAttributeLen, STA_COMMAND); 
     if(i==255) return STR_COMMAND_UNKNOWN;
     Command = *((BYTE*)Data[i].pValue);	
@@ -114,7 +116,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
                 Answers = STF_COMMAND_INCOMPLETE;
                 Connection[bConnectionID].Mode = STS_NO_CONNECT;                
             } else {
-                if(1){ // проверка подлиннности                
+                if(1){ // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ                
                     Answers = STF_ACCEPTED;
                     Connection[bConnectionID].Mode = STS_CONNECTED;
                 } else {
@@ -145,8 +147,8 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     }
     if(NeedAnswer) {        
         res = FormBlob(Answer, 1, &pbBlobPtr, &bBlobLen);
-        pbBlobPtr+=bBlobLen; // увеличиваем указатель
-        *pbBlobLen+=bBlobLen; // увеличиваем размер
+        pbBlobPtr+=bBlobLen; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        *pbBlobLen+=bBlobLen; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         if(res!=STR_OK) return res;
         if(Connection[bConnectionID].Mode == STS_NO_CONNECT) {
             res = STR_NEED_DISCONNECT;
