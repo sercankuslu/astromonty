@@ -13,11 +13,13 @@ BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BY
     BYTE* pbBlockLast = pbBlock + (*pbBlockLen); 
     BYTE  bHead = sizeof(ST_ATTRIBUTE_TYPE) + sizeof(BYTE);   
     for(i = 0; i < bAttributeLen; i++){
-	    if(pbBlock + bHead >= pbBlockLast) return STR_BUFFER_TOO_SMALL;
+        if(pbBlock + bHead >= pbBlockLast) 
+            return STR_BUFFER_TOO_SMALL;
         memcpy(BlockPtr, &pAttribute[i], bHead);
         BlockPtr += bHead;  
         if(pAttribute[i].ulValueLen!=0){
-	        if(pbBlock + pAttribute[i].ulValueLen >= pbBlockLast) return STR_BUFFER_TOO_SMALL; 
+            if(pbBlock + pAttribute[i].ulValueLen >= pbBlockLast) 
+                return STR_BUFFER_TOO_SMALL; 
             memcpy(BlockPtr, pAttribute[i].pValue, pAttribute[i].ulValueLen);
             BlockPtr += pAttribute[i].ulValueLen;
         }     
@@ -33,14 +35,15 @@ BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE 
     *pbAttribute=0;
     BYTE bHead = sizeof(ST_ATTRIBUTE_TYPE) + sizeof(BYTE);
     for(i = 0; BlockPtr < pbBlockLast; i++){
-        if(BlockPtr + bHead >= pbBlockLast) return STR_DATA_CORRUPTED;
+        if(BlockPtr + bHead >= pbBlockLast) 
+            return STR_DATA_CORRUPTED;
         memcpy(&pAttribute[i], BlockPtr, bHead); 
         BlockPtr += bHead;
         if(pAttribute[i].ulValueLen != 0){ 
-            if(pbMemPtr + pAttribute[i].ulValueLen >= pbMemEnd) return 
-                STR_BUFFER_TOO_SMALL;
-            if(BlockPtr + pAttribute[i].ulValueLen >= pbBlockLast) return
-                STR_DATA_CORRUPTED;
+            if(pbMemPtr + pAttribute[i].ulValueLen >= pbMemEnd) 
+                return STR_BUFFER_TOO_SMALL;
+            if(BlockPtr + pAttribute[i].ulValueLen >= pbBlockLast) 
+                return STR_DATA_CORRUPTED;
             memcpy((*pbMemPtr), BlockPtr, pAttribute[i].ulValueLen);
             pAttribute[i].pValue = (*pbMemPtr);
             (*pbMemPtr) += pAttribute[i].ulValueLen;
@@ -80,7 +83,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     BYTE bBlobLen = 0;
     BYTE pbMem[MEM_BUFFER_LEN];
     ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE* pbBlobPtr = pbBlob; // ����� ��� ����������������� ������������ �����
+    BYTE* pbBlobPtr = pbBlob; 
     BYTE* pbMemPtr = pbMem;    
 
     
@@ -92,11 +95,9 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     memset(Data,0,sizeof(Data));
     res = ParseBlob(pbBlob, bBlobLen, Data, &bAttributeLen, &pbMemPtr, pbMem + sizeof(pbMem));
     if(res!=STR_OK) return res;
-    // ���� ��������� �������    
     i = findparam(Data, bAttributeLen, STA_COMMAND); 
     if(i==255) return STR_COMMAND_UNKNOWN;
     Command = *((BYTE*)Data[i].pValue);	
-
     switch(Connection[bConnectionID].Mode){
     case STS_NO_CONNECT:
         if(Command == STC_REQEST_CONNECT) {            
@@ -115,7 +116,8 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
                 Answers = STF_COMMAND_INCOMPLETE;
                 Connection[bConnectionID].Mode = STS_NO_CONNECT;                
             } else {
-                if(1){ // �������� ������������                
+                //strcmp();
+                if(1){ // authority check                
                     Answers = STF_ACCEPTED;
                     Connection[bConnectionID].Mode = STS_CONNECTED;
                 } else {
@@ -142,12 +144,12 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         }
         break;
     default:
-        res = STR_COMMAND_UNKNOWN;  
+        res = STR_FUNCTION_FAILED;  
     }
     if(NeedAnswer) {        
         res = FormBlob(Answer, 1, &pbBlobPtr, &bBlobLen);
-        pbBlobPtr+=bBlobLen; // ����������� ���������
-        *pbBlobLen+=bBlobLen; // ����������� ������
+        pbBlobPtr += bBlobLen; 
+        *pbBlobLen += bBlobLen;
         if(res!=STR_OK) return res;
         if(Connection[bConnectionID].Mode == STS_NO_CONNECT) {
             res = STR_NEED_DISCONNECT;
