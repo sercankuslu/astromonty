@@ -271,9 +271,9 @@ int main(void)
 		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 		
 	}
-	BYTE Blob[] = {0x01,0x01,0x00,0x80};
+	BYTE Blob[] = {0x01,0x01,0x80};
 	WORD BlobLen = sizeof(Blob);
-	ProcessAttributes(0, Blob, &BlobLen);
+	ProcessClients(0, Blob, &BlobLen);
     
     /*
     // calculate CPU speed  
