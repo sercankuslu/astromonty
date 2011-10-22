@@ -94,9 +94,11 @@ typedef struct ST_PACKET {
     BYTE*               Data;                   // ������ ������
 } ST_PACKET;
 */
+#define FALSE	0
+#define TRUE    1
 static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 255
 BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE* pbBlockLen);
-BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMem, BYTE bMemLen);
+BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttribute, BYTE** pbMemPtr, BYTE* pbMemEnd);
 BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 #endif
