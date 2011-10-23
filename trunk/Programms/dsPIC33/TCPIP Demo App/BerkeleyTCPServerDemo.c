@@ -57,10 +57,10 @@
 #if defined(STACK_USE_BERKELEY_API)
 
 #include "TCPIP Stack/TCPIP.h"
-
+#include "../protocol.h"
 
 #define PORTNUM 9764
-#define MAX_CLIENT (3) // Maximum number of simultanous connections accepted by the server.
+#define MAX_CLIENT (5) // Maximum number of simultanous connections accepted by the server.
 
 
 /*********************************************************************
@@ -85,9 +85,10 @@ void BerkeleyTCPServerDemo(void)
     struct sockaddr_in addr;
     struct sockaddr_in addRemote;
     int addrlen = sizeof(struct sockaddr_in);
-    char bfr[15];
+    char bfr[64];
     int length;
     int i;
+    BYTE res = STR_OK;
     static enum
     {
 	    BSD_INIT = 0,
@@ -155,10 +156,15 @@ void BerkeleyTCPServerDemo(void)
          
                 if( length > 0 )
                 {
-                    bfr[length] = '\0';
-                    send(ClientSock[i], bfr, strlen(bfr), 0);
+	                res = STR_OK;
+	                res = ProcessClients(i, bfr, &length);
+                    if(res==STR_NEED_ANSWER){
+	                	send(ClientSock[i], bfr, length, 0);  
+	                	res = STR_OK;
+                    }
                 }
-                else if( length < 0 )
+                
+                if(( length < 0 )||(res != STR_OK))
                 {
                     closesocket( ClientSock[i] );
                     ClientSock[i] = INVALID_SOCKET;

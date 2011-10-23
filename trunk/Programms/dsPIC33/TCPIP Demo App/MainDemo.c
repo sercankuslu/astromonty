@@ -271,10 +271,29 @@ int main(void)
 		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 		
 	}
-	BYTE Blob[] = {0x01,0x01,0x80};
-	WORD BlobLen = sizeof(Blob);
+	//char login[] = "root";
+	//char pass[] = "pass";
+	/*
+	BYTE Blob[30] = {STA_COMMAND,sizeof(BYTE),STC_REQEST_CONNECT};
+	BYTE BlobLen = 3;
 	ProcessClients(0, Blob, &BlobLen);
-    
+	BYTE Blob2[] = {STA_COMMAND,  sizeof(BYTE), STC_REQEST_AUTH, 
+					STA_LOGIN,    4, 'r','o','o','t',
+					STA_PASSWORD, 4, 'p','a','s','s'
+					};
+	BlobLen = sizeof(Blob2);
+	memcpy(Blob,Blob2,BlobLen);
+    ProcessClients(0, Blob, &BlobLen);
+
+	BYTE Blob3[] = {STA_COMMAND,  		sizeof(BYTE), STC_REQEST_DATA, 
+				    STA_NETWORK_ADDRESS, 0x00, 
+					};
+	BlobLen = sizeof(Blob3);					
+	memcpy(Blob,Blob3,BlobLen);					
+	AppConfig.MyIPAddr.Val = 0xC0A80137;			
+	
+    ProcessClients(0, Blob, &BlobLen);
+	*/
     /*
     // calculate CPU speed  
     T6CON = 0x0002;
@@ -479,9 +498,9 @@ int main(void)
 		#endif
 		
 		#if defined(STACK_USE_BERKELEY_API)
-		BerkeleyTCPClientDemo();
+		//BerkeleyTCPClientDemo();
 		BerkeleyTCPServerDemo();
-		BerkeleyUDPClientDemo();
+		//BerkeleyUDPClientDemo();
 		#endif
 
 		ProcessIO();
