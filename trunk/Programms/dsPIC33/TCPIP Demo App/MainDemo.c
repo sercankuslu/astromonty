@@ -117,7 +117,7 @@ BYTE AN0String[8];
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
-	int __C30_UART = 2;
+    int __C30_UART = 2;
 #endif
 
 
@@ -136,60 +136,54 @@ static void ProcessIO(void);
 // NOTE: Several PICs, including the PIC18F4620 revision A3 have a RETFIE FAST/MOVFF bug
 // The interruptlow keyword is used to work around the bug when using C18
 #if defined(__18CXX)
-	#if defined(HI_TECH_C)
-	void interrupt low_priority LowISR(void)
-	#else
-	#pragma interruptlow LowISR
-	void LowISR(void)
-	#endif
-	{
-	    TickUpdate();
-	}
+#if defined(HI_TECH_C)
+void interrupt low_priority LowISR(void)
+#else
+#pragma interruptlow LowISR
+void LowISR(void)
+#endif
+{
+    TickUpdate();
+}
 	
-	#if defined(HI_TECH_C)
-	void interrupt HighISR(void)
-	#else
-	#pragma interruptlow HighISR
-	void HighISR(void)
-	#endif
-	{
-	    #if defined(STACK_USE_UART2TCP_BRIDGE)
-			UART2TCPBridgeISR();
-		#endif
+#if defined(HI_TECH_C)
+void interrupt HighISR(void)
+#else
+#pragma interruptlow HighISR
+void HighISR(void)
+#endif
+{
+    Nop();	
+}
 
-		#if defined(WF_CS_TRIS)
-			WFEintISR();
-		#endif // WF_CS_TRIS
-	}
-
-	#if !defined(HI_TECH_C)
-	#pragma code lowVector=0x18
-	void LowVector(void){_asm goto LowISR _endasm}
-	#pragma code highVector=0x8
-	void HighVector(void){_asm goto HighISR _endasm}
-	#pragma code // Return to default code section
-	#endif
+#if !defined(HI_TECH_C)
+#pragma code lowVector=0x18
+void LowVector(void){_asm goto LowISR _endasm}
+#pragma code highVector=0x8
+void HighVector(void){_asm goto HighISR _endasm}
+#pragma code // Return to default code section
+#endif
 
 // C30 and C32 Exception Handlers
 // If your code gets here, you either tried to read or write
 // a NULL pointer, or your application overflowed the stack
 // by having too many local variables or parameters declared.
 #elif defined(__C30__)
-	void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
-	{
-	    Nop();
-		Nop();
-	}
-	void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
-	{
-	    Nop();
-		Nop();
-	}
+void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
+{
+    Nop();
+Nop();
+}
+void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
+{
+    Nop();
+Nop();
+}
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
     TMR6 = 0x0000;
-	TMR8 = 0x0000;
-	TMR9 = 0x0000;
+    TMR8 = 0x0000;
+    TMR9 = 0x0000;
     IFS2bits.T6IF = 0; // Clear T3 interrupt flag
 }	
 #elif defined(__C32__)
@@ -214,63 +208,63 @@ void main(void)
 int main(void)
 #endif
 {
-	static DWORD t = 0;
-	static DWORD d = 0;
-	static DWORD dwLastIP = 0;
+    static DWORD t = 0;
+    static DWORD d = 0;
+    static DWORD dwLastIP = 0;
+
+    //volatile DWORD UTCT;
+    LATFbits.LATF4 = 0;
+    TRISFbits.TRISF4 = 0;	
+    // Initialize application specific hardware
+    // Для работы A13  его нужно отключить от ADC
+    {
+        TRISAbits.TRISA12 = 1;
+        AD1CON1 = 0;
+        AD2CON1 = 0;
+        AD1PCFGH = 0xFFFF;
+        AD1PCFGL = 0xFFFF;
+        AD2PCFGL = 0xFFFF;
+    }
 	
-	//volatile DWORD UTCT;
-	LATFbits.LATF4 = 0;
-	TRISFbits.TRISF4 = 0;	
-	// Initialize application specific hardware
-	// Для работы A13  его нужно отключить от ADC
-	{
-		TRISAbits.TRISA12 = 1;
-		AD1CON1 = 0;
-		AD2CON1 = 0;
-		AD1PCFGH = 0xFFFF;
-		AD1PCFGL = 0xFFFF;
-		AD2PCFGL = 0xFFFF;
+	
+    {
+	static double PI = 3.1415926536f;
+	static double Mass = 500.0f;
+	static double Radius = 2.0f;
+	static double pMPower[] = {
+		303.3428571429f,
+		275.2714285714f,
+		241.2f,
+		216.0f,
+		190.8f,
+		165.6f,
+		144.0f,
+		118.8f,
+		79.2f,
+		36.0f
+	};
+	static double MaxV[] = {
+		0.004166667,
+		0.5,
+		1.25,
+		2.5,
+		3.75,
+		5.0,
+		6.25,
+		7.5,
+		8.75,
+		10.0,
+	};
+	static double MaxA[10];
+	double RdivMassR2PI = 360.0f/(Mass*Radius*Radius*PI);
+	int i;
+	static double resY;
+	for(i=0;i<10;i++){
+	    MaxA[i]=pMPower[i]*RdivMassR2PI;
 	}
+	resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 	
-	
-	{
-		static double PI = 3.1415926536f;
-		static double Mass = 500.0f;
-		static double Radius = 2.0f;
-		static double pMPower[] = {
-			303.3428571429f,
-			275.2714285714f,
-			241.2f,
-			216.0f,
-			190.8f,
-			165.6f,
-			144.0f,
-			118.8f,
-			79.2f,
-			36.0f
-		};
-		static double MaxV[] = {
-			0.004166667,
-			0.5,
-			1.25,
-			2.5,
-			3.75,
-			5.0,
-			6.25,
-			7.5,
-			8.75,
-			10.0,
-		};
-		static double MaxA[10];
-		double RdivMassR2PI = 360.0f/(Mass*Radius*Radius*PI);
-		int i;
-		static double resY;
-		for(i=0;i<10;i++){
-			MaxA[i]=pMPower[i]*RdivMassR2PI;
-		}
-		resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
-		
-	}
+    }
 	//char login[] = "root";
 	//char pass[] = "pass";
 	/*
@@ -283,7 +277,7 @@ int main(void)
 					};
 	BlobLen = sizeof(Blob2);
 	memcpy(Blob,Blob2,BlobLen);
-    ProcessClients(0, Blob, &BlobLen);
+        ProcessClients(0, Blob, &BlobLen);
 
 	BYTE Blob3[] = {STA_COMMAND,  		sizeof(BYTE), STC_REQEST_DATA, 
 				    STA_NETWORK_ADDRESS, 0x00, 
@@ -292,131 +286,131 @@ int main(void)
 	memcpy(Blob,Blob3,BlobLen);					
 	AppConfig.MyIPAddr.Val = 0xC0A80137;			
 	
-    ProcessClients(0, Blob, &BlobLen);
+        ProcessClients(0, Blob, &BlobLen);
 	*/
     /*
     // calculate CPU speed  
     T6CON = 0x0002;
-	T8CON = 0x0008;
-	T9CON = 0x0000;
-	PR8=0xFFFF;
-	PR9=0xFFFF;
-	TMR6 = 0x0000;
-	TMR8 = 0x0000;
-	TMR9 = 0x0000;	
-	IFS2bits.T6IF = 0;
-	IEC2bits.T6IE = 1;
-	IPC11bits.T6IP = 7;
-	T6CONbits.TON = 1;
-	T8CONbits.TON = 1;	
-	*/
+    T8CON = 0x0008;
+    T9CON = 0x0000;
+    PR8=0xFFFF;
+    PR9=0xFFFF;
+    TMR6 = 0x0000;
+    TMR8 = 0x0000;
+    TMR9 = 0x0000;	
+    IFS2bits.T6IF = 0;
+    IEC2bits.T6IE = 1;
+    IPC11bits.T6IP = 7;
+    T6CONbits.TON = 1;
+    T8CONbits.TON = 1;	
+    */
      
-	InitializeBoard();	
+    InitializeBoard();	
 	
     
 	
-	#if defined(USE_LCD)
-	// Initialize and display the stack version on the LCD
-	LCDInit();
-	DelayMs(100);
-	strcpypgm2ram((char*)LCDText, "TCPStack " TCPIP_STACK_VERSION "  "
-		"                ");
-	LCDUpdate();
-	#endif
+#if defined(USE_LCD)
+    // Initialize and display the stack version on the LCD
+    LCDInit();
+    DelayMs(100);
+    strcpypgm2ram((char*)LCDText, "TCPStack " TCPIP_STACK_VERSION "  "
+	    "                ");
+    LCDUpdate();
+#endif
 
-	// Initialize stack-related hardware components that may be 
-	// required by the UART configuration routines
+    // Initialize stack-related hardware components that may be 
+    // required by the UART configuration routines
     TickInit();
-	#if defined(STACK_USE_MPFS) || defined(STACK_USE_MPFS2)
-	MPFSInit();
-	#endif
+#if defined(STACK_USE_MPFS) || defined(STACK_USE_MPFS2)
+    MPFSInit();
+#endif
 
-	// Initialize Stack and application related NV variables into AppConfig.
-	InitAppConfig();
+    // Initialize Stack and application related NV variables into AppConfig.
+    InitAppConfig();
 
     // Initiates board setup process if button is depressed 
-	// on startup
-	#ifdef bad
+    // on startup
+    #ifdef bad
     if(BUTTON0_IO == 0u)
     {
-		#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
-		// Invalidate the EEPROM contents if BUTTON0 is held down for more than 4 seconds
-		DWORD StartTime = TickGet();
-		LED_PUT(0x00);
-				
-		while(BUTTON0_IO == 0u)
-		{
-			if(TickGet() - StartTime > 4*TICK_SECOND)
-			{
-				#if defined(EEPROM_CS_TRIS)
-			    XEEBeginWrite(0x0000);
-			    XEEWrite(0xFF);
-			    XEEWrite(0xFF);
-			    XEEEndWrite();
-			    #elif defined(SPIFLASH_CS_TRIS)
-			    SPIFlashBeginWrite(0x0000);
-			    SPIFlashWrite(0xFF);
-			    SPIFlashWrite(0xFF);
-			    #endif
-			    
-				#if defined(STACK_USE_UART)
-				putrsUART("\r\n\r\nBUTTON0 held for more than 4 seconds.  Default settings restored.\r\n\r\n");
-				#endif
+	#if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
+	// Invalidate the EEPROM contents if BUTTON0 is held down for more than 4 seconds
+	DWORD StartTime = TickGet();
+	LED_PUT(0x00);
+			
+	while(BUTTON0_IO == 0u)
+	{
+	    if(TickGet() - StartTime > 4*TICK_SECOND)
+	    {
+		    #if defined(EEPROM_CS_TRIS)
+	        XEEBeginWrite(0x0000);
+	        XEEWrite(0xFF);
+	        XEEWrite(0xFF);
+	        XEEEndWrite();
+	        #elif defined(SPIFLASH_CS_TRIS)
+	        SPIFlashBeginWrite(0x0000);
+	        SPIFlashWrite(0xFF);
+	        SPIFlashWrite(0xFF);
+	        #endif
+    	    
+	        #if defined(STACK_USE_UART)
+	        putrsUART("\r\n\r\nBUTTON0 held for more than 4 seconds.  Default settings restored.\r\n\r\n");
+	        #endif
 
-				LED_PUT(0x0F);
-				while((LONG)(TickGet() - StartTime) <= (LONG)(9*TICK_SECOND/2));
-				LED_PUT(0x00);
-				while(BUTTON0_IO == 0u);
-				Reset();
-				break;
-			}
-		}
-		#endif
+	        LED_PUT(0x0F);
+	        while((LONG)(TickGet() - StartTime) <= (LONG)(9*TICK_SECOND/2));
+	        LED_PUT(0x00);
+	        while(BUTTON0_IO == 0u);
+	        Reset();
+	        break;
+	    }
+	}
+	#endif
 
-		#if defined(STACK_USE_UART)
+	#if defined(STACK_USE_UART)
         DoUARTConfig();
-		#endif
+	#endif
     }
     #endif //bad
-	// Initialize core stack layers (MAC, ARP, TCP, UDP) and
-	// application modules (HTTP, SNMP, etc.)
+    // Initialize core stack layers (MAC, ARP, TCP, UDP) and
+    // application modules (HTTP, SNMP, etc.)
     StackInit();
 
     #if defined(WF_CS_TRIS)
     WF_Connect();
     #endif
 
-	// Initialize any application-specific modules or functions/
-	// For this demo application, this only includes the
-	// UART 2 TCP Bridge
-	#if defined(STACK_USE_UART2TCP_BRIDGE)
-	UART2TCPBridgeInit();
-	#endif
+    // Initialize any application-specific modules or functions/
+    // For this demo application, this only includes the
+    // UART 2 TCP Bridge
+    #if defined(STACK_USE_UART2TCP_BRIDGE)
+    UART2TCPBridgeInit();
+    #endif
 
-	#if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
+    #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
     ZeroconfLLInitialize();
-	#endif
+    #endif
 
-	#if defined(STACK_USE_ZEROCONF_MDNS_SD)
-	mDNSInitialize(MY_DEFAULT_HOST_NAME);
-	mDNSServiceRegister(
-		(const char *) "DemoWebServer",	// base name of the service
-		"_http._tcp.local",			    // type of the service
-		80,				                // TCP or UDP port, at which this service is available
-		((const BYTE *)"path=/index.htm"),	// TXT info
-		1,								    // auto rename the service when if needed
-		NULL,							    // no callback function
-		NULL							    // no application context
-		);
+    #if defined(STACK_USE_ZEROCONF_MDNS_SD)
+    mDNSInitialize(MY_DEFAULT_HOST_NAME);
+    mDNSServiceRegister(
+        (const char *) "DemoWebServer",	// base name of the service
+        "_http._tcp.local",			    // type of the service
+        80,				                // TCP or UDP port, at which this service is available
+        ((const BYTE *)"path=/index.htm"),	// TXT info
+        1,								    // auto rename the service when if needed
+        NULL,							    // no callback function
+        NULL							    // no application context
+        );
 
     mDNSMulticastFilterRegister();			
 	#endif
 
-	// Now that all items are initialized, begin the co-operative
-	// multitasking loop.  This infinite loop will continuously 
-	// execute all stack-related tasks, as well as your own
-	// application's functions.  Custom functions should be added
-	// at the end of this loop.
+    // Now that all items are initialized, begin the co-operative
+    // multitasking loop.  This infinite loop will continuously 
+    // execute all stack-related tasks, as well as your own
+    // application's functions.  Custom functions should be added
+    // at the end of this loop.
     // Note that this is a "co-operative mult-tasking" mechanism
     // where every task performs its tasks (whether all in one shot
     // or part of it) and returns so that other tasks can do their
@@ -436,12 +430,11 @@ int main(void)
 		
 		
 		
-		if(PORTAbits.RA13 != t){
-			t = PORTAbits.RA13;
+	if(PORTAbits.RA13 != t){
+	    t = PORTAbits.RA13;
             LED0_IO ^= 1;
-            AdjustLocalRTCTime();
-            
-		}
+            AdjustLocalRTCTime();            
+	}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
@@ -451,87 +444,87 @@ int main(void)
         StackApplications();
 
         #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
-		ZeroconfLLProcess();
+	ZeroconfLLProcess();
         #endif
 
         #if defined(STACK_USE_ZEROCONF_MDNS_SD)
         mDNSProcess();
-		// Use this function to exercise service update function
-		// HTTPUpdateRecord();
+	// Use this function to exercise service update function
+	// HTTPUpdateRecord();
         #endif
 
-		// Process application specific tasks here.
-		// For this demo app, this will include the Generic TCP 
-		// client and servers, and the SNMP, Ping, and SNMP Trap
-		// demos.  Following that, we will process any IO from
-		// the inputs on the board itself.
-		// Any custom modules or processing you need to do should
-		// go here.
-		#if defined(STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE)
-		GenericTCPClient();
-		#endif
-		
-		#if defined(STACK_USE_GENERIC_TCP_SERVER_EXAMPLE)
-		GenericTCPServer();
-		#endif
-		
-		#if defined(STACK_USE_SMTP_CLIENT)
-		SMTPDemo();
-		#endif
-		
-		#if defined(STACK_USE_ICMP_CLIENT)
-		PingDemo();
-		#endif
-		
-		#if defined(STACK_USE_SNMP_SERVER) && !defined(SNMP_TRAP_DISABLED)
-		//User should use one of the following SNMP demo
-		// This routine demonstrates V1 or V2 trap formats with one variable binding.
-		SNMPTrapDemo();
-		
-		#if defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
-		//This routine provides V2 format notifications with multiple (3) variable bindings
-		//User should modify this routine to send v2 trap format notifications with the required varbinds.
-		//SNMPV2TrapDemo();
-		#endif 
-		if(gSendTrapFlag)
-			SNMPSendTrap();
-		#endif
-		
-		#if defined(STACK_USE_BERKELEY_API)
-		//BerkeleyTCPClientDemo();
-		BerkeleyTCPServerDemo();
-		//BerkeleyUDPClientDemo();
-		#endif
+	// Process application specific tasks here.
+	// For this demo app, this will include the Generic TCP 
+	// client and servers, and the SNMP, Ping, and SNMP Trap
+	// demos.  Following that, we will process any IO from
+	// the inputs on the board itself.
+	// Any custom modules or processing you need to do should
+	// go here.
+	#if defined(STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE)
+	GenericTCPClient();
+	#endif
+	
+	#if defined(STACK_USE_GENERIC_TCP_SERVER_EXAMPLE)
+	GenericTCPServer();
+	#endif
+	
+	#if defined(STACK_USE_SMTP_CLIENT)
+	SMTPDemo();
+	#endif
+	
+	#if defined(STACK_USE_ICMP_CLIENT)
+	PingDemo();
+	#endif
+	
+	#if defined(STACK_USE_SNMP_SERVER) && !defined(SNMP_TRAP_DISABLED)
+	//User should use one of the following SNMP demo
+	// This routine demonstrates V1 or V2 trap formats with one variable binding.
+	SNMPTrapDemo();
+	
+	#if defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
+	//This routine provides V2 format notifications with multiple (3) variable bindings
+	//User should modify this routine to send v2 trap format notifications with the required varbinds.
+	//SNMPV2TrapDemo();
+	#endif 
+	if(gSendTrapFlag)
+	    SNMPSendTrap();
+	#endif
+	
+	#if defined(STACK_USE_BERKELEY_API)
+	//BerkeleyTCPClientDemo();
+	    BerkeleyTCPServerDemo();
+	//BerkeleyUDPClientDemo();
+	#endif
 
-		ProcessIO();
+	ProcessIO();
 
         // If the local IP address has changed (ex: due to DHCP lease change)
         // write the new IP address to the LCD display, UART, and Announce 
         // service
-		if(dwLastIP != AppConfig.MyIPAddr.Val)
-		{
-			dwLastIP = AppConfig.MyIPAddr.Val;
+	if(dwLastIP != AppConfig.MyIPAddr.Val)
+	{
+	    dwLastIP = AppConfig.MyIPAddr.Val;
 			
-			#if defined(STACK_USE_UART)
-				putrsUART((ROM char*)"\r\nNew IP Address: ");
-			#endif
+	    #if defined(STACK_USE_UART)
+		    putrsUART((ROM char*)"\r\nNew IP Address: ");
+	    #endif
 
-			DisplayIPValue(AppConfig.MyIPAddr);
+	    DisplayIPValue(AppConfig.MyIPAddr);
 
-			#if defined(STACK_USE_UART)
-				putrsUART((ROM char*)"\r\n");
-			#endif
+	    #if defined(STACK_USE_UART)
+		    putrsUART((ROM char*)"\r\n");
+	    #endif
 
 
-			#if defined(STACK_USE_ANNOUNCE)
-				AnnounceIP();
-			#endif
+	    #if defined(STACK_USE_ANNOUNCE)
+		    AnnounceIP();
+	    #endif
 
             #if defined(STACK_USE_ZEROCONF_MDNS_SD)
-				mDNSFillHostRecord();
-			#endif
-		}
+		    mDNSFillHostRecord();
+	    #endif
 	}
+    }
 }
 void AdjustLocalRTCTime()
 {
