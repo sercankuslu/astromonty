@@ -321,6 +321,8 @@ int main(void)
         {
             t = TickGet();
             LED0_IO ^= 1;
+            if(!AppConfig.Flags.bIsValidMontyIPAddr)
+            	AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;
         }
 
         // This task performs normal stack task including checking
@@ -1004,6 +1006,8 @@ static void InitAppConfig(void)
 		
 		AppConfig.Flags.bIsDHCPEnabled = TRUE;
 		AppConfig.Flags.bInConfigMode = TRUE;
+		AppConfig.Flags.bIsValidMontyIPAddr = FALSE;
+		AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;		
 		memcpypgm2ram((void*)&AppConfig.MyMACAddr, (ROM void*)SerializedMACAddress, sizeof(AppConfig.MyMACAddr));
 //		{
 //			_prog_addressT MACAddressAddress;
@@ -1017,7 +1021,7 @@ static void InitAppConfig(void)
 		AppConfig.MyGateway.Val = MY_DEFAULT_GATE_BYTE1 | MY_DEFAULT_GATE_BYTE2<<8ul | MY_DEFAULT_GATE_BYTE3<<16ul | MY_DEFAULT_GATE_BYTE4<<24ul;
 		AppConfig.PrimaryDNSServer.Val = MY_DEFAULT_PRIMARY_DNS_BYTE1 | MY_DEFAULT_PRIMARY_DNS_BYTE2<<8ul  | MY_DEFAULT_PRIMARY_DNS_BYTE3<<16ul  | MY_DEFAULT_PRIMARY_DNS_BYTE4<<24ul;
 		AppConfig.SecondaryDNSServer.Val = MY_DEFAULT_SECONDARY_DNS_BYTE1 | MY_DEFAULT_SECONDARY_DNS_BYTE2<<8ul  | MY_DEFAULT_SECONDARY_DNS_BYTE3<<16ul  | MY_DEFAULT_SECONDARY_DNS_BYTE4<<24ul;
-	
+		AppConfig.MontyIPAddr.Val = 0x00000000;
 	
 		// SNMP Community String configuration
 		#if defined(STACK_USE_SNMP_SERVER)

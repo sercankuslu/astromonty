@@ -239,7 +239,7 @@ void BerkeleyTCPClientDemo(void)
             
         case BSD_DONE:
         	ST_STATE = 0;
-            if(BUTTON2_IO == 0u)
+            if(AppConfig.Flags.bIsValidMontyIPAddr)
             	BSDClientState = DNS_START_RESOLUTION;
             break;
          

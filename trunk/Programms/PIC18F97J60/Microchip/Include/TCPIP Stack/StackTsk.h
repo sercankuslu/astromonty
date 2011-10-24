@@ -99,9 +99,12 @@ typedef struct __attribute__((__packed__))
 	IP_ADDR		DefaultIPAddr;          // Default IP address
 	IP_ADDR		DefaultMask;            // Default subnet mask
 	BYTE		NetBIOSName[16];        // NetBIOS name
+	IP_ADDR		MontyIPAddr;			// IP addres of Monty
 	struct
 	{
-		unsigned char : 6;
+		unsigned char : 4;
+		unsigned char bNeedUpdateMontyIPAddr : 1;
+		unsigned char bIsValidMontyIPAddr : 1;
 		unsigned char bIsDHCPEnabled : 1;
 		unsigned char bInConfigMode : 1;
 	} Flags;                            // Flag structure
