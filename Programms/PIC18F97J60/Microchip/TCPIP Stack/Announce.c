@@ -179,15 +179,20 @@ void DiscoveryTask(void)
 		DISCOVERY_HOME = 0,
 		DISCOVERY_LISTEN,
 		DISCOVERY_REQUEST_RECEIVED,
-		DISCOVERY_DISABLED
+		DISCOVERY_DISABLED,
+		DISCOVERY_REQUEST_SEND
 	} DiscoverySM = DISCOVERY_HOME;
 
 	static UDP_SOCKET	MySocket;
 	BYTE 				i;
-	
+	if(AppConfig.Flags.bNeedUpdateMontyIPAddr){		
+		DiscoverySM = DISCOVERY_REQUEST_SEND;					
+	}
 	switch(DiscoverySM)
 	{
 		case DISCOVERY_HOME:
+			if(MySocket != INVALID_UDP_SOCKET)
+				UDPClose(MySocket);
 			// Open a UDP socket for inbound and outbound transmission
 			// Since we expect to only receive broadcast packets and 
 			// only send unicast packets directly to the node we last 
@@ -202,14 +207,18 @@ void DiscoveryTask(void)
 
 		case DISCOVERY_LISTEN:
 			// Do nothing if no data is waiting
+			
 			if(!UDPIsGetReady(MySocket))
 				return;
 			
 			// See if this is a discovery query or reply
 			UDPGet(&i);
 			UDPDiscard();
-			if(i != 'D')
-				return;
+			if(i != 'D'){
+				if(i == 'A') {
+					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;	
+				}else return;
+			}
 
 			// We received a discovery request, reply when we can
 			DiscoverySM++;
@@ -256,6 +265,30 @@ void DiscoveryTask(void)
 			break;
 
 		case DISCOVERY_DISABLED:
+			break;
+		case DISCOVERY_REQUEST_SEND:
+			if(MySocket != INVALID_UDP_SOCKET)
+				UDPClose(MySocket);
+			AppConfig.Flags.bNeedUpdateMontyIPAddr = FALSE;	
+			
+			// Open a UDP socket for outbound broadcast transmission
+			MySocket = UDPOpen(2860, NULL, ANNOUNCE_PORT);
+			if(MySocket == INVALID_UDP_SOCKET)
+				return;
+			
+			// Make certain the socket can be written to
+			while(!UDPIsPutReady(MySocket));			
+				
+			UDPPutROMString((ROM BYTE*)"Discovery: Who is out there?");
+			UDPPut('\r');
+			UDPPut('\n');	
+			
+			// Send the packet
+			UDPFlush();
+			
+			// Close the socket so it can be used by other modules
+			UDPClose(MySocket);
+			DiscoverySM = DISCOVERY_HOME;					
 			break;
 	}	
 
