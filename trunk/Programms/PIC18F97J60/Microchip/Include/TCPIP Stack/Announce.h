@@ -53,5 +53,5 @@
 
 void	AnnounceIP(void);
 void	DiscoveryTask(void);
-
+void    SendRequestIP(void);
 #endif

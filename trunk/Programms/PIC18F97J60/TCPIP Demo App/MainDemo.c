@@ -322,7 +322,8 @@ int main(void)
             t = TickGet();
             LED0_IO ^= 1;
             if(!AppConfig.Flags.bIsValidMontyIPAddr)
-            	AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;
+            	//AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;
+                SendRequestIP();
         }
 
         // This task performs normal stack task including checking
