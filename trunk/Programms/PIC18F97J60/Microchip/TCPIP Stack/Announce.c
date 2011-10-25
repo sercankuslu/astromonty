@@ -209,8 +209,10 @@ void DiscoveryTask(void)
 			UDPGet(&i);
 			UDPDiscard();
 			if(i != 'D'){
-				if(i == 'A') {
-					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;	
+				// if(i == 'A') 
+				{
+					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;
+					memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
 				}else return;
 			}
 
