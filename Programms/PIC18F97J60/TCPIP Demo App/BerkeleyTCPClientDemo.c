@@ -100,8 +100,8 @@ void BerkeleyTCPClientDemo(void)
     BYTE bMemPos = 0;    
     static enum
     {
-	    DNS_START_RESOLUTION = 0,
-	    DNS_GET_RESULT,
+        DNS_START_RESOLUTION = 0,
+        DNS_GET_RESULT,
         BSD_START,
         BSD_CONNECT,
         BSD_SEND,
