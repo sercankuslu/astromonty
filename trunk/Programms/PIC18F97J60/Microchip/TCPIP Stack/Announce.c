@@ -215,9 +215,12 @@ void DiscoveryTask(void)
 				if(memcmp((void*)buf, (void*)AppConfig.MontyName, wDataLen) == 0u) {
 					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;
 					memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
-				}else return;
+				}				
+				//else 
+				return;
 			}
-
+		    if(memcmp((void*)&AppConfig.MyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr)) == 0u) 
+		    	return;
 			// We received a discovery request, reply when we can
 			DiscoverySM++;
 
@@ -260,6 +263,7 @@ void DiscoveryTask(void)
 
 			// Listen for other discovery requests
 			DiscoverySM = DISCOVERY_LISTEN;
+			
 			break;
 
 		case DISCOVERY_DISABLED:
@@ -297,21 +301,23 @@ void DiscoveryTask(void)
  ********************************************************************/
 void SendRequestIP(void)
 {
-	UDP_SOCKET	MySocket;
+	UDP_SOCKET	MySocket1 = INVALID_UDP_SOCKET;
 	BYTE 		i;
 
 	// Open a UDP socket for outbound broadcast transmission
-	MySocket = UDPOpen(2860, NULL, ANNOUNCE_PORT);
+	
+	MySocket1 = UDPOpen(30302, NULL, ANNOUNCE_PORT);
+		
 
 	// Abort operation if no UDP sockets are available
 	// If this ever happens, incrementing MAX_UDP_SOCKETS in 
 	// StackTsk.h may help (at the expense of more global memory 
 	// resources).
-	if(MySocket == INVALID_UDP_SOCKET)
+	if(MySocket1 == INVALID_UDP_SOCKET)
 		return;
 
 	// Make certain the socket can be written to
-	while(!UDPIsPutReady(MySocket));
+	while(!UDPIsPutReady(MySocket1));
 
 	// Begin sending our MAC address in human readable form.
 	// The MAC address theoretically could be obtained from the 
@@ -328,6 +334,5 @@ void SendRequestIP(void)
 	UDPFlush();
 
 	// Close the socket so it can be used by other modules
-	UDPClose(MySocket);
+	UDPClose(MySocket1);
 }
-#endif //#if defined(STACK_USE_ANNOUNCE)
