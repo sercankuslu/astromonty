@@ -155,7 +155,7 @@
  *   holding until the LEDs flash.  Release, and reset again.
  */
 #define MY_DEFAULT_HOST_NAME			"AM-CONTROL"
-#define MY_DEFAULT_MONTY_NAME			"AM-BASE"
+#define MY_DEFAULT_MONTY_NAME			"ASTROMONTY"
 
 #define MY_DEFAULT_MAC_BYTE1            (0x00)	// Use the default of 00-04-A3-00-00-00
 #define MY_DEFAULT_MAC_BYTE2            (0x04)	// if using an ENCX24J600, MRF24WB0M, or

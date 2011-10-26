@@ -150,13 +150,7 @@ static void ProcessIO(void);
 	void HighISR(void)
 	#endif
 	{
-	    #if defined(STACK_USE_UART2TCP_BRIDGE)
-			UART2TCPBridgeISR();
-		#endif
-
-		#if defined(WF_CS_TRIS)
-			WFEintISR();
-		#endif // WF_CS_TRIS
+	    Nop();
 	}
 
 	#if !defined(HI_TECH_C)
@@ -203,6 +197,7 @@ int main(void)
 {
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
+	static DWORD tt = 0;
 
 	// Initialize application specific hardware
 	InitializeBoard();
@@ -314,6 +309,7 @@ int main(void)
     // job.
     // If a task needs very long time to do its job, it must be broken
     // down into smaller pieces so that other tasks can have CPU time.
+    
     while(1)
     {
         // Blink LED0 (right most one) every second.
@@ -321,11 +317,13 @@ int main(void)
         {
             t = TickGet();
             LED0_IO ^= 1;
-            if(!AppConfig.Flags.bIsValidMontyIPAddr)
+            if(!AppConfig.Flags.bIsValidMontyIPAddr){
             	//AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;
-                SendRequestIP();
+            	SendRequestIP();                	
+                //AnnounceIP();
+            }                
         }
-
+		  
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.

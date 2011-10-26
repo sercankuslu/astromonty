@@ -239,8 +239,8 @@ void BerkeleyTCPClientDemo(void)
             
         case BSD_DONE:
         	ST_STATE = 0;
-            if(AppConfig.Flags.bIsValidMontyIPAddr)
-            	BSDClientState = DNS_START_RESOLUTION;
+            //if(AppConfig.Flags.bIsValidMontyIPAddr)
+            	//BSDClientState = DNS_START_RESOLUTION;
             break;
          
         default:
