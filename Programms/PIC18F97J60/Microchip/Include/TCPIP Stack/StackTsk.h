@@ -100,6 +100,7 @@ typedef struct __attribute__((__packed__))
 	IP_ADDR		DefaultMask;            // Default subnet mask
 	BYTE		NetBIOSName[16];        // NetBIOS name
 	IP_ADDR		MontyIPAddr;			// IP addres of Monty
+	BYTE        MontyName[16];
 	struct
 	{
 		unsigned char : 4;
