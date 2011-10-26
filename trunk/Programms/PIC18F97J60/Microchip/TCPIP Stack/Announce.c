@@ -175,7 +175,7 @@ void AnnounceIP(void)
  ********************************************************************/
 void DiscoveryTask(void)
 {
-	static enum {
+        static enum {
 		DISCOVERY_HOME = 0,
 		DISCOVERY_LISTEN,
 		DISCOVERY_REQUEST_RECEIVED,
@@ -183,7 +183,9 @@ void DiscoveryTask(void)
 	} DiscoverySM = DISCOVERY_HOME;
 
 	static UDP_SOCKET	MySocket;
-	BYTE 				i;
+	BYTE buf[32];
+	WORD wDataLen;	
+    BYTE i;
 	switch(DiscoverySM)
 	{
 		case DISCOVERY_HOME:
@@ -206,11 +208,11 @@ void DiscoveryTask(void)
 				return;
 			
 			// See if this is a discovery query or reply
-			UDPGet(&i);
-			UDPDiscard();
-			if(i != 'D'){
-				// if(i == 'A') 
-				{
+			wDataLen = UDPGetArray(buf, sizeof(buf));
+            			
+			UDPDiscard();			
+			if(buf[0] != 'D'){
+				if(memcmp((void*)buf, (void*)AppConfig.MontyName, wDataLen) == 0u) {
 					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;
 					memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
 				}else return;

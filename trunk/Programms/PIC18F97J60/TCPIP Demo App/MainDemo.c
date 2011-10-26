@@ -1023,50 +1023,10 @@ static void InitAppConfig(void)
 		AppConfig.PrimaryDNSServer.Val = MY_DEFAULT_PRIMARY_DNS_BYTE1 | MY_DEFAULT_PRIMARY_DNS_BYTE2<<8ul  | MY_DEFAULT_PRIMARY_DNS_BYTE3<<16ul  | MY_DEFAULT_PRIMARY_DNS_BYTE4<<24ul;
 		AppConfig.SecondaryDNSServer.Val = MY_DEFAULT_SECONDARY_DNS_BYTE1 | MY_DEFAULT_SECONDARY_DNS_BYTE2<<8ul  | MY_DEFAULT_SECONDARY_DNS_BYTE3<<16ul  | MY_DEFAULT_SECONDARY_DNS_BYTE4<<24ul;
 		AppConfig.MontyIPAddr.Val = 0x00000000;
-	
-		// SNMP Community String configuration
-		#if defined(STACK_USE_SNMP_SERVER)
-		{
-			BYTE i;
-			static ROM char * ROM cReadCommunities[] = SNMP_READ_COMMUNITIES;
-			static ROM char * ROM cWriteCommunities[] = SNMP_WRITE_COMMUNITIES;
-			ROM char * strCommunity;
+		// Load the default NetBIOS Monty Base Name
+    	memcpypgm2ram(AppConfig.MontyName, (ROM void*)MY_DEFAULT_MONTY_NAME, 16);
+		FormatNetBIOSName(AppConfig.MontyName);
 			
-			for(i = 0; i < SNMP_MAX_COMMUNITY_SUPPORT; i++)
-			{
-				// Get a pointer to the next community string
-				strCommunity = cReadCommunities[i];
-				if(i >= sizeof(cReadCommunities)/sizeof(cReadCommunities[0]))
-					strCommunity = "";
-	
-				// Ensure we don't buffer overflow.  If your code gets stuck here, 
-				// it means your SNMP_COMMUNITY_MAX_LEN definition in TCPIPConfig.h 
-				// is either too small or one of your community string lengths 
-				// (SNMP_READ_COMMUNITIES) are too large.  Fix either.
-				if(strlenpgm(strCommunity) >= sizeof(AppConfig.readCommunity[0]))
-					while(1);
-				
-				// Copy string into AppConfig
-				strcpypgm2ram((char*)AppConfig.readCommunity[i], strCommunity);
-	
-				// Get a pointer to the next community string
-				strCommunity = cWriteCommunities[i];
-				if(i >= sizeof(cWriteCommunities)/sizeof(cWriteCommunities[0]))
-					strCommunity = "";
-	
-				// Ensure we don't buffer overflow.  If your code gets stuck here, 
-				// it means your SNMP_COMMUNITY_MAX_LEN definition in TCPIPConfig.h 
-				// is either too small or one of your community string lengths 
-				// (SNMP_WRITE_COMMUNITIES) are too large.  Fix either.
-				if(strlenpgm(strCommunity) >= sizeof(AppConfig.writeCommunity[0]))
-					while(1);
-	
-				// Copy string into AppConfig
-				strcpypgm2ram((char*)AppConfig.writeCommunity[i], strCommunity);
-			}
-		}
-		#endif
-	
 		// Load the default NetBIOS Host Name
 		memcpypgm2ram(AppConfig.NetBIOSName, (ROM void*)MY_DEFAULT_HOST_NAME, 16);
 		FormatNetBIOSName(AppConfig.NetBIOSName);
