@@ -57,7 +57,7 @@
 #include "../../dsPIC33/protocol.h"
 
 #define PORTNUM 9764
-static ROM BYTE ServerName[] =  "192.168.1.2";
+static ROM BYTE ServerName[] =  MY_DEFAULT_MONTY_NAME;
 // This is specific to this HTTP Client example
 static BYTE sendRequest[] = "";//GET /search?as_q=Microchip&as_sitesearch=microchip.com HTTP/1.0\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
 static BYTE Blob[]  = {	STA_COMMAND, sizeof(BYTE),STC_REQEST_CONNECT};
@@ -109,7 +109,17 @@ void BerkeleyTCPClientDemo(void)
         BSD_CLOSE,
         BSD_DONE
     } BSDClientState = BSD_DONE;
-	static BYTE ST_STATE = 0;
+	static  enum 
+	{
+		ST_REQUEST_CONNECT = 0,
+		ST_WAIT_CONNECT,
+		ST_REQUEST_AUTH,
+		ST_WAIT_AUTH,
+		ST_REQUEST_DATA,
+		ST_WAIT_DATA,
+		ST_SEND_DATA,
+		ST_WAIT_ANSWER
+	} ST_STATE = ST_REQUEST_CONNECT;
     switch(BSDClientState)
     {
 	    case DNS_START_RESOLUTION:
@@ -163,10 +173,7 @@ void BerkeleyTCPClientDemo(void)
             while(1)
             {
 				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
-
-                //if(i == 0)
-					//break;
-                
+				
                 if(i< 0) //error condition
                 {
                     BSDClientState = BSD_CLOSE;
@@ -174,13 +181,13 @@ void BerkeleyTCPClientDemo(void)
                     break;
                 } else {
                 	switch(ST_STATE){
-	                case 0:
+	                case ST_REQUEST_CONNECT:
 						BlobLen = sizeof(Blob);					
 						memcpy(recvBuffer,Blob,BlobLen);
 						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
 						ST_STATE++;						
 						break;
-					case 1:
+					case ST_WAIT_CONNECT:
 						if(i==0) break;
 						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
 						if(res != STR_OK){
@@ -190,13 +197,13 @@ void BerkeleyTCPClientDemo(void)
 							ST_STATE++;
 						}
 						break;	
-					case 2:
+					case ST_REQUEST_AUTH:
 						BlobLen = sizeof(Blob2);
 						memcpy(Blob,Blob2,BlobLen);
 						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
 						ST_STATE++;						
 						break;
-					case 3:
+					case ST_WAIT_AUTH:
 						if(i==0) break;
 						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
 						if(res != STR_OK){
@@ -206,13 +213,13 @@ void BerkeleyTCPClientDemo(void)
 							ST_STATE++;
 						}
 						break;
-					case 4:
+					case ST_REQUEST_DATA:
 						BlobLen = sizeof(Blob3);					
 						memcpy(Blob,Blob3,BlobLen);											
 						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
 						ST_STATE++;						
 						break;
-					case 5:
+					case ST_WAIT_DATA:
 						if(i==0) break;
 						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
 						if(res != STR_OK){
@@ -222,7 +229,9 @@ void BerkeleyTCPClientDemo(void)
 							ST_STATE++;
 						}
 						break;
-					default: ST_STATE = 0;	
+					default: 
+						ST_STATE = ST_REQUEST_CONNECT;
+						BSDClientState = BSD_CLOSE;						
 					};
                 }
                                
@@ -239,8 +248,11 @@ void BerkeleyTCPClientDemo(void)
             
         case BSD_DONE:
         	ST_STATE = 0;
-            //if(AppConfig.Flags.bIsValidMontyIPAddr)
+            if(AppConfig.Flags.bIsValidMontyIPAddr == 1){
             	//BSDClientState = DNS_START_RESOLUTION;
+            	addr.sin_addr.S_un.S_addr = AppConfig.MontyIPAddr.Val;
+            	BSDClientState = BSD_START;
+            }	
             break;
          
         default:
