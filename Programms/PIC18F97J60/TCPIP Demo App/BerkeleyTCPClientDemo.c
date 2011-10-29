@@ -60,15 +60,7 @@
 static ROM BYTE ServerName[] =  MY_DEFAULT_MONTY_NAME;
 // This is specific to this HTTP Client example
 static BYTE sendRequest[] = "";//GET /search?as_q=Microchip&as_sitesearch=microchip.com HTTP/1.0\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
-static BYTE Blob[]  = {	STA_COMMAND, sizeof(BYTE),STC_REQEST_CONNECT};
-static BYTE Blob2[] = {	STA_COMMAND,  sizeof(BYTE), STC_REQEST_AUTH, 
-						STA_LOGIN,    4, 'r','o','o','t',
-						STA_PASSWORD, 4, 'p','a','s','s'
-};
-static BYTE Blob3[] = {	STA_COMMAND,  		sizeof(BYTE), STC_REQEST_DATA, 
-						STA_NETWORK_ADDRESS, 0x00, 
-};
-BYTE BlobLen;
+
 
 /*********************************************************************
  * Function:        void BerkeleyTCPClientDemo(void)
@@ -92,12 +84,10 @@ void BerkeleyTCPClientDemo(void)
     static struct sockaddr_in addr;
     BYTE recvBuffer[64];
     int i;
+    BYTE j;
     int addrlen;
    	BYTE res = 0;
-   	BYTE pbMem[MEM_BUFFER_LEN];
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];   
-    BYTE bAttributeLen = 0;
-    BYTE bMemPos = 0;    
+    BYTE BlobLen;
     static enum
     {
         DNS_START_RESOLUTION = 0,
@@ -109,17 +99,7 @@ void BerkeleyTCPClientDemo(void)
         BSD_CLOSE,
         BSD_DONE
     } BSDClientState = BSD_DONE;
-	static  enum 
-	{
-		ST_REQUEST_CONNECT = 0,
-		ST_WAIT_CONNECT,
-		ST_REQUEST_AUTH,
-		ST_WAIT_AUTH,
-		ST_REQUEST_DATA,
-		ST_WAIT_DATA,
-		ST_SEND_DATA,
-		ST_WAIT_ANSWER
-	} ST_STATE = ST_REQUEST_CONNECT;
+	
     switch(BSDClientState)
     {
 	    case DNS_START_RESOLUTION:
@@ -168,86 +148,36 @@ void BerkeleyTCPClientDemo(void)
             BSDClientState = BSD_OPERATION;
             break;
         
-        case BSD_OPERATION:
-            // Obtian and print the server reply
+        case BSD_OPERATION:            
             while(1)
             {
 				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
-				
-                if(i< 0) //error condition
-                {
-                    BSDClientState = BSD_CLOSE;
-                    ST_STATE = 0;
+				send(bsdClientSocket, recvBuffer, BlobLen, 0); 
+                if(i< 0) { //error condition                
+                    BSDClientState = BSD_CLOSE;                    
                     break;
-                } else {
-                	switch(ST_STATE){
-	                case ST_REQUEST_CONNECT:
-						BlobLen = sizeof(Blob);					
-						memcpy(recvBuffer,Blob,BlobLen);
-						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
-						ST_STATE++;						
-						break;
-					case ST_WAIT_CONNECT:
-						if(i==0) break;
-						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
-						if(res != STR_OK){
-							BSDClientState = BSD_CLOSE;
-                    		ST_STATE = 0;
-						} else {
-							ST_STATE++;
-						}
-						break;	
-					case ST_REQUEST_AUTH:
-						BlobLen = sizeof(Blob2);
-						memcpy(Blob,Blob2,BlobLen);
-						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
-						ST_STATE++;						
-						break;
-					case ST_WAIT_AUTH:
-						if(i==0) break;
-						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
-						if(res != STR_OK){
-							BSDClientState = BSD_CLOSE;
-                    		ST_STATE = 0;
-						} else {
-							ST_STATE++;
-						}
-						break;
-					case ST_REQUEST_DATA:
-						BlobLen = sizeof(Blob3);					
-						memcpy(Blob,Blob3,BlobLen);											
-						send(bsdClientSocket, recvBuffer, BlobLen, 0); 
-						ST_STATE++;						
-						break;
-					case ST_WAIT_DATA:
-						if(i==0) break;
-						res = ParseBlob(recvBuffer, BlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
-						if(res != STR_OK){
-							BSDClientState = BSD_CLOSE;
-                    		ST_STATE = 0;
-						} else {
-							ST_STATE++;
-						}
-						break;
-					default: 
-						ST_STATE = ST_REQUEST_CONNECT;
-						BSDClientState = BSD_CLOSE;						
-					};
-                }
-                               
-                if(BSDClientState == BSD_OPERATION)
-                    break;
+                } 
+                res = RunClient(recvBuffer, sizeof(recvBuffer), &i);
+                switch(res){
+	            case STR_NEED_ANSWER:  
+	            	send(bsdClientSocket, recvBuffer, i, 0);
+	            case STR_OK:
+	            	break;
+	            case STR_NEED_DISCONNECT:
+	            	BSDClientState = BSD_CLOSE;
+	            default:
+	            	break;
+                }                
+				break;
             }
             break;
          
         case BSD_CLOSE:
             closesocket(bsdClientSocket);
-            BSDClientState = BSD_DONE;
-            ST_STATE = 0;
+            BSDClientState = BSD_DONE;           
             // No break needed
             
-        case BSD_DONE:
-        	ST_STATE = 0;
+        case BSD_DONE:        	
             if(AppConfig.Flags.bIsValidMontyIPAddr == 1){
             	//BSDClientState = DNS_START_RESOLUTION;
             	addr.sin_addr.S_un.S_addr = AppConfig.MontyIPAddr.Val;
