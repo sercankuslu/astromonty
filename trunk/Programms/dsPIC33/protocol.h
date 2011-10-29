@@ -2,15 +2,15 @@
 #define __PROTOCOL_H_
 #include "TCPIP Stack/TCPIP.h"
 
-// ���� ������
+// 
 #define STR_OK                              0
 #define STR_NEED_ANSWER                     1
 #define STR_NEED_DISCONNECT                 2
 #define STR_FUNCTION_FAILED                 6
 #define STR_BUFFER_TOO_SMALL                7
 #define STR_COMMAND_UNKNOWN                 8
-#define STR_DATA_CORRUPTED		         9
-// ��������� ����������
+#define STR_DATA_CORRUPTED					9
+// 
 #define STS_NO_CONNECT                      0
 #define STS_CONNECT_REQ                     1
 #define STS_AUTH_REQ                        2
@@ -87,4 +87,6 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
 BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
 BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
+BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
+BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
 #endif
