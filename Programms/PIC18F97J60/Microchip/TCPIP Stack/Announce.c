@@ -183,9 +183,13 @@ void DiscoveryTask(void)
 	} DiscoverySM = DISCOVERY_HOME;
 
 	static UDP_SOCKET	MySocket;
-	BYTE buf[32];
+	static BYTE buf[32];
 	WORD wDataLen;	
     BYTE i;
+    if(AppConfig.Flags.bNeedUpdateMontyIPAddr == 1){
+	    AppConfig.Flags.bNeedUpdateMontyIPAddr = 0;
+	    SendRequestIP();
+    }
 	switch(DiscoverySM)
 	{
 		case DISCOVERY_HOME:
@@ -210,13 +214,14 @@ void DiscoveryTask(void)
 			// See if this is a discovery query or reply
 			wDataLen = UDPGetArray(buf, sizeof(buf));
             			
-			UDPDiscard();			
-			if(buf[0] != 'D'){
-				if(memcmp((void*)buf, (void*)AppConfig.MontyName, wDataLen) == 0u) {
-					AppConfig.Flags.bIsValidMontyIPAddr = TRUE;
-					memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
-				}				
+			UDPDiscard();						
+			//i = memcmp((void*)&buf, (const void*)&AppConfig.MontyName, sizeof(AppConfig.MontyName));
+			if(buf[0] == 'A') {
+				AppConfig.Flags.bIsValidMontyIPAddr = 1;
+				memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
+			}				
 				//else 
+			if(buf[0] != 'D'){
 				return;
 			}
 		    if(memcmp((void*)&AppConfig.MyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr)) == 0u) 
@@ -306,15 +311,17 @@ void SendRequestIP(void)
 
 	// Open a UDP socket for outbound broadcast transmission
 	
-	MySocket1 = UDPOpen(30302, NULL, ANNOUNCE_PORT);
+	MySocket1 = UDPOpen(30303, NULL, ANNOUNCE_PORT);
 		
 
 	// Abort operation if no UDP sockets are available
 	// If this ever happens, incrementing MAX_UDP_SOCKETS in 
 	// StackTsk.h may help (at the expense of more global memory 
 	// resources).
-	if(MySocket1 == INVALID_UDP_SOCKET)
+	if(MySocket1 == INVALID_UDP_SOCKET){
+		Nop();
 		return;
+	}	
 
 	// Make certain the socket can be written to
 	while(!UDPIsPutReady(MySocket1));

@@ -313,13 +313,13 @@ int main(void)
     while(1)
     {
         // Blink LED0 (right most one) every second.
-        if(TickGet() - t >= TICK_SECOND/2ul)
+        if(TickGet() - t >= TICK_SECOND)
         {
             t = TickGet();
             LED0_IO ^= 1;
-            if(!AppConfig.Flags.bIsValidMontyIPAddr){
-            	//AppConfig.Flags.bNeedUpdateMontyIPAddr = TRUE;
-            	SendRequestIP();                	
+            if(AppConfig.Flags.bIsValidMontyIPAddr == 0){
+            	AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;
+            	//SendRequestIP();                	
                 //AnnounceIP();
             }                
         }
