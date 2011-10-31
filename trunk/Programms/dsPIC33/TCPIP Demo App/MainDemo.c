@@ -269,10 +269,9 @@ int main(void)
 	char bfr[64];
     int length=0;
 	while(1){
-		res = RunClient(bfr, sizeof(bfr), &length);
-		if(res == STR_NEED_ANSWER){
-			res = ProcessClients(0, bfr, &length);
-		}		
+		res = RunClient(bfr, sizeof(bfr), &length);		
+		res = ProcessClients(0, bfr, &length);
+			
 	}
 
 
