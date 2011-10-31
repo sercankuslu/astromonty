@@ -109,7 +109,7 @@ BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType)
     }   
     return 255;
 } 
-#ifdef PROTOCOL_USE_SERVER
+
 /******************************************************************************
 *
 *
@@ -238,7 +238,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     return res;
 }
 
-#else //#ifdef PROTOCOL_USE_SERVER
+
 /******************************************************************************
 * Function				RunClient 
 * Params:
@@ -252,8 +252,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
 ******************************************************************************/
 BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 {
-	static  enum 
-	{
+	static  enum {
 		ST_REQUEST_CONNECT = 0,
 		ST_WAIT_CONNECT,
 		ST_REQUEST_AUTH,
@@ -355,4 +354,4 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 	return res;                          
 }
 
-#endif //#ifdef PROTOCOL_USE_SERVER
+

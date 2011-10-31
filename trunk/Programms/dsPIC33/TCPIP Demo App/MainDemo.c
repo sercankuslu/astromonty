@@ -265,29 +265,17 @@ int main(void)
 	resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 	
     }
-	//char login[] = "root";
-	//char pass[] = "pass";
-	/*
-	BYTE Blob[30] = {STA_COMMAND,sizeof(BYTE),STC_REQEST_CONNECT};
-	BYTE BlobLen = 3;
-	ProcessClients(0, Blob, &BlobLen);
-	BYTE Blob2[] = {STA_COMMAND,  sizeof(BYTE), STC_REQEST_AUTH, 
-					STA_LOGIN,    4, 'r','o','o','t',
-					STA_PASSWORD, 4, 'p','a','s','s'
-					};
-	BlobLen = sizeof(Blob2);
-	memcpy(Blob,Blob2,BlobLen);
-        ProcessClients(0, Blob, &BlobLen);
+	BYTE res;
+	char bfr[64];
+    int length=0;
+	while(1){
+		res = RunClient(bfr, sizeof(bfr), &length);
+		if(res == STR_NEED_ANSWER){
+			res = ProcessClients(0, bfr, &length);
+		}		
+	}
 
-	BYTE Blob3[] = {STA_COMMAND,  		sizeof(BYTE), STC_REQEST_DATA, 
-				    STA_NETWORK_ADDRESS, 0x00, 
-					};
-	BlobLen = sizeof(Blob3);					
-	memcpy(Blob,Blob3,BlobLen);					
-	AppConfig.MyIPAddr.Val = 0xC0A80137;			
-	
-        ProcessClients(0, Blob, &BlobLen);
-	*/
+
     /*
     // calculate CPU speed  
     T6CON = 0x0002;
