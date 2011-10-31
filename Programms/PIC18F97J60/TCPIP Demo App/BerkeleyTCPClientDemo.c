@@ -152,7 +152,7 @@ void BerkeleyTCPClientDemo(void)
             while(1)
             {
 				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
-				send(bsdClientSocket, recvBuffer, BlobLen, 0); 
+				//send(bsdClientSocket, recvBuffer, BlobLen, 0); 
                 if(i< 0) { //error condition                
                     BSDClientState = BSD_CLOSE;                    
                     break;
@@ -163,9 +163,9 @@ void BerkeleyTCPClientDemo(void)
 	            	send(bsdClientSocket, recvBuffer, i, 0);
 	            case STR_OK:
 	            	break;
-	            case STR_NEED_DISCONNECT:
-	            	BSDClientState = BSD_CLOSE;
+	            case STR_NEED_DISCONNECT:	            	
 	            default:
+	            	BSDClientState = BSD_CLOSE;
 	            	break;
                 }                
 				break;
