@@ -265,14 +265,14 @@ int main(void)
 	resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
 	
     }
-	BYTE res;
-	char bfr[64];
-    int length=0;
-	while(1){
-		res = RunClient(bfr, sizeof(bfr), &length);		
-		res = ProcessClients(0, bfr, &length);
-			
-	}
+	//BYTE res;
+	//char bfr[64];
+    //BYTE length=0;
+    //AppConfig.MyIPAddr.Val = 0x12345678;
+	//while(1){
+	//	res = RunClient(bfr, sizeof(bfr), &length);		
+	//	res = ProcessClients(0, bfr, &length);			
+	//}
 
 
     /*

@@ -6,16 +6,23 @@ typedef struct ST_CONNECTION {
 }ST_CONNECTION;
 #define MAX_CONNECTIONS 5
 ST_CONNECTION Connection[MAX_CONNECTIONS];
-
-static BYTE RequestConnectBlob[]  = {	STA_COMMAND, sizeof(BYTE),STC_REQEST_CONNECT};
-static BYTE RequestAuthBlob[] = {	STA_COMMAND,  sizeof(BYTE), STC_REQEST_AUTH, 
-						STA_LOGIN,    4, 'r','o','o','t',
-						STA_PASSWORD, 4, 'p','a','s','s'
+static BYTE connectreq = STC_REQEST_CONNECT;
+static BYTE authreq = STC_REQEST_AUTH;
+static BYTE datareq = STC_REQEST_DATA;
+static ST_ATTRIBUTE RequestConnect[] = {
+	{STA_COMMAND, sizeof(BYTE), &connectreq},
 };
-static BYTE RequestDataBlob[] = {	STA_COMMAND,  		sizeof(BYTE), STC_REQEST_DATA, 
-						STA_NETWORK_ADDRESS, 0x00, 
+static char* Login = "root";
+static char* Password = "pass";
+static ST_ATTRIBUTE RequestAuth[] = {
+	{STA_COMMAND,  sizeof(BYTE), &authreq},
+	{STA_LOGIN,  0, 0},
+	{STA_PASSWORD,  0, 0},
 };
-
+static ST_ATTRIBUTE RequestData[] = {
+	{STA_COMMAND,  sizeof(BYTE), &datareq},
+	{STA_NETWORK_ADDRESS,  0, NULL},
+};
 
 /******************************************************************************
 *
@@ -57,7 +64,7 @@ BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE 
     BYTE bHead;
     BYTE j = 0;	
     bHead = sizeof(ST_ATTRIBUTE_TYPE) + sizeof(BYTE);
-    for(i = 0; i < bBlockLen; i++){
+    for(i = 0; i < bBlockLen; ){
         if(i + bHead > bBlockLen) return STR_DATA_CORRUPTED;
         pAttribute[j].type = pbBlock[i++];
         pAttribute[j].ulValueLen = pbBlock[i++];
@@ -139,7 +146,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     ST_ATTRIBUTE SendData[] = {
         {0,  0, 0 }
     };
-
+	if(*pbBlobLen == 0) return STR_OK;
     memset(pbMem,0,sizeof(pbMem));
     memset(Data,0,sizeof(Data));
     res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
@@ -192,7 +199,7 @@ BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
 		        	break;
 		        case STA_NETWORK_ADDRESS:  
 		        	SendData[0].type = STA_NETWORK_ADDRESS;
-		        	SendData[0].ulValueLen = sizeof(AppConfig.MyIPAddr);
+		        	SendData[0].ulValueLen = sizeof(AppConfig.MyIPAddr.Val);
 		        	SendData[0].pValue = &AppConfig.MyIPAddr.Val;
 		        	res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);       
         			if(res!=STR_OK){
@@ -266,8 +273,9 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 	BYTE bAttributeLen = 0;
 	BYTE pbMem[MEM_BUFFER_LEN];
 	BYTE bMemPos = 0;	
+	BYTE bBlockPos = NULL;
 	static BYTE res = STR_OK;
-	BYTE BlobLen;
+	BYTE AttrLen;
 	BYTE j;
 	BYTE* Answer;
 	while(1){	
@@ -278,8 +286,8 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 		} 		
 		switch(ST_STATE){
 		case ST_REQUEST_CONNECT:
-			BlobLen = sizeof(RequestConnectBlob);					
-			memcpy(pbBlob, RequestConnectBlob, BlobLen);
+			AttrLen = 1;	
+			res = FormBlob(RequestConnect, AttrLen, pbBlob, bBlobLen, &bBlockPos);			
 			res = STR_NEED_ANSWER;			
 			ST_STATE++;						
 		break;
@@ -313,9 +321,15 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 		   		}							
 	   		}
 			break;	
-		case ST_REQUEST_AUTH:
-			BlobLen = sizeof(RequestAuthBlob);
-			memcpy(pbBlob,RequestAuthBlob,BlobLen);						
+		case ST_REQUEST_AUTH:			
+			AttrLen = 3;	
+			j = FindParam(RequestAuth,AttrLen,STA_LOGIN);
+			RequestAuth[j].pValue = Login;
+			RequestAuth[j].ulValueLen = strlen(Login);
+			j = FindParam(RequestAuth,AttrLen,STA_PASSWORD);
+			RequestAuth[j].pValue = Password;
+			RequestAuth[j].ulValueLen = strlen(Password);
+			res = FormBlob(RequestAuth, AttrLen, pbBlob, bBlobLen, &bBlockPos);				
 			res = STR_NEED_ANSWER; 
 			ST_STATE++;						
 			break;
@@ -329,8 +343,8 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 			}
 			break;
 		case ST_REQUEST_DATA:
-			BlobLen = sizeof(RequestDataBlob);					
-			memcpy(pbBlob, RequestDataBlob, BlobLen);											
+			AttrLen = 2;	
+			res = FormBlob(RequestData, AttrLen, pbBlob, bBlobLen, &bBlockPos);										
 			res = STR_NEED_ANSWER; 
 			ST_STATE++;						
 			break;
@@ -349,7 +363,9 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
 		break;
 	}		
 	if(res == STR_NEED_ANSWER){
-		*pbDataLength = BlobLen;
+		*pbDataLength = bBlockPos;
+	} else {
+		*pbDataLength = 0;
 	}
 	return res;                          
 }
