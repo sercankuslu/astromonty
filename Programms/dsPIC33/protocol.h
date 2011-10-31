@@ -86,7 +86,7 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 #define MAX_BUFFER_LEN 64
 BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
 BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
-BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
+BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
-#endif
+#endif //__PROTOCOL_H_
