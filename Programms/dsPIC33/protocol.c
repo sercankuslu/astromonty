@@ -25,14 +25,16 @@ static ST_ATTRIBUTE RequestData[] = {
 };
 
 #if defined(__18CXX)
-#pragma udata ATTRIBUTE =0x600
+#pragma udata INC_DATA =0x500
 #endif
-static ST_ATTRIBUTE Attributes[64];
+static ST_ATTRIBUTE IncomingData[16];
 #if defined(__18CXX)
-#pragma udata MEMORY =0x500
+#pragma udata MEMORY =0x540
 #endif
-static BYTE Memory[256];
+static BYTE IncomingMemory[64];
 #pragma udata
+static BYTE bAttributeCount = 0;
+static BYTE bMemoryPos = 0;
 
 /******************************************************************************
 *
@@ -142,12 +144,8 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     BYTE j = 0;
     BYTE Command = 0;
     BOOL NeedAnswer = FALSE;
-    BYTE Answers = 0;
-
-    BYTE bAttributeLen = 0;
-    BYTE pbMem[MEM_BUFFER_LEN];
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE bMemPos = 0;
+    BYTE Answers = 0;    
+    ST_ATTRIBUTE IncomingData[MAX_ATTRIBUTE];    
     BYTE bBlobPos = 0;
 
     ST_ATTRIBUTE Answer[] = {
@@ -157,13 +155,13 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         {0,  0, 0 }
     };
     if(*pbBlobLen == 0) return STR_OK;
-    memset(pbMem,0,sizeof(pbMem));
-    memset(Data,0,sizeof(Data));
-    res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
+    memset(IncomingMemory,0,sizeof(IncomingMemory));
+    memset(IncomingData,0,sizeof(IncomingData));
+    res = ParseBlob(pbBlob, *pbBlobLen, IncomingData, &bAttributeCount, IncomingMemory, sizeof(IncomingMemory), &bMemoryPos);
     if(res!=STR_OK) return res;  
-    i = FindParam(Data, bAttributeLen, STA_COMMAND); 
+    i = FindParam(IncomingData, bAttributeCount, STA_COMMAND); 
     if(i==255) return STR_COMMAND_UNKNOWN;
-    Command = *((BYTE*)Data[i].pValue);	
+    Command = *((BYTE*)IncomingData[i].pValue);	
     switch(Connection[bConnectionID].Mode){
     case STS_NO_CONNECT:
         if(Command == STC_REQEST_CONNECT) {
@@ -176,8 +174,8 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         break;
     case STS_AUTH_REQ:
         if(Command == STC_REQEST_AUTH) {
-            BYTE login = FindParam(Data, bAttributeLen, STA_LOGIN);
-            BYTE password = FindParam(Data, bAttributeLen, STA_PASSWORD); 
+            BYTE login = FindParam(IncomingData, bAttributeCount, STA_LOGIN);
+            BYTE password = FindParam(IncomingData, bAttributeCount, STA_PASSWORD); 
             if((login == 255)||(password == 255)) {
                 Answers = STF_COMMAND_INCOMPLETE;
                 Connection[bConnectionID].Mode = STS_NO_CONNECT;
@@ -200,8 +198,8 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     case STS_CONNECTED:
         switch(Command){
     case STC_REQEST_DATA:
-        for(j = 0; j < bAttributeLen; j++){
-            switch (Data[j].type){
+        for(j = 0; j < bAttributeCount; j++){
+            switch (IncomingData[j].type){
     case STA_COMMAND:
     case STA_FLAG:
     case STA_LOGIN:
@@ -214,7 +212,7 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
         if(res!=STR_OK){
             Answers = STF_DATA_ERROR;
-            i = bAttributeLen; // interrupt process
+            i = bAttributeCount; // interrupt process
             *pbBlobLen = 0;
             bBlobPos = 0;	
         }else {
@@ -224,7 +222,7 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         break;
     default:
         Answers = STF_DATA_TYPE_UNKNOWN;
-        i = bAttributeLen; // interrupt process
+        i = bAttributeCount; // interrupt process
         *pbBlobLen = 0;
         bBlobPos = 0;
             };
@@ -278,18 +276,13 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
         ST_WAIT_DATA,
         ST_SEND_DATA,
         ST_WAIT_ANSWER
-    } ST_STATE = ST_REQUEST_CONNECT;
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE bAttributeLen = 0;
-    BYTE pbMem[MEM_BUFFER_LEN];
-    BYTE bMemPos = 0;	
+    } ST_STATE = ST_REQUEST_CONNECT;   
+    BYTE bAttributeCount = 0;    
     BYTE bBlockPos = NULL;
     static BYTE res = STR_OK;
     BYTE AttrLen;
     BYTE j;
-    BYTE* Answer;
-    memset(Attributes,0,256);
-    memset(Memory,0,256);
+    BYTE* Answer;    
     while(1){
         if(*pbDataLength< 0){
             ST_STATE = 0;
@@ -305,20 +298,20 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
             break;
         case ST_WAIT_CONNECT:
             if(*pbDataLength==0) break;
-            res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
+            res = ParseBlob(pbBlob, *pbDataLength, IncomingData, &bAttributeCount, IncomingMemory, sizeof(IncomingMemory), &bMemoryPos);
             if(res != STR_OK){
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             } 
-            j = FindParam(Data,bAttributeLen,STA_FLAG);
+            j = FindParam(IncomingData,bAttributeCount,STA_FLAG);
             if(j==255){
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             }
-            if((Data[j].type == STA_FLAG)&&
-                (Data[j].ulValueLen == sizeof(BYTE)))
+            if((IncomingData[j].type == STA_FLAG)&&
+                (IncomingData[j].ulValueLen == sizeof(BYTE)))
             {
-                Answer = (BYTE*)Data[j].pValue;
+                Answer = (BYTE*)IncomingData[j].pValue;
                 switch(*Answer){
         case STF_AUTH_NEEDED:
             ST_STATE = ST_REQUEST_AUTH;
@@ -347,7 +340,7 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
             break;
         case ST_WAIT_AUTH:
             if(*pbDataLength==0) break;
-            res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
+            res = ParseBlob(pbBlob, *pbDataLength, IncomingData, &bAttributeCount, IncomingMemory, sizeof(IncomingMemory), &bMemoryPos);
             if(res != STR_OK){
                 ST_STATE = 0;
             } else {
@@ -362,7 +355,7 @@ BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
             break;
         case ST_WAIT_DATA:
             if(*pbDataLength==0) break;
-            res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
+            res = ParseBlob(pbBlob, *pbDataLength, IncomingData, &bAttributeCount, IncomingMemory, sizeof(IncomingMemory), &bMemoryPos);
             if(res != STR_OK){
                 ST_STATE = 0;
             } else {
