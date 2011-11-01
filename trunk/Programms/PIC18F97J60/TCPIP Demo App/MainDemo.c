@@ -99,7 +99,12 @@
 #if defined(STACK_USE_ZEROCONF_MDNS_SD)
 #include "TCPIP Stack/ZeroconfMulticastDNS.h"
 #endif
-
+#define USE_OR_MASKS
+#include <p18cxxx.h>
+#include <i2c.h>
+#include <timers.h>
+#include <pwm.h>
+#include <flash.h>
 // Include functions specific to this stack application
 #include "MainDemo.h"
 #include "DisplayBuffer.h"
@@ -214,7 +219,7 @@ BYTE IsDownKey()
 	void LowISR(void)
 	#endif
 	{
-	    TickUpdate();            
+	   	TickUpdate(); 	          
 	}
 	
 	#if defined(HI_TECH_C)
@@ -224,7 +229,8 @@ BYTE IsDownKey()
 	void HighISR(void)
 	#endif
 	{
-	    LCDUpdate();
+	    //TickUpdate();
+		LCDUpdate();  			    
 	}
 
 	#if !defined(HI_TECH_C)
@@ -259,7 +265,50 @@ BYTE IsDownKey()
 	}
 #endif
 
+void InitTimerAndPWM()
+{
+	//CCP5
+	char period=0x00;
+    unsigned char outputconfig=0;
+    unsigned char outputmode=0;
+    unsigned char config=0;
+    unsigned int duty_cycle=0;
+    //Timer0
+    unsigned char config0=0x00;
+    unsigned int timer0_value=0x00;
+    //Timer1    
+    unsigned char config1=0x00;
+    unsigned int timer1_value=0x00;
+    //Timer2    
+    unsigned char config2=0x00;
+    unsigned int timer2_value=0x00;
+    //----Configure Timer1----
+    timer1_value = 0x00;    
+    WriteTimer1(timer1_value);            //clear timer if previously contains any value
+        
+    config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
+    OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
+    IPR1bits.TMR1IP = 1; // HIGH
+    PIR1bits.TMR1IF = 0; 
+    PIE1bits.TMR1IE = 1;
+    
+    //----Configure Timer2----
+    timer2_value = 0x00;    
+    WriteTimer2(timer2_value);            //clear timer if previously contains any value
 
+    config2 =  T2_POST_1_16 | T2_PS_1_16 | TIMER_INT_OFF;
+    OpenTimer2(config2);                //API configures the tmer1 as per user defined parameters
+
+    SetTmrCCPSrc(T12_SOURCE_CCP);
+    
+    //----Configure pwm ----
+    period = 0xFF;
+    OpenPWM5( period);            //Configure PWM module and initialize PWM period
+
+    //-----set duty cycle----
+    duty_cycle = 0x0F00;
+    SetDCPWM5(duty_cycle);        //set the duty cycle
+}
 //
 // Main application entry point.
 //
@@ -277,11 +326,16 @@ int main(void)
 	// Initialize application specific hardware
     unsigned char Text[20] = "Testing";
     BYTE count;
-    InitializeBoard();
+        
     pcfLCDInit(add1);
     DisplayInit();
+    InitializeBoard();
+    OutTextXY(0,0,Text,0);
+	
+	OutTextXY(0,15,Text,1);    
     DisplayDraw(add1);
-
+	
+	
 	// Initialize stack-related hardware components that may be 
 	// required by the UART configuration routines
     TickInit();
@@ -291,7 +345,7 @@ int main(void)
 
 	// Initialize Stack and application related NV variables into AppConfig.
 	InitAppConfig();
-
+	
     // Initiates board setup process if button is depressed 
 	// on startup
     if(BUTTON0_IO == 0u)
@@ -369,6 +423,9 @@ int main(void)
     mDNSMulticastFilterRegister();			
 	#endif
 	LED0_TRIS = 0;
+	InitTimerAndPWM();
+	INTCONbits.PEIE_GIEL = 1;
+	INTCONbits.GIE_GIEH  = 1;
 	// Now that all items are initialized, begin the co-operative
 	// multitasking loop.  This infinite loop will continuously 
 	// execute all stack-related tasks, as well as your own
@@ -392,13 +449,14 @@ int main(void)
             	AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;
             	//SendRequestIP();                	
                 //AnnounceIP();
+            }    
             UpdateKey();
             if(IsUpKey()) y++;
             if(IsRightKey()) x++;
             if(IsDownKey()) y--;
             if (IsLeftKey())x--;
             OutTextXY(x,y,Text,1);
-            }                
+                            
         }
 		  
         // This task performs normal stack task including checking

@@ -15,6 +15,7 @@ static BYTE DisplayBuffer3[256];
 #pragma udata DISPLAY4 =0xC00
 static BYTE DisplayBuffer4[40];
 #pragma udata
+
 void DisplayInit()
 {
     DisplayClear();
