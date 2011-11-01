@@ -102,6 +102,8 @@
 
 // Include functions specific to this stack application
 #include "MainDemo.h"
+#include "DisplayBuffer.h"
+#include "pcf8535.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -110,6 +112,8 @@
 APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
+static BYTE CKeys=0;
+static BYTE add1 = PCF8535_BUS_ADDRESS;
 
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
@@ -123,10 +127,80 @@ BYTE AN0String[8];
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
+
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
 
+
+
+void LCDUpdate(void){
+    if(PIR1bits.TMR1IF)
+    {	    
+        DisplayDraw(add1);
+        PIR1bits.TMR1IF=0;
+    }
+}
+
+
+void UpdateKey()
+{
+    BYTE i;
+    BYTE j;		
+    static BYTE a = 0;
+    static BYTE b = 0;
+    static BYTE k = 0;
+    TRISBbits.TRISB1 = 1;
+    TRISBbits.TRISB2 = 1;
+    TRISBbits.TRISB3 = 1;
+    TRISBbits.TRISB4 = 1;
+
+    TRISD=0x07; //порт D на чтение строки 1-3
+    TRISBbits.TRISB5 = 1;  //строка 4
+    LATD = 0x07; //
+    LATBbits.LATB5 = 1;
+
+    TRISDbits.TRISD0 = 0; //первая строка
+    Nop();
+    a=(PORTB>>1);
+    TRISDbits.TRISD0 = 1; //первая строка
+    Nop();
+    TRISDbits.TRISD1 = 0; //вторая строка
+    Nop();
+    b=(PORTB<<3);
+    TRISDbits.TRISD1 = 1; //вторая строка
+    k=a&0x0F;
+    k|=b&0xF0;
+    CKeys = k;
+}
+BYTE IsRightKey()
+{
+    if((CKeys&KEY_RIGHT)>0){
+        return 1;
+    }
+    return 0;
+}
+BYTE IsLeftKey()
+{
+    if((CKeys&KEY_LEFT)>0){
+        return 1;
+    }
+    return 0;
+}
+BYTE IsUpKey()
+{
+    if((CKeys&KEY_UP)>0){
+        return 1;
+    }
+    return 0;
+}
+BYTE IsDownKey()
+{
+    if((CKeys&KEY_DOWN)>0){
+        return 1;
+    }
+    return 0;
+}
 //
 // PIC18 Interrupt Service Routines
 // 
@@ -140,7 +214,7 @@ static void ProcessIO(void);
 	void LowISR(void)
 	#endif
 	{
-	    TickUpdate();
+	    TickUpdate();            
 	}
 	
 	#if defined(HI_TECH_C)
@@ -150,7 +224,7 @@ static void ProcessIO(void);
 	void HighISR(void)
 	#endif
 	{
-	    Nop();
+	    LCDUpdate();
 	}
 
 	#if !defined(HI_TECH_C)
@@ -198,18 +272,15 @@ int main(void)
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
 	static DWORD tt = 0;
-
+    static BYTE x = 0;
+    static BYTE y = 0;
 	// Initialize application specific hardware
-	InitializeBoard();
-
-	#if defined(USE_LCD)
-	// Initialize and display the stack version on the LCD
-	LCDInit();
-	DelayMs(100);
-	strcpypgm2ram((char*)LCDText, "TCPStack " TCPIP_STACK_VERSION "  "
-		"                ");
-	LCDUpdate();
-	#endif
+    unsigned char Text[20] = "Testing";
+    BYTE count;
+    InitializeBoard();
+    pcfLCDInit(add1);
+    DisplayInit();
+    DisplayDraw(add1);
 
 	// Initialize stack-related hardware components that may be 
 	// required by the UART configuration routines
@@ -321,6 +392,12 @@ int main(void)
             	AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;
             	//SendRequestIP();                	
                 //AnnounceIP();
+            UpdateKey();
+            if(IsUpKey()) y++;
+            if(IsRightKey()) x++;
+            if(IsDownKey()) y--;
+            if (IsLeftKey())x--;
+            OutTextXY(x,y,Text,1);
             }                
         }
 		  
