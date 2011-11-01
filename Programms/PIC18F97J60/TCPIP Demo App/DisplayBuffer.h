@@ -1,6 +1,6 @@
 #ifndef _DISPLAY_BUFFER_H
 #define _DISPLAY_BUFFER_H
-#include "GenericTypeDefs.h"
+#include "TCPIP Stack/TCPIP.h"
 
 void DisplayInit(void);
 void DisplayClear(void);

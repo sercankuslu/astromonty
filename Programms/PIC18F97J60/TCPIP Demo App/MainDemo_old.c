@@ -345,13 +345,10 @@ int main(void)
 			LATAbits.LATA1 ^= 1;
 			UpdateKey();
 			if(IsUpKey()) y++;
-			if(IsRightKey()) x++;						
+			if(IsRightKey()) x++;
 			if(IsDownKey()) y--;
-			
 			if (IsLeftKey())x--;
-		
-			
-			OutTextXY(x,y,Text,1);	
+			OutTextXY(x,y,Text,1);
 							
 		}		
 		// This task performs normal stack task including checking

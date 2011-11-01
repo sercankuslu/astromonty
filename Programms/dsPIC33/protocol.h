@@ -34,14 +34,13 @@
 #   define STF_DATA_TYPE_UNKNOWN           	0x44
 #   define STF_DATA_ERROR		           	0x45
 #   define STF_DATA_READY                   0x46
-#define STA_LOGIN                           0x03    
-#define STA_PASSWORD                        0x04    
+
+#define STA_LOGIN                           0x03
+#define STA_PASSWORD                        0x04
 
 #define STA_NETWORK_ADDRESS  		         5   // 
 
 /*
-
-
 #define STA_NETWORK_MASK                     2   //
 #define STA_NETWORK_DNS1                     3   //
 #define STA_NETWORK_DNS2                     4   //
@@ -55,7 +54,7 @@
 #define STA_TIME_SNTP                        12   // 
 #define STA_TIME_RTC                         13   // 
 #define STA_TIME_SELECT                      14   // 
-//
+
 #define STA_ALPHA_GRAD_CURRENT               15   //
 #define STA_ALPHA_GRAD_TARGET                16   //
 #define STA_ALPHA_GRAD_MIN                   17   //
@@ -66,9 +65,17 @@
 #define STA_ALPHA_STEP_MAX                   22   //
 #define STA_ALPHA_DIRECTION                  23   //
 #define STA_ALPHA_CONFIG                     24   //
-#define STA_DELTA_CURRENT                    25   //
-#define STA_DELTA_TARGET                     26   //
-#define STA_DELTA_NUL                        27   //
+
+#define STA_ALPHA_GRAD_CURRENT               15   //
+#define STA_ALPHA_GRAD_TARGET                16   //
+#define STA_ALPHA_GRAD_MIN                   17   //
+#define STA_ALPHA_GRAD_MAX                   18   //
+#define STA_ALPHA_STEP_CURRENT               19   //
+#define STA_ALPHA_STEP_TARGET                20   //
+#define STA_ALPHA_STEP_MIN                   21   //
+#define STA_ALPHA_STEP_MAX                   22   //
+#define STA_ALPHA_DIRECTION                  23   //
+#define STA_ALPHA_CONFIG                     24   //
 */
 #define MEM_BUFFER_LEN 64
 #define MAX_ATTRIBUTE 10
@@ -87,6 +94,6 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
 BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
 BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
-BYTE ProcessClients(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
+BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
 #endif //__PROTOCOL_H_
