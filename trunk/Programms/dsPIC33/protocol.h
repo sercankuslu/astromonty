@@ -96,4 +96,5 @@ BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE 
 BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
 BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
 BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
+BYTE CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
 #endif //__PROTOCOL_H_

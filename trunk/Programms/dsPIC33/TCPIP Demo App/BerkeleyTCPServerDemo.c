@@ -88,7 +88,9 @@ void BerkeleyTCPServerDemo(void)
     char bfr[64];
     int length;
     int i;
+    int ClientsCnt = 0;
     BYTE res = STR_OK;
+    DWORD ConnectTime[MAX_CLIENT];
     static enum
     {
         BSD_INIT = 0,
@@ -103,8 +105,10 @@ void BerkeleyTCPServerDemo(void)
     case BSD_INIT:
         // Initialize all client socket handles so that we don't process 
         // them in the BSD_OPERATION state
-        for(i = 0; i < MAX_CLIENT; i++)
+        for(i = 0; i < MAX_CLIENT; i++){
             ClientSock[i] = INVALID_SOCKET;
+            ConnectTime[i] = 0;
+        }
         BSDServerState = BSD_CREATE_SOCKET;
         Init();
         // No break needed
@@ -148,28 +152,36 @@ void BerkeleyTCPServerDemo(void)
                 ClientSock[i] = accept(bsdServerSocket, (struct sockaddr*)&addRemote, &addrlen);
 
             // If this socket is not connected then no need to process anything
-            if(ClientSock[i] == INVALID_SOCKET)
+            if(ClientSock[i] == INVALID_SOCKET){
+	            ConnectTime[i] = 0;
                 continue;
-
+            }
+            if(ConnectTime[i] == 0) ConnectTime[i] = TickGet();
             // For all connected sockets, receive and send back the data
             length = recv( ClientSock[i], bfr, sizeof(bfr), 0);
 
-            if( length > 0 )
-            {
+            if( length > 0 ) {
+	            ConnectTime[i] = TickGet();
                 res = STR_OK;
                 res = RunServer(i, bfr, &length);
                 if(res==STR_NEED_ANSWER){
                     send(ClientSock[i], bfr, length, 0);  
                     res = STR_OK;
                 }
-            }
-
+            } else {
+				if(TickGet() - ConnectTime[i] > TICK_MINUTE){
+					res = STR_NEED_DISCONNECT;
+				}
+			}
             if(( length < 0 )||(res != STR_OK))
             {
                 closesocket( ClientSock[i] );
                 ClientSock[i] = INVALID_SOCKET;
+                ConnectTime[i] = 0;
             }
+            ClientsCnt++;
         }
+        if(ClientsCnt == 0) LED1_IO = 0;
         break;
 
     default:
