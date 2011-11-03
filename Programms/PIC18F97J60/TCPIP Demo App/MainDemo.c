@@ -139,11 +139,10 @@ static void ProcessIO(void);
 
 
 
-void LCDUpdate(void){
-    if(PIR1bits.TMR1IF)
-    {	    
+void LCDUpdate(void){	
+    if(PIR1bits.TMR1IF) {	    
         DisplayDraw(add1);
-        PIR1bits.TMR1IF=0;
+        PIR1bits.TMR1IF = 0;
     }
 }
 
@@ -230,7 +229,7 @@ BYTE IsDownKey()
 	#endif
 	{
 	    //TickUpdate();
-		LCDUpdate();  			    
+		//LCDUpdate();  			    
 	}
 
 	#if !defined(HI_TECH_C)
@@ -283,14 +282,14 @@ void InitTimerAndPWM()
     unsigned char config2=0x00;
     unsigned int timer2_value=0x00;
     //----Configure Timer1----
-    timer1_value = 0x00;    
-    WriteTimer1(timer1_value);            //clear timer if previously contains any value
+    //timer1_value = 0x00;    
+    //WriteTimer1(timer1_value);            //clear timer if previously contains any value
         
-    config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
-    OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
-    IPR1bits.TMR1IP = 1; // HIGH
-    PIR1bits.TMR1IF = 0; 
-    PIE1bits.TMR1IE = 1;
+    //config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
+    //OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
+    //IPR1bits.TMR1IP = 0; // HIGH
+    //PIR1bits.TMR1IF = 0; 
+    //PIE1bits.TMR1IE = 1;
     
     //----Configure Timer2----
     timer2_value = 0x00;    
@@ -319,10 +318,15 @@ int main(void)
 #endif
 {
 	static DWORD t = 0;
+	static DWORD displayup = 0;
 	static DWORD dwLastIP = 0;
 	static DWORD tt = 0;
     static BYTE x = 0;
     static BYTE y = 0;
+    static BYTE x1 = 0;
+    static BYTE y1 = 0;
+    static BYTE sx1 = 2;
+    static BYTE sy1 = 2;
 	// Initialize application specific hardware
     unsigned char Text[20] = "Testing";
     BYTE count;
@@ -458,15 +462,30 @@ int main(void)
             OutTextXY(x,y,Text,1);
                             
         }
+        
+        if(TickGet() - displayup >= TICK_SECOND/10){
+	        displayup = TickGet();
+	        OutTextXY(x1,y1,Text,0);	 
+	        x1+=sx1;
+	        y1+=sy1;
+	        if((x1>130)||(x1<1)) {
+		        sx1 = -sx1;		        
+		    } 
+	        if((y1>63)||(y1<1)) {
+		        sy1 = -sy1;		        
+		    } 
+		    DisplayDraw(add1);	        
+        }
 		  
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
+        
         StackTask();
-
+		
         // This tasks invokes each of the core stack application tasks
         StackApplications();
-
+		
         #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
 		ZeroconfLLProcess();
         #endif
@@ -515,7 +534,8 @@ int main(void)
 		#endif
 		
 		#if defined(STACK_USE_BERKELEY_API)
-		BerkeleyTCPClientDemo();
+		
+		BerkeleyTCPClientDemo();		
 		//BerkeleyTCPServerDemo();
 		//BerkeleyUDPClientDemo();
 		#endif

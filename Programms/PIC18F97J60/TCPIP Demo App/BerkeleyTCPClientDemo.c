@@ -88,6 +88,7 @@ void BerkeleyTCPClientDemo(void)
     int addrlen;
    	BYTE res = 0;
     BYTE BlobLen;
+    static DWORD TimeOut = 0;
     static enum
     {
         DNS_START_RESOLUTION = 0,
