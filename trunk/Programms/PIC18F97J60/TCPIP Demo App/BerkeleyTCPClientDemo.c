@@ -54,7 +54,6 @@
 #if defined(STACK_USE_BERKELEY_API)
 
 #include "TCPIP Stack/TCPIP.h"
-#include "../../dsPIC33/protocol.h"
 
 #define PORTNUM 9764
 static ROM BYTE ServerName[] =  MY_DEFAULT_MONTY_NAME;
@@ -154,10 +153,7 @@ void BerkeleyTCPClientDemo(void)
             {
 				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
 				//send(bsdClientSocket, recvBuffer, BlobLen, 0); 
-                if(i< 0) { //error condition                
-                    BSDClientState = BSD_CLOSE;                    
-                    break;
-                } 
+                
                 res = RunClient(recvBuffer, sizeof(recvBuffer), &i);
                 switch(res){
 	            case STR_NEED_ANSWER:  
@@ -168,14 +164,16 @@ void BerkeleyTCPClientDemo(void)
 	            default:
 	            	BSDClientState = BSD_CLOSE;
 	            	break;
-                }                
+                }     
 				break;
             }
             break;
          
         case BSD_CLOSE:
             closesocket(bsdClientSocket);
-            BSDClientState = BSD_DONE;           
+            BSDClientState = BSD_DONE;  
+            AppConfig.Flags.bIsValidMontyIPAddr = 0;  
+            AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;       
             // No break needed
             
         case BSD_DONE:        	
