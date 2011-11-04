@@ -119,6 +119,8 @@ static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM default
 BYTE AN0String[8];
 static BYTE CKeys=0;
 static BYTE add1 = PCF8535_BUS_ADDRESS;
+static int DisplayBright = 0x0F00;
+static int DisplaydB = 0;      // changing the value DisplayBright of every second 
 
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
@@ -327,10 +329,14 @@ int main(void)
     static BYTE y1 = 0;
     static BYTE sx1 = 2;
     static BYTE sy1 = 2;
+    static BYTE RBuffer[30];	
+    ST_ATTRIBUTE ReceivePacket = {
+		0, 0, RBuffer
+	};
 	// Initialize application specific hardware
     unsigned char Text[20] = "Testing";
     BYTE count;
-        
+    memset(RBuffer, 0, sizeof(RBuffer));    
     pcfLCDInit(add1);
     DisplayInit();
     InitializeBoard();
@@ -459,8 +465,8 @@ int main(void)
             if(IsRightKey()) x++;
             if(IsDownKey()) y--;
             if (IsLeftKey())x--;
-            OutTextXY(x,y,Text,1);
-                            
+            //OutTextXY(x,y,Text,1);
+            //OutTextXY(x,y,RBuffer,1);  
         }
         
         if(TickGet() - displayup >= TICK_SECOND/10){
@@ -541,6 +547,12 @@ int main(void)
 		#endif
 
 		ProcessIO();
+		
+		if(IsDataInBuffer()){
+			if(PopAttr(&ReceivePacket) == 0){
+				OutTextXY(x,y,RBuffer,0);
+			}
+		}
 
         // If the local IP address has changed (ex: due to DHCP lease change)
         // write the new IP address to the LCD display, UART, and Announce 
@@ -769,7 +781,18 @@ static void ProcessIO(void)
 		ADCON2 = temp;
 	}
 	#endif
+	
+	DisplayBright = (DisplayBright+(1024 - *((WORD*)(&ADRESL))))/2;
+		
+	if(DisplayBright<0){
+		DisplayBright = 0;
+	}	
+	if(DisplayBright>0x03FF){
+		DisplayBright = 0x03FF;
+	}	
+	SetDCPWM5(DisplayBright);        //set the duty cycle                                      
 
+    
     // Convert 10-bit value into ASCII string
     uitoa(*((WORD*)(&ADRESL)), AN0String);
 #endif
