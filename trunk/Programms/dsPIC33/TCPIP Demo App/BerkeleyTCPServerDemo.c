@@ -55,7 +55,6 @@
 #include "TCPIPConfig.h" 
 
 #if defined(STACK_USE_BERKELEY_API)
-
 #include "TCPIP Stack/TCPIP.h"
 #include "../protocol.h"
 
@@ -108,7 +107,7 @@ void BerkeleyTCPServerDemo(void)
             ClientSock[i] = INVALID_SOCKET;            
         }
         BSDServerState = BSD_CREATE_SOCKET;
-        Init();
+        ProtocolInit();
         // No break needed
 
     case BSD_CREATE_SOCKET:

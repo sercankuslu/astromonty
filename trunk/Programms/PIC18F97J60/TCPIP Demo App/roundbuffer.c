@@ -1,94 +1,163 @@
 
 #include "../../dsPIC33/protocol.h"
 
-#define ATTR_SIZE 16
-#define MEM_SIZE 64
+#define ATTR_BUFF_SIZE 16
+#define MEM_BUF_SIZE 64
+#define BUFFERS_COUNT 2
+
+typedef struct MEMORY_BUFFER {
+	WORD MemBegin;
+	WORD MemEnd;
+	WORD MemFree;
+	WORD MemSize;
+	BYTE* MemoryBuffer;
+} MEMORY_BUFFER;
+
+typedef struct ATTR_BUFFER {
+	BYTE AttrBegin;
+	BYTE AttrEnd;
+	BYTE AttrFree;
+	BYTE AttrSize;	
+	ST_ATTRIBUTE* AttrBuffer;
+	MEMORY_BUFFER MemoryBuffer;	
+} ATTR_BUFFER;
+
 #if defined(__18CXX)
 #pragma udata ATTRIBUTE = 0x500
 #endif
-static ST_ATTRIBUTE AttrBuffer[ATTR_SIZE];
-static BYTE MemoryBuffer[64];
+static ST_ATTRIBUTE AttrBuffer1[ATTR_BUFF_SIZE];
+static ST_ATTRIBUTE AttrBuffer2[ATTR_BUFF_SIZE];
+static BYTE MemoryBuffer1[MEM_BUF_SIZE];
+static BYTE MemoryBuffer2[MEM_BUF_SIZE];
+//#if defined(__18CXX)
+//#pragma udata MEMORY = 0x600
+//#endif
 #pragma udata
 
-static WORD MemBegin = 0;
+/*static WORD MemBegin = 0;
 static WORD MemEnd = 0;
 static WORD MemFree = MEM_SIZE;
 static BYTE AttrBegin = 0;
 static BYTE AttrEnd = 0;
 static BYTE AttrFree = ATTR_SIZE;
+*/
 
-int MoveDataToBuffer(BYTE* D, WORD Count);
-int MoveDataFromBuffer(BYTE* D, WORD Count);
-BOOL IsDataInBuffer(void)
-{
-	return (AttrFree < ATTR_SIZE)?1:0;
-}
-int PushAttr( ST_ATTRIBUTE Attr )
-{
-	WORD C = 0;
-	if (AttrFree == 0) return -1; // no memory	
-	if(MoveDataToBuffer((BYTE*)Attr.pValue, Attr.ulValueLen)==0){
-		AttrBuffer[AttrEnd].type = Attr.type;
-		AttrBuffer[AttrEnd].ulValueLen = Attr.ulValueLen;
-		AttrBuffer[AttrEnd].pValue = NULL;
-		
-		AttrEnd++;
-		if (AttrEnd >= ATTR_SIZE) {
-			AttrEnd = 0;
-		}
-		AttrFree--;
-	} else return -1;
-	return 0;
-}
+static ATTR_BUFFER RoundBuffers[BUFFERS_COUNT]; 
+static BOOL IsInit = FALSE;
+int MoveDataToBuffer(BYTE* D, WORD Count, MEMORY_BUFFER* MemBuf);
+int MoveDataFromBuffer(BYTE* D, WORD Count, MEMORY_BUFFER* MemBuf);
 
-int PopAttr( ST_ATTRIBUTE* Attr )
+BOOL RoundBufferInit(void)
 {
-	WORD C = 0;
-	if (AttrFree == 0) return -1; // no memory	
-	if(MoveDataFromBuffer((BYTE*)Attr->pValue, AttrBuffer[AttrBegin].ulValueLen)==0){
-		Attr->type = AttrBuffer[AttrBegin].type;
-		Attr->ulValueLen = AttrBuffer[AttrBegin].ulValueLen;
-		AttrBegin++;
-		if (AttrBegin >= ATTR_SIZE) {
-			AttrBegin = 0;
-		}
-		AttrFree++;
-	} else return -1;
-	return 0;
-}
-int MoveDataToBuffer(BYTE* D, WORD Count)
-{
-	WORD C = 0;
-	if (Count > MemFree) return -1; // no memory
-	if (Count + MemEnd > MEM_SIZE)	{
-		C = MEM_SIZE - MemEnd;
-		memcpy(&MemoryBuffer[MemEnd], &D[0], C);
-		memcpy(&MemoryBuffer[0], &D[C], Count - C);
-		MemEnd = Count - C;		
-	} else {		
-		memcpy(&MemoryBuffer[MemEnd], &D[0], Count);
-		MemEnd+=Count;		
+	BYTE i;
+	for(i = 0; i< BUFFERS_COUNT; i++){
+		RoundBuffers[i].AttrBegin = 0;
+		RoundBuffers[i].AttrEnd = 0;
+		RoundBuffers[i].AttrFree = ATTR_BUFF_SIZE;
+		RoundBuffers[i].AttrSize = ATTR_BUFF_SIZE;
+		RoundBuffers[i].MemoryBuffer.MemBegin = 0;
+		RoundBuffers[i].MemoryBuffer.MemEnd = 0;
+		RoundBuffers[i].MemoryBuffer.MemFree = MEM_BUF_SIZE;
+		RoundBuffers[i].MemoryBuffer.MemSize = MEM_BUF_SIZE;		
 	}
-	if(MemEnd >= MEM_SIZE) MemEnd = 0;
-	MemFree-=Count;
-	return 0;
+	RoundBuffers[0].AttrBuffer = AttrBuffer1;
+	RoundBuffers[1].AttrBuffer = AttrBuffer2;
+	memset(AttrBuffer1, 0 , ATTR_BUFF_SIZE*sizeof(ST_ATTRIBUTE));
+	memset(AttrBuffer2, 0 , ATTR_BUFF_SIZE*sizeof(ST_ATTRIBUTE));
+	RoundBuffers[0].MemoryBuffer.MemoryBuffer = MemoryBuffer1;
+	RoundBuffers[1].MemoryBuffer.MemoryBuffer = MemoryBuffer2;
+	memset(MemoryBuffer1, 0 , MEM_BUF_SIZE);
+	memset(MemoryBuffer2, 0 , MEM_BUF_SIZE);
 }
 
-int MoveDataFromBuffer(BYTE* D, WORD Count)
+BOOL IsDataInBuffer(BYTE BufNumber)
+{
+	if(!IsInit) {
+		RoundBufferInit();
+		IsInit = TRUE;
+	}	
+	return (RoundBuffers[BufNumber].AttrFree < RoundBuffers[BufNumber].AttrSize)?1:0;
+}
+int PushAttr( ST_ATTRIBUTE Attr , BYTE BufNumber)
 {
 	WORD C = 0;
-	if (Count > MEM_SIZE - MemFree) return -1; // no data in memory
-	if (Count + MemBegin > MEM_SIZE)	{
-		C = MEM_SIZE - MemBegin;
-		memcpy(&D[0], &MemoryBuffer[MemBegin], C);
-		memcpy(&D[C], &MemoryBuffer[0], Count - C);
-		MemBegin = Count - C;		
-	} else {		
-		memcpy(&D[0], &MemoryBuffer[MemBegin], Count);
-		MemBegin+=Count;
+	ATTR_BUFFER* Attr_buf = &RoundBuffers[BufNumber];
+	if (Attr_buf->AttrFree == 0) return -1; // no memory	
+	Attr_buf->AttrBuffer[Attr_buf->AttrEnd].type = Attr.type;
+	Attr_buf->AttrBuffer[Attr_buf->AttrEnd].ulValueLen = Attr.ulValueLen;
+	Attr_buf->AttrBuffer[Attr_buf->AttrEnd].pValue = NULL;		
+	if(Attr.ulValueLen > 0){
+		if(MoveDataToBuffer((BYTE*)Attr.pValue, Attr.ulValueLen, &Attr_buf->MemoryBuffer)!=0)
+		return -1;
+	}	
+	Attr_buf->AttrEnd++;
+	if (Attr_buf->AttrEnd >= Attr_buf->AttrSize) {
+		Attr_buf->AttrEnd = 0;
 	}
-	if(MemBegin >= MEM_SIZE) MemBegin = 0;
-	MemFree+=Count;	
+	if(Attr_buf->AttrFree>0)
+		Attr_buf->AttrFree--;
 	return 0;
 }
 
+int PopAttr( ST_ATTRIBUTE* Attr, BYTE BufNumber )
+{
+	WORD C = 0;
+	ATTR_BUFFER* Attr_buf = &RoundBuffers[BufNumber];
+	if (Attr_buf->AttrFree == Attr_buf->AttrSize) return -1; // no data
+	
+	Attr->type = Attr_buf->AttrBuffer[Attr_buf->AttrBegin].type;
+	Attr->ulValueLen = Attr_buf->AttrBuffer[Attr_buf->AttrBegin].ulValueLen;	
+	if(Attr->ulValueLen>0){
+		if(MoveDataFromBuffer((BYTE*)Attr->pValue, Attr_buf->AttrBuffer[Attr_buf->AttrBegin].ulValueLen, &Attr_buf->MemoryBuffer)!=0)
+			return -1;		
+	}
+	Attr_buf->AttrBegin++;
+	if (Attr_buf->AttrBegin >= Attr_buf->AttrSize) {
+		Attr_buf->AttrBegin = 0;
+	}
+	Attr_buf->AttrFree++;
+	
+	return 0;
+}
+int MoveDataToBuffer(BYTE* D, WORD Count, MEMORY_BUFFER* MemBuf)
+{
+	WORD C = 0;
+	if (Count > MemBuf->MemFree) return -1; // no memory
+	if (Count + MemBuf->MemEnd > MemBuf->MemSize)	{
+		C = MemBuf->MemSize - MemBuf->MemEnd;
+		memcpy((void*)&MemBuf->MemoryBuffer[MemBuf->MemEnd], (void*)&D[0], C);
+		memcpy((void*)&MemBuf->MemoryBuffer[0], (void*)&D[C], Count - C);
+		MemBuf->MemEnd = Count - C;		
+	} else {		
+		memcpy((void*)&MemBuf->MemoryBuffer[MemBuf->MemEnd], (void*)&D[0], Count);
+		MemBuf->MemEnd+=Count;		
+	}
+	if(MemBuf->MemEnd >= MemBuf->MemSize) MemBuf->MemEnd = 0;
+	MemBuf->MemFree-=Count;
+	return 0;
+}
+
+int MoveDataFromBuffer(BYTE* D, WORD Count, MEMORY_BUFFER* MemBuf)
+{
+	WORD C = 0;
+	if (Count > MemBuf->MemSize - MemBuf->MemFree) return -1; // no data in memory
+	if (Count + MemBuf->MemBegin > MemBuf->MemSize)	{
+		C = MemBuf->MemSize - MemBuf->MemBegin;
+		memcpy((void*)&D[0], (void*)&MemBuf->MemoryBuffer[MemBuf->MemBegin], C);
+		memcpy((void*)&D[C], (void*)&MemBuf->MemoryBuffer[0], Count - C);
+		MemBuf->MemBegin = Count - C;		
+	} else {		
+		memcpy((void*)&D[0], (void*)&MemBuf->MemoryBuffer[MemBuf->MemBegin], Count);
+		MemBuf->MemBegin+=Count;
+	}
+	if(MemBuf->MemBegin >= MemBuf->MemSize) MemBuf->MemBegin = 0;
+	MemBuf->MemFree+=Count;	
+	return 0;
+}
+
+
+// запрос данных
+// SendData(type) -> помещаем в очередь запросов
+// ReciveData()   <- забираем из очереди ответов
+// Отправка данных
+// SendData()     -> помещаем в очередь запросов

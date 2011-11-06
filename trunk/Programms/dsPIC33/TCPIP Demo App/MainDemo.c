@@ -89,6 +89,7 @@
  * and this file must define the AppConfig variable as described below.
  */
 #define THIS_IS_STACK_APPLICATION
+#define USE_PROTOCOL_SERVER
 
 // Include all headers for any enabled TCPIP Stack functions
 #include "TCPIP Stack/TCPIP.h"
