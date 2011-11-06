@@ -89,6 +89,7 @@
  * and this file must define the AppConfig variable as described below.
  */
 #define THIS_IS_STACK_APPLICATION
+#define USE_PROTOCOL_CLIENT
 
 // Include all headers for any enabled TCPIP Stack functions
 #include "TCPIP Stack/TCPIP.h"
@@ -335,14 +336,22 @@ int main(void)
 	};
 	// Initialize application specific hardware
     unsigned char Text[20] = "Testing";
+    unsigned char Text1[] = "_______________________";
+    unsigned char Text2[] = " a: 06h 45m 08.9173s";
+    unsigned char Text3[] = " d:-16  42' 58.017\"";
+    unsigned char Text4[] = " Соединение установлено";
+    
     BYTE count;
     memset(RBuffer, 0, sizeof(RBuffer));    
     pcfLCDInit(add1);
     DisplayInit();
     InitializeBoard();
-    OutTextXY(0,0,Text,0);
-	
-	OutTextXY(0,15,Text,1);    
+    OutTextXY(0,54,Text1,1); // ___    
+    OutTextXY(0,10,Text1,1); // ___
+    OutTextXY(0,38,Text2,1); // a
+    OutTextXY(0,24,Text3,1); // d  	
+	OutTextXY(0,12,Text4,0); // msg
+	   
     DisplayDraw(add1);
 	
 	
@@ -453,6 +462,10 @@ int main(void)
         // Blink LED0 (right most one) every second.
         if(TickGet() - t >= TICK_SECOND)
         {
+	        //BYTE datatype = STA_TIME_SNTP;
+	        ST_ATTRIBUTE ReceivePacket = {
+				STA_TIME_SNTP, 0, NULL
+			};
             t = TickGet();
             LED0_IO ^= 1;
             if(AppConfig.Flags.bIsValidMontyIPAddr == 0){
@@ -467,8 +480,10 @@ int main(void)
             if (IsLeftKey())x--;
             //OutTextXY(x,y,Text,1);
             //OutTextXY(x,y,RBuffer,1);  
+            PushAttr(ReceivePacket, OUT_BUFFER);            
+            
         }
-        
+        if(0){
         if(TickGet() - displayup >= TICK_SECOND/10){
 	        displayup = TickGet();
 	        OutTextXY(x1,y1,Text,0);	 
@@ -482,7 +497,7 @@ int main(void)
 		    } 
 		    DisplayDraw(add1);	        
         }
-		  
+		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
@@ -548,9 +563,10 @@ int main(void)
 
 		ProcessIO();
 		
-		if(IsDataInBuffer()){
-			if(PopAttr(&ReceivePacket) == 0){
+		if(IsDataInBuffer(IN_BUFFER)){
+			if(PopAttr(&ReceivePacket, IN_BUFFER) == 0){
 				OutTextXY(x,y,RBuffer,0);
+				DisplayDraw(add1);
 			}
 		}
 

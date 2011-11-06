@@ -52,7 +52,7 @@
 #define HARDWARE_PROFILE_H
 
 #include "Compiler.h"
-
+#define USE_PROTOCOL_SERVER
 // Define a macro describing this hardware set up (used in other files)
 #define EXPLORER_16
 
