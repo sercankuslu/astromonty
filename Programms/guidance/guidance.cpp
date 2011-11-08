@@ -165,7 +165,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-                LineTo(hdc, 100,100);
+                //LineTo(hdc, 100,100);
 		// TODO: добавьте любой код отрисовки...
                 Calc(hdc);
 		EndPaint(hWnd, &ps);
@@ -216,9 +216,9 @@ void Calc(HDC hdc)
         double dt = 0.1;                
         double V = 1;
         double dV = 0;
-        double F = 0;
-        int dir = 1;
-        double dX = 0.1125;
+        //double F = 0;
+        //int dir = 1;
+        static double dX = 1/(200*16);
         double X = 0;
         double T = 0;
         // x = x0 + Vt
@@ -230,33 +230,46 @@ void Calc(HDC hdc)
         // dx = dV*dt + a * dt*dt/2
         // D = (dV*dV + 2 * dx * a)
         // dt = (-dV + sqrt(D))/a
-        for(int i = 1; i< 500; i++)
-        {               
-            dX = dV*dt + A*dt*dt/2;
-            dV = dX/dt;
-            X += dX;
-            T = i * dt;
-            V = dV;            
-            SetPixel(hdc, (int)(T * 10), (int)(X * 10), 0x00FF00);
-            SetPixel(hdc, (int)(T * 10), (int)(V * 10), 0x0000FF);
-        }
-        dX = 0.1125;        
+        //for(int i = 1; i< 500; i++)
+        //{               
+        //    dX = dV*dt + A*dt*dt/2;
+        //    dV = dX/dt;
+        //    X += dX;
+        //    T = i * dt;
+        //    V = dV;            
+        //    //SetPixel(hdc, (int)(T ), (int)(X ), 0x00FF00);
+        //    //SetPixel(hdc, (int)(T ), (int)(V ), 0x0000FF);
+        //}
+        dX = 1.0/(200.0*16.0);        
         dt = 0;
         T = 0;
         X = 0;
         V = 0;
         A = 0;
-        //for(int i = 1; i< 500; i++) 
-        do {    
+		int K = 0;
+		int K1 = 0;
+		int i =0;
+        //for(int i = 1; i< 500; i++)         
+        do { 
+			i++;
+			if(i>
             Calculate_A(V, 2/(Mass*Radius*Radius),&A);
             Calculate_dT(0, dX, V, A, &dt);            
             V = dX/dt;
             X += dX;
-            T += dt;            
-            SetPixel(hdc, (int)(T*50), (int)(X/5 ), 0xFF0000);
-            SetPixel(hdc, (int)(T*50), (int)(V ), 0x000000);
-            SetPixel(hdc, (int)(T*50), (int)(A *20 ), 0x00FF00);
-        } while ( 1/dt <2000);
+            T += dt;   
+			K = (int)X;
+			if(K != K1){
+				K1 = K;
+				SetPixel(hdc, (int)(T*2), (int)(X), 0xFF0000);
+				SetPixel(hdc, (int)(T*2), (int)(V ), 0x00FF00);
+				SetPixel(hdc, (int)(T*2), (int)((18-A)*20), 0x0000FF);			
+				if(X<360) 
+					SetPixel(hdc, 100, (int)X, 0x000000);
+				else 
+					break;
+			}
+        } while ( V*200/360 < 2000);
     }
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -270,11 +283,11 @@ int Calculate_A(double V, double L, double *A)
     double Lm = 0.0;
     // усилие на валу
     static double MPower[] = {
-        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1
+        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.0
     };
     // частота в Гц
     static double MaxF[] = {
-        0.0, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000
+        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000, 3000
     };
     F = V/dX;
     for(int i = 0; i< sizeof(MaxF)-1; i++){
