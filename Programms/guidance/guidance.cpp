@@ -21,6 +21,10 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 void Calc(HDC hdc);
 double M(double F);
+int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
+int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
+int Calculate_A(double V, double L, double *A);
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -208,62 +212,128 @@ void Calc(HDC hdc)
     {
         static double Mass = 500.0f;
         static double Radius = 2.0f;
-        double A;
-        double dt;        
-        double D;
-        double V0 = 0;
+        double A = 0.1;
+        double dt = 0.1;                
+        double V = 1;
+        double dV = 0;
         double F = 0;
         int dir = 1;
-        double X = 0.1125;
+        double dX = 0.1125;
+        double X = 0;
+        double T = 0;
+        // x = x0 + Vt
+        // t = (x-x0)/V
+        // x = Vt+ at*t/2
+        // (a/2)t*t + Vt - X = 0
+        // D = (V*V + 2 * X * a)
+        // t = (-V +- sqrt(D))/a
+        // dx = dV*dt + a * dt*dt/2
+        // D = (dV*dV + 2 * dx * a)
+        // dt = (-dV + sqrt(D))/a
         for(int i = 1; i< 500; i++)
         {               
-            A=dir*M(F)*360*180/(PI*Mass*Radius);
-            D= V0*V0+2*X*A;
-            if(D<0) {
-                A=-A;
-                D= V0*V0+2*X*A;
-            }
-            dt = (-V0 + sqrt(D))/A;
-            V0 = X/dt;
-            F = 1/dt;            
-            if(F>=1000) {
-                F = 1000;
-                dir = -1;
-            }
-            SetPixel(hdc, i, dt, 0x000000);
+            dX = dV*dt + A*dt*dt/2;
+            dV = dX/dt;
+            X += dX;
+            T = i * dt;
+            V = dV;            
+            SetPixel(hdc, (int)(T * 10), (int)(X * 10), 0x00FF00);
+            SetPixel(hdc, (int)(T * 10), (int)(V * 10), 0x0000FF);
         }
+        dX = 0.1125;        
+        dt = 0;
+        T = 0;
+        X = 0;
+        V = 0;
+        A = 0;
+        //for(int i = 1; i< 500; i++) 
+        do {    
+            Calculate_A(V, 2/(Mass*Radius*Radius),&A);
+            Calculate_dT(0, dX, V, A, &dt);            
+            V = dX/dt;
+            X += dX;
+            T += dt;            
+            SetPixel(hdc, (int)(T*50), (int)(X/5 ), 0xFF0000);
+            SetPixel(hdc, (int)(T*50), (int)(V ), 0x000000);
+            SetPixel(hdc, (int)(T*50), (int)(A *20 ), 0x00FF00);
+        } while ( 1/dt <2000);
     }
 }
-double M(double F){
+// должна возвращать значение ускорения в зависимости от скорости
+// V - скорость в градусах в сек
+// L - момент инерции системы
+int Calculate_A(double V, double L, double *A)
+{
+    double F; // частота полных шагов
+    double R_G = 180/PI;
+    double dX = 360.0/200; // угол в градусах полного шага
+    double Lm = 0.0;
     // усилие на валу
     static double MPower[] = {
-        0.85,        
-        0.764642857,
-        0.67,
-        0.6,
-        0.53,
-        0.46,
-        0.4,
-        0.33,
-        0.22,
-        0.1
+        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1
     };
     // частота в Гц
     static double MaxF[] = {
-        0.0,        
-        100,
-        250,
-        500,
-        750,
-        1000,
-        1250,
-        1500,
-        1750,
-        2000
+        0.0, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000
     };
+    F = V/dX;
     for(int i = 0; i< sizeof(MaxF)-1; i++){
         if((F >= MaxF[i]) && (F < MaxF[i+1])){
-            return (LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F));
+            Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
+            break;
         }
     }    
+    *A = Lm * 360 * R_G * L;
+    return 0;
 }
+
+// функция возвращает время, прошедшее
+// при движении с заданными параметрами на промежутке (Xbeg,Xend), 
+// при начальной скорости V и ускорении A
+int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
+{
+    double T1 = 0.0;
+    double T2 = 0.0;
+    int res = 0;
+    if((A==0.0)&&(V==0.0)){
+        return -1; // ошибка
+    }
+    if((A == 0)&&(V != 0.0)){        
+        *T = (Xend-Xbeg)/V;
+        return 0;  // нет ошибки
+    }
+    // Xend = Xbeg + V*T + (A * T^2)/2
+    // (A/2)T^2 + V*T + (Xbeg - Xend) = 0
+    res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
+    if(res > 0) {
+        *T = T1;
+        return 0;
+    }
+    else return 1;
+}
+// вычисляет корени квадратного уравнения
+int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
+{
+    // Ax^2+Bx+C=0
+    double D = 0.0;
+    if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
+    *X1 = 0.0;
+    *X2 = 0.0;
+    if(A == 0.0){
+        // Bx+C = 0
+        // x = -C/B
+        if(C!=0.0){
+            *X1 = -B/C;
+        } else {
+            *X1 = 0.0;
+        }
+        return 1; // не квадратное уравнение, один корень
+    }
+    D = B*B - 4.0 * A * C;
+    if(D<0.0) return 0; // дискриминант 0 корней нет
+
+    *X1 = (-B+sqrt(D))/(2*A);
+    *X2 = (-B-sqrt(D))/(2*A);
+    return 2; // два корня уравнения
+}
+
