@@ -317,8 +317,9 @@ void MACInit(void)
     WriteReg((BYTE)MAADR6, AppConfig.MyMACAddr.v[5]);
 
     // Disable the CLKOUT output to reduce EMI generation
-    WriteReg((BYTE)ECOCON, 0x00);   // Output off (0V)
+    //WriteReg((BYTE)ECOCON, 0x00);   // Output off (0V)
     //WriteReg((BYTE)ECOCON, 0x01); // 25.000MHz
+    WriteReg((BYTE)ECOCON, 0x04);  // 6.250MHz
     //WriteReg((BYTE)ECOCON, 0x03); // 8.3333MHz (*4 with PLL is 33.3333MHz)
 
     // Get the Rev ID so that we can implement the correct errata workarounds

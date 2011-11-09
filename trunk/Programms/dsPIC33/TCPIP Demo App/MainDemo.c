@@ -127,6 +127,15 @@ BYTE AN0String[8];
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
+int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
+int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
+int Calculate_A(double V, double L, double *A);
+double LinInt(double x1,double y1,double x2,double y2, double x);
+void Calc(void);
+DWORD_VAL CPUSPEED;
+#define PI 3.1415926535897932384626433832795
+
+
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
@@ -178,13 +187,15 @@ Nop();
 void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 {
     Nop();
-Nop();
+    Nop();
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
+	CPUSPEED.word.LW = TMR8;
+	CPUSPEED.word.HW = TMR9;
     TMR6 = 0x0000;
     TMR8 = 0x0000;
-    TMR9 = 0x0000;
+    TMR9 = 0x0000;    
     IFS2bits.T6IF = 0; // Clear T3 interrupt flag
 }	
 #elif defined(__C32__)
@@ -194,12 +205,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 		Nop();
 	}
 #endif
-double LinInt(double x1,double y1,double x2,double y2, double x)
-{
-	if(x1!=x2) {
-		return y1+(y2-y1)*(x-x1)/(x2-x1);
-	}else return y1;
-}
+// Select Internal FRC at POR		
+_FOSCSEL(FNOSC_FRC);
+// Enable Clock Switching and Configure Posc in XT mode
+_FOSC(FCKSM_CSECMD & OSCIOFNC_OFF & POSCMD_EC);
 //
 // Main application entry point.
 //
@@ -209,6 +218,8 @@ void main(void)
 int main(void)
 #endif
 {
+	
+	
     static DWORD t = 0;
     static DWORD d = 0;
     static DWORD dwLastIP = 0;
@@ -216,6 +227,9 @@ int main(void)
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
+    
+ 	
+     
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
     {
@@ -228,44 +242,8 @@ int main(void)
     }
 	
 	
-    {
-	static double PI = 3.1415926536f;
-	static double Mass = 500.0f;
-	static double Radius = 2.0f;
-	static double pMPower[] = {
-		303.3428571429f,
-		275.2714285714f,
-		241.2f,
-		216.0f,
-		190.8f,
-		165.6f,
-		144.0f,
-		118.8f,
-		79.2f,
-		36.0f
-	};
-	static double MaxV[] = {
-		0.004166667,
-		0.5,
-		1.25,
-		2.5,
-		3.75,
-		5.0,
-		6.25,
-		7.5,
-		8.75,
-		10.0,
-	};
-	static double MaxA[10];
-	double RdivMassR2PI = 360.0f/(Mass*Radius*Radius*PI);
-	int i;
-	static double resY;
-	for(i=0;i<10;i++){
-	    MaxA[i]=pMPower[i]*RdivMassR2PI;
-	}
-	resY = LinInt(MaxV[0],MaxA[0],MaxV[1],MaxA[1], 0.4);
+    
 	
-    }
 	//BYTE res;
 	//char bfr[64];
     //BYTE length=0;
@@ -276,7 +254,7 @@ int main(void)
 	//}
 
 
-    /*
+    InitializeBoard();
     // calculate CPU speed  
     T6CON = 0x0002;
     T8CON = 0x0008;
@@ -286,16 +264,19 @@ int main(void)
     TMR6 = 0x0000;
     TMR8 = 0x0000;
     TMR9 = 0x0000;	
+    CPUSPEED.Val = 0;
     IFS2bits.T6IF = 0;
     IEC2bits.T6IE = 1;
     IPC11bits.T6IP = 7;
     T6CONbits.TON = 1;
     T8CONbits.TON = 1;	
-    */
-     
-    InitializeBoard();	
-	
     
+     
+    /*	
+	while(1){
+		Nop();
+	}
+    */
 	
 #if defined(USE_LCD)
     // Initialize and display the stack version on the LCD
@@ -393,6 +374,23 @@ int main(void)
 
     mDNSMulticastFilterRegister();			
 	#endif
+
+
+	{	
+	 	// Configure PLL prescaler, PLL postscaler, PLL divisor
+		PLLFBD=0x7F; // M = 128
+		CLKDIVbits.PLLPOST = 0;// N2 = 2
+		CLKDIVbits.PLLPRE = 3; // N1 = 5
+		// Initiate Clock Switch to Primary Oscillator with PLL (NOSC = 0b011)
+		__builtin_write_OSCCONH(0x03);
+		__builtin_write_OSCCONL(0x01);
+		// Wait for Clock switch to occur
+		while (OSCCONbits.COSC!= 0b011);
+		// Wait for PLL to lock
+		while(OSCCONbits.LOCK!= 1) {};
+ 	}
+
+	Calc();
 
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
@@ -877,9 +875,9 @@ static void InitializeBoard(void)
 	#endif
 
 	#if defined(__dsPIC33F__) || defined(__PIC24H__)
-		PLLFBD = 0x7f;				// Multiply by 40 for 160MHz VCO output (8MHz XT oscillator)
-		CLKDIV = 0x0004;			// FRC: divide by 2, PLLPOST: divide by 2, PLLPRE: divide by 2
-		OSCCON = 0x0301;	
+		//PLLFBD = 0x7f;				// Multiply by 40 for 160MHz VCO output (8MHz XT oscillator)
+		//CLKDIV = 0x0004;			// FRC: divide by 2, PLLPOST: divide by 2, PLLPRE: divide by 2
+		//OSCCON = 0x0301;	
 	
 		// Port I/O
 		AD1PCFGHbits.PCFG23 = 1;	// Make RA7 (BUTTON1) a digital input
@@ -1345,3 +1343,138 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 }
 #endif
 
+// должна возвращать значение ускорения в зависимости от скорости
+// V - скорость в градусах в сек
+// L - момент инерции системы
+int Calculate_A(double V, double L, double *A)
+{
+    double F; // частота полных шагов
+    double R_G = 180/PI;
+    //double dX = 1.0/200; // угол в градусах полного шага
+    double Lm = 0.0;
+    int i;
+    // усилие на валу
+    static double MPower[] = {
+        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.01
+    };
+    // частота в Гц
+    static double MaxF[] = {
+        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 2250.0
+    };
+    int sizeMaxF = sizeof(MaxF)/sizeof(double);
+    F = V * 200;
+    if(F > MaxF[sizeMaxF-1]){
+        Lm = MPower[sizeMaxF-1];
+    } else {
+        for( i = 0; i< sizeMaxF-1; i++){
+            if((F >= MaxF[i]) && (F < MaxF[i+1])){
+                Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
+                break;
+            }
+        }
+    }
+    *A = Lm * 360 * R_G * L;
+    return 0;
+}
+
+// функция возвращает время, прошедшее
+// при движении с заданными параметрами на промежутке (Xbeg,Xend), 
+// при начальной скорости V и ускорении A
+int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
+{
+    double T1 = 0.0;
+    double T2 = 0.0;
+    int res = 0;
+    if((A==0.0)&&(V==0.0)){
+        return -1; // ошибка
+    }
+    if((A == 0)&&(V != 0.0)){        
+        *T = (Xend-Xbeg)/V;
+        return 0;  // нет ошибки
+    }
+    // Xend = Xbeg + V*T + (A * T^2)/2
+    // (A/2)T^2 + V*T + (Xbeg - Xend) = 0
+    res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
+    if(res > 0) {
+        *T = T1;
+        return 0;
+    }
+    else return 1;
+}
+// вычисляет корени квадратного уравнения
+int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
+{
+    // Ax^2+Bx+C=0
+    double D = 0.0f;
+    double R1 = 0.0f;
+    volatile double sqrtD = 0.0f;
+    if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
+    *X1 = 0.0;
+    *X2 = 0.0;
+        
+    if(A == 0.0){
+        // Bx+C = 0
+        // x = -C/B
+        if(C!=0.0){
+            *X1 = -B/C;
+        } else {
+            *X1 = 0.0;
+        }
+        return 1; // не квадратное уравнение, один корень
+    }
+    D = B*B - 4.0 * A * C;
+    if(D<0.0) return 0; // дискриминант 0 корней нет
+	sqrtD = sqrtf(D);
+    R1 = (-B + sqrtD)/(2*A);
+    *X1 = R1;
+    *X2 = R1;
+    //*X2 = (-B - sqrtD)/(2*A);
+    return 2; // два корня уравнения
+}
+double LinInt(double x1,double y1,double x2,double y2, double x)
+{
+	if(x1!=x2) {
+		return y1+(y2-y1)*(x-x1)/(x2-x1);
+	}else return y1;
+}
+
+void Calc(void)
+{
+    {
+        static double Mass = 100.0;
+        static double Radius = 2.0;
+        double A = 0.0; //ускорение
+        double dt = 0.0; // изменение времени
+        double V = 0.0;  // мгновенная скорость
+        static double dX =1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+        double X = 0.0;    // полное перемещение в градусах
+        volatile double T = 0.0;    // полное время
+        volatile DWORD timer1 = 0;  // значение таймера 
+        volatile DWORD i = 0;  
+        double L = 2.0/(Mass*Radius*Radius); 
+        
+        do{
+            Calculate_A(V, L ,&A);
+            Calculate_dT(0, dX, V, A, &dt);
+            V = dX/dt;
+            //X += dX;
+            T += dt;
+            timer1 = (DWORD)(T/0.0000002); // результат вычислений            
+            i++;
+        }while ( i < 288000);
+        //i = 0
+        //T = 0;
+        //do{
+        //    Calculate_A(V, 2/(Mass*Radius*Radius),&A);
+        //    A = -A;
+        //    if(Calculate_dT(0, dX, V, A, &dt)!=0){
+        //        V=0;
+        //    } else
+        //    V = dX/dt;
+            //X += dX;
+        //    T += dt;
+        //    timer1 = T/0.0000002; // результат вычислений
+        //    i++;
+        //}while ( i < 64);
+    }
+}

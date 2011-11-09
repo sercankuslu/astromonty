@@ -23,7 +23,7 @@ static ST_ATTRIBUTE RequestData[] = {
     {STA_COMMAND,  sizeof(BYTE), &datareq},
     {STA_TIME_SNTP,  0, NULL},
 };
-
+extern DWORD_VAL CPUSPEED;
 /******************************************************************************
 *
 *
@@ -225,10 +225,11 @@ BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, int* pbBlobLen)
 			        break;
 			    case STA_TIME_SNTP:
 			    	{				    
-				    	static DWORD dwTime;
+				    	//static DWORD dwTime;
 						static BYTE vTime[11];
-						dwTime = SNTPGetUTCSeconds();
-						ultoa(dwTime, vTime);
+						//dwTime = SNTPGetUTCSeconds();
+						//ultoa(dwTime, vTime);
+						ultoa(CPUSPEED.Val, vTime);
 						
 				    	SendData[0].type = STA_TIME_SNTP;
 				        SendData[0].ulValueLen = sizeof(vTime);
