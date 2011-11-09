@@ -210,7 +210,7 @@ double LinInt(double x1,double y1,double x2,double y2, double x)
 void Calc(HDC hdc)
 {
     {
-        static double Mass = 500.0f;
+        static double Mass = 250.0f;
         static double Radius = 2.0f;
         double A = 0.1;
         double dt = 0.1;                
@@ -240,36 +240,43 @@ void Calc(HDC hdc)
         //    //SetPixel(hdc, (int)(T ), (int)(X ), 0x00FF00);
         //    //SetPixel(hdc, (int)(T ), (int)(V ), 0x0000FF);
         //}
-        dX = 1.0/(200.0*16.0);        
+        dX = 1.0/(200.0*16.0);    // в 1 градусе 3200 шагов    
         dt = 0;
         T = 0;
         X = 0;
         V = 0;
         A = 0;
-		int K = 0;
-		int K1 = 0;
-		int i =0;
-        //for(int i = 1; i< 500; i++)         
-        do { 
-			i++;
-			if(i>
+        int K = 0;
+        int K1 = 0;
+        int K2 = 0;
+        int K3 = 0;
+        int i =0;
+        double timer1 = 0;
+        //for(int i = 1; i< 500; i++)
+        MoveToEx(hdc, 100,0, NULL);
+        LineTo(hdc, 100,10*20);
+        do{
             Calculate_A(V, 2/(Mass*Radius*Radius),&A);
-            Calculate_dT(0, dX, V, A, &dt);            
+            Calculate_dT(0, dX, V, A, &dt);
             V = dX/dt;
             X += dX;
-            T += dt;   
-			K = (int)X;
-			if(K != K1){
-				K1 = K;
-				SetPixel(hdc, (int)(T*2), (int)(X), 0xFF0000);
-				SetPixel(hdc, (int)(T*2), (int)(V ), 0x00FF00);
-				SetPixel(hdc, (int)(T*2), (int)((18-A)*20), 0x0000FF);			
-				if(X<360) 
-					SetPixel(hdc, 100, (int)X, 0x000000);
-				else 
-					break;
-			}
-        } while ( V*200/360 < 2000);
+            T += dt;
+            timer1 = T/0.0000002; // результат вычислений
+            K = (int)(T*500.0);
+            K2 = (int)(V*20.0);
+            if((K != K1)||(K2!=K3)) {
+                K1 = K;
+                K3 = K2;
+                SetPixel(hdc, (int)(T*500), (int)(X*20), RGB(0,0,255));
+                SetPixel(hdc, (int)(T*500), (int)(V*20), RGB(0,255,0));
+                SetPixel(hdc, (int)(T*500), (int)((A)*10), RGB(255,0,0));
+                SetPixel(hdc, (int)(T*500), (int)(timer1/100), RGB(255,0,255));
+                /*if(X<180)
+                    SetPixel(hdc, 100, (int)(X*20), 0x000000);
+                else
+                    break;*/
+            }
+        }while ( V < 10);
     }
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -279,17 +286,17 @@ int Calculate_A(double V, double L, double *A)
 {
     double F; // частота полных шагов
     double R_G = 180/PI;
-    double dX = 360.0/200; // угол в градусах полного шага
+    //double dX = 1.0/200; // угол в градусах полного шага
     double Lm = 0.0;
     // усилие на валу
     static double MPower[] = {
-        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.0
+        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.01
     };
     // частота в Гц
     static double MaxF[] = {
-        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000, 3000
+        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 4000.0
     };
-    F = V/dX;
+    F = V * 200;
     for(int i = 0; i< sizeof(MaxF)-1; i++){
         if((F >= MaxF[i]) && (F < MaxF[i+1])){
             Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
