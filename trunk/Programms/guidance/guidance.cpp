@@ -210,51 +210,23 @@ double LinInt(double x1,double y1,double x2,double y2, double x)
 void Calc(HDC hdc)
 {
     {
-        static double Mass = 250.0f;
+        static double Mass = 100.0f;
         static double Radius = 2.0f;
-        double A = 0.1;
-        double dt = 0.1;                
-        double V = 1;
-        double dV = 0;
-        //double F = 0;
-        //int dir = 1;
-        static double dX = 1/(200*16);
-        double X = 0;
-        double T = 0;
-        // x = x0 + Vt
-        // t = (x-x0)/V
-        // x = Vt+ at*t/2
-        // (a/2)t*t + Vt - X = 0
-        // D = (V*V + 2 * X * a)
-        // t = (-V +- sqrt(D))/a
-        // dx = dV*dt + a * dt*dt/2
-        // D = (dV*dV + 2 * dx * a)
-        // dt = (-dV + sqrt(D))/a
-        //for(int i = 1; i< 500; i++)
-        //{               
-        //    dX = dV*dt + A*dt*dt/2;
-        //    dV = dX/dt;
-        //    X += dX;
-        //    T = i * dt;
-        //    V = dV;            
-        //    //SetPixel(hdc, (int)(T ), (int)(X ), 0x00FF00);
-        //    //SetPixel(hdc, (int)(T ), (int)(V ), 0x0000FF);
-        //}
-        dX = 1.0/(200.0*16.0);    // в 1 градусе 3200 шагов    
-        dt = 0;
-        T = 0;
-        X = 0;
-        V = 0;
-        A = 0;
-        int K = 0;
+        double A = 0.0; //ускорение
+        double dt = 0.0; // изменение времени
+        double V = 0.0;  // мгновенная скорость
+        static double dX =1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+        double X = 0;    // полное перемещение в градусах
+        double T = 0;    // полное время
+        int K = 0;       // флаги для оптимизации вывода
         int K1 = 0;
         int K2 = 0;
         int K3 = 0;
-        int i =0;
-        double timer1 = 0;
-        //for(int i = 1; i< 500; i++)
+        double timer1 = 0;  // значение таймера
         MoveToEx(hdc, 100,0, NULL);
         LineTo(hdc, 100,10*20);
+        MoveToEx(hdc, 0, 10*20, NULL);
+        LineTo(hdc, 1000,10*20);
         do{
             Calculate_A(V, 2/(Mass*Radius*Radius),&A);
             Calculate_dT(0, dX, V, A, &dt);
@@ -267,16 +239,36 @@ void Calc(HDC hdc)
             if((K != K1)||(K2!=K3)) {
                 K1 = K;
                 K3 = K2;
+                 SetPixel(hdc, (int)(T*500), (int)(X*20), RGB(0,0,255));
+                 SetPixel(hdc, (int)(T*500), (int)(V*20), RGB(0,255,0));
+                 SetPixel(hdc, (int)(T*500), (int)((A)*10), RGB(255,0,0));
+                 SetPixel(hdc, (int)(T*500), (int)(timer1/100), RGB(255,0,255));
+            }
+            if(X>180.0) break;
+        }while ( V < 10);
+        //T = 0;
+        do{
+            Calculate_A(V, 2/(Mass*Radius*Radius),&A);
+            A = -A;
+            if(Calculate_dT(0, dX, V, A, &dt)!=0){
+                V=0;
+            } else
+            V = dX/dt;
+            X += dX;
+            T += dt;
+            timer1 = T/0.0000002; // результат вычислений
+            K = (int)(T*500.0);
+            K2 = (int)(V*20.0);
+            if((K != K1)||(K2!=K3)) {
+                K1 = K;
+                K3 = K2;
                 SetPixel(hdc, (int)(T*500), (int)(X*20), RGB(0,0,255));
                 SetPixel(hdc, (int)(T*500), (int)(V*20), RGB(0,255,0));
-                SetPixel(hdc, (int)(T*500), (int)((A)*10), RGB(255,0,0));
+                SetPixel(hdc, (int)(T*500), (int)((-A)*10), RGB(255,0,0));
                 SetPixel(hdc, (int)(T*500), (int)(timer1/100), RGB(255,0,255));
-                /*if(X<180)
-                    SetPixel(hdc, 100, (int)(X*20), 0x000000);
-                else
-                    break;*/
             }
-        }while ( V < 10);
+            if(X<0.0) break;
+        }while ( V > 0);
     }
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -294,15 +286,20 @@ int Calculate_A(double V, double L, double *A)
     };
     // частота в Гц
     static double MaxF[] = {
-        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 4000.0
+        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 2250.0
     };
+    int sizeMaxF = sizeof(MaxF)/sizeof(double);
     F = V * 200;
-    for(int i = 0; i< sizeof(MaxF)-1; i++){
-        if((F >= MaxF[i]) && (F < MaxF[i+1])){
-            Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
-            break;
+    if(F > MaxF[sizeMaxF-1]){
+        Lm = MPower[sizeMaxF-1];
+    } else {
+        for(int i = 0; i< sizeMaxF-1; i++){
+            if((F >= MaxF[i]) && (F < MaxF[i+1])){
+                Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
+                break;
+            }
         }
-    }    
+    }
     *A = Lm * 360 * R_G * L;
     return 0;
 }
