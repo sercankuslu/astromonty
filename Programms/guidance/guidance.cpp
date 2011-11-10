@@ -8,12 +8,12 @@
 #define MAX_LOADSTRING 100
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 100
-#define FREQ_STEP 20
+#define FREQ_STEP 23
 static double Accelerate[ACCELERATE_SIZE];
 
 // усилие на валу
 static double MPower[] = {
-	0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.01
+	0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.00
 };
 // частота в Гц
 static double MaxF[] = {
@@ -277,7 +277,7 @@ void Calc(HDC hdc)
 			}
 			//if(X>PI) break;
 			i++;
-		}while ( i< 32000);
+		}while ( i< 320000);
 	}
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -374,6 +374,7 @@ int InitAccelerate(double* Power, double * Freq, WORD Len, double I)
 				break;
 			}
 		}
+		if(F > Freq[Len-1]) Lm = Power[Len-1];
 		F += FREQ_STEP;
 		Accelerate[j] = Lm / I;
 	}
