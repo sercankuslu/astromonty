@@ -6,19 +6,30 @@
 #include <math.h>
 
 #define MAX_LOADSTRING 100
+
 #define PI 3.1415926535897932384626433832795
-#define ACCELERATE_SIZE 100
-#define FREQ_STEP 23
+#define ACCELERATE_SIZE 111
+#define FREQ_STEP 20
 static double Accelerate[ACCELERATE_SIZE];
 
-// усилие на валу
-static double MPower[] = {
-	0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.00
+typedef struct FREQ_POWER {
+    WORD Freq;
+    double Power;
+} FREQ_POWER;
+static FREQ_POWER FreqPower[] = {
+    {0,     0.850000000},
+    {100,   0.764642857},
+    {250,   0.666666667},
+    {500,   0.600000000},
+    {750,   0.533333333},
+    {1000,  0.466666667},
+    {1250,  0.400000000},
+    {1500,  0.333333333},
+    {1750,  0.222222222},
+    {2000,  0.100000000},
+    {2200,  0.000000000}
 };
-// частота в Гц
-static double MaxF[] = {
-	0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 2250.0
-};
+
 
 // Глобальные переменные:
 HINSTANCE hInst;								// текущий экземпляр
@@ -32,12 +43,12 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
  
 
-void Calc(HDC hdc);
+void Calc(HWND hWnd, HDC hdc);
 double M(double F);
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
 int Calculate_A(DWORD F, double *A);
-int InitAccelerate(double* Power, double * Freq, WORD Len, double L);
+int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
 
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -58,7 +69,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			static double Grad_to_Rad = 180.0/PI;
 			double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
 			//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-			InitAccelerate(MPower, MaxF, sizeof(MaxF)/sizeof(double), I);
+			InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
 		}
 	MSG msg;
 	HACCEL hAccelTable;
@@ -193,7 +204,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hWnd, &ps);
 				//LineTo(hdc, 100,100);
 		// TODO: добавьте любой код отрисовки...
-				Calc(hdc);
+				Calc(hWnd, hdc);
 		EndPaint(hWnd, &ps);
 
 		break;
@@ -233,7 +244,7 @@ double LinInt(double x1,double y1,double x2,double y2, double x)
 		return y1+(y2-y1)*(x-x1)/(x2-x1);
 	}else return y1;
 }
-void Calc(HDC hdc)
+void Calc(HWND hWnd, HDC hdc)
 {
 	{
 		
@@ -251,14 +262,15 @@ void Calc(HDC hdc)
 		double timer1 = 0;  // значение таймера
 		DWORD F = 0;
 		DWORD i = 0;
-		
-		MoveToEx(hdc, 100,0, NULL);
-		LineTo(hdc, 100,10*20);
-		MoveToEx(hdc, 0, 10*20, NULL);
-		LineTo(hdc, 500,10*20);
-		
-		do{
-			F =(DWORD)(V * 180 * 200/PI);
+		RECT rect;
+        double Vf = 180 * 200/PI;
+        GetClientRect(hWnd, &rect);
+        MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
+        LineTo(hdc, rect.right, rect.bottom - 9);
+        MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
+        LineTo(hdc, rect.left+9, rect.top);        
+        do{
+			F =(DWORD)(V * Vf);
 			Calculate_A(F, &A);
 			Calculate_dT(0, dX, V, A, &dt);
 			V = dX/dt;
@@ -270,14 +282,36 @@ void Calc(HDC hdc)
 			if((K != K1)||(K2!=K3)) {
 				K1 = K;
 				K3 = K2;
-				SetPixel(hdc, (int)(T*500), (int)(X*180*20/PI), RGB(0,0,255));
-				SetPixel(hdc, (int)(T*500), (int)(V*180*20/PI), RGB(0,255,0));
-				SetPixel(hdc, (int)(T*500), (int)((1.7-A)*180*5/PI), RGB(255,0,0));
-				SetPixel(hdc, (int)(T*500), (int)(timer1/100), RGB(255,0,255));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
+				SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
 			}
 			//if(X>PI) break;
 			i++;
-		}while ( i< 320000);
+		}while ( i< 10000);
+        i=0;        
+        do{
+            F =(DWORD)(V * Vf);
+            Calculate_A(F, &A);            
+            Calculate_dT(0, dX, V, -A, &dt);
+            V = dX/dt;
+            X += dX;
+            T += dt;
+            timer1 = T/0.0000002; // результат вычислений
+            K = (int)(T*500.0);
+            K2 = (int)(V*20.0);
+            if((K != K1)||(K2!=K3)) {
+                K1 = K;
+                K3 = K2;
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
+                SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
+            }
+            //if(X>PI) break;
+            i++;
+        }while ( i< 11000);
 	}
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -361,20 +395,29 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
  * I	 - Момент инерции  
  * 
  ************************************************************************/
-int InitAccelerate(double* Power, double * Freq, WORD Len, double I)
+int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
 {    
 	double Lm = 0.0;
 	int i;
 	int j;
+    int k = 0;
+    WORD Freq1;
+    WORD Freq2;
+    BYTE b = 0;
 	WORD F = 0;
 	for(j = 0; j < ACCELERATE_SIZE; j++){
-		for(int i = 0; i< Len-1; i++){
-			if((F >= Freq[i]) && (F < Freq[i+1])){
-				Lm = LinInt(Freq[i],Power[i],Freq[i+1],Power[i+1], F);
+		for(int i = k; i< Len-1; i++){
+            Freq1 = FreqPower[i].Freq;  
+            Freq2 = FreqPower[i+1].Freq;            
+			if((F >= Freq1) && (F <= Freq2)){
+				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
+                b = 1;
+                k = i;
 				break;
 			}
 		}
-		if(F > Freq[Len-1]) Lm = Power[Len-1];
+		if(b == 0) 
+            Lm = FreqPower[Len - 1].Power;
 		F += FREQ_STEP;
 		Accelerate[j] = Lm / I;
 	}

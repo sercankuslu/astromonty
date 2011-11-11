@@ -114,6 +114,29 @@
 APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
+DWORD_VAL CPUSPEED;
+#define PI 3.1415926535897932384626433832795
+#define ACCELERATE_SIZE 100
+#define FREQ_STEP 23
+static double Accelerate[ACCELERATE_SIZE];
+
+typedef struct FREQ_POWER {
+    WORD Freq;
+    double Power;
+} FREQ_POWER;
+static FREQ_POWER FreqPower[] = {
+    {0,     0.850000000},
+    {100,   0.764642857},
+    {250,   0.666666667},
+    {500,   0.600000000},
+    {750,   0.533333333},
+    {1000,  0.466666667},
+    {1250,  0.400000000},
+    {1500,  0.333333333},
+    {1750,  0.222222222},
+    {2000,  0.100000000},
+    {2250,  0.000000000}
+};
 
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
@@ -129,11 +152,10 @@ static void InitializeBoard(void);
 static void ProcessIO(void);
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
-int Calculate_A(double V, double L, double *A);
+int Calculate_A(DWORD F, double *A);
+int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
 double LinInt(double x1,double y1,double x2,double y2, double x);
 void Calc(void);
-DWORD_VAL CPUSPEED;
-#define PI 3.1415926535897932384626433832795
 
 
 #if defined(WF_CS_TRIS)
@@ -221,7 +243,7 @@ int main(void)
 	
 	
     static DWORD t = 0;
-    static DWORD d = 0;
+   // static DWORD d = 0;
     static DWORD dwLastIP = 0;
 
     //volatile DWORD UTCT;
@@ -242,7 +264,21 @@ int main(void)
     }
 	
 	
-    
+    {
+		// I = (m*r^2/4) + (m*l^2)/12
+		static double Mass = 500.0f;
+		static double Radius = 0.30f;
+		static double Length = 2.0f;
+		static double Reduction = 360.0f;
+		//static double Grad_to_Rad = 180.0/PI;
+		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
+		InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
+    }
+	Calc();
+	while(1){
+	    Nop();
+	}
 	
 	//BYTE res;
 	//char bfr[64];
@@ -389,7 +425,17 @@ int main(void)
 		// Wait for PLL to lock
 		while(OSCCONbits.LOCK!= 1) {};
  	}
-
+    {
+		// I = (m*r^2/4) + (m*l^2)/12
+		static double Mass = 500.0f;
+		static double Radius = 0.30f;
+		static double Length = 2.0f;
+		static double Reduction = 360.0f;
+		//static double Grad_to_Rad = 180.0/PI;
+		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
+		InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
+    }
 	Calc();
 
     // Now that all items are initialized, begin the co-operative
@@ -1344,37 +1390,17 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 #endif
 
 // должна возвращать значение ускорения в зависимости от скорости
-// V - скорость в градусах в сек
+// F - частота полных шагов
 // L - момент инерции системы
-int Calculate_A(double V, double L, double *A)
+int Calculate_A(DWORD F, double *A)
 {
-    double F; // частота полных шагов
-    double R_G = 180/PI;
-    //double dX = 1.0/200; // угол в градусах полного шага
-    double Lm = 0.0;
-    int i;
-    // усилие на валу
-    static double MPower[] = {
-        0.85, 0.764642857, 0.67, 0.6, 0.53, 0.46, 0.4, 0.33, 0.22, 0.1, 0.01
-    };
-    // частота в Гц
-    static double MaxF[] = {
-        0.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 1250.0, 1500.0, 1750.0, 2000.0, 2250.0
-    };
-    int sizeMaxF = sizeof(MaxF)/sizeof(double);
-    F = V * 200;
-    if(F > MaxF[sizeMaxF-1]){
-        Lm = MPower[sizeMaxF-1];
-    } else {
-        for( i = 0; i< sizeMaxF-1; i++){
-            if((F >= MaxF[i]) && (F < MaxF[i+1])){
-                Lm = LinInt(MaxF[i],MPower[i],MaxF[i+1],MPower[i+1], F);
-                break;
-            }
-        }
-    }
-    *A = Lm * 360 * R_G * L;
-    return 0;
+	DWORD f = (DWORD)(F/FREQ_STEP);
+	if(f < ACCELERATE_SIZE){
+		*A = Accelerate[f];
+	} else {
+		*A = Accelerate[ACCELERATE_SIZE-1];
+	}
+	return 0;
 }
 
 // функция возвращает время, прошедшее
@@ -1382,79 +1408,113 @@ int Calculate_A(double V, double L, double *A)
 // при начальной скорости V и ускорении A
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
 {
-    double T1 = 0.0;
-    double T2 = 0.0;
-    int res = 0;
-    if((A==0.0)&&(V==0.0)){
-        return -1; // ошибка
-    }
-    if((A == 0)&&(V != 0.0)){        
-        *T = (Xend-Xbeg)/V;
-        return 0;  // нет ошибки
-    }
-    // Xend = Xbeg + V*T + (A * T^2)/2
-    // (A/2)T^2 + V*T + (Xbeg - Xend) = 0
-    res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
-    if(res > 0) {
-        *T = T1;
-        return 0;
-    }
-    else return 1;
+	double T1 = 0.0;
+	double T2 = 0.0;
+	int res = 0;
+	if((A==0.0)&&(V==0.0)){
+		return -1; // ошибка
+	}
+	if((A == 0)&&(V != 0.0)){
+		*T = (Xend-Xbeg)/V;
+		return 0;  // нет ошибки
+	}
+	// Xend = Xbeg + V*T + (A * T^2)/2
+	// (A/2)T^2 + V*T + (Xbeg - Xend) = 0
+	res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
+	if(res > 0) {
+		*T = T1;
+		return 0;
+	}
+	else return 1;
 }
 // вычисляет корени квадратного уравнения
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
 {
-    // Ax^2+Bx+C=0
-    double D = 0.0f;
-    double R1 = 0.0f;
-    volatile double sqrtD = 0.0f;
-    if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
-    *X1 = 0.0;
-    *X2 = 0.0;
-        
-    if(A == 0.0){
-        // Bx+C = 0
-        // x = -C/B
-        if(C!=0.0){
-            *X1 = -B/C;
-        } else {
-            *X1 = 0.0;
-        }
-        return 1; // не квадратное уравнение, один корень
-    }
-    D = B*B - 4.0 * A * C;
-    if(D<0.0) return 0; // дискриминант 0 корней нет
-	sqrtD = sqrtf(D);
-    R1 = (-B + sqrtD)/(2*A);
-    *X1 = R1;
-    *X2 = R1;
-    //*X2 = (-B - sqrtD)/(2*A);
-    return 2; // два корня уравнения
+	// Ax^2+Bx+C=0
+	double D = 0.0;
+	if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
+	*X1 = 0.0;
+	*X2 = 0.0;
+	if(A == 0.0){
+		// Bx+C = 0
+		// x = -C/B
+		if(C!=0.0){
+			*X1 = -B/C;
+		} else {
+			*X1 = 0.0;
+		}
+		return 1; // не квадратное уравнение, один корень
+	}
+	D = B*B - 4.0 * A * C;
+	if(D<0.0) return 0; // дискриминант 0 корней нет
+
+	*X1 = (-B+sqrtf(D))/(2*A);
+	//*X2 = (-B-sqrtf(D))/(2*A);
+	return 2; // два корня уравнения
 }
-double LinInt(double x1,double y1,double x2,double y2, double x)
-{
-	if(x1!=x2) {
-		return y1+(y2-y1)*(x-x1)/(x2-x1);
-	}else return y1;
+/**************************************************************************
+ * M = Ia =>   a = M/I
+ * M - момент силы
+ * I - момент инерции
+ * a - угловое ускорение в радианах в секунду за секунду
+ * для альфы: ( сплошной цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
+ * I = (m*r^2/4) + (m*l^2)/12  
+ * 
+ * для дельты: ( полый тонкостенный цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
+ * I = (m*r^2/2)+ (m*l^2/12)
+ **************************************************************************
+ * Параметры функции
+ * Power - массив моментов силы двигателя
+ * Freq  - массив частот шагов двигателя
+ * Len   - размер массивов
+ * I	 - Момент инерции  
+ * 
+ ************************************************************************/
+int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
+{    
+	double Lm = 0.0;
+	int i;
+	int j;
+    WORD Freq1;
+    WORD Freq2;
+    BYTE b = 0;
+	WORD F = 0;
+	for(j = 0; j < ACCELERATE_SIZE; j++){
+		for(i = 0; i< Len-1; i++){
+            Freq1 = FreqPower[i].Freq;  
+            Freq2 = FreqPower[i+1].Freq;            
+			if((F >= Freq1) && (F < Freq2)){
+				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
+                b = 1;
+				break;
+			}
+		}
+		if(b == 0) 
+            Lm = FreqPower[Len - 1].Power;
+		F += FREQ_STEP;
+		Accelerate[j] = Lm / I;
+	}
+	return 0;
 }
+
 
 void Calc(void)
 {
     {
-        static double Mass = 100.0;
-        static double Radius = 2.0;
-        double A = 0.0; //ускорение
-        double dt = 0.0; // изменение времени
-        double V = 0.0;  // мгновенная скорость
-        static double dX =1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-        double X = 0.0;    // полное перемещение в градусах
-        volatile double T = 0.0;    // полное время
-        volatile DWORD timer1 = 0;  // значение таймера 
-        volatile DWORD i = 0;  
-        double L = 2.0/(Mass*Radius*Radius); 
+		double A = 0.0; //ускорение в радианах в сек за сек
+		double dt = 0.0; // изменение времени
+		double V = 0.0;  // мгновенная скорость в радианах
+		//static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+		static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
+		double T = 0;    // полное время
+		double timer1 = 0;  // значение таймера
+		DWORD F = 0;
+		DWORD i = 0;		
+        double Vf = 180 * 200/PI;
         
         do{
-            Calculate_A(V, L ,&A);
+            F =(DWORD)(V * Vf);
+			Calculate_A(F, &A);
             Calculate_dT(0, dX, V, A, &dt);
             V = dX/dt;
             //X += dX;
@@ -1477,4 +1537,10 @@ void Calc(void)
         //    i++;
         //}while ( i < 64);
     }
+}
+double LinInt(double x1,double y1,double x2,double y2, double x)
+{
+	if(x1!=x2) {
+		return y1+(y2-y1)*(x-x1)/(x2-x1);
+	}else return y1;
 }
