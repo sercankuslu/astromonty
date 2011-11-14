@@ -48,7 +48,7 @@
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Aseem Swalah         4/17/08  	Original
  ********************************************************************/
-
+#define USE_PROTOCOL_CLIENT
 #include "TCPIPConfig.h" 
 
 #if defined(STACK_USE_BERKELEY_API)
