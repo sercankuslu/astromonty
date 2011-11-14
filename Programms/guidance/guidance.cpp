@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "guidance.h"
 #include <math.h>
+#include <stdio.h>
+
 
 #define MAX_LOADSTRING 100
 
@@ -32,7 +34,11 @@ static FREQ_POWER FreqPower[] = {
 
 
 // √лобальные переменные:
-HINSTANCE hInst;								// текущий экземпл€р
+#define FIRST_TIMER 1
+int nTimerID;
+HINSTANCE hInst;// текущий экземпл€р
+HWND hWindow;
+
 TCHAR szTitle[MAX_LOADSTRING];					// “екст строки заголовка
 TCHAR szWindowClass[MAX_LOADSTRING];			// им€ класса главного окна
 
@@ -87,6 +93,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
+	SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
 	// ÷икл основного сообщени€:
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -162,7 +169,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
-	
+	hWindow = hWnd;
 	return TRUE;
 }
 
@@ -181,7 +188,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
-
+	RECT rect;
+	static int T = 0;
+	static bool k = false;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -200,12 +209,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
+	case WM_TIMER: 
+
+		switch (wParam) 
+		{ 
+		case FIRST_TIMER: 	
+			T++;
+			if(T>=360) T-=360;
+			//GetClientRect(hWnd, &rect);
+			rect.top = 100;
+			rect.bottom = 300;
+			rect.left = 100;
+			rect.right = 300;
+			InvalidateRect(hWnd, &rect, TRUE);
+			k = true;
+		}
+		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 				//LineTo(hdc, 100,100);
 		// TODO: добавьте любой код отрисовки...
-				Calc(hWnd, hdc);
+
+				
+		if(k)
+		{
+			double X = 200+100*sin(T*PI/180);
+			double Y = 200+100*cos(T*PI/180);
+			MoveToEx(hdc, 200,200, NULL);
+			LineTo(hdc,(int)X, (int)Y);
+			k=false;
+		} else Calc(hWnd, hdc);	
 		EndPaint(hWnd, &ps);
+	
 
 		break;
 	case WM_DESTROY:
@@ -262,20 +297,27 @@ void Calc(HWND hWnd, HDC hdc)
 		double timer1 = 0;  // значение таймера
 		DWORD F = 0;
 		DWORD i = 0;
+		DWORD k = 16;
 		RECT rect;
         double Vf = 180 * 200/PI;
+		char RRR[256];
         GetClientRect(hWnd, &rect);
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
         LineTo(hdc, rect.right, rect.bottom - 9);
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
         LineTo(hdc, rect.left+9, rect.top);        
         do{
-			F =(DWORD)(V * Vf);
-			Calculate_A(F, &A);
-			Calculate_dT(0, dX, V, A, &dt);
-			V = dX/dt;
+			if(k>=16)
+			{
+				F =(DWORD)(V * Vf);
+				Calculate_A(F, &A);
+				Calculate_dT(0, dX*16, V, A, &dt);
+				V = dX*16/dt;				
+				k=0;
+			}
+			k++;			
+			T += dt/16;
 			X += dX;
-			T += dt;
 			timer1 = T/0.0000002; // результат вычислений
 			K = (int)(T*500.0);
 			K2 = (int)(V*20.0);
@@ -285,33 +327,39 @@ void Calc(HWND hWnd, HDC hdc)
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
-				SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(100), RGB(255,0,255));
+				MoveToEx(hdc, rect.left + 9 + (int)(T)*500, rect.bottom - 9, NULL);
+				LineTo(  hdc, rect.left + 9 + (int)(T)*500, rect.top); 
 			}
 			//if(X>PI) break;
 			i++;
-		}while ( i< 10000);
-        i=0;        
-        do{
-            F =(DWORD)(V * Vf);
-            Calculate_A(F, &A);            
-            Calculate_dT(0, dX, V, -A, &dt);
-            V = dX/dt;
-            X += dX;
-            T += dt;
-            timer1 = T/0.0000002; // результат вычислений
-            K = (int)(T*500.0);
-            K2 = (int)(V*20.0);
-            if((K != K1)||(K2!=K3)) {
-                K1 = K;
-                K3 = K2;
-                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
-                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
-                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
-                SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
-            }
-            //if(X>PI) break;
-            i++;
-        }while ( i< 11000);
+		}while ( i<32000);
+		sprintf(RRR,"%d",i);
+		TextOutA(hdc, 0,0, (char*)RRR, strlen(RRR));
+		sprintf(RRR,"%fs",T);
+		TextOutA(hdc, 100,0, (char*)RRR, strlen(RRR));
+//         i=0;        
+//         do{
+//             F =(DWORD)(V * Vf);
+//             Calculate_A(F, &A);            
+//             Calculate_dT(0, dX, V, -A, &dt);
+//             V = dX/dt;
+//             X += dX;
+//             T += dt;
+//             timer1 = T/0.0000002; // результат вычислений
+//             K = (int)(T*500.0);
+//             K2 = (int)(V*20.0);
+//             if((K != K1)||(K2!=K3)) {
+//                 K1 = K;
+//                 K3 = K2;
+//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
+//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
+//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
+//                 SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
+//             }
+//             //if(X>PI) break;
+//             i++;
+//        }while ( i< 11000);
 	}
 }
 // должна возвращать значение ускорени€ в зависимости от скорости

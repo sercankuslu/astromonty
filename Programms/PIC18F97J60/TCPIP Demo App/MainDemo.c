@@ -779,6 +779,7 @@ void DisplayIPValue(IP_ADDR IPVal)
 // Processes A/D data from the potentiometer
 static void ProcessIO(void)
 {
+	WORD ADRES_Data;
 #if defined(__C30__) || defined(__C32__)
     // Convert potentiometer result into ASCII string
     uitoa((WORD)ADC1BUF0, AN0String);
@@ -797,8 +798,12 @@ static void ProcessIO(void)
 		ADCON2 = temp;
 	}
 	#endif
-	
-	DisplayBright = (DisplayBright+(1024 - *((WORD*)(&ADRESL))))/2;
+	ADRES_Data = *((WORD*)(&ADRESL));
+	if(ADRES_Data>10){
+		DisplayBright = (DisplayBright+(1024 - ADRES_Data))/2;
+	} else {
+		DisplayBright = (DisplayBright+(1024 - 900))/2;
+	}	
 		
 	if(DisplayBright<0){
 		DisplayBright = 0;

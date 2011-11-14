@@ -116,8 +116,8 @@ static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM default
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
 #define PI 3.1415926535897932384626433832795
-#define ACCELERATE_SIZE 100
-#define FREQ_STEP 23
+#define ACCELERATE_SIZE 111
+#define FREQ_STEP 20
 static double Accelerate[ACCELERATE_SIZE];
 
 typedef struct FREQ_POWER {
@@ -150,10 +150,10 @@ static FREQ_POWER FreqPower[] = {
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
-int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
+int SolvQuadratic(double A, double B, double C, double* X1/*, double* X2*/);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
-int Calculate_A(DWORD F, double *A);
-int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
+int Calculate_A(WORD F, double *A);
+int InitAccelerate(FREQ_POWER* FqPwr, WORD Len, double I);
 double LinInt(double x1,double y1,double x2,double y2, double x);
 void Calc(void);
 
@@ -204,7 +204,7 @@ void HighVector(void){_asm goto HighISR _endasm}
 void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
 {
     Nop();
-Nop();
+	Nop();
 }
 void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 {
@@ -213,11 +213,15 @@ void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
-	CPUSPEED.word.LW = TMR8;
-	CPUSPEED.word.HW = TMR9;
-    TMR6 = 0x0000;
-    TMR8 = 0x0000;
-    TMR9 = 0x0000;    
+	static WORD T;
+	static WORD T1;
+	T  = TMR8;
+	T1 = TMR9HLD;
+	TMR9HLD = 0x0000;
+	TMR8 = 0x0000;
+    TMR6 = 0x7FFF;
+	CPUSPEED.word.LW = T;
+	CPUSPEED.word.HW = T1;
     IFS2bits.T6IF = 0; // Clear T3 interrupt flag
 }	
 #elif defined(__C32__)
@@ -250,7 +254,19 @@ int main(void)
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
     
- 	
+ 	{
+		// I = (m*r^2/4) + (m*l^2)/12
+		static double Mass = 500.0f;
+		static double Radius = 0.30f;
+		static double Length = 2.0f;
+		static double Reduction = 360.0f;
+		int SizeFreq = sizeof(FreqPower)/sizeof(FreqPower[0]);
+		//static double Grad_to_Rad = 180.0/PI;
+		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
+		InitAccelerate(FreqPower, SizeFreq, I);
+    }
+	Calc();
      
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
@@ -263,23 +279,7 @@ int main(void)
         AD2PCFGL = 0xFFFF;
     }
 	
-	
-    {
-		// I = (m*r^2/4) + (m*l^2)/12
-		static double Mass = 500.0f;
-		static double Radius = 0.30f;
-		static double Length = 2.0f;
-		static double Reduction = 360.0f;
-		//static double Grad_to_Rad = 180.0/PI;
-		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-		InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
-    }
-	Calc();
-	while(1){
-	    Nop();
-	}
-	
+		
 	//BYTE res;
 	//char bfr[64];
     //BYTE length=0;
@@ -292,21 +292,22 @@ int main(void)
 
     InitializeBoard();
     // calculate CPU speed  
-    T6CON = 0x0002;
-    T8CON = 0x0008;
-    T9CON = 0x0000;
-    PR8=0xFFFF;
-    PR9=0xFFFF;
-    TMR6 = 0x0000;
-    TMR8 = 0x0000;
-    TMR9 = 0x0000;	
-    CPUSPEED.Val = 0;
-    IFS2bits.T6IF = 0;
-    IEC2bits.T6IE = 1;
-    IPC11bits.T6IP = 7;
-    T6CONbits.TON = 1;
-    T8CONbits.TON = 1;	
-    
+    {
+	    T6CON = 0x0002;
+	    T8CON = 0x0008;
+	    T9CON = 0x0000;
+	    PR8=0xFFFF;
+	    PR9=0xFFFF;
+	    TMR6 = 0x7FFF;
+	    TMR8 = 0x0000;
+	    TMR9 = 0x0000;	
+	    CPUSPEED.Val = 0;
+	    IFS2bits.T6IF = 0;
+	    IEC2bits.T6IE = 1;
+	    IPC11bits.T6IP = 7;
+	    T6CONbits.TON = 1;
+	    T8CONbits.TON = 1;	
+    }
      
     /*	
 	while(1){
@@ -411,20 +412,8 @@ int main(void)
     mDNSMulticastFilterRegister();			
 	#endif
 
-
-	{	
-	 	// Configure PLL prescaler, PLL postscaler, PLL divisor
-		PLLFBD=0x7F; // M = 128
-		CLKDIVbits.PLLPOST = 0;// N2 = 2
-		CLKDIVbits.PLLPRE = 3; // N1 = 5
-		// Initiate Clock Switch to Primary Oscillator with PLL (NOSC = 0b011)
-		__builtin_write_OSCCONH(0x03);
-		__builtin_write_OSCCONL(0x01);
-		// Wait for Clock switch to occur
-		while (OSCCONbits.COSC!= 0b011);
-		// Wait for PLL to lock
-		while(OSCCONbits.LOCK!= 1) {};
- 	}
+	
+ 	//if(0)
     {
 		// I = (m*r^2/4) + (m*l^2)/12
 		static double Mass = 500.0f;
@@ -436,7 +425,7 @@ int main(void)
 		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
 		InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
     }
-	Calc();
+	//Calc();
 
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
@@ -462,11 +451,11 @@ int main(void)
 		
 		
 		
-	if(PORTAbits.RA13 != t){
-	    t = PORTAbits.RA13;
-            LED0_IO ^= 1;
-            AdjustLocalRTCTime();            
-	}
+		if(PORTAbits.RA13 != t){
+		    t = PORTAbits.RA13;
+	            LED0_IO ^= 1;
+	            AdjustLocalRTCTime();            
+		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
@@ -476,7 +465,7 @@ int main(void)
         StackApplications();
 
         #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
-	ZeroconfLLProcess();
+		ZeroconfLLProcess();
         #endif
 
         #if defined(STACK_USE_ZEROCONF_MDNS_SD)
@@ -924,7 +913,19 @@ static void InitializeBoard(void)
 		//PLLFBD = 0x7f;				// Multiply by 40 for 160MHz VCO output (8MHz XT oscillator)
 		//CLKDIV = 0x0004;			// FRC: divide by 2, PLLPOST: divide by 2, PLLPRE: divide by 2
 		//OSCCON = 0x0301;	
-	
+		{	
+		 	// Configure PLL prescaler, PLL postscaler, PLL divisor
+			PLLFBD=0x7E; // M = 128
+			CLKDIVbits.PLLPOST = 0;// N2 = 2
+			CLKDIVbits.PLLPRE = 3; // N1 = 5
+			// Initiate Clock Switch to Primary Oscillator with PLL (NOSC = 0b011)
+			__builtin_write_OSCCONH(0x03);
+			__builtin_write_OSCCONL(0x01);
+			// Wait for Clock switch to occur
+			while (OSCCONbits.COSC!= 0b011);
+			// Wait for PLL to lock
+			while(OSCCONbits.LOCK!= 1) {};
+	 	}
 		// Port I/O
 		AD1PCFGHbits.PCFG23 = 1;	// Make RA7 (BUTTON1) a digital input
 		AD1PCFGHbits.PCFG20 = 1;	// Make RA12 (INT1) a digital input for MRF24WB0M PICtail Plus interrupt
@@ -1392,9 +1393,9 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 // должна возвращать значение ускорения в зависимости от скорости
 // F - частота полных шагов
 // L - момент инерции системы
-int Calculate_A(DWORD F, double *A)
+int Calculate_A(WORD f, double *A)
 {
-	DWORD f = (DWORD)(F/FREQ_STEP);
+	//WORD f = (WORD)(F/FREQ_STEP);
 	if(f < ACCELERATE_SIZE){
 		*A = Accelerate[f];
 	} else {
@@ -1420,21 +1421,23 @@ int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
 	}
 	// Xend = Xbeg + V*T + (A * T^2)/2
 	// (A/2)T^2 + V*T + (Xbeg - Xend) = 0
-	res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
+	//res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
+	res = SolvQuadratic(A,V,(Xbeg-Xend),&T1/*, &T2*/); 
 	if(res > 0) {
 		*T = T1;
 		return 0;
 	}
 	else return 1;
 }
-// вычисляет корени квадратного уравнения
-int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
+// вычисляет больший корень квадратного уравнения
+int SolvQuadratic(double A, double B, double C, double* X1/*, double* X2*/)
 {
 	// Ax^2+Bx+C=0
-	double D = 0.0;
-	if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
-	*X1 = 0.0;
-	*X2 = 0.0;
+	double D;// = 0.0;
+	if((X1 == NULL) /*|| (X2 == NULL)*/) 
+		return -1; // ошибка: неверные указатели
+	//*X1 = 0.0;
+	//*X2 = 0.0;
 	if(A == 0.0){
 		// Bx+C = 0
 		// x = -C/B
@@ -1445,10 +1448,15 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
 		}
 		return 1; // не квадратное уравнение, один корень
 	}
-	D = B*B - 4.0 * A * C;
-	if(D<0.0) return 0; // дискриминант 0 корней нет
+	//D = B*B - 4.0 * A * C;
+	D = B*B - 2.0 * A * C;
+	if(D<0.0) {
+		*X1=0.0;
+		return 0; // дискриминант 0 корней нет
+	}
 
-	*X1 = (-B+sqrtf(D))/(2*A);
+	*X1 = (-B+sqrtf(D))/A;
+	//*X1 = (-B+sqrtf(D))/(2*A);
 	//*X2 = (-B-sqrtf(D))/(2*A);
 	return 2; // два корня уравнения
 }
@@ -1470,28 +1478,32 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
  * I	 - Момент инерции  
  * 
  ************************************************************************/
-int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
+int InitAccelerate(FREQ_POWER* FqPwr, WORD Len, double I)
 {    
 	double Lm = 0.0;
 	int i;
 	int j;
-    WORD Freq1;
-    WORD Freq2;
+    double Freq1;
+    double Freq2;
+    double Pw1;
+    double Pw2;
     BYTE b = 0;
-	WORD F = 0;
+	double F = 0;
 	for(j = 0; j < ACCELERATE_SIZE; j++){
 		for(i = 0; i< Len-1; i++){
-            Freq1 = FreqPower[i].Freq;  
-            Freq2 = FreqPower[i+1].Freq;            
+            Freq1 = FqPwr[i].Freq;  
+            Freq2 = FqPwr[i+1].Freq;            
 			if((F >= Freq1) && (F < Freq2)){
-				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
+				Pw1 = FqPwr[i].Power;
+				Pw2 = FqPwr[i+1].Power;
+				Lm = LinInt(Freq1,Pw1,Freq2,Pw2, F);
                 b = 1;
 				break;
 			}
 		}
 		if(b == 0) 
-            Lm = FreqPower[Len - 1].Power;
-		F += FREQ_STEP;
+            Lm = FqPwr[Len - 1].Power;
+		F = F + FREQ_STEP;
 		Accelerate[j] = Lm / I;
 	}
 	return 0;
@@ -1501,27 +1513,35 @@ int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
 void Calc(void)
 {
     {
+		const double  kk = 32.0;
 		double A = 0.0; //ускорение в радианах в сек за сек
 		double dt = 0.0; // изменение времени
 		double V = 0.0;  // мгновенная скорость в радианах
 		//static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-		static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
-		double T = 0;    // полное время
-		double timer1 = 0;  // значение таймера
-		DWORD F = 0;
-		DWORD i = 0;		
-        double Vf = 180 * 200/PI;
-        
+		static double dX = kk*PI/(180.0*360.0*200.0*16.0); // шаг перемещения в радианах
+		volatile double T = 0;    // полное время
+		volatile double timer1 = 0.0;  // значение таймера
+		WORD F = 0;
+		volatile WORD i = 0;		
+        double Vf = 180.0 * 200.0/(PI*FREQ_STEP);
+        BYTE k = kk;
+        double ddt = 0.0;
         do{
-            F =(DWORD)(V * Vf);
-			Calculate_A(F, &A);
-            Calculate_dT(0, dX, V, A, &dt);
-            V = dX/dt;
-            //X += dX;
-            T += dt;
+	        if(k>=kk)
+			{
+	            F =(WORD)(V * Vf); //F/FREQ_STEP  1/20 от частоты полных шагов
+				Calculate_A(F, &A);
+	            Calculate_dT(0, dX, V, A, &dt);
+	            V = dX/dt;
+	            //X += dX;
+	  			k=0;
+	  			ddt = dt/kk;
+			}
+			k++;	         
+            T += ddt;
             timer1 = (DWORD)(T/0.0000002); // результат вычислений            
             i++;
-        }while ( i < 288000);
+        }while ( i < 3200);
         //i = 0
         //T = 0;
         //do{

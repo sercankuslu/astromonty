@@ -50,7 +50,7 @@
  ********************************************************************/
 #ifndef HARDWARE_PROFILE_H
 #define HARDWARE_PROFILE_H
-
+#define USE_PROTOCOL_CLIENT
 #include "Compiler.h"
 
 // Define a macro describing this hardware set up (used in other files)
