@@ -211,6 +211,11 @@ void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
     Nop();
     Nop();
 }
+void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
+{
+    // используем для вызова вычислений
+    IFS1bits.U2RXIF = 0;    
+}    
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
 	static WORD T;
@@ -231,6 +236,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 		Nop();
 	}
 #endif
+
 // Select Internal FRC at POR		
 _FOSCSEL(FNOSC_FRC);
 // Enable Clock Switching and Configure Posc in XT mode
@@ -245,7 +251,10 @@ int main(void)
 #endif
 {
 	
-	
+	IFS1bits.U2RXIF = 0;
+	IPC7bits.U2RXIP = 6;		// Priority level 6
+	IEC1bits.U2RXIE = 1;
+	IFS1bits.U2RXIF = 1;    
     static DWORD t = 0;
    // static DWORD d = 0;
     static DWORD dwLastIP = 0;
