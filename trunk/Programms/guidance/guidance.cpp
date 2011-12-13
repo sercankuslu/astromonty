@@ -53,7 +53,9 @@ void Calc(HWND hWnd, HDC hdc);
 double M(double F);
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
+//int Calculate_A(double V, double *A);
 int Calculate_A(DWORD F, double *A);
+int Calculate_A1(double V, double *A);
 int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
 
 
@@ -284,6 +286,7 @@ void Calc(HWND hWnd, HDC hdc)
 	{
 		
 		double A = 0.0; //ускорение в радианах в сек за сек
+		double A1 = 0.0; //ускорение в радианах в сек за сек
 		double dt = 0.0; // изменение времени
 		double V = 0.0;  // мгновенная скорость в радианах
 		//static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
@@ -297,26 +300,27 @@ void Calc(HWND hWnd, HDC hdc)
 		double timer1 = 0;  // значение таймера
 		DWORD F = 0;
 		DWORD i = 0;
-		DWORD k = 16;
+		//DWORD k = 1;
 		RECT rect;
         double Vf = 180 * 200/PI;
-		char RRR[256];
+		//char RRR[256];
         GetClientRect(hWnd, &rect);
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
         LineTo(hdc, rect.right, rect.bottom - 9);
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
         LineTo(hdc, rect.left+9, rect.top);        
         do{
-			if(k>=16)
-			{
+			//if(k>=16)
+			//{
 				F =(DWORD)(V * Vf);
 				Calculate_A(F, &A);
-				Calculate_dT(0, dX*16, V, A, &dt);
-				V = dX*16/dt;				
-				k=0;
-			}
-			k++;			
-			T += dt/16;
+				Calculate_A1(V, &A1);
+				Calculate_dT(0, dX, V, A, &dt);
+				V = dX/dt;				
+				//k=0;
+			//}
+			//k++;			
+			T += dt;
 			X += dX;
 			timer1 = T/0.0000002; // результат вычислений
 			K = (int)(T*500.0);
@@ -327,52 +331,67 @@ void Calc(HWND hWnd, HDC hdc)
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A1)*180*5/PI), RGB(255,255,0));                
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(100), RGB(255,0,255));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(500/(T*9.0)), RGB(255,0,255));
 				MoveToEx(hdc, rect.left + 9 + (int)(T)*500, rect.bottom - 9, NULL);
 				LineTo(  hdc, rect.left + 9 + (int)(T)*500, rect.top); 
 			}
 			//if(X>PI) break;
 			i++;
 		}while ( i<32000);
-		sprintf(RRR,"%d",i);
-		TextOutA(hdc, 0,0, (char*)RRR, strlen(RRR));
-		sprintf(RRR,"%fs",T);
-		TextOutA(hdc, 100,0, (char*)RRR, strlen(RRR));
-//         i=0;        
-//         do{
-//             F =(DWORD)(V * Vf);
-//             Calculate_A(F, &A);            
-//             Calculate_dT(0, dX, V, -A, &dt);
-//             V = dX/dt;
-//             X += dX;
-//             T += dt;
-//             timer1 = T/0.0000002; // результат вычислений
-//             K = (int)(T*500.0);
-//             K2 = (int)(V*20.0);
-//             if((K != K1)||(K2!=K3)) {
-//                 K1 = K;
-//                 K3 = K2;
-//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
-//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
-//                 SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
-//                 SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
-//             }
-//             //if(X>PI) break;
-//             i++;
-//        }while ( i< 11000);
+// 		sprintf(RRR,"%d",i);
+// 		TextOutA(hdc, 0,0, (char*)RRR, strlen(RRR));
+// 		sprintf(RRR,"%fs",T);
+// 		TextOutA(hdc, 100,0, (char*)RRR, strlen(RRR));
+//          i=0;        
+//          do{
+//              F =(DWORD)(V * Vf);
+//              Calculate_A(F, &A);            
+//              Calculate_dT(0, dX, V, -A, &dt);
+//              V = dX/dt;
+//              X += dX;
+//              T += dt;
+//              timer1 = T/0.0000002; // результат вычислений
+//              K = (int)(T*500.0);
+//              K2 = (int)(V*20.0);
+//              if((K != K1)||(K2!=K3)) {
+//                  K1 = K;
+//                  K3 = K2;
+//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
+//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
+//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
+//                  SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
+//              }
+//              //if(X>PI) break;
+//              i++;
+//         }while ( i< 32000);
 	}
 }
 // должна возвращать значение ускорения в зависимости от скорости
 // F - частота полных шагов
 // L - момент инерции системы
+int Calculate_A1(double V, double *A)
+{
+	static double Mass = 500.0f;
+	static double Radius = 0.30f;
+	static double Length = 2.0f;
+	static double Reduction = 360.0f;
+	static double Grad_to_Rad = 180.0/PI;
+	double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+	// y=kx+b
+	*A = (-1.396379998 * V  + 0.287457143)/I;
+	//*A = (-1.1 * V  + 0.287457143)/I;
+	return 0;
+}
 int Calculate_A(DWORD F, double *A)
 {
-	DWORD f = (DWORD)(F/FREQ_STEP);
-	if(f < ACCELERATE_SIZE){
-		*A = Accelerate[f];
-	} else {
-		*A = Accelerate[ACCELERATE_SIZE-1];
-	}
+ 	DWORD f = (DWORD)(F/FREQ_STEP);
+ 	if(f < ACCELERATE_SIZE){
+ 		*A = Accelerate[f];
+ 	} else {
+ 		*A = Accelerate[ACCELERATE_SIZE-1];
+ 	}
 	return 0;
 }
 
@@ -445,8 +464,7 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
  ************************************************************************/
 int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
 {    
-	double Lm = 0.0;
-	int i;
+	double Lm = 0.0;	
 	int j;
     int k = 0;
     WORD Freq1;
