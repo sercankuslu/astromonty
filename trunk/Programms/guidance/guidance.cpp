@@ -54,9 +54,9 @@ double M(double F);
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
 //int Calculate_A(double V, double *A);
-int Calculate_A(DWORD F, double *A);
-int Calculate_A1(double V, double *A);
-int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
+//int Calculate_A(DWORD F, double *A);
+//int Calculate_A(double V, double *A);
+//int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
 
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -68,17 +68,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	// TODO: разместите код здесь.
-		{
-			// I = (m*r^2/4) + (m*l^2)/12
-			static double Mass = 500.0f;
-			static double Radius = 0.30f;
-			static double Length = 2.0f;
-			static double Reduction = 360.0f;
-			static double Grad_to_Rad = 180.0/PI;
-			double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-			//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-			InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
-		}
+// 		{
+// 			// I = (m*r^2/4) + (m*l^2)/12
+// 			static double Mass = 500.0f;
+// 			static double Radius = 0.30f;
+// 			static double Length = 2.0f;
+// 			static double Reduction = 360.0f;
+// 			static double Grad_to_Rad = 180.0/PI;
+// 			double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+// 			//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
+// 			InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
+// 		}
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -298,11 +298,20 @@ void Calc(HWND hWnd, HDC hdc)
 		int K2 = 0;
 		int K3 = 0;
 		double timer1 = 0;  // значение таймера
-		DWORD F = 0;
+		//DWORD F = 0;
 		DWORD i = 0;
 		//DWORD k = 1;
 		RECT rect;
-        double Vf = 180 * 200/PI;
+        static double Mass = 500.0f;
+        static double Radius = 0.30f;
+        static double Length = 2.0f;
+        static double Reduction = 360.0f;
+        static double Grad_to_Rad = 180.0/PI;
+        double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+        static double Kx = (-0.000349812 * 200 * 180/PI)/I;
+        static double B = 0.79962406 / I;
+        
+        //double Vf = 180 * 200/PI;
 		//char RRR[256];
         GetClientRect(hWnd, &rect);
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
@@ -310,16 +319,10 @@ void Calc(HWND hWnd, HDC hdc)
         MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
         LineTo(hdc, rect.left+9, rect.top);        
         do{
-			//if(k>=16)
-			//{
-				F =(DWORD)(V * Vf);
-				Calculate_A(F, &A);
-				Calculate_A1(V, &A1);
-				Calculate_dT(0, dX, V, A, &dt);
-				V = dX/dt;				
-				//k=0;
-			//}
-			//k++;			
+            if(dt!=0) 
+                V = dX/dt;
+			A = Kx * V  + B;
+			Calculate_dT(0, dX, V, A, &dt);            
 			T += dt;
 			X += dX;
 			timer1 = T/0.0000002; // результат вычислений
@@ -330,70 +333,71 @@ void Calc(HWND hWnd, HDC hdc)
 				K3 = K2;
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
 				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
-				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
-				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A1)*180*5/PI), RGB(255,255,0));                
-				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(100), RGB(255,0,255));
-				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(500/(T*9.0)), RGB(255,0,255));
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (rect.bottom/2) -(int)((A)*60*5/PI), RGB(255,0,0));                				
+				SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(10.0*20), RGB(255,0,255));				
 				MoveToEx(hdc, rect.left + 9 + (int)(T)*500, rect.bottom - 9, NULL);
 				LineTo(  hdc, rect.left + 9 + (int)(T)*500, rect.top); 
 			}
 			//if(X>PI) break;
 			i++;
-		}while ( i<32000);
-// 		sprintf(RRR,"%d",i);
-// 		TextOutA(hdc, 0,0, (char*)RRR, strlen(RRR));
-// 		sprintf(RRR,"%fs",T);
-// 		TextOutA(hdc, 100,0, (char*)RRR, strlen(RRR));
-//          i=0;        
-//          do{
-//              F =(DWORD)(V * Vf);
-//              Calculate_A(F, &A);            
-//              Calculate_dT(0, dX, V, -A, &dt);
-//              V = dX/dt;
-//              X += dX;
-//              T += dt;
-//              timer1 = T/0.0000002; // результат вычислений
-//              K = (int)(T*500.0);
-//              K2 = (int)(V*20.0);
-//              if((K != K1)||(K2!=K3)) {
-//                  K1 = K;
-//                  K3 = K2;
-//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
-//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
-//                  SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)((A)*180*5/PI), RGB(255,0,0));                
-//                  SetPixel(hdc, rect.left + 10 + (int)(T)*500, rect.bottom - 10 - (int)(100), RGB(255,0,255));
-//              }
-//              //if(X>PI) break;
-//              i++;
-//         }while ( i< 32000);
+		}while ( i<3200);
+        i = 0;
+        do{
+            if(dt!=0) 
+                V = dX/dt;
+            A = -(Kx * V  + B);
+            Calculate_dT(0, dX, V, A, &dt);            
+            T += dt;
+            X += dX;          
+            timer1 = T/0.0000002; // результат вычислений
+            K = (int)(T*500.0);
+            K2 = (int)(V*20.0);
+            if((K != K1)||(K2!=K3)) {
+                K1 = K;
+                K3 = K2;
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(X*180*20/PI), RGB(0,0,255));
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(V*180*20/PI), RGB(0,255,0));
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (rect.bottom/2) - (int)((A)*60*5/PI), RGB(255,0,0));                				
+                SetPixel(hdc, rect.left + 10 + (int)(T*500), rect.bottom - 10 - (int)(100), RGB(255,0,255));				
+                MoveToEx(hdc, rect.left + 9 + (int)(T)*500, rect.bottom - 9, NULL);
+                LineTo(  hdc, rect.left + 9 + (int)(T)*500, rect.top); 
+            }
+            //if(X>PI) break;
+            i++;
+        }while ( i<4000);
 	}
 }
 // должна возвращать значение ускорения в зависимости от скорости
 // F - частота полных шагов
 // L - момент инерции системы
-int Calculate_A1(double V, double *A)
-{
-	static double Mass = 500.0f;
-	static double Radius = 0.30f;
-	static double Length = 2.0f;
-	static double Reduction = 360.0f;
-	static double Grad_to_Rad = 180.0/PI;
-	double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-	// y=kx+b
-	*A = (-1.396379998 * V  + 0.287457143)/I;
-	//*A = (-1.1 * V  + 0.287457143)/I;
-	return 0;
-}
-int Calculate_A(DWORD F, double *A)
-{
- 	DWORD f = (DWORD)(F/FREQ_STEP);
- 	if(f < ACCELERATE_SIZE){
- 		*A = Accelerate[f];
- 	} else {
- 		*A = Accelerate[ACCELERATE_SIZE-1];
- 	}
-	return 0;
-}
+// int Calculate_A(double V, double *A)
+// {
+// 	static double Mass = 500.0f;
+// 	static double Radius = 0.30f;
+// 	static double Length = 2.0f;
+// 	static double Reduction = 360.0f;
+// 	static double Grad_to_Rad = 180.0/PI;
+// 	double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+//     static double K = (-0.000349812 * 180 * 200/PI)/I;
+//     static double B = 0.79962406 / I;
+// 
+// 	// y=kx+b 
+//     // -0.000349812	0.79962406
+// 
+// 	*A = K * V  + B;
+// 	//*A = (-1.1 * V  + 0.287457143)/I;
+// 	return 0;
+// }
+// int Calculate_A(DWORD F, double *A)
+// {
+//  	DWORD f = (DWORD)(F/FREQ_STEP);
+//  	if(f < ACCELERATE_SIZE){
+//  		*A = Accelerate[f];
+//  	} else {
+//  		*A = Accelerate[ACCELERATE_SIZE-1];
+//  	}
+// 	return 0;
+// }
 
 // функция возвращает время, прошедшее
 // при движении с заданными параметрами на промежутке (Xbeg,Xend), 
@@ -462,30 +466,30 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
  * I	 - Момент инерции  
  * 
  ************************************************************************/
-int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
-{    
-	double Lm = 0.0;	
-	int j;
-    int k = 0;
-    WORD Freq1;
-    WORD Freq2;
-    BYTE b = 0;
-	WORD F = 0;
-	for(j = 0; j < ACCELERATE_SIZE; j++){
-		for(int i = k; i< Len-1; i++){
-            Freq1 = FreqPower[i].Freq;  
-            Freq2 = FreqPower[i+1].Freq;            
-			if((F >= Freq1) && (F <= Freq2)){
-				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
-                b = 1;
-                k = i;
-				break;
-			}
-		}
-		if(b == 0) 
-            Lm = FreqPower[Len - 1].Power;
-		F += FREQ_STEP;
-		Accelerate[j] = Lm / I;
-	}
-	return 0;
-}
+// int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
+// {    
+// 	double Lm = 0.0;	
+// 	int j;
+//     int k = 0;
+//     WORD Freq1;
+//     WORD Freq2;
+//     BYTE b = 0;
+// 	WORD F = 0;
+// 	for(j = 0; j < ACCELERATE_SIZE; j++){
+// 		for(int i = k; i< Len-1; i++){
+//             Freq1 = FreqPower[i].Freq;  
+//             Freq2 = FreqPower[i+1].Freq;            
+// 			if((F >= Freq1) && (F <= Freq2)){
+// 				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
+//                 b = 1;
+//                 k = i;
+// 				break;
+// 			}
+// 		}
+// 		if(b == 0) 
+//             Lm = FreqPower[Len - 1].Power;
+// 		F += FREQ_STEP;
+// 		Accelerate[j] = Lm / I;
+// 	}
+// 	return 0;
+// }
