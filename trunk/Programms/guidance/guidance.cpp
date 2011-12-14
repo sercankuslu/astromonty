@@ -322,7 +322,7 @@ void Calc(HWND hWnd, HDC hdc)
             if(dt!=0) 
                 V = dX/dt;
 			A = Kx * V  + B;
-			Calculate_dT(0, dX, V, A, &dt);            
+			if(Calculate_dT(0, dX, V, A, &dt);
 			T += dt;
 			X += dX;
 			timer1 = T/0.0000002; // результат вычислений
