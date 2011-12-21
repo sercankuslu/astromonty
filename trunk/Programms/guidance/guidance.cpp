@@ -53,6 +53,7 @@ void Calc(HWND hWnd, HDC hdc);
 double M(double F);
 int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
 int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
+DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
 //int Calculate_A(double V, double *A);
 //int Calculate_A(DWORD F, double *A);
 //int Calculate_A(double V, double *A);
@@ -284,138 +285,113 @@ double LinInt(double x1,double y1,double x2,double y2, double x)
 }
 void Calc(HWND hWnd, HDC hdc)
 {
-	{
-		
-		double D = 0.0;
-		double A = 0.0; //ускорение в радианах в сек за сек
-		double A1 = 0.0; //ускорение в радианах в сек за сек
-		double A2 = 0.0; //ускорение в радианах в сек за сек
-		double V1 = 0.0; //ускорение в радианах в сек за сек
-		double dt = 0.0; // изменение времени
-		double V = 0.0000727221;  // мгновенная скорость в радианах
-		//static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-		static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
-		double X = 0;    // полное перемещение в радианах
-		double X1 = 0;    // полное перемещение в радианах
-		double T = 0;    // полное время
-		double T1 = 0;    // полное время
-		double dt1 = 0.0; // изменение времени
-		int W = 0;       // флаги для оптимизации вывода
-		int K1 = -1;
-		int W1 = 0;
-		int K3 = -1;
-		double timer1 = 0;  // значение таймера
-		//DWORD F = 0;
-		DWORD i = 0;
-		//DWORD k = 1;
-		RECT rect;
-        static double Mass = 500.0f;
-        static double Radius = 0.30f;
-        static double Length = 2.0f;
-        static double Reduction = 360.0f;
-        static double Grad_to_Rad = 180.0/PI;
-        double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-        static double K = (-0.000349812 * 200 * 180/PI)/I;
-        static double B = 0.79962406 / I;
-        static int SizeX = 800;
-		static int SizeY = 600;
-		static double Pi = PI;
-        //double Vf = 180 * 200/PI;
-		//char RRR[256];
-        GetClientRect(hWnd, &rect);
-        MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
-        LineTo(hdc, rect.right - 9, rect.bottom - 9);
-        MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
-        LineTo(hdc, rect.left+9, rect.top);        
-		MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2), NULL);
-		LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) );        
-		MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY), NULL);
-		LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY) );        
-        do{		
-			//Calculate_dT(0, dX, V, A, &dt);	
+    double D = 0.0;
+    static double A = 0.0; //ускорение в радианах в сек за сек
+    static double A1 = 0.0; //ускорение в радианах в сек за сек
+    static double A2 = 0.0; //ускорение в радианах в сек за сек
+    static double V1 = 0.0; //ускорение в радианах в сек за сек
+    static double dt = 0.0; // изменение времени
+    static double V = 0.0;  // мгновенная скорость в радианах
+    //static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+    static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
+    static double X = 0;    // полное перемещение в радианах
+    static double X1 = 0;    // полное перемещение в радианах
+    static double T = 0;    // полное время
+    static double T1 = 0;    // полное время
+    static double T2 = 0;    // полное время
+    double dt1 = 0.0; // изменение времени
+    int W = 0;       // флаги для оптимизации вывода
+    int K1 = -1;
+    int W1 = 0;
+    int K3 = -1;
+    double timer1 = 0;  // значение таймера
+    //DWORD F = 0;
+    DWORD i = 0;
+    //DWORD k = 1;
+    RECT rect;
+    static double Mass = 500.0f;
+    static double Radius = 0.30f;
+    static double Length = 2.0f;
+    static double Reduction = 360.0f;
+    static double Grad_to_Rad = PI / 180.0;
+    static double Rad_to_Grad = 180.0 / PI;
+    static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+    static double K = (-0.000349812 * 200 * 180/PI)/I;
+    static double B = 0.79962406 / I;
+    static int SizeX = 400;
+    static int SizeY = 10;
+    static double Pi = PI;
+    static double TT[65536];
+    static DWORD TTLen = 65536;
+    static DWORD Count = 0;
+    DWORD XPos = 0;
+    //double Vf = 180 * 200/PI;
+    //char RRR[256];
+    GetClientRect(hWnd, &rect);
+    MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
+    LineTo(hdc, rect.right - 9, rect.bottom - 9);
+    MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
+    LineTo(hdc, rect.left+9, rect.top);        
+    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2), NULL);
+    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) );        
+    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY), NULL);
+    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY) );  
+    dt = 0.0;
+    T = 0.0;
+    X = 0.0;
 
-			dt = 0.0000002 * 50.0;
-			A = K * V + B;
-			V = V + A * dt;
-			T += dt;
-			//X += A * dt * dt / 2.0;
-			X = V * T;
-
-			//X += dX;
-			//X = V*T;
-			//timer1 = T/0.0000002; // результат вычислений
-			
-			T1 += dt;
-			X1 = B*T1*T1/(1.0-K*T1);
-			//X1 += dX;
-			//A1 = B/(1-K*T);
-
-// 			if((D=((2.0*X1) + (X1*X1*K*K/B)))>=0){
-// 				T1 = -(X1*K/B)+ sqrt(D/B);
-// 				V1 = X1/T1;
-// 				A1 = V1/T1;
-// 			}
-// 			V1 = X1/T1;
-// 			A1 = V1/T1;
-			
-			//A2 = A / T;
-			W = (int)(T1*SizeX);
-			W1 = (int)(X1*SizeY);
+    do{		
+            
+//             
+//             // KX = K*X;     // 1
+//             // KXu2 = Kx*Kx; // 1
+//             // B2 = 2.0 * B; //const 0
+//             // B4 = 4.0 * B; //const 0
+//             // B4X = B4 * X; // 1
+//             // D = Kxu2 + B4X; // 
+//             // T = (-KX + sqrt(D))/B2; // 2
+//             // итого
+//             D = X*X*K*K + 4.0*X*B;
+//             if(D>=0.0){
+//                 T = (-K*X + sqrt(D))/(2.0*B);
+//                 timer1 = T/0.0000002; // результат вычислений
+//             }
+//             V = X / T;
+//             A = V / T;
+// 
+// 			//A2 = A / T;
+// 			W = (int)(T1*SizeX);
+// 			W1 = (int)(X1*SizeY);
 
 
-			//if((W != K1)||(W1!=K3)) 
-			{
-				K1 = W;
-				K3 = W1;
-				SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X*SizeY), RGB(0,0,255));
-				SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X1*SizeY), RGB(128,0,255));
-				SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V*SizeY), RGB(0,255,0));
-				//SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX/2), rect.bottom - 10 - (rect.bottom/2) - (int)(V1*SizeY), RGB(128,255,0));
-				SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A*SizeY), RGB(255,0,0));                				
-				//SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX/2), rect.bottom - 10 - (rect.bottom/2) - (int)(A1*SizeY), RGB(255,128,0));                				
-				//SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A2*SizeY), RGB(255,128,0));                				
-				//SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(0.004166667*SizeY), RGB(0,128,0));
-				//SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY), RGB(0,128,0));
-				MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
-				LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
-			}
-			//if(X>PI) break;
-			i++;
-		}while ( T < 1);
-        i = 0;
-		if(0)
-        do{            
-            A = -(K * abs(V)  + B);
-			if(V>=0){
-				Calculate_dT(0, dX, V, A, &dt);
-				X += dX;
-			}
-			else {
-				Calculate_dT(dX, 0, V, A, &dt);
-				X -= dX;
-			}
-            T += dt;
-                      
-            timer1 = T/0.0000002; // результат вычислений
-            W = (int)(T*500.0);
-            W1 = (int)(V*20.0);
-            if((W != K1)||(W1!=K3)) 
-			{
-                K1 = W;
-                K3 = W1;
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X*180*SizeY/Pi), RGB(0,0,255));
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V*180*SizeY/Pi), RGB(0,255,0));
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A*30*SizeY/Pi), RGB(255,0,0));                				
-				SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(0.004166667*SizeY), RGB(0,128,0));				
-                MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
-                LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
-            }
-            //if(X>PI) break;
-            i++;
-			V = V + A * dt;
-			//if(V<0)break;
-        }while ( i<40000);
-	}
+	    //if((W != K1)||(W1!=K3)) 
+        Count = MaxAcceleration(0, 20*3200, dX, K, B, TT, TTLen, &XPos);
+        for( i = 0; i<Count; i++)
+        {
+            T = TT[i];
+            X += dX;
+            V = X / T;
+            A = V / T;
+            K1 = W;
+            K3 = W1;
+            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X*Rad_to_Grad*SizeY), RGB(0,0,255));
+            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V*Rad_to_Grad*SizeY), RGB(0,255,0));
+            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A*Rad_to_Grad*SizeY), RGB(255,0,0));                				
+            SetPixel(hdc, rect.left + 10 + (int)(V*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/2) - (int)(A*Rad_to_Grad*SizeY), RGB(255,255,0));                				
+            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A2*Rad_to_Grad*SizeY), RGB(200,0,200));                				
+
+            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X1*Rad_to_Grad*SizeY), RGB(0,0,200));
+            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V1*Rad_to_Grad*SizeY), RGB(0,200,0));
+            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A1*Rad_to_Grad*SizeY), RGB(200,0,0));                				
+
+            SetPixel(hdc, rect.left + 10 + (int)(V1*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/2) - (int)(A1*Rad_to_Grad*SizeY), RGB(200,200,0));                				
+            //SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(0.004166667*SizeY), RGB(0,128,0));
+            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(10.0*SizeY), RGB(0,128,0));
+            MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
+            LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
+        }       
+    }while ( X < 16.0 * Grad_to_Rad);       
+
 }
 // должна возвращать значение ускорения в зависимости от скорости
 // F - частота полных шагов
@@ -544,3 +520,46 @@ int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
 // 	}
 // 	return 0;
 // }
+
+// Заполняем массив T длинной Len значениями времени начиная со скорости Vb и заканчивая скоростью Ve
+// K B dx - параметры 
+// возвращает количество просчитанных шагов
+// 
+//
+DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos)
+{
+    double D;
+    double X;
+    DWORD StepCount;
+    DWORD Count;
+    double Kx;
+
+    // определяем координаты 
+    if(*Xpos<Xb) *Xpos = Xb;
+    if(*Xpos>=Xe) {*Xpos = Xe; return 0;}
+    Count = (DWORD)(Xe - *Xpos);
+    if(Count > Len) StepCount = Len; 
+    else StepCount = Count;
+    X = *Xpos*dx;
+    for(WORD i = 0; i < StepCount; i++) {        
+        Kx = X * K;
+        D = Kx * Kx + 4.0 * X * B;
+        if(D >= 0.0){
+            T[i] = (-Kx + sqrt(D))/(2.0 * B);        
+        }
+        X += dx;
+    }
+    *Xpos += StepCount; 
+    return StepCount;
+}
+double Deceleration(double X, double K, double B)
+{
+    double D;
+
+    D = X*X*K*K + 4.0*X*B;
+    if(D>=0.0){
+        return (-K*X + sqrt(D))/(2.0*B);        
+    }
+    return -1.0;
+
+}
