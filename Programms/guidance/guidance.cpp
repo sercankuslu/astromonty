@@ -50,14 +50,8 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
  
 
 void Calc(HWND hWnd, HDC hdc);
-double M(double F);
-int SolvQuadratic(double A, double B, double C, double* X1, double* X2);
-int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
 DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
-//int Calculate_A(double V, double *A);
-//int Calculate_A(DWORD F, double *A);
-//int Calculate_A(double V, double *A);
-//int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I);
+
 
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -69,17 +63,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	// TODO: разместите код здесь.
-// 		{
-// 			// I = (m*r^2/4) + (m*l^2)/12
-// 			static double Mass = 500.0f;
-// 			static double Radius = 0.30f;
-// 			static double Length = 2.0f;
-// 			static double Reduction = 360.0f;
-// 			static double Grad_to_Rad = 180.0/PI;
-// 			double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-// 			//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-// 			InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
-// 		}
+
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -316,13 +300,13 @@ void Calc(HWND hWnd, HDC hdc)
     static double Grad_to_Rad = PI / 180.0;
     static double Rad_to_Grad = 180.0 / PI;
     static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    //static double K = (-0.000349812 * 200 * 180/PI)/I;
-    static double K = (-0.000154286 * 200 * 180/PI)/I;
+    static double K = (-0.000349812 * 200 * 180/PI)/I;
+    //static double K = (-0.000154286 * 200 * 180/PI)/I;
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static int SizeX = 500000;
-    static int SizeY = 10000;
+    static int SizeX = 100;
+    static int SizeY = 10;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -396,154 +380,18 @@ void Calc(HWND hWnd, HDC hdc)
                 VA.y = Py - (int)(A*Rad_to_Grad*SizeY);
                 LineTo(hdc, VA.x, VA.y);                  
 
-                                  
-                /*
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(X*Rad_to_Grad*SizeY), RGB(0,0,255));
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(V*Rad_to_Grad*SizeY), RGB(0,255,0));
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(A*Rad_to_Grad*SizeY), RGB(255,0,0));                				
-                SetPixel(hdc, rect.left + 10 + (int)(V*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/4) - (int)(A*Rad_to_Grad*SizeY), RGB(255,255,0));                				
-
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(0.004166667*SizeY), RGB(0,200,0));
-                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(10.0*SizeY), RGB(0,128,0));
-                */
+                               
                 SetDCPenColor(hdc,RGB(0,0,0));
                 MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
                 LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
                 K1 = K3;
             }
         }       
-    }while ( X < 1.0 * Grad_to_Rad);       
+    }while ( X < 180.0 * Grad_to_Rad);       
     //Restore original object.
     SelectObject(hdc,original);
 
 }
-// должна возвращать значение ускорения в зависимости от скорости
-// F - частота полных шагов
-// L - момент инерции системы
-// int Calculate_A(double V, double *A)
-// {
-// 	static double Mass = 500.0f;
-// 	static double Radius = 0.30f;
-// 	static double Length = 2.0f;
-// 	static double Reduction = 360.0f;
-// 	static double Grad_to_Rad = 180.0/PI;
-// 	double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-//     static double K = (-0.000349812 * 180 * 200/PI)/I;
-//     static double B = 0.79962406 / I;
-// 
-// 	// y=kx+b 
-//     // -0.000349812	0.79962406
-// 
-// 	*A = K * V  + B;
-// 	//*A = (-1.1 * V  + 0.287457143)/I;
-// 	return 0;
-// }
-// int Calculate_A(DWORD F, double *A)
-// {
-//  	DWORD f = (DWORD)(F/FREQ_STEP);
-//  	if(f < ACCELERATE_SIZE){
-//  		*A = Accelerate[f];
-//  	} else {
-//  		*A = Accelerate[ACCELERATE_SIZE-1];
-//  	}
-// 	return 0;
-// }
-
-// функция возвращает время, прошедшее
-// при движении с заданными параметрами на промежутке (Xbeg,Xend), 
-// при начальной скорости V и ускорении A
-int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
-{
-	double T1 = 0.0;
-	double T2 = 0.0;
-	int res = 0;
-	if((A==0.0)&&(V==0.0)){
-		return -1; // ошибка
-	}
-	if((A == 0)&&(V != 0.0)){
-		*T = (Xend-Xbeg)/V;
-		return 0;  // нет ошибки
-	}
-	// Xend = Xbeg + V*T + (A * T^2)/2
-	// (A/2)T^2 + V*T + (Xbeg - Xend) = 0
-	res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
-	if(res > 0) {
-		*T = T1>=0?T1:T2;
-		return 0;
-	}
-	else return 1;
-}
-// вычисляет корени квадратного уравнения
-int SolvQuadratic(double A, double B, double C, double* X1, double* X2)
-{
-	// Ax^2+Bx+C=0
-	double D = 0.0;
-	if((X1 == NULL) || (X2 == NULL)) return -1; // ошибка: неверные указатели
-	*X1 = 0.0;
-	*X2 = 0.0;
-	if(A == 0.0){
-		// Bx+C = 0
-		// x = -C/B
-		if(C!=0.0){
-			*X1 = -B/C;
-		} else {
-			*X1 = 0.0;
-		}
-		return 1; // не квадратное уравнение, один корень
-	}
-	D = B*B - 4.0 * A * C;
-	if(D<0.0) 
-		return 0; // дискриминант 0 корней нет
-
-	*X1 = (-B+sqrt(D))/(2*A);
-	*X2 = (-B-sqrt(D))/(2*A);
-	return 2; // два корня уравнения
-}
-/**************************************************************************
- * M = Ia =>   a = M/I
- * M - момент силы
- * I - момент инерции
- * a - угловое ускорение в радианах в секунду за секунду
- * для альфы: ( сплошной цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
- * I = (m*r^2/4) + (m*l^2)/12  
- * 
- * для дельты: ( полый тонкостенный цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
- * I = (m*r^2/2)+ (m*l^2/12)
- **************************************************************************
- * Параметры функции
- * Power - массив моментов силы двигателя
- * Freq  - массив частот шагов двигателя
- * Len   - размер массивов
- * I	 - Момент инерции  
- * 
- ************************************************************************/
-// int InitAccelerate(FREQ_POWER* FreqPower, WORD Len, double I)
-// {    
-// 	double Lm = 0.0;	
-// 	int j;
-//     int k = 0;
-//     WORD Freq1;
-//     WORD Freq2;
-//     BYTE b = 0;
-// 	WORD F = 0;
-// 	for(j = 0; j < ACCELERATE_SIZE; j++){
-// 		for(int i = k; i< Len-1; i++){
-//             Freq1 = FreqPower[i].Freq;  
-//             Freq2 = FreqPower[i+1].Freq;            
-// 			if((F >= Freq1) && (F <= Freq2)){
-// 				Lm = LinInt(Freq1,FreqPower[i].Power,Freq2,FreqPower[i+1].Power, F);
-//                 b = 1;
-//                 k = i;
-// 				break;
-// 			}
-// 		}
-// 		if(b == 0) 
-//             Lm = FreqPower[Len - 1].Power;
-// 		F += FREQ_STEP;
-// 		Accelerate[j] = Lm / I;
-// 	}
-// 	return 0;
-// }
 
 // Заполняем массив T длинной Len значениями времени начиная со скорости Vb и заканчивая скоростью Ve
 // K B dx - параметры 
@@ -576,7 +424,7 @@ DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double *
     *Xpos += StepCount; 
     return StepCount;
 }
-// разгон до заданной скорости с ускорением, не большим, чем предельная
+// разгон до заданной скорости 
 DWORD AccelerationToSpeed(double Vb, double Ve, double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos)
 {
     double D;
