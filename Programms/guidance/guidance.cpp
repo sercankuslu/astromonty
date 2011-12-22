@@ -316,15 +316,24 @@ void Calc(HWND hWnd, HDC hdc)
     static double Grad_to_Rad = PI / 180.0;
     static double Rad_to_Grad = 180.0 / PI;
     static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    static double K = (-0.000349812 * 200 * 180/PI)/I;
-    static double B = 0.79962406 / I;
-    static int SizeX = 400;
-    static int SizeY = 10;
+    //static double K = (-0.000349812 * 200 * 180/PI)/I;
+    static double K = (-0.000154286 * 200 * 180/PI)/I;
+    //static double B = 0.79962406 / I;
+    static double B = 0.751428571 / I;
+
+    static int SizeX = 500000;
+    static int SizeY = 10000;
     static double Pi = PI;
-    static double TT[65536];
-    static DWORD TTLen = 65536;
+    static double TT[64];
+    static DWORD TTLen = 64;
     static DWORD Count = 0;
     DWORD XPos = 0;
+
+    HGDIOBJ original = NULL;
+
+    //Save original object.
+    original = SelectObject(hdc,GetStockObject(DC_PEN));
+
     //double Vf = 180 * 200/PI;
     //char RRR[256];
     GetClientRect(hWnd, &rect);
@@ -332,65 +341,80 @@ void Calc(HWND hWnd, HDC hdc)
     LineTo(hdc, rect.right - 9, rect.bottom - 9);
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
     LineTo(hdc, rect.left+9, rect.top);        
-    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2), NULL);
-    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) );        
-    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY), NULL);
-    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/2) - (int)(1.0*SizeY) );  
+    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/4), NULL);
+    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/4) );        
+    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/4) - (int)(1.0*SizeY), NULL);
+    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/4) - (int)(1.0*SizeY) );  
+    DWORD Px = rect.left + 10;
+    DWORD Py = rect.bottom - 10 - (rect.bottom/4);
+    POINT TX = {Px,Py};
+    POINT TV = {Px,Py};
+    POINT TA = {Px,Py};
+    POINT VA = {Px,Py};
+
+       
+    SetDCPenColor(hdc,RGB(0,200,0));
+    MoveToEx(hdc, Px, Py - (int)(0.004166667*SizeY), NULL);
+    LineTo(hdc, rect.right - 9, Py - (int)(0.004166667*SizeY));
+
     dt = 0.0;
     T = 0.0;
     X = 0.0;
-
+    
     do{		
-            
-//             
-//             // KX = K*X;     // 1
-//             // KXu2 = Kx*Kx; // 1
-//             // B2 = 2.0 * B; //const 0
-//             // B4 = 4.0 * B; //const 0
-//             // B4X = B4 * X; // 1
-//             // D = Kxu2 + B4X; // 
-//             // T = (-KX + sqrt(D))/B2; // 2
-//             // итого
-//             D = X*X*K*K + 4.0*X*B;
-//             if(D>=0.0){
-//                 T = (-K*X + sqrt(D))/(2.0*B);
-//                 timer1 = T/0.0000002; // результат вычислений
-//             }
-//             V = X / T;
-//             A = V / T;
-// 
-// 			//A2 = A / T;
-// 			W = (int)(T1*SizeX);
-// 			W1 = (int)(X1*SizeY);
-
-
-	    //if((W != K1)||(W1!=K3)) 
-        Count = MaxAcceleration(0, 20*3200, dX, K, B, TT, TTLen, &XPos);
+        Count = MaxAcceleration(XPos, 180*3200, dX, K, B, TT, TTLen, &XPos);
         for( i = 0; i<Count; i++)
         {
             T = TT[i];
             X += dX;
-            V = X / T;
-            A = V / T;
-            K1 = W;
-            K3 = W1;
-            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X*Rad_to_Grad*SizeY), RGB(0,0,255));
-            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V*Rad_to_Grad*SizeY), RGB(0,255,0));
-            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A*Rad_to_Grad*SizeY), RGB(255,0,0));                				
-            SetPixel(hdc, rect.left + 10 + (int)(V*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/2) - (int)(A*Rad_to_Grad*SizeY), RGB(255,255,0));                				
-            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A2*Rad_to_Grad*SizeY), RGB(200,0,200));                				
+            V = B*T/(1-K*T);
+            A = B/(1-K*T);
+            K3 = (int)(T*SizeX);
+            if( K3 != K1){
+                //Change the DC pen color
+                SetDCPenColor(hdc,RGB(0,0,255));
+                MoveToEx(hdc, TX.x, TX.y, NULL);
+                TX.x = Px + (int)(T*SizeX);
+                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
+                LineTo(hdc, TX.x, TX.y);  
 
-            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(X1*Rad_to_Grad*SizeY), RGB(0,0,200));
-            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(V1*Rad_to_Grad*SizeY), RGB(0,200,0));
-            SetPixel(hdc, rect.left + 10 + (int)(T1*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(A1*Rad_to_Grad*SizeY), RGB(200,0,0));                				
+                SetDCPenColor(hdc,RGB(0,255,0));
+                MoveToEx(hdc, TV.x, TV.y, NULL);
+                TV.x = Px + (int)(T*SizeX);
+                TV.y = Py - (int)(V*Rad_to_Grad*SizeY);
+                LineTo(hdc, TV.x, TV.y);  
 
-            SetPixel(hdc, rect.left + 10 + (int)(V1*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/2) - (int)(A1*Rad_to_Grad*SizeY), RGB(200,200,0));                				
-            //SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(0.004166667*SizeY), RGB(0,128,0));
-            SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/2) - (int)(10.0*SizeY), RGB(0,128,0));
-            MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
-            LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
+                SetDCPenColor(hdc,RGB(255,0,0));
+                MoveToEx(hdc, TA.x, TA.y, NULL);
+                TA.x = Px + (int)(T*SizeX);
+                TA.y = Py - (int)(A*Rad_to_Grad*SizeY);
+                LineTo(hdc, TA.x, TA.y);  
+
+                SetDCPenColor(hdc,RGB(200,200,0));
+                MoveToEx(hdc, VA.x, VA.y, NULL);
+                VA.x = Px + (int)(V*Rad_to_Grad*SizeY);
+                VA.y = Py - (int)(A*Rad_to_Grad*SizeY);
+                LineTo(hdc, VA.x, VA.y);                  
+
+                                  
+                /*
+                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(X*Rad_to_Grad*SizeY), RGB(0,0,255));
+                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(V*Rad_to_Grad*SizeY), RGB(0,255,0));
+                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(A*Rad_to_Grad*SizeY), RGB(255,0,0));                				
+                SetPixel(hdc, rect.left + 10 + (int)(V*Rad_to_Grad*SizeY), rect.bottom - 10 - (rect.bottom/4) - (int)(A*Rad_to_Grad*SizeY), RGB(255,255,0));                				
+
+                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(0.004166667*SizeY), RGB(0,200,0));
+                SetPixel(hdc, rect.left + 10 + (int)(T*SizeX), rect.bottom - 10 - (rect.bottom/4) - (int)(10.0*SizeY), RGB(0,128,0));
+                */
+                SetDCPenColor(hdc,RGB(0,0,0));
+                MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
+                LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
+                K1 = K3;
+            }
         }       
-    }while ( X < 16.0 * Grad_to_Rad);       
+    }while ( X < 1.0 * Grad_to_Rad);       
+    //Restore original object.
+    SelectObject(hdc,original);
 
 }
 // должна возвращать значение ускорения в зависимости от скорости
@@ -541,6 +565,33 @@ DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double *
     if(Count > Len) StepCount = Len; 
     else StepCount = Count;
     X = *Xpos*dx;
+    for(WORD i = 0; i < StepCount; i++) {        
+        Kx = X * K;
+        D = Kx * Kx + 4.0 * X * B;
+        if(D >= 0.0){
+            T[i] = (-Kx + sqrt(D))/(2.0 * B);        
+        }
+        X += dx;
+    }
+    *Xpos += StepCount; 
+    return StepCount;
+}
+// разгон до заданной скорости с ускорением, не большим, чем предельная
+DWORD AccelerationToSpeed(double Vb, double Ve, double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos)
+{
+    double D;
+    double X;
+    DWORD StepCount;
+    DWORD Count;
+    double Kx;
+
+    // определяем координаты 
+    if(Count > Len) StepCount = Len; 
+    else StepCount = Count;
+    
+    // V = B*t/(1-k*t);
+    // X = V*t
+    // Amax = K*V+B;
     for(WORD i = 0; i < StepCount; i++) {        
         Kx = X * K;
         D = Kx * Kx + 4.0 * X * B;
