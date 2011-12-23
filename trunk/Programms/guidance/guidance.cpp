@@ -31,6 +31,47 @@ static FREQ_POWER FreqPower[] = {
     {2000,  0.100000000},
     {2200,  0.000000000}
 };
+typedef struct RR {
+    
+    // Время
+    // IntervalArray
+    // |      NextReadFrom
+    // |      |      NextWriteTo
+    // |      |      | 
+    // v      v      v
+    // 0------=======-------
+    DWORD   IntervalArray[256]; // массив отсчетов времени (кольцевой буффер)
+    WORD    NextReadFrom;       // индекс массива времени. указывает на первый значащий
+    WORD    NextWriteTo;        // индекс массива времени. указывает на первый свободный элемент
+    WORD    DataCount;          // количество данных в массиве.
+
+    // команды
+    enum State {                // состояния
+        ST_STOP,                // остановлен
+        ST_ACCELERATE,          // разгоняется
+        ST_RUN,                 // движется с постоянной скоростью
+        ST_DECELERATE           // тормозит
+    };
+    enum Cmd {                  // команды
+        CM_STOP,                // Остановиться (снижаем скорость до остановки)
+        CM_RUN_WITH_SPEED,      // Двигаться с заданной скоростью до окончания 
+        CM_RUN_TO_POINT,        // Двигаться до указанного угла        
+    };
+    // настоящее состояние
+    DWORD   CurrentX;           // текущий номер шага
+    BYTE    Direction;          // направление движения
+    BYTE    n;                  // резерв
+    // будующее состояние
+    float   TargetSpeed;        // разгоняемся до скорости
+    float   TargetAngle;        // двигаемся до угла
+    DWORD   TargetX;
+    
+    // кэш параметров
+    DWORD   Xpos;               // номер шага
+    float   X;
+    float   T;
+
+} RR;
 
 
 // Глобальные переменные:
