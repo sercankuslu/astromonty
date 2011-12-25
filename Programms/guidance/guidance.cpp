@@ -12,7 +12,8 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-static double Accelerate[ACCELERATE_SIZE];
+#define BUF_SIZE 256
+//static double Accelerate[ACCELERATE_SIZE];
 
 typedef struct FREQ_POWER {
     WORD Freq;
@@ -31,32 +32,34 @@ static FREQ_POWER FreqPower[] = {
     {2000,  0.100000000},
     {2200,  0.000000000}
 };
+typedef enum Cmd {                  // команды
+	CM_STOP,                // ќстановитьс€ (снижаем скорость до остановки)
+	CM_RUN_WITH_SPEED,      // ƒвигатьс€ с заданной скоростью до окончани€ 
+	CM_RUN_TO_POINT,        // ƒвигатьс€ до указанного угла        
+} GD_CMD;
+typedef enum State {                // состо€ни€
+	ST_STOP,                // остановлен
+	ST_ACCELERATE,          // разгон€етс€
+	ST_RUN,                 // движетс€ с посто€нной скоростью
+	ST_DECELERATE           // тормозит
+} GD_STATE;
 typedef struct RR {
     
     // ¬рем€
     // IntervalArray
-    // |      NextReadFrom
-    // |      |      NextWriteTo
+    // |      NextWriteTo
+    // |	  |      NextReadFrom
     // |      |      | 
     // v      v      v
-    // 0------=======-------
-    DWORD   IntervalArray[256]; // массив отсчетов времени (кольцевой буффер)
+    // 0======-------=========
+    DWORD   IntervalArray[BUF_SIZE]; // массив отсчетов времени (кольцевой буффер)
     WORD    NextReadFrom;       // индекс массива времени. указывает на первый значащий
     WORD    NextWriteTo;        // индекс массива времени. указывает на первый свободный элемент
     WORD    DataCount;          // количество данных в массиве.
 
     // команды
-    enum State {                // состо€ни€
-        ST_STOP,                // остановлен
-        ST_ACCELERATE,          // разгон€етс€
-        ST_RUN,                 // движетс€ с посто€нной скоростью
-        ST_DECELERATE           // тормозит
-    };
-    enum Cmd {                  // команды
-        CM_STOP,                // ќстановитьс€ (снижаем скорость до остановки)
-        CM_RUN_WITH_SPEED,      // ƒвигатьс€ с заданной скоростью до окончани€ 
-        CM_RUN_TO_POINT,        // ƒвигатьс€ до указанного угла        
-    };
+    GD_STATE State;
+    GD_CMD Cmd;
     // насто€щее состо€ние
     DWORD   CurrentX;           // текущий номер шага
     BYTE    Direction;          // направление движени€
@@ -66,13 +69,23 @@ typedef struct RR {
     float   TargetAngle;        // двигаемс€ до угла
     DWORD   TargetX;
     
+	float	BufCurSpeed;		// текуща€ скорость при заполнении буфера нужна дл€ функции Run
+
     // кэш параметров
-    DWORD   Xpos;               // номер шага
-    float   X;
-    float   T;
+    DWORD   Xpos;               // номер шага дл€ ускорени€	
+    float   X;					// координата дл€ текущего маневра
+    				
+	// буфер заполнен до значени€
+
+	// константы
+	float K;
+	float B;
+	float TimerStep;
+	float dx;
+
 
 } RR;
-
+RR rr1;
 
 // √лобальные переменные:
 #define FIRST_TIMER 1
@@ -89,6 +102,8 @@ BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
  
+
+int Run(RR * rr);
 
 void Calc(HWND hWnd, HDC hdc);
 DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
@@ -346,8 +361,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static int SizeX = 100;
-    static int SizeY = 10;
+    static int SizeX = 400;
+    static int SizeY = 20;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -385,7 +400,20 @@ void Calc(HWND hWnd, HDC hdc)
     dt = 0.0;
     T = 0.0;
     X = 0.0;
-    
+	rr1.B = B;
+	rr1.K = K;
+	rr1.dx = dX;
+	rr1.TimerStep = 0.0000002;
+	rr1.TargetSpeed = 10.0 * Grad_to_Rad;
+	rr1.BufCurSpeed = 10.0 * Grad_to_Rad;
+	rr1.DataCount = 0;
+	rr1.NextWriteTo = 0;
+
+    Run(&rr1);
+	rr1.DataCount = 150;
+	Run(&rr1);
+	rr1.DataCount = 150;
+	Run(&rr1);
     do{		
         Count = MaxAcceleration(XPos, 180*3200, dX, K, B, TT, TTLen, &XPos);
         for( i = 0; i<Count; i++)
@@ -428,7 +456,7 @@ void Calc(HWND hWnd, HDC hdc)
                 K1 = K3;
             }
         }       
-    }while ( X < 180.0 * Grad_to_Rad);       
+    }while ( X < 11.0 * Grad_to_Rad);       
     //Restore original object.
     SelectObject(hdc,original);
 
@@ -455,51 +483,88 @@ DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double *
     else StepCount = Count;
     X = *Xpos*dx;
     for(WORD i = 0; i < StepCount; i++) {        
-        Kx = X * K;
-        D = Kx * Kx + 4.0 * X * B;
-        if(D >= 0.0){
-            T[i] = (-Kx + sqrt(D))/(2.0 * B);        
-        }
+		Kx = X * K;
+		D = Kx * Kx + 4.0 * X * B;
+		if(D >= 0.0){
+			T[i] = (-Kx + sqrt(D))/(2.0 * B );        
+		}
         X += dx;
     }
     *Xpos += StepCount; 
     return StepCount;
 }
-// разгон до заданной скорости 
-DWORD AccelerationToSpeed(double Vb, double Ve, double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos)
+// ¬рем€
+// IntervalArray
+// |      NextWriteTo
+// |	  |      NextReadFrom
+// |      |      | 
+// v      v      v
+// 0======-------=========
+// 
+int Run(RR * rr)
 {
-    double D;
-    double X;
-    DWORD StepCount;
-    DWORD Count;
-    double Kx;
-
-    // определ€ем координаты 
-    if(Count > Len) StepCount = Len; 
-    else StepCount = Count;
-    
-    // V = B*t/(1-k*t);
-    // X = V*t
-    // Amax = K*V+B;
-    for(WORD i = 0; i < StepCount; i++) {        
-        Kx = X * K;
-        D = Kx * Kx + 4.0 * X * B;
-        if(D >= 0.0){
-            T[i] = (-Kx + sqrt(D))/(2.0 * B);        
-        }
-        X += dx;
-    }
-    *Xpos += StepCount; 
-    return StepCount;
+	// x = V*T
+	// T = X/V;
+	WORD i;
+	WORD j;
+	WORD FreeData = BUF_SIZE - rr->DataCount;
+	for (i = 0; i < FreeData; i++){
+		j = rr->NextWriteTo + i;
+		if(j >= BUF_SIZE) j -= BUF_SIZE;
+		rr->IntervalArray[j] = (DWORD)(rr->X / (rr->BufCurSpeed * rr->TimerStep));		
+		rr->X += rr->dx;
+	}	
+	rr->DataCount += FreeData;
+	rr->NextWriteTo += FreeData;
+	if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+	
+	return 0;
 }
-double Deceleration(double X, double K, double B)
+// разгон с текущей скорости до требуемой
+DWORD Acceleration(RR * rr)
 {
-    double D;
+	double D;
+	double X;
+	DWORD StepCount;
+	DWORD Count;
+	double Kx;
 
-    D = X*X*K*K + 4.0*X*B;
-    if(D>=0.0){
-        return (-K*X + sqrt(D))/(2.0*B);        
-    }
-    return -1.0;
 
+	Count = (DWORD)(Xe - *Xpos);
+	if(Count > Len) StepCount = Len; 
+	else StepCount = Count;
+	X = *Xpos*dx;
+	for(WORD i = 0; i < StepCount; i++) {        
+		Kx = X * K;
+		D = Kx * Kx + 4.0 * X * B;
+		if(D >= 0.0){
+			T[i] = (-Kx + sqrt(D))/(2.0 * B );        
+		}
+		X += dx;
+	}
+	*Xpos += StepCount; 
+	return StepCount;
 }
+
+// void RunCommand()
+// {
+// 	switch (rr1.Cmd){
+// 		case CM_RUN_WITH_SPEED: 
+// 			do{
+// 				switch(rr1.State){
+// 				case ST_STOP:
+// 				case ST_ACCELERATE:
+// 					Accelerate();
+// 					break;
+// 				case ST_RUN:
+// 					Run();
+// 					break;
+// 				case ST_DECELERATE:
+// 					Decelerate();
+// 					break;
+// 				}
+// 			} while (rr1.DataCount < BUF_SIZE/2);
+// 		break;
+// 	}
+// 
+// }
