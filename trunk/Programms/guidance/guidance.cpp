@@ -14,7 +14,7 @@
 #define FREQ_STEP 20
 #define BUF_SIZE 64
 //static double Accelerate[ACCELERATE_SIZE];
-
+typedef double ARR_TYPE;
 typedef struct FREQ_POWER {
     WORD Freq;
     double Power;
@@ -52,7 +52,7 @@ typedef struct RR {
     // |      |      | 
     // v      v      v
     // 0======-------=========
-    DWORD   IntervalArray[BUF_SIZE]; // массив отсчетов времени (кольцевой буффер)
+    ARR_TYPE   IntervalArray[BUF_SIZE]; // массив отсчетов времени (кольцевой буффер)
     WORD    NextReadFrom;       // индекс массива времени. указывает на первый значащий элемент
     WORD    NextWriteTo;        // индекс массива времени. указывает на первый свободный элемент
     WORD    DataCount;          // количество данных в массиве.
@@ -76,7 +76,7 @@ typedef struct RR {
     DWORD   Xpos;               // номер шага для ускорения	
     double   X;			// координата для текущего маневра
     DWORD   dwX;                // номер шага для текущего маневра
-    DWORD  BeginT;             // время на момент начала торможения
+    ARR_TYPE  BeginT;             // время на момент начала торможения
     				
     // буфер заполнен до значения
 
@@ -388,7 +388,7 @@ void Calc(HWND hWnd, HDC hdc)
     LineTo(hdc, rect.left+9, rect.top);        
     
 
-    for (int i = 0; i < rect.bottom/SizeY ; i++) {
+    for (DWORD i = 0; i < rect.bottom/SizeY ; i++) {
         if(i % 10 == 0){
             SetDCPenColor(hdc,RGB(0,0,0));
         } else {
@@ -397,7 +397,7 @@ void Calc(HWND hWnd, HDC hdc)
         MoveToEx(hdc, rect.left + 10, rect.bottom - 10 - (int)(i*SizeY), NULL);
         LineTo(hdc,   rect.right -10, rect.bottom - 10 - (int)(i*SizeY) );  
     }
-    for (int i = 0; i < rect.right*10/(SizeX) ; i++) {
+    for (DWORD i = 0; i < rect.right*10/(SizeX) ; i++) {
         if(i % 10 == 0){
             SetDCPenColor(hdc,RGB(0,0,0));
         } else {
@@ -428,7 +428,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.B = B;
     rr1.K = K;
     rr1.dx = dX;
-    rr1.TimerStep = 0.0000002;
+    rr1.TimerStep = 1;
     rr1.TargetSpeed = 10.0 * Grad_to_Rad;
     rr1.BufCurSpeed = 10.0 * Grad_to_Rad;
     rr1.DataCount = 0;
@@ -477,7 +477,7 @@ void Calc(HWND hWnd, HDC hdc)
         for( i = 0; i < rr1.DataCount; i++) {            
             T1 = T;
             V1 = V;
-            T = rr1.IntervalArray[rr1.NextReadFrom] * 0.0000002;
+            T = rr1.IntervalArray[rr1.NextReadFrom] * rr1.TimerStep;
             rr1.NextReadFrom++;
             if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
             X += dX;          
@@ -573,14 +573,14 @@ int Run(RR * rr)
 {
 	// x = V*T
 	// T = X/V;
-	DWORD i;
-	DWORD j;
-	DWORD FreeData = BUF_SIZE - rr->DataCount;
+	WORD i;
+	WORD j;
+	WORD FreeData = BUF_SIZE - rr->DataCount;
         rr->X = rr->dwX * rr->dx;
 	for (i = 0; i < FreeData; i++){
 	    j = rr->NextWriteTo + i;
 	    if(j >= BUF_SIZE) j -= BUF_SIZE;
-	    rr->IntervalArray[j] = (DWORD)(rr->X / (rr->BufCurSpeed * rr->TimerStep));		
+	    rr->IntervalArray[j] = (ARR_TYPE)(rr->X / (rr->BufCurSpeed * rr->TimerStep));		
 	    rr->X += rr->dx;
 	}	
         rr->dwX += FreeData;
@@ -598,12 +598,12 @@ int Acceleration(RR * rr)
 	DWORD Count;
         WORD j;        
         WORD FreeData = BUF_SIZE - rr->DataCount;
-        DWORD Tdest;        
-        DWORD T;
+        ARR_TYPE Tdest;        
+        ARR_TYPE T;
         // V = B*T/(1-K*T)
         // T = V/(B+K*V)
 	rr->X = rr->Xpos*rr->dx;
-        Tdest = (DWORD)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
+        Tdest = (ARR_TYPE)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
 
 	for(WORD i = 0; i < FreeData; i++) {        
             j = rr->NextWriteTo + i;
@@ -611,7 +611,7 @@ int Acceleration(RR * rr)
 	    Kx = rr->X * rr->K;
 	    D = Kx * Kx + 4.0 * rr->X * rr->B;
 	    if(D >= 0.0){
-                T = (DWORD)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
+                T = (ARR_TYPE)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
                 if(T >= Tdest){
                     FreeData = i;
                     rr->State = rr->NextState;
@@ -637,12 +637,12 @@ int Deceleration(RR * rr)
     DWORD Count;
     WORD j;        
     WORD FreeData = BUF_SIZE - rr->DataCount;
-    DWORD Tdest;        
-    DWORD T;
+    ARR_TYPE Tdest;        
+    ARR_TYPE T;
     // V = B*T/(1-K*T)
     // T = V/(B+K*V)
     rr->X = rr->Xpos*rr->dx;
-    Tdest = (DWORD)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
+    Tdest = (ARR_TYPE)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
 
     for(WORD i = 0; i < FreeData; i++) {        
         j = rr->NextWriteTo + i;
@@ -650,7 +650,7 @@ int Deceleration(RR * rr)
         Kx = rr->X * rr->K;
         D = Kx * Kx + 4.0 * rr->X * rr->B;
         if(D >= 0.0){
-            T = (DWORD)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
+            T = (ARR_TYPE)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
             if(rr->BeginT == 0){
                 rr->BeginT = T;
             }
