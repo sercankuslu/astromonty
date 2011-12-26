@@ -12,7 +12,7 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 256
+#define BUF_SIZE 64
 //static double Accelerate[ACCELERATE_SIZE];
 
 typedef struct FREQ_POWER {
@@ -48,40 +48,43 @@ typedef struct RR {
     // Время
     // IntervalArray
     // |      NextWriteTo
-    // |	  |      NextReadFrom
+    // |      |      NextReadFrom
     // |      |      | 
     // v      v      v
     // 0======-------=========
     DWORD   IntervalArray[BUF_SIZE]; // массив отсчетов времени (кольцевой буффер)
-    WORD    NextReadFrom;       // индекс массива времени. указывает на первый значащий
+    WORD    NextReadFrom;       // индекс массива времени. указывает на первый значащий элемент
     WORD    NextWriteTo;        // индекс массива времени. указывает на первый свободный элемент
     WORD    DataCount;          // количество данных в массиве.
 
     // команды
     GD_STATE State;
+    GD_STATE NextState;
     GD_CMD Cmd;
     // настоящее состояние
     DWORD   CurrentX;           // текущий номер шага
     BYTE    Direction;          // направление движения
     BYTE    n;                  // резерв
     // будующее состояние
-    float   TargetSpeed;        // разгоняемся до скорости
-    float   TargetAngle;        // двигаемся до угла
+    double   TargetSpeed;        // разгоняемся до скорости
+    double   TargetAngle;        // двигаемся до угла
     DWORD   TargetX;
     
-	float	BufCurSpeed;		// текущая скорость при заполнении буфера нужна для функции Run
+    double	BufCurSpeed;	// текущая скорость при заполнении буфера нужна для функции Run
 
     // кэш параметров
     DWORD   Xpos;               // номер шага для ускорения	
-    float   X;					// координата для текущего маневра
+    double   X;			// координата для текущего маневра
+    DWORD   dwX;                // номер шага для текущего маневра
+    DWORD  BeginT;             // время на момент начала торможения
     				
-	// буфер заполнен до значения
+    // буфер заполнен до значения
 
-	// константы
-	float K;
-	float B;
-	float TimerStep;
-	float dx;
+    // константы
+    double K;
+    double B;
+    double TimerStep;
+    double dx;
 
 
 } RR;
@@ -104,6 +107,8 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
  
 
 int Run(RR * rr);
+int Acceleration(RR * rr);
+int Deceleration(RR * rr);
 
 void Calc(HWND hWnd, HDC hdc);
 DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
@@ -361,8 +366,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static int SizeX = 400;
-    static int SizeY = 20;
+    static DWORD SizeX = 200;
+    static DWORD SizeY = 50;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -381,12 +386,29 @@ void Calc(HWND hWnd, HDC hdc)
     LineTo(hdc, rect.right - 9, rect.bottom - 9);
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
     LineTo(hdc, rect.left+9, rect.top);        
-    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/4), NULL);
-    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/4) );        
-    MoveToEx(hdc, rect.left+10, rect.bottom - 10 - (rect.bottom/4) - (int)(1.0*SizeY), NULL);
-    LineTo(hdc, rect.right-10, rect.bottom - 10 - (rect.bottom/4) - (int)(1.0*SizeY) );  
+    
+
+    for (int i = 0; i < rect.bottom/SizeY ; i++) {
+        if(i % 10 == 0){
+            SetDCPenColor(hdc,RGB(0,0,0));
+        } else {
+            SetDCPenColor(hdc,RGB(200,200,200));
+        }
+        MoveToEx(hdc, rect.left + 10, rect.bottom - 10 - (int)(i*SizeY), NULL);
+        LineTo(hdc,   rect.right -10, rect.bottom - 10 - (int)(i*SizeY) );  
+    }
+    for (int i = 0; i < rect.right*10/(SizeX) ; i++) {
+        if(i % 10 == 0){
+            SetDCPenColor(hdc,RGB(0,0,0));
+        } else {
+            SetDCPenColor(hdc,RGB(200,200,200));
+        }
+        MoveToEx(hdc, rect.left + 10 + (int)(i*SizeX/10), rect.bottom - 10, NULL);
+        LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
+    }
+
     DWORD Px = rect.left + 10;
-    DWORD Py = rect.bottom - 10 - (rect.bottom/4);
+    DWORD Py = rect.bottom - 10 ;//- (rect.bottom/4);
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
     POINT TA = {Px,Py};
@@ -399,36 +421,85 @@ void Calc(HWND hWnd, HDC hdc)
 
     dt = 0.0;
     T = 0.0;
+    T1 = 0.0;
     X = 0.0;
-	rr1.B = B;
-	rr1.K = K;
-	rr1.dx = dX;
-	rr1.TimerStep = 0.0000002;
-	rr1.TargetSpeed = 10.0 * Grad_to_Rad;
-	rr1.BufCurSpeed = 10.0 * Grad_to_Rad;
-	rr1.DataCount = 0;
-	rr1.NextWriteTo = 0;
+    V = 0.0;
+    V1 = 0.0;
+    rr1.B = B;
+    rr1.K = K;
+    rr1.dx = dX;
+    rr1.TimerStep = 0.0000002;
+    rr1.TargetSpeed = 10.0 * Grad_to_Rad;
+    rr1.BufCurSpeed = 10.0 * Grad_to_Rad;
+    rr1.DataCount = 0;
+    rr1.NextWriteTo = 0;
+    rr1.NextReadFrom = 0;
+    rr1.X = 0.0;
+    rr1.Xpos = 0;
+    rr1.State = ST_ACCELERATE;
+    rr1.NextState = ST_DECELERATE;
+    rr1.BeginT = 0;
+   
 
-    Run(&rr1);
-	rr1.DataCount = 150;
-	Run(&rr1);
-	rr1.DataCount = 150;
-	Run(&rr1);
+//     do{
+//         rr1.DataCount = 0;
+//         Acceleration(&rr1);        
+//     }while(rr1.State == ST_ACCELERATE);
+// 
+//     Run(&rr1);
+//     rr1.DataCount = 150;
+//     Run(&rr1);
+//     rr1.DataCount = 150;
+//     Run(&rr1);
+    //     rr1.State = ST_DECELERATE;
+    //     rr1.TargetSpeed = 1.0 * Grad_to_Rad;
     do{		
-        Count = MaxAcceleration(XPos, 180*3200, dX, K, B, TT, TTLen, &XPos);
-        for( i = 0; i<Count; i++)
-        {
-            T = TT[i];
-            X += dX;
-            V = B*T/(1-K*T);
-            A = B/(1-K*T);
+        //Count = MaxAcceleration(XPos, 180*3200, dX, K, B, TT, TTLen, &XPos);
+        switch(rr1.State){
+            case ST_ACCELERATE:
+                Acceleration(&rr1);                  
+                break;
+            case ST_RUN:
+                Run(&rr1);
+                break;
+            case ST_DECELERATE:
+                if(rr1.BeginT == 0){                    
+                    rr1.TargetSpeed = 1.0 * Grad_to_Rad;
+                    rr1.BufCurSpeed = 1.0 * Grad_to_Rad;
+                    rr1.NextState = ST_RUN;
+                }
+                Deceleration(&rr1);
+                break;
+            case ST_STOP:
+                break;
+        }
+        int j;
+        for( i = 0; i < rr1.DataCount; i++) {            
+            T1 = T;
+            V1 = V;
+            T = rr1.IntervalArray[rr1.NextReadFrom] * 0.0000002;
+            rr1.NextReadFrom++;
+            if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
+            X += dX;          
+            V = dX/(T-T1);
+            //A = (V-V1)/(T-T1);
+//              if(V >= rr1.TargetSpeed) {
+//                  rr1.State = ST_DECELERATE;
+//                  rr1.TargetSpeed = 1.0 * Grad_to_Rad;
+//              }
+//             T = TT[i];
+//             X += dX;
+//             V = B*T/(1-K*T);
+//             A = B/(1-K*T);
+        
             K3 = (int)(T*SizeX);
-            if( K3 != K1){
+            //if( K3 != K1)
+            {
                 //Change the DC pen color
                 SetDCPenColor(hdc,RGB(0,0,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
-                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
+                TX.y = Py - (int)(X*Rad_to_Grad*SizeY/2);
                 LineTo(hdc, TX.x, TX.y);  
 
                 SetDCPenColor(hdc,RGB(0,255,0));
@@ -440,23 +511,20 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(255,0,0));
                 MoveToEx(hdc, TA.x, TA.y, NULL);
                 TA.x = Px + (int)(T*SizeX);
-                TA.y = Py - (int)(A*Rad_to_Grad*SizeY);
+                TA.y = Py - (int)(A*Rad_to_Grad*SizeY/10);
                 LineTo(hdc, TA.x, TA.y);  
 
                 SetDCPenColor(hdc,RGB(200,200,0));
                 MoveToEx(hdc, VA.x, VA.y, NULL);
-                VA.x = Px + (int)(V*Rad_to_Grad*SizeY);
-                VA.y = Py - (int)(A*Rad_to_Grad*SizeY);
+                VA.x = Px + (int)(V*Rad_to_Grad*SizeY/10);
+                VA.y = Py - (int)(A*Rad_to_Grad*SizeY/10);
                 LineTo(hdc, VA.x, VA.y);                  
 
-                               
-                SetDCPenColor(hdc,RGB(0,0,0));
-                MoveToEx(hdc, rect.left + 9 + (int)(T)*SizeX, rect.bottom - 9, NULL);
-                LineTo(  hdc, rect.left + 9 + (int)(T)*SizeX, rect.top); 
                 K1 = K3;
             }
-        }       
-    }while ( X < 11.0 * Grad_to_Rad);       
+        }     
+        rr1.DataCount = 0;
+    }while ( T < 9.0 && rr1.State!=ST_STOP);       
     //Restore original object.
     SelectObject(hdc,original);
 
@@ -483,11 +551,11 @@ DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double *
     else StepCount = Count;
     X = *Xpos*dx;
     for(WORD i = 0; i < StepCount; i++) {        
-		Kx = X * K;
-		D = Kx * Kx + 4.0 * X * B;
-		if(D >= 0.0){
-			T[i] = (-Kx + sqrt(D))/(2.0 * B );        
-		}
+	Kx = X * K;
+	D = Kx * Kx + 4.0 * X * B;
+	if(D >= 0.0){
+		T[i] = (-Kx + sqrt(D))/(2.0 * B );        
+	}
         X += dx;
     }
     *Xpos += StepCount; 
@@ -505,15 +573,17 @@ int Run(RR * rr)
 {
 	// x = V*T
 	// T = X/V;
-	WORD i;
-	WORD j;
-	WORD FreeData = BUF_SIZE - rr->DataCount;
+	DWORD i;
+	DWORD j;
+	DWORD FreeData = BUF_SIZE - rr->DataCount;
+        rr->X = rr->dwX * rr->dx;
 	for (i = 0; i < FreeData; i++){
-		j = rr->NextWriteTo + i;
-		if(j >= BUF_SIZE) j -= BUF_SIZE;
-		rr->IntervalArray[j] = (DWORD)(rr->X / (rr->BufCurSpeed * rr->TimerStep));		
-		rr->X += rr->dx;
+	    j = rr->NextWriteTo + i;
+	    if(j >= BUF_SIZE) j -= BUF_SIZE;
+	    rr->IntervalArray[j] = (DWORD)(rr->X / (rr->BufCurSpeed * rr->TimerStep));		
+	    rr->X += rr->dx;
 	}	
+        rr->dwX += FreeData;
 	rr->DataCount += FreeData;
 	rr->NextWriteTo += FreeData;
 	if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
@@ -521,50 +591,90 @@ int Run(RR * rr)
 	return 0;
 }
 // разгон с текущей скорости до требуемой
-DWORD Acceleration(RR * rr)
+int Acceleration(RR * rr)
 {
-	double D;
-	double X;
-	DWORD StepCount;
+	double D;	
+        double Kx;
 	DWORD Count;
-	double Kx;
+        WORD j;        
+        WORD FreeData = BUF_SIZE - rr->DataCount;
+        DWORD Tdest;        
+        DWORD T;
+        // V = B*T/(1-K*T)
+        // T = V/(B+K*V)
+	rr->X = rr->Xpos*rr->dx;
+        Tdest = (DWORD)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
 
-
-	Count = (DWORD)(Xe - *Xpos);
-	if(Count > Len) StepCount = Len; 
-	else StepCount = Count;
-	X = *Xpos*dx;
-	for(WORD i = 0; i < StepCount; i++) {        
-		Kx = X * K;
-		D = Kx * Kx + 4.0 * X * B;
-		if(D >= 0.0){
-			T[i] = (-Kx + sqrt(D))/(2.0 * B );        
-		}
-		X += dx;
+	for(WORD i = 0; i < FreeData; i++) {        
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;
+	    Kx = rr->X * rr->K;
+	    D = Kx * Kx + 4.0 * rr->X * rr->B;
+	    if(D >= 0.0){
+                T = (DWORD)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
+                if(T >= Tdest){
+                    FreeData = i;
+                    rr->State = rr->NextState;
+                    //rr->X = 0.0;
+                    break;
+                }
+                rr->IntervalArray[j] = T; 
+	    }
+	    rr->X += rr->dx;            
 	}
-	*Xpos += StepCount; 
-	return StepCount;
+	rr->Xpos += FreeData; 
+        rr->DataCount += FreeData;
+        rr->NextWriteTo += FreeData;
+        if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+        return 0;
 }
 
-// void RunCommand()
-// {
-// 	switch (rr1.Cmd){
-// 		case CM_RUN_WITH_SPEED: 
-// 			do{
-// 				switch(rr1.State){
-// 				case ST_STOP:
-// 				case ST_ACCELERATE:
-// 					Accelerate();
-// 					break;
-// 				case ST_RUN:
-// 					Run();
-// 					break;
-// 				case ST_DECELERATE:
-// 					Decelerate();
-// 					break;
-// 				}
-// 			} while (rr1.DataCount < BUF_SIZE/2);
-// 		break;
-// 	}
-// 
-// }
+// торможение с текущей скорости до требуемой
+int Deceleration(RR * rr)
+{
+    double D;	
+    double Kx;
+    DWORD Count;
+    WORD j;        
+    WORD FreeData = BUF_SIZE - rr->DataCount;
+    DWORD Tdest;        
+    DWORD T;
+    // V = B*T/(1-K*T)
+    // T = V/(B+K*V)
+    rr->X = rr->Xpos*rr->dx;
+    Tdest = (DWORD)(rr->TargetSpeed/((rr->B + rr->TargetSpeed * rr->K) * rr->TimerStep));
+
+    for(WORD i = 0; i < FreeData; i++) {        
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;
+        Kx = rr->X * rr->K;
+        D = Kx * Kx + 4.0 * rr->X * rr->B;
+        if(D >= 0.0){
+            T = (DWORD)((-Kx + sqrt(D))/(2.0 * rr->TimerStep * rr->B ));
+            if(rr->BeginT == 0){
+                rr->BeginT = T;
+            }
+            if(T <= Tdest){
+                FreeData = i;
+                rr->State = rr->NextState;
+                rr->dwX = 0;
+                //rr->X = 0.0;
+                rr->BeginT = 0;
+                break;
+            }
+            rr->IntervalArray[j] = 2* rr->BeginT - T; 
+        }        
+        rr->X -= rr->dx;   
+        if(rr->X <= 0.0) {
+            rr->X = 0.0;
+            rr->State = ST_STOP;
+            rr->BeginT = 0;
+            break;
+        }
+    }
+    rr->Xpos -= FreeData; 
+    rr->DataCount += FreeData;
+    rr->NextWriteTo += FreeData;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+    return 0;
+}
