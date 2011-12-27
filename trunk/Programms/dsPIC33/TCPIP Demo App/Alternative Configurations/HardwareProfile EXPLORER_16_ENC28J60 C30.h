@@ -77,9 +77,9 @@
 		_CONFIG1(JTAGEN_OFF & FWDTEN_OFF)		// JTAG off, watchdog timer off
 	#elif defined(__dsPIC33F__) || defined(__PIC24H__)
 		// All dsPIC33F and PIC24H PIMs
-		//_FOSCSEL(FNOSC_PRIPLL)			// PLL enabled
-		//_FOSC(OSCIOFNC_OFF & POSCMD_EC)	// EC Osc
-		//_FWDT(FWDTEN_ON)				// Disable Watchdog timer
+		_FOSCSEL(FNOSC_PRIPLL)			// PLL enabled
+		_FOSC(OSCIOFNC_OFF & POSCMD_EC)	// EC Osc
+		_FWDT(FWDTEN_ON)				// Disable Watchdog timer
 		
 		// JTAG should be disabled as well
 	#endif
