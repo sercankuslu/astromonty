@@ -453,14 +453,14 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.K = K;
     rr1.dx = dX;
     rr1.TimerStep = 1;
-    rr1.Vend = 10.0 * Grad_to_Rad;
+    rr1.Vend = 15 * Grad_to_Rad;
     rr1.Xend = 15.0 * Grad_to_Rad;
     rr1.DataCount = 0;
     rr1.NextWriteTo = 0;
     rr1.NextReadFrom = 0;    
     rr1.XaccBeg = 0;
     rr1.Xbeg = 0;
-    rr1.TimeBeg = (ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
+    rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
        
     rr1.State = ST_ACCELERATE;
     rr1.NextState = ST_RUN;
@@ -472,7 +472,7 @@ void Calc(HWND hWnd, HDC hdc)
              case ST_ACCELERATE:
                  Acceleration(&rr1);                  
                  if(rr1.State == ST_RUN){
-                     rr1.Vend = 10.0 * Grad_to_Rad;
+                     //rr1.Vend = 10.0 * Grad_to_Rad;
                      rr1.NextState = ST_DECELERATE;
                  }
                  if(rr1.State == ST_DECELERATE){
@@ -502,8 +502,6 @@ void Calc(HWND hWnd, HDC hdc)
             rr1.NextReadFrom++;
             if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
             V = 1.0*Grad_to_Rad;
-            //X += dX;
-            //T += dX/V;
             
               if(T-T1 != 0.0){
                   X += dX;
@@ -512,17 +510,11 @@ void Calc(HWND hWnd, HDC hdc)
                   V = 0.0;
               }
             
-            //A = rr1.B*T/(1-rr1.K*T);
             
-            //A = (V-V1)/(T-T1);
-              
-//             T = TT[i];
-//             X += dX;
-//             V = B*T/(1-K*T);
-//             A = B/(1-K*T);
+            A = (V-V1)/(T-T1);
         
             K3 = (int)(T*SizeX);
-            //if( K3 != K1)
+            if( K3 != K1)
             {
                 //Change the DC pen color
                 SetDCPenColor(hdc,RGB(0,0,255));
@@ -552,14 +544,14 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(255,0,0));
                 MoveToEx(hdc, TA.x, TA.y, NULL);
                 TA.x = Px + (int)(T*SizeX);
-                TA.y = Py - (int)(A*Rad_to_Grad*SizeY);
+                TA.y = Py - (int)(A*Rad_to_Grad*SizeY/30)- (rect.bottom/2);
                 LineTo(hdc, TA.x, TA.y);  
 
-                SetDCPenColor(hdc,RGB(200,200,0));
-                MoveToEx(hdc, VA.x, VA.y, NULL);
-                VA.x = Px + (int)(V*Rad_to_Grad*SizeY/10);
-                VA.y = Py - (int)(A*Rad_to_Grad*SizeY/10);
-                LineTo(hdc, VA.x, VA.y);                  
+//                 SetDCPenColor(hdc,RGB(200,200,0));
+//                 MoveToEx(hdc, VA.x, VA.y, NULL);
+//                 VA.x = Px + (int)(V*Rad_to_Grad*SizeX);
+//                 VA.y = Py - (int)(A*Rad_to_Grad*SizeY/30);
+//                 LineTo(hdc, VA.x, VA.y);                  
 
                 K1 = K3;
             }
@@ -595,7 +587,7 @@ int Run(RR * rr)
     DWORD Xb = rr->Xbeg/rr->dx;
     DWORD Xe = rr->Xend/rr->dx;
     ARR_TYPE T = 0;
-    ARR_TYPE T1;// = 0;
+    ARR_TYPE T1 = rr->TimeBeg;// = 0;
     for (i = 0; i < FreeData; i++){
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;  
@@ -706,14 +698,14 @@ int Deceleration(RR * rr)
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;
         X -= rr->dx;  
-        if(X<0.0){
+        if(X<=0.0){
             FreeData = i;
             rr->State = rr->NextState;            
             break;
         }
         Xb++;
         T = CalculateT( X, rr->K, rr->B, rr->TimerStep);           
-        if((T1 - T <= dT)||((Xe != 0)&&(Xb >= Xe))){
+        if(((dT!=0)&&(T1 - T >= dT))||((Xe != 0)&&(Xb >= Xe))){
             FreeData = i;
             rr->State = rr->NextState;                                
             break;
