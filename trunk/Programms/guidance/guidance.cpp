@@ -88,15 +88,13 @@ typedef struct RR {
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
     DWORD       XaccBeg;                    //(желательно целое число шагов)
-    //параметры, нужные в процессе работы
-    ARR_TYPE    TimePos;
-    DWORD       Xpos;
-    DWORD       XaccPos;                    //(целое число шагов) 
+    double       Xbeg;
+    
 
     // параметры указывающие на момент окончания
     double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
-    ARR_TYPE    Tend;                       //(для ускорения работы нужно знать сразу время в шагах, когда закончить маневр)
-    double      Xend;
+    //ARR_TYPE    Tend;                       //(для ускорения работы нужно знать сразу время в шагах, когда закончить маневр)
+    double       Xend;
     DWORD       XaccEnd;                    //координата ускорения (DWORD)
 
     // константы
@@ -136,7 +134,7 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
-ARR_TYPE CalculateT(double X, double dx, double K, double B, double TimerStep);
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
 
 void Calc(HWND hWnd, HDC hdc);
 DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
@@ -392,7 +390,7 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static DWORD SizeX = 200;
+    static DWORD SizeX = 500;
     static DWORD SizeY = 50;
     static double Pi = PI;
     static double TT[64];
@@ -455,54 +453,66 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.K = K;
     rr1.dx = dX;
     rr1.TimerStep = 1;
-    rr1.Vend = 5.0 * Grad_to_Rad;
+    rr1.Vend = 10.0 * Grad_to_Rad;
+    rr1.Xend = 15.0 * Grad_to_Rad;
     rr1.DataCount = 0;
     rr1.NextWriteTo = 0;
-    rr1.NextReadFrom = 0;
-    rr1.Tend = 0.0;
+    rr1.NextReadFrom = 0;    
     rr1.XaccBeg = 0;
-    rr1.TimeBeg = (ARR_TYPE)(rr1.Vend/((rr1.B + rr1.Vend * rr1.K) * rr1.TimerStep));
-    
-    rr1.Xpos = 0;
+    rr1.Xbeg = 0;
+    rr1.TimeBeg = (ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
+       
     rr1.State = ST_ACCELERATE;
     rr1.NextState = ST_RUN;
    
 
     do{		
         
-        switch(rr1.State){
-            case ST_ACCELERATE:
-                Acceleration(&rr1);                  
-                if(rr1.State == ST_RUN){
-                    rr1.Vend = 5.0 * Grad_to_Rad;
-                    rr1.NextState = ST_DECELERATE;
-                }
-                break;
-            case ST_RUN:
-                Run(&rr1);
-                if(rr1.State == ST_DECELERATE){
-                    rr1.Vend = 0.0 * Grad_to_Rad;
-                    rr1.NextState = ST_STOP;
-                }
-                break;
-            case ST_DECELERATE:                
-                Deceleration(&rr1);                
-                break;
-            case ST_STOP:
-                break;
-        }
-        int j;        
-        for( i = 0; i < rr1.DataCount; i++) {            
+         switch(rr1.State){
+             case ST_ACCELERATE:
+                 Acceleration(&rr1);                  
+                 if(rr1.State == ST_RUN){
+                     rr1.Vend = 10.0 * Grad_to_Rad;
+                     rr1.NextState = ST_DECELERATE;
+                 }
+                 if(rr1.State == ST_DECELERATE){
+                     rr1.Vend = 0.0 * Grad_to_Rad;
+                     rr1.NextState = ST_STOP;
+                 }
+                 break;
+             case ST_RUN:
+                 Run(&rr1);
+                 if(rr1.State == ST_DECELERATE){
+                     rr1.Vend = 0.0 * Grad_to_Rad;
+                     rr1.Xend = 0;
+                     rr1.NextState = ST_STOP;
+                 }
+                 break;
+             case ST_DECELERATE:                
+                 Deceleration(&rr1);                
+                 break;
+             case ST_STOP:
+                 break;
+         }
+        int j;     
+        //V = 5.0*Grad_to_Rad;
+        for( i = 0; i < rr1.DataCount; i++) 
+        {            
             T = rr1.IntervalArray[rr1.NextReadFrom] * rr1.TimerStep;
             rr1.NextReadFrom++;
             if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
+            V = 1.0*Grad_to_Rad;
+            //X += dX;
+            //T += dX/V;
             
-            if(T-T1 != 0.0){
-                X += dX;
-                V = dX/(T-T1);
-            }else {
-                V = 0.0;
-            }
+              if(T-T1 != 0.0){
+                  X += dX;
+                  V = dX/(T-T1);
+              }else {
+                  V = 0.0;
+              }
+            
+            //A = rr1.B*T/(1-rr1.K*T);
             
             //A = (V-V1)/(T-T1);
               
@@ -518,7 +528,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(0,0,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
-                TX.y = Py - (int)(X*Rad_to_Grad*SizeY/2);
+                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
                 LineTo(hdc, TX.x, TX.y);  
 
                 
@@ -542,7 +552,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(255,0,0));
                 MoveToEx(hdc, TA.x, TA.y, NULL);
                 TA.x = Px + (int)(T*SizeX);
-                TA.y = Py - (int)(A*Rad_to_Grad*SizeY/10);
+                TA.y = Py - (int)(A*Rad_to_Grad*SizeY);
                 LineTo(hdc, TA.x, TA.y);  
 
                 SetDCPenColor(hdc,RGB(200,200,0));
@@ -557,7 +567,7 @@ void Calc(HWND hWnd, HDC hdc)
             V1 = V;
         }     
         rr1.DataCount = 0;
-    }while ( (X < 0.590) && (rr1.State!= ST_STOP)) /*rr1.State!=ST_STOP)*/;       
+    }while ( /*(X < 0.590) && */(rr1.State!= ST_STOP)) /*rr1.State!=ST_STOP)*/;       
     //Restore original object.
     SelectObject(hdc,original);
 
@@ -575,26 +585,37 @@ void Calc(HWND hWnd, HDC hdc)
 
 int Run(RR * rr)
 {
-	// x = V*T
-	// T = X/V;
- 	WORD i;
- 	WORD j;
- 	WORD FreeData = BUF_SIZE - rr->DataCount;  
-        double X = 0.0;
-        //X = rr->Vend * rr->TimeBeg;
-
- 	for (i = 0; i < FreeData; i++){
- 	    j = rr->NextWriteTo + i;
- 	    if(j >= BUF_SIZE) j -= BUF_SIZE;  
-             X += rr->dx;
- 	    rr->IntervalArray[j] = rr->TimeBeg + (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
-        }	
-        rr->TimeBeg = rr->IntervalArray[j];        
- 	rr->DataCount += FreeData;
- 	rr->NextWriteTo += FreeData;
- 	if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-	
-	return 0;
+    // x = V*T
+    // T = X/V;
+    WORD i;
+    WORD j;
+    WORD FreeData = BUF_SIZE - rr->DataCount;  
+    double X = 0.0;
+    //X = rr->Vend * rr->TimeBeg;
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
+    ARR_TYPE T = 0;
+    ARR_TYPE T1;// = 0;
+    for (i = 0; i < FreeData; i++){
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;  
+        X += rr->dx;
+        Xb++;
+        T = rr->TimeBeg + (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
+        if((Xe != 0) && (Xb >= Xe)){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        rr->IntervalArray[j] = T;
+        T1 = T;
+    }	
+    rr->TimeBeg = T1;        
+    rr->DataCount += FreeData;
+    rr->NextWriteTo += FreeData;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+    rr->Xbeg = Xb * rr->dx;
+    return 0;
 }
 // разгон с текущей скорости до требуемой
 //    ARR_TYPE    TimeBeg;  
@@ -605,44 +626,47 @@ int Acceleration(RR * rr)
     WORD j;        
     WORD FreeData = BUF_SIZE - rr->DataCount;
     ARR_TYPE T = 0;
-    double X;
-    ARR_TYPE Tb = 0.0;
-    bool e = false;
+    ARR_TYPE T1 = 0;
+    ARR_TYPE dT = 0;
+    double X;       // временныя переменная 
+    ARR_TYPE Tb = 0.0;    
     // V = B*T/(1-K*T)
     // T = V/(B+K*V)
-    X = rr->XaccBeg * rr->dx;
-    if(rr->Tend == 0.0)
-        rr->Tend = (ARR_TYPE)( rr->Vend / ((rr->B + rr->Vend * rr->K) * rr->TimerStep ));
-
+    X = rr->XaccBeg * rr->dx; 
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
     if(rr->XaccBeg > 0){
-        T = CalculateT( X, rr->dx, rr->K, rr->B, rr->TimerStep);            
+        T1 = CalculateT( X, rr->K, rr->B, rr->TimerStep);         
     }
-    Tb = rr->TimeBeg - T;
+    Tb = rr->TimeBeg - T1;    
+    
+    if(rr->Vend != 0.0)
+        dT = rr->dx/(rr->Vend * rr->TimerStep);
 
     for(WORD i = 0; i < FreeData; i++) {        
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X += rr->dx;            
-        T = CalculateT( X, rr->dx, rr->K, rr->B, rr->TimerStep);                
-        if(T >= rr->Tend){
+        X += rr->dx;    
+        Xb++;
+        T = CalculateT( X, rr->K, rr->B, rr->TimerStep);           
+        if((T - T1 <= dT)||((Xe != 0)&&(Xb >= Xe))){
             FreeData = i;
-            rr->State = rr->NextState;                    
-            rr->Tend = 0.0;
-            j--;  // для TimeBeg
+            rr->State = rr->NextState;                                
             break;
         }
-        rr->IntervalArray[j] = Tb + T;     
+        rr->IntervalArray[j] = Tb + T;  
+        T1 = T;
     }
-    rr->TimeBeg = rr->IntervalArray[j];
+    rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    //rr->TimeBeg = T;
+    rr->Xbeg = Xb * rr->dx;
     return 0;
 }
 
-ARR_TYPE CalculateT(double X, double dx, double K, double B, double TimerStep)
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
 {
     double D;	
     double Kx;
@@ -657,49 +681,52 @@ ARR_TYPE CalculateT(double X, double dx, double K, double B, double TimerStep)
 
 // торможение с текущей скорости до требуемой
 int Deceleration(RR * rr)
-{
+{    
     WORD j;        
     WORD FreeData = BUF_SIZE - rr->DataCount;
     ARR_TYPE T = 0;
-    double X;
-    ARR_TYPE Tb = 0.0;
+    ARR_TYPE T1 = 0;
+    ARR_TYPE dT = 0;
+    double X;       // временныя переменная 
+    ARR_TYPE Tb = 0.0;    
     // V = B*T/(1-K*T)
     // T = V/(B+K*V)
-    X = (rr->XaccBeg) * rr->dx;
-    if(rr->Tend == 0.0)
-        rr->Tend = (ARR_TYPE)( rr->Vend / ((rr->B + rr->Vend * rr->K) * rr->TimerStep ));
-
+    X = rr->XaccBeg * rr->dx; 
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
     if(rr->XaccBeg > 0){
-        T = CalculateT( X, rr->dx, rr->K, rr->B, rr->TimerStep);            
+        T1 = CalculateT( X, rr->K, rr->B, rr->TimerStep);         
     }
-     Tb = rr->TimeBeg + T;
+    Tb = rr->TimeBeg + T1;    
+
+    if(rr->Vend != 0.0)
+        dT = rr->dx/(rr->Vend * rr->TimerStep);
 
     for(WORD i = 0; i < FreeData; i++) {        
         j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;  
-        X -= rr->dx;
-        T = CalculateT( X, rr->dx, rr->K, rr->B, rr->TimerStep);                
-        if(T <= rr->Tend){
-            FreeData = i;
-            rr->State = rr->NextState;                    
-            rr->Tend = 0.0;                    
-            j--;
-            break;
-        }
-        rr->IntervalArray[j] = Tb - T;               
+        if(j >= BUF_SIZE) j -= BUF_SIZE;
+        X -= rr->dx;  
         if(X<0.0){
             FreeData = i;
-            rr->State = rr->NextState;
-            rr->Tend = 0.0;
-            j--;
+            rr->State = rr->NextState;            
             break;
         }
+        Xb++;
+        T = CalculateT( X, rr->K, rr->B, rr->TimerStep);           
+        if((T1 - T <= dT)||((Xe != 0)&&(Xb >= Xe))){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        rr->IntervalArray[j] = Tb - T;  
+        T1 = T;
+
     }
-    rr->TimeBeg = rr->IntervalArray[j];
+    rr->TimeBeg = Tb - T1;
     rr->XaccBeg -= FreeData; 
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    //rr->TimeBeg = T;
+    rr->Xbeg = Xb * rr->dx;
     return 0;
 }
