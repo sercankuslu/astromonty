@@ -389,12 +389,14 @@ void Calc(HWND hWnd, HDC hdc)
     static double A = 0.0; //ускорение в радианах в сек за сек
     static double A1 = 0.0; //ускорение в радианах в сек за сек
     static double A2 = 0.0; //ускорение в радианах в сек за сек
-    static double V1 = 0.0; //ускорение в радианах в сек за сек
     static double dt = 0.0; // изменение времени
+    static double V0 = 1.0* Grad_to_Rad;  // мгновенная скорость в радианах
     static double V = 0.0;  // мгновенная скорость в радианах
+    static double V1 = 0.0; //мгновенная скорость в радианах
     static double V2 = 0.0;  // мгновенная скорость в радианах
     //static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
     static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
+    static double X0 = 0;    // полное перемещение в радианах
     static double X = 0;    // полное перемещение в радианах
     static double X1 = 0;    // полное перемещение в радианах
     static double T = 0;    // полное время
@@ -420,8 +422,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static DWORD SizeX = 500;
-    static DWORD SizeY = 50;
+    static DWORD SizeX = 200;
+    static DWORD SizeY = 20;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -468,7 +470,7 @@ void Calc(HWND hWnd, HDC hdc)
     POINT TV2 = {Px,Py};
     POINT TA = {Px,Py};
     POINT VA = {Px,Py};
-
+    POINT X0T = {Px,Py};
        
     //SetDCPenColor(hdc,RGB(0,200,0));
     //MoveToEx(hdc, Px, Py - (int)(0.004166667*SizeY), NULL);
@@ -485,7 +487,19 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.dx = dX;
     rr1.TimerStep = 1;
     rr1.Vend = 0 * Grad_to_Rad;
-    rr1.Xend = 4.5 * Grad_to_Rad;
+    V0 = 1.0 * Grad_to_Rad;
+    double XX = 9.0 * Grad_to_Rad;
+    //double XC = (-(V0-XX*K) + sqrt((V0-XX*K)*(V0-XX*K)+4.0*(V0*K+B)*XX))*V0/(2.0*(V0*K+B)*(-1));
+    //double XC = ((V0+XX*K/2.0) + sqrt((V0+XX*K/2.0)*(V0+XX*K/2.0) - 2.0*(V0*K+B)*XX))*V0/(2.0*(V0*K+B));
+    // время, через которое координаты будут равны    
+    //double TC = (((XX*K-V0)-sqrt((V0+K*XX)*(V0+K*XX)+8.0*B*XX))/(-1.0*(V0*K+2.0*B)));
+    //double TC = 1.0*Grad_to_Rad;
+    double TC = (((XX*K/2.0-V0)-sqrt((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
+    
+    double XC = V0 * TC + XX;
+    double XT = B * TC * TC / ((1 - K * TC));
+    double XL = (XC - XT)- XX / 2;
+    rr1.Xend = XT;
     rr1.DataCount = 0;
     rr1.NextWriteTo = 0;
     rr1.NextReadFrom = 0;    
@@ -494,33 +508,37 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
        
     rr1.State = ST_ACCELERATE;
-    rr1.NextState = ST_RUN;
+    rr1.NextState = ST_DECELERATE;
    
-
-    do{		
-        
+    do{		        
          switch(rr1.State){
              case ST_ACCELERATE:
                  Acceleration(&rr1);                  
                  if(rr1.State == ST_RUN){
-                     //rr1.Vend = 10.0 * Grad_to_Rad;
+                     rr1.Vend = 10.0 * Grad_to_Rad;
                      rr1.NextState = ST_DECELERATE;
                  }
                  if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = 0.0 * Grad_to_Rad;
-                     rr1.NextState = ST_STOP;
+                     rr1.Vend = V0;
+                     rr1.Xend = 30.0 * Grad_to_Rad;
+                     rr1.NextState = ST_RUN;
                  }
                  break;
              case ST_RUN:
                  Run(&rr1);
                  if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = 0.0 * Grad_to_Rad;
-                     rr1.Xend = 0;
+                     rr1.Vend = 0.004166667 * Grad_to_Rad;
+                     rr1.Xend = 20.0 * Grad_to_Rad;
                      rr1.NextState = ST_STOP;
                  }
                  break;
              case ST_DECELERATE:                
-                 Deceleration(&rr1);                
+                 Deceleration(&rr1); 
+                 if(rr1.State == ST_RUN){
+                     rr1.Vend = V0;
+                     rr1.Xend = 20.0 * Grad_to_Rad;
+                     rr1.NextState = ST_STOP;
+                 }
                  break;
              case ST_STOP:
                  break;
@@ -540,13 +558,13 @@ void Calc(HWND hWnd, HDC hdc)
                }else {
                    V = 0.0;
                }
-//             
-//             
+          
 //             A = (V-V1)/(T-T1);
             //  Формула для вычисления мгновенной скорости         
             V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
             //V2 = B*T/(1-K*T);
-        
+            X0 = XX + V0*T;
+
             K3 = (int)(T*SizeX);
             //if( K3 != K1)
             {
@@ -598,11 +616,11 @@ void Calc(HWND hWnd, HDC hdc)
                 TA.y = Py - (int)(A*Rad_to_Grad*SizeY/30)- (rect.bottom/2);
                 LineTo(hdc, TA.x, TA.y);  
 
-//                 SetDCPenColor(hdc,RGB(200,200,0));
-//                 MoveToEx(hdc, VA.x, VA.y, NULL);
-//                 VA.x = Px + (int)(V*Rad_to_Grad*SizeX);
-//                 VA.y = Py - (int)(A*Rad_to_Grad*SizeY/30);
-//                 LineTo(hdc, VA.x, VA.y);                  
+                SetDCPenColor(hdc,RGB(200,200,0));
+                MoveToEx(hdc, X0T.x, X0T.y, NULL);
+                X0T.x = Px + (int)(T*SizeX);
+                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
+                LineTo(hdc, X0T.x, X0T.y);                  
 
                 K1 = K3;
             }
