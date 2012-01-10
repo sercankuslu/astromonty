@@ -489,17 +489,17 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.Vend = 0 * Grad_to_Rad;
     V0 = 1.0 * Grad_to_Rad;
     double XX = 9.0 * Grad_to_Rad;
-    //double XC = (-(V0-XX*K) + sqrt((V0-XX*K)*(V0-XX*K)+4.0*(V0*K+B)*XX))*V0/(2.0*(V0*K+B)*(-1));
-    //double XC = ((V0+XX*K/2.0) + sqrt((V0+XX*K/2.0)*(V0+XX*K/2.0) - 2.0*(V0*K+B)*XX))*V0/(2.0*(V0*K+B));
-    // время, через которое координаты будут равны    
-    //double TC = (((XX*K-V0)-sqrt((V0+K*XX)*(V0+K*XX)+8.0*B*XX))/(-1.0*(V0*K+2.0*B)));
-    //double TC = 1.0*Grad_to_Rad;
+
+    // вычислим время в которое пересекутся две функции:
+    // x = X0 + V0*T
+    // x = B*T*T/(1-K*T)
+    // надо еще учесть текущую координату
     double TC = (((XX*K/2.0-V0)-sqrt((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
     
-    double XC = V0 * TC + XX;
-    double XT = B * TC * TC / ((1 - K * TC));
-    double XL = (XC - XT)- XX / 2;
-    rr1.Xend = XT;
+    //double XC = V0 * TC + XX;
+    double XT = B * TC * TC / (1 - K * TC);
+    //double XL = (XC - XT)- XX / 2;
+    rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
     rr1.DataCount = 0;
     rr1.NextWriteTo = 0;
     rr1.NextReadFrom = 0;    
