@@ -17,7 +17,7 @@
 const double Grad_to_Rad = PI / 180.0;
 const double Rad_to_Grad = 180.0 / PI;
 
-typedef double ARR_TYPE;
+typedef DWORD ARR_TYPE;
 typedef struct FREQ_POWER {
     WORD Freq;
     double Power;
@@ -485,7 +485,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.B = B;
     rr1.K = K;
     rr1.dx = dX;
-    rr1.TimerStep = 1;
+    rr1.TimerStep = 0.0000002;
     rr1.Vend = 0 * Grad_to_Rad;
     V0 = 1.0 * Grad_to_Rad;
     double XX = 9.0 * Grad_to_Rad;
