@@ -118,26 +118,73 @@ DWORD_VAL CPUSPEED;
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-static double Accelerate[ACCELERATE_SIZE];
+#define BUF_SIZE 128
+typedef DWORD ARR_TYPE;
+//static double Accelerate[ACCELERATE_SIZE];
+const double Grad_to_Rad = PI / 180.0;
+const double Rad_to_Grad = 180.0 / PI;
 
-typedef struct FREQ_POWER {
-    WORD Freq;
-    double Power;
-} FREQ_POWER;
-static FREQ_POWER FreqPower[] = {
-    {0,     0.850000000},
-    {100,   0.764642857},
-    {250,   0.666666667},
-    {500,   0.600000000},
-    {750,   0.533333333},
-    {1000,  0.466666667},
-    {1250,  0.400000000},
-    {1500,  0.333333333},
-    {1750,  0.222222222},
-    {2000,  0.100000000},
-    {2250,  0.000000000}
-};
+typedef enum Cmd {                  // команды
+	CM_STOP,                // Остановиться (снижаем скорость до остановки)
+	CM_RUN_WITH_SPEED,      // Двигаться с заданной скоростью до окончания 
+	CM_RUN_TO_POINT,        // Двигаться до указанного угла        
+} GD_CMD;
 
+typedef enum State {                // состояния
+    ST_FREE,                // ожидает получения команды (значение, устанавливаемое после каждого состояния)
+	ST_STOP,                // остановлен
+	ST_ACCELERATE,          // разгоняется
+	ST_RUN,                 // движется с постоянной скоростью
+	ST_DECELERATE           // тормозит
+} GD_STATE;
+
+typedef struct RR {
+    
+    // Время
+    // IntervalArray
+    // |      NextWriteTo
+    // |      |      NextReadFrom
+    // |      |      | 
+    // v      v      v
+    // 0======-------=========
+    // 
+    //       окончание предыдущей операции ( исходные параметры операции)
+    //       |   промежуточное состояние
+    //       |   |   Конец операции 
+    //       |   |   |
+    //       v   v   v 
+    // -------========--------
+    // 
+    
+    ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
+    WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
+    WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
+    WORD        DataCount;                  // количество данных в массиве.
+
+    // команды
+    GD_CMD      Cmd;
+    GD_STATE    State;    
+    GD_STATE    NextState;
+    
+    // исхoдные параметры:
+    ARR_TYPE    TimeBeg;  
+    DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
+    double      Xbeg;
+    
+
+    // параметры указывающие на момент окончания
+    double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
+    double      Xend;
+    DWORD       XaccEnd;                    //координата ускорения (DWORD)
+
+    // константы
+    double      K;
+    double      B;
+    double      TimerStep;
+    double      dx;
+
+} RR;
+RR rr1;
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
@@ -150,11 +197,11 @@ static FREQ_POWER FreqPower[] = {
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
-int SolvQuadratic(double A, double B, double C, double* X1/*, double* X2*/);
-int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T);
-int Calculate_A(WORD F, double *A);
-int InitAccelerate(FREQ_POWER* FqPwr, WORD Len, double I);
-double LinInt(double x1,double y1,double x2,double y2, double x);
+
+int Run(RR * rr);
+int Acceleration(RR * rr);
+int Deceleration(RR * rr);
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
 void Calc(void);
 
 
@@ -237,10 +284,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 	}
 #endif
 
-// Select Internal FRC at POR		
-_FOSCSEL(FNOSC_FRC);
-// Enable Clock Switching and Configure Posc in XT mode
-_FOSC(FCKSM_CSECMD & OSCIOFNC_OFF & POSCMD_EC);
+
 //
 // Main application entry point.
 //
@@ -262,19 +306,7 @@ int main(void)
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
-    
- 	{
-		// I = (m*r^2/4) + (m*l^2)/12
-		static double Mass = 500.0f;
-		static double Radius = 0.30f;
-		static double Length = 2.0f;
-		static double Reduction = 360.0f;
-		int SizeFreq = sizeof(FreqPower)/sizeof(FreqPower[0]);
-		//static double Grad_to_Rad = 180.0/PI;
-		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-		InitAccelerate(FreqPower, SizeFreq, I);
-    }
+     	
 	Calc();
      
     // Initialize application specific hardware
@@ -422,19 +454,8 @@ int main(void)
 	#endif
 
 	
- 	//if(0)
-    {
-		// I = (m*r^2/4) + (m*l^2)/12
-		static double Mass = 500.0f;
-		static double Radius = 0.30f;
-		static double Length = 2.0f;
-		static double Reduction = 360.0f;
-		//static double Grad_to_Rad = 180.0/PI;
-		double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-		//double L = (2 * Reduction * Grad_to_Rad)/(Mass*Radius*Radius);
-		InitAccelerate(FreqPower, sizeof(FreqPower)/sizeof(FreqPower[0]), I);
-    }
-	//Calc();
+ 	
+
 
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
@@ -1399,177 +1420,280 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 }
 #endif
 
-// должна возвращать значение ускорения в зависимости от скорости
-// F - частота полных шагов
-// L - момент инерции системы
-int Calculate_A(WORD f, double *A)
-{
-	//WORD f = (WORD)(F/FREQ_STEP);
-	if(f < ACCELERATE_SIZE){
-		*A = Accelerate[f];
-	} else {
-		*A = Accelerate[ACCELERATE_SIZE-1];
-	}
-	return 0;
-}
-
-// функция возвращает время, прошедшее
-// при движении с заданными параметрами на промежутке (Xbeg,Xend), 
-// при начальной скорости V и ускорении A
-int Calculate_dT(double Xbeg, double Xend, double V, double A, double* T)
-{
-	double T1 = 0.0;
-	double T2 = 0.0;
-	int res = 0;
-	if((A==0.0)&&(V==0.0)){
-		return -1; // ошибка
-	}
-	if((A == 0)&&(V != 0.0)){
-		*T = (Xend-Xbeg)/V;
-		return 0;  // нет ошибки
-	}
-	// Xend = Xbeg + V*T + (A * T^2)/2
-	// (A/2)T^2 + V*T + (Xbeg - Xend) = 0
-	//res = SolvQuadratic(A/2,V,(Xbeg-Xend),&T1, &T2); 
-	res = SolvQuadratic(A,V,(Xbeg-Xend),&T1/*, &T2*/); 
-	if(res > 0) {
-		*T = T1;
-		return 0;
-	}
-	else return 1;
-}
-// вычисляет больший корень квадратного уравнения
-int SolvQuadratic(double A, double B, double C, double* X1/*, double* X2*/)
-{
-	// Ax^2+Bx+C=0
-	double D;// = 0.0;
-	if((X1 == NULL) /*|| (X2 == NULL)*/) 
-		return -1; // ошибка: неверные указатели
-	//*X1 = 0.0;
-	//*X2 = 0.0;
-	if(A == 0.0){
-		// Bx+C = 0
-		// x = -C/B
-		if(C!=0.0){
-			*X1 = -B/C;
-		} else {
-			*X1 = 0.0;
-		}
-		return 1; // не квадратное уравнение, один корень
-	}
-	//D = B*B - 4.0 * A * C;
-	D = B*B - 2.0 * A * C;
-	if(D<0.0) {
-		*X1=0.0;
-		return 0; // дискриминант 0 корней нет
-	}
-
-	*X1 = (-B+sqrtf(D))/A;
-	//*X1 = (-B+sqrtf(D))/(2*A);
-	//*X2 = (-B-sqrtf(D))/(2*A);
-	return 2; // два корня уравнения
-}
-/**************************************************************************
- * M = Ia =>   a = M/I
- * M - момент силы
- * I - момент инерции
- * a - угловое ускорение в радианах в секунду за секунду
- * для альфы: ( сплошной цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
- * I = (m*r^2/4) + (m*l^2)/12  
- * 
- * для дельты: ( полый тонкостенный цилиндр длинны l, радиуса r и массы m, ось перпендикулярна целиндру и проходит через его середину)
- * I = (m*r^2/2)+ (m*l^2/12)
- **************************************************************************
- * Параметры функции
- * Power - массив моментов силы двигателя
- * Freq  - массив частот шагов двигателя
- * Len   - размер массивов
- * I	 - Момент инерции  
- * 
- ************************************************************************/
-int InitAccelerate(FREQ_POWER* FqPwr, WORD Len, double I)
-{    
-	double Lm = 0.0;
-	int i;
-	int j;
-    double Freq1;
-    double Freq2;
-    double Pw1;
-    double Pw2;
-    BYTE b = 0;
-	double F = 0;
-	for(j = 0; j < ACCELERATE_SIZE; j++){
-		for(i = 0; i< Len-1; i++){
-            Freq1 = FqPwr[i].Freq;  
-            Freq2 = FqPwr[i+1].Freq;            
-			if((F >= Freq1) && (F < Freq2)){
-				Pw1 = FqPwr[i].Power;
-				Pw2 = FqPwr[i+1].Power;
-				Lm = LinInt(Freq1,Pw1,Freq2,Pw2, F);
-                b = 1;
-				break;
-			}
-		}
-		if(b == 0) 
-            Lm = FqPwr[Len - 1].Power;
-		F = F + FREQ_STEP;
-		Accelerate[j] = Lm / I;
-	}
-	return 0;
-}
 
 
 void Calc(void)
 {
-    {
-		const double  kk = 32.0;
-		double A = 0.0; //ускорение в радианах в сек за сек
-		double dt = 0.0; // изменение времени
-		double V = 0.0;  // мгновенная скорость в радианах
-		//static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-		static double dX = kk*PI/(180.0*360.0*200.0*16.0); // шаг перемещения в радианах
-		volatile double T = 0;    // полное время
-		volatile double timer1 = 0.0;  // значение таймера
-		WORD F = 0;
-		volatile WORD i = 0;		
-        double Vf = 180.0 * 200.0/(PI*FREQ_STEP);
-        BYTE k = kk;
-        double ddt = 0.0;
-        do{
-	        if(k>=kk)
-			{
-	            F =(WORD)(V * Vf); //F/FREQ_STEP  1/20 от частоты полных шагов
-				Calculate_A(F, &A);
-	            Calculate_dT(0, dX, V, A, &dt);
-	            V = dX/dt;
-	            //X += dX;
-	  			k=0;
-	  			ddt = dt/kk;
-			}
-			k++;	         
-            T += ddt;
-            timer1 = (DWORD)(T/0.0000002); // результат вычислений            
-            i++;
-        }while ( i < 3200);
-        //i = 0
-        //T = 0;
-        //do{
-        //    Calculate_A(V, 2/(Mass*Radius*Radius),&A);
-        //    A = -A;
-        //    if(Calculate_dT(0, dX, V, A, &dt)!=0){
-        //        V=0;
-        //    } else
-        //    V = dX/dt;
-            //X += dX;
-        //    T += dt;
-        //    timer1 = T/0.0000002; // результат вычислений
-        //    i++;
-        //}while ( i < 64);
-    }
+    static double dt = 0.0; // изменение времени
+    static double V0 = 1.0* Grad_to_Rad;  // мгновенная скорость в радианах
+    static double V = 0.0;  // мгновенная скорость в радианах
+    static double V1 = 0.0; //мгновенная скорость в радианах
+    //static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+    static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
+    static double X = 0;    // полное перемещение в радианах
+    static double T = 0;    // полное время
+    static double T1 = 0;    // полное время
+    
+    static double Mass = 500.0f;
+    static double Radius = 0.30f;
+    static double Length = 2.0f;
+    static double Reduction = 360.0f;
+    static double I;// = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction;     
+    static double K;// = (-0.000349812 * 200 * 180/PI)/I;
+    //static double K = (-0.000154286 * 200 * 180/PI)/I;
+    //static double B = 0.79962406 / I;
+    static double B;// = 0.751428571 / I;
+    double XX = 9.0 * Grad_to_Rad;
+    double TC;
+    double XT;
+    
+    I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+    K = (-0.000349812 * 200 * 180/PI)/I;
+    B = 0.751428571 / I;
+    
+    dt = 0.0;
+    T = 0.0;
+    T1 = 0.0;
+    X = 0.0;
+    V = 0.0;
+    V1 = 0.0;
+    rr1.B = B;
+    rr1.K = K;
+    rr1.dx = dX;
+    rr1.TimerStep = 0.0000002;
+    rr1.Vend = 0 * Grad_to_Rad;
+    V0 = 1.0 * Grad_to_Rad;
+    
+
+    // вычислим время в которое пересекутся две функции:
+    // x = X0 + V0*T
+    // x = B*T*T/(1-K*T)
+    // надо еще учесть текущую координату
+    TC = (((XX*K/2.0-V0)-sqrtf((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
+    
+    //double XC = V0 * TC + XX;
+    XT = B * TC * TC / (1 - K * TC);
+    //double XL = (XC - XT)- XX / 2;
+    rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
+    rr1.DataCount = 0;
+    rr1.NextWriteTo = 0;
+    rr1.NextReadFrom = 0;    
+    rr1.XaccBeg = 0;
+    rr1.Xbeg = 0;
+    rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
+       
+    rr1.State = ST_ACCELERATE;
+    rr1.NextState = ST_STOP;
+   
+    do{		        
+         switch(rr1.State){
+             case ST_ACCELERATE:
+                 Acceleration(&rr1);                  
+                 if(rr1.State == ST_RUN){
+                     rr1.Vend = 10.0 * Grad_to_Rad;
+                     rr1.NextState = ST_DECELERATE;
+                 }
+                 if(rr1.State == ST_DECELERATE){
+                     rr1.Vend = V0;
+                     rr1.Xend = 30.0 * Grad_to_Rad;
+                     rr1.NextState = ST_RUN;
+                 }
+                 break;
+             case ST_RUN:
+                 Run(&rr1);
+                 if(rr1.State == ST_DECELERATE){
+                     rr1.Vend = 0.004166667 * Grad_to_Rad;
+                     rr1.Xend = 20.0 * Grad_to_Rad;
+                     rr1.NextState = ST_STOP;
+                 }
+                 break;
+             case ST_DECELERATE:                
+                 Deceleration(&rr1); 
+                 if(rr1.State == ST_RUN){
+                     rr1.Vend = V0;
+                     rr1.Xend = 20.0 * Grad_to_Rad;
+                     rr1.NextState = ST_STOP;
+                 }
+                 break;
+             case ST_STOP:
+                 break;
+         }
+    }while(rr1.State == ST_STOP);     
 }
-double LinInt(double x1,double y1,double x2,double y2, double x)
+int Run(RR * rr)
 {
-	if(x1!=x2) {
-		return y1+(y2-y1)*(x-x1)/(x2-x1);
-	}else return y1;
+    // x = V*T
+    // T = X/V;
+    WORD i;
+    WORD j;
+    WORD FreeData = BUF_SIZE - rr->DataCount;  
+    double X = 0.0;
+    //X = rr->Vend * rr->TimeBeg;
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
+    ARR_TYPE T = 0;
+    ARR_TYPE T1 = rr->TimeBeg;// = 0;
+    for (i = 0; i < FreeData; i++){
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;  
+        X += rr->dx;
+        Xb++;
+        T = rr->TimeBeg + (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
+        if((Xe != 0) && (Xb >= Xe)){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        rr->IntervalArray[j] = T;
+        T1 = T;
+    }	
+    rr->TimeBeg = T1;        
+    rr->DataCount += FreeData;
+    rr->NextWriteTo += FreeData;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+    rr->Xbeg = Xb * rr->dx;
+    return 0;
+}
+// разгон с текущей скорости до требуемой
+//    ARR_TYPE    TimeBeg;  
+//    DWORD       XaccBeg;                    //(желательно целое число шагов)
+
+int Acceleration(RR * rr)
+{
+    WORD j;        
+    WORD FreeData = BUF_SIZE - rr->DataCount;
+    ARR_TYPE T = 0;
+    ARR_TYPE T1 = 0;
+    ARR_TYPE dT = 0;
+    double X;       // временная переменная 
+    ARR_TYPE Tb = 0.0;  
+    double D;      
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
+    double K = rr->K;
+    double B = rr->B;
+    double VKpB = 0.0; 
+    double TimerStep;  
+    double dx;
+    double a;
+    double c;
+    double d;
+    WORD i = 0;
+    TimerStep = rr->TimerStep;  
+    dx = rr->dx;
+    X = rr->XaccBeg * rr->dx; 
+    d = K/(2.0 * B * TimerStep);
+    c = K*d;
+    a = 4.0 * B/(K*K);
+    
+    if(rr->XaccBeg > 0){
+        T1 = CalculateT( X, K, B, rr->TimerStep);         
+    }
+    Tb = rr->TimeBeg - T1;    
+    
+    if(rr->Vend != 0.0){       
+        // фактически это реализация формулы (производная X по T):
+        //X'(T) = V(T) = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));        
+        // VKpB = V*K+B;
+        // T = -VKpB+sqrt(B*VKpB)/(K*VKpB); (время из скорости) ЗЫ: VKpB? о_О  ВКпБ?        
+        VKpB = rr->Vend * K + B;
+        D = B * VKpB;
+        dT = (-VKpB + sqrtf(D))/(-K * VKpB * TimerStep);
+    }
+    // оптимизировано 35 uSec (1431.5 тактов за шаг)
+    for( i = 0; i < FreeData; i++) {        
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;
+        X += dx;    
+        Xb++;        
+        D = X *(X + a);
+        if(D >= 0.0){
+            T = (ARR_TYPE)((-X - sqrtf(D))*d);    
+        }               
+        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        rr->IntervalArray[j] = Tb + T;  
+        T1 = T;
+    }
+    rr->TimeBeg = Tb + T1;
+    rr->XaccBeg += FreeData; 
+    rr->DataCount += FreeData;
+    rr->NextWriteTo += FreeData;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+    rr->Xbeg = Xb * rr->dx;
+    return 0;
+}
+
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
+{
+    double D;	
+    double Kx;
+
+    Kx = X * K;
+    D = Kx * Kx + 4.0 * X * B;
+    if(D >= 0.0){
+        return (ARR_TYPE)((-Kx + sqrtf(D))/(2.0 * TimerStep * B ));    
+    }
+    return (ARR_TYPE) 0;
+}
+
+// торможение с текущей скорости до требуемой
+int Deceleration(RR * rr)
+{    
+    WORD j;        
+    WORD FreeData = BUF_SIZE - rr->DataCount;
+    ARR_TYPE T = 0;
+    ARR_TYPE T1 = 0;
+    ARR_TYPE dT = 0;
+    double X;       // временныя переменная 
+    ARR_TYPE Tb = 0.0; 
+    double K = rr->K;
+    double B = rr->B;
+    double VKpB = 0.0; 
+    DWORD Xb = rr->Xbeg/rr->dx;
+    DWORD Xe = rr->Xend/rr->dx;
+    double TimerStep = rr->TimerStep;
+    WORD i;
+
+    X = rr->XaccBeg * rr->dx; 
+    if(rr->XaccBeg > 0){
+        T1 = CalculateT( X, K, B, TimerStep);         
+    }
+    Tb = rr->TimeBeg + T1;    
+
+    if(rr->Vend != 0.0){        
+        VKpB = rr->Vend * K + B;
+        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * TimerStep);
+    }
+
+    for(i = 0; i < FreeData; i++) {        
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;
+        X -= rr->dx;  
+        if(X<=0.0){
+            FreeData = i;
+            rr->State = rr->NextState;            
+            break;
+        }
+        Xb++;
+        T = CalculateT( X, K, B, TimerStep);           
+        if(((dT!=0)&&( T <= dT))||((Xe != 0)&&(Xb >= Xe))){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        rr->IntervalArray[j] = Tb - T;  
+        T1 = T;
+
+    }
+    rr->TimeBeg = Tb - T1;
+    rr->XaccBeg -= FreeData; 
+    rr->DataCount += FreeData;
+    rr->NextWriteTo += FreeData;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
+    rr->Xbeg = Xb * rr->dx;
+    return 0;
 }
