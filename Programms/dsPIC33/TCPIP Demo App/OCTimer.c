@@ -101,7 +101,7 @@ int TmrInit(BYTE Num)
 			T2CONbits.TON = 0; 		// Disable Timer
 		    T2CONbits.TCS = 0; 		// Select internal instruction cycle clock
 		    T2CONbits.TGATE = 0; 	// Disable Gated Timer mode
-		    T2CONbits.TCKPS = 0b00; // Select 1:1 Prescaler 25ns
+		    T2CONbits.TCKPS = 0b01; // Select 8:1 Prescaler 200ns
 		    TMR2 = 0x00; 			// Clear timer register
 		    PR2 = 0xFFFF; 			// Load the period value
 		    IPC1bits.T2IP = 0x01; 	// Set Timer2 Interrupt Priority Level
