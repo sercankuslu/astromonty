@@ -2,6 +2,8 @@
 #include "TCPIP Stack/TCPIP.h"
 #include "OCTimer.h"
 
+OC_TIMER_TYPE OCTimers[8];
+
 int TimerOverflow(BYTE TmrNum);
 int UpdateOCTimer(BYTE Num);
 int EnableOCTimer(BYTE Num);

@@ -94,7 +94,7 @@ typedef struct RR {
     //       v   v   v 
     // -------========--------
     // 
-    
+    ARR_TYPE    LastInterval;
     ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
     WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
     WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
@@ -487,8 +487,9 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.dx = dX;
     rr1.TimerStep = 0.0000002;
     rr1.Vend = 0 * Grad_to_Rad;
-    V0 = 1.0 * Grad_to_Rad;
-    double XX = 9.0 * Grad_to_Rad;
+    rr1.LastInterval = 0;
+    V0 = 5.0 * Grad_to_Rad;
+    double XX = 10.0 * Grad_to_Rad;
 
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
@@ -508,14 +509,14 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
        
     rr1.State = ST_ACCELERATE;
-    rr1.NextState = ST_DECELERATE;
+    rr1.NextState = ST_STOP;
    
     do{		        
          switch(rr1.State){
              case ST_ACCELERATE:
                  Acceleration(&rr1);                  
                  if(rr1.State == ST_RUN){
-                     rr1.Vend = 10.0 * Grad_to_Rad;
+                     rr1.Vend = 20.0 * Grad_to_Rad;
                      rr1.NextState = ST_DECELERATE;
                  }
                  if(rr1.State == ST_DECELERATE){
@@ -536,7 +537,7 @@ void Calc(HWND hWnd, HDC hdc)
                  Deceleration(&rr1); 
                  if(rr1.State == ST_RUN){
                      rr1.Vend = V0;
-                     rr1.Xend = 20.0 * Grad_to_Rad;
+                     rr1.Xend = 30.0 * Grad_to_Rad;
                      rr1.NextState = ST_STOP;
                  }
                  break;
@@ -552,16 +553,16 @@ void Calc(HWND hWnd, HDC hdc)
             if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
              //V = 1.0*Grad_to_Rad;
              
-               if(T-T1 != 0.0){
-                   X += dX;
-                   V = dX/(T-T1);
-               }else {
-                   V = 0.0;
-               }
-          
+//                if(T-T1 != 0.0){
+//                    X += dX;
+//                    V = dX/(T-T1);
+//                }else {
+//                    V = 0.0;
+//                }
+            X += dX;
 //             A = (V-V1)/(T-T1);
             //  Формула для вычисления мгновенной скорости         
-            V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
+            //V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
             //V2 = B*T/(1-K*T);
             X0 = XX + V0*T;
 
@@ -700,10 +701,10 @@ int Acceleration(RR * rr)
     double TimerStep = rr->TimerStep;
 
     X = rr->XaccBeg * rr->dx; 
-    if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, rr->TimerStep);         
-    }
-    Tb = rr->TimeBeg - T1;    
+//     if(rr->XaccBeg > 0){
+//         T1 = CalculateT( X, K, B, rr->TimerStep);         
+//     }
+//     Tb = rr->TimeBeg - T1;    
     
     if(rr->Vend != 0.0){       
         // фактически это реализация формулы (производная X по T):
@@ -725,10 +726,10 @@ int Acceleration(RR * rr)
             rr->State = rr->NextState;                                
             break;
         }
-        rr->IntervalArray[j] = Tb + T;  
+        rr->IntervalArray[j] = /*Tb +*/ T - T1;  
         T1 = T;
     }
-    rr->TimeBeg = Tb + T1;
+    //rr->TimeBeg =/* Tb +*/ T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
