@@ -104,8 +104,9 @@
 // Include functions specific to this stack application
 #include "MainDemo.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
-//#include "OCTimer.h"
+#include "OCTimer.h"
 #include "../protocol.h"
+
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -302,11 +303,36 @@ int main(void)
     static DWORD t = 0;
    // static DWORD d = 0;
     static DWORD dwLastIP = 0;
+    DWORD_VAL T;
+    static WORD TT;
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
-     	
+    
+    OC1CONbits.OCM = 0b000;
+    OC1CONbits.OCTSEL = 0;  	// выбрать Timer2
+    IPC0bits.OC1IP = 0x01;		// выбрать приоритет прерывания для OC1
+    IFS0bits.OC1IF = 0;			// сбросить флаг прерывания
+    IEC0bits.OC1IE = 1;			// разрешаем прерывания от OC1    
+    TmrInit(2);
+    
+   	{	
+	   	T.Val = rr1.IntervalArray[rr1.NextReadFrom]; 	
+	   	rr1.NextReadFrom++;
+	   	if(rr1.NextReadFrom>=BUF_SIZE) rr1.NextReadFrom-=BUF_SIZE;
+	   	OC1CONbits.OCM = 0b000; // выключить модуль OC	   	
+	   	OC1R = T.word.LW;		// записать значение OCxR
+	   	OC1RS = T.word.LW + 50; // записать значение OCxRS
+	   	if(T.word.HW > 0 ){     // если старший байт больше 0, записать его в структуру и выйти
+			TT = T.word.HW;
+			//return 0;
+		}	
+	   	OC1CONbits.OCM = 0b100;	// включить модуль OC
+   	}
+   	while(1){
+	   	Nop();
+   	}
 	Calc();
      
     // Initialize application specific hardware
@@ -319,7 +345,6 @@ int main(void)
         AD1PCFGL = 0xFFFF;
         AD2PCFGL = 0xFFFF;
     }
-	
 		
 	//BYTE res;
 	//char bfr[64];

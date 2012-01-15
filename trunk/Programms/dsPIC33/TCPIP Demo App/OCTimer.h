@@ -25,7 +25,7 @@
 #define OCT_IS_USE 		        0x80	// Этот таймер используется
 
 
-struct OC_TIMER_TYPE {
+typedef struct OC_TIMER_TYPE {
 	BYTE OCTFlags;				// флаги режима 		
 	BYTE PeriodsLeft; 			// оставшееся количество периодов в буфере
 	WORD OCMFlags;				// настройки OC
@@ -35,7 +35,7 @@ struct OC_TIMER_TYPE {
 	DWORD_VAL High;			    // число интервалов от фронта импульса до спада 
 	DWORD * Periods;			// буфер периодов
 	DWORD * Pulses;             // буфер импульсов
-} OCTimers[8];
+} OC_TIMER_TYPE;
 
 
 #define MS1_Tris 			TRISGbits.TRISG12 // выход MS1
