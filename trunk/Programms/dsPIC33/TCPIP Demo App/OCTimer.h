@@ -37,6 +37,85 @@ typedef struct OC_TIMER_TYPE {
 	DWORD * Pulses;             // буфер импульсов
 } OC_TIMER_TYPE;
 
+#define PI 3.1415926535897932384626433832795
+#define ACCELERATE_SIZE 111
+#define FREQ_STEP 20
+#define BUF_SIZE 256
+// половина BUF_SIZE
+#define BUF_SIZE_2 128
+
+//static double Accelerate[ACCELERATE_SIZE];
+#define Grad_to_Rad  PI / 180.0
+#define Rad_to_Grad  180.0 / PI
+
+typedef DWORD ARR_TYPE;
+
+typedef enum Cmd {                  // команды
+	CM_STOP,                // Остановиться (снижаем скорость до остановки)
+	CM_RUN_WITH_SPEED,      // Двигаться с заданной скоростью до окончания 
+	CM_RUN_TO_POINT,        // Двигаться до указанного угла        
+} GD_CMD;
+
+typedef enum State {                // состояния
+    ST_FREE,                // ожидает получения команды (значение, устанавливаемое после каждого состояния)
+	ST_STOP,                // остановлен
+	ST_ACCELERATE,          // разгоняется
+	ST_RUN,                 // движется с постоянной скоростью
+	ST_DECELERATE           // тормозит
+} GD_STATE;
+
+typedef struct RR {
+    
+    // Время
+    // IntervalArray
+    // |      NextWriteTo
+    // |      |      NextReadFrom
+    // |      |      | 
+    // v      v      v
+    // 0======-------=========
+    // 
+    //       окончание предыдущей операции ( исходные параметры операции)
+    //       |   промежуточное состояние
+    //       |   |   Конец операции 
+    //       |   |   |
+    //       v   v   v 
+    // -------========--------
+    // 
+    
+    ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
+    WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
+    WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
+    WORD        DataCount;                  // количество данных в массиве.
+    DWORD_VAL   T;
+    // команды
+    GD_CMD      Cmd;
+    GD_STATE    State;   
+    GD_STATE    RunState; 
+    GD_STATE    NextState;
+    
+    // исхoдные параметры:
+    ARR_TYPE    TimeBeg;  
+    DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
+    double      Xbeg;
+    
+    // параметры указывающие на момент окончания
+    double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
+    double      Xend;
+    DWORD       XaccEnd;                    //координата ускорения (DWORD)
+
+    // константы
+    double      K;
+    double      B;
+    double      TimerStep;
+    double      dx;
+    double      Mass;
+    double      Radius;
+    double      Length;
+    double      Reduction;
+
+} RR;
+
+
 
 #define MS1_Tris 			TRISGbits.TRISG12 // выход MS1
 #define MS2_Tris 			TRISGbits.TRISG13 // выход MS2
@@ -162,7 +241,10 @@ typedef struct OC_TIMER_TYPE {
 int OCInit(void);
 int TmrInit(BYTE Num);
 //int OCTimerInit(BYTE num, DWORD Steps, DWORD * Periods, DWORD * Pulses, BYTE TmrNum,WORD ocm);
-
+int Run(RR * rr);
+int Acceleration(RR * rr);
+int Deceleration(RR * rr);
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
 
 
 #endif
