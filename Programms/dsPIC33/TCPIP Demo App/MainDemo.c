@@ -116,75 +116,9 @@ APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
-#define PI 3.1415926535897932384626433832795
-#define ACCELERATE_SIZE 111
-#define FREQ_STEP 20
-#define BUF_SIZE 128
-typedef DWORD ARR_TYPE;
-//static double Accelerate[ACCELERATE_SIZE];
-const double Grad_to_Rad = PI / 180.0;
-const double Rad_to_Grad = 180.0 / PI;
 
-typedef enum Cmd {                  // команды
-	CM_STOP,                // ќстановитьс€ (снижаем скорость до остановки)
-	CM_RUN_WITH_SPEED,      // ƒвигатьс€ с заданной скоростью до окончани€ 
-	CM_RUN_TO_POINT,        // ƒвигатьс€ до указанного угла        
-} GD_CMD;
 
-typedef enum State {                // состо€ни€
-    ST_FREE,                // ожидает получени€ команды (значение, устанавливаемое после каждого состо€ни€)
-	ST_STOP,                // остановлен
-	ST_ACCELERATE,          // разгон€етс€
-	ST_RUN,                 // движетс€ с посто€нной скоростью
-	ST_DECELERATE           // тормозит
-} GD_STATE;
 
-typedef struct RR {
-    
-    // ¬рем€
-    // IntervalArray
-    // |      NextWriteTo
-    // |      |      NextReadFrom
-    // |      |      | 
-    // v      v      v
-    // 0======-------=========
-    // 
-    //       окончание предыдущей операции ( исходные параметры операции)
-    //       |   промежуточное состо€ние
-    //       |   |    онец операции 
-    //       |   |   |
-    //       v   v   v 
-    // -------========--------
-    // 
-    
-    ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
-    WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
-    WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
-    WORD        DataCount;                  // количество данных в массиве.
-
-    // команды
-    GD_CMD      Cmd;
-    GD_STATE    State;    
-    GD_STATE    NextState;
-    
-    // исхoдные параметры:
-    ARR_TYPE    TimeBeg;  
-    DWORD       XaccBeg;                    //параметры функции ускорени€ (желательно целое число шагов)
-    double      Xbeg;
-    
-
-    // параметры указывающие на момент окончани€
-    double      Vend;                       //(надо знать скорость, на которой завершитс€ ускорение)
-    double      Xend;
-    DWORD       XaccEnd;                    //координата ускорени€ (DWORD)
-
-    // константы
-    double      K;
-    double      B;
-    double      TimerStep;
-    double      dx;
-
-} RR;
 RR rr1;
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
@@ -199,10 +133,6 @@ static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
 
-int Run(RR * rr);
-int Acceleration(RR * rr);
-int Deceleration(RR * rr);
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
 void Calc(void);
 
 
@@ -259,11 +189,7 @@ void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
     Nop();
     Nop();
 }
-void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
-{
-    // используем дл€ вызова вычислений
-    IFS1bits.U2RXIF = 0;    
-}    
+   
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
 	static WORD T;
@@ -296,44 +222,23 @@ int main(void)
 #endif
 {
 	
-	IFS1bits.U2RXIF = 0;
-	IPC7bits.U2RXIP = 6;		// Priority level 6
-	IEC1bits.U2RXIE = 1;
-	IFS1bits.U2RXIF = 1;    
+	    
     static DWORD t = 0;
    // static DWORD d = 0;
     static DWORD dwLastIP = 0;
-    DWORD_VAL T;
-    static WORD TT;
+    static DWORD_VAL GG;
+    static DWORD GG1 = 0x00350000;
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
     
-    OC1CONbits.OCM = 0b000;
-    OC1CONbits.OCTSEL = 0;  	// выбрать Timer2
-    IPC0bits.OC1IP = 0x01;		// выбрать приоритет прерывани€ дл€ OC1
-    IFS0bits.OC1IF = 0;			// сбросить флаг прерывани€
-    IEC0bits.OC1IE = 1;			// разрешаем прерывани€ от OC1    
-    TmrInit(2);
-    
-   	{	
-	   	T.Val = rr1.IntervalArray[rr1.NextReadFrom]; 	
-	   	rr1.NextReadFrom++;
-	   	if(rr1.NextReadFrom>=BUF_SIZE) rr1.NextReadFrom-=BUF_SIZE;
-	   	OC1CONbits.OCM = 0b000; // выключить модуль OC	   	
-	   	OC1R = T.word.LW;		// записать значение OCxR
-	   	OC1RS = T.word.LW + 50; // записать значение OCxRS
-	   	if(T.word.HW > 0 ){     // если старший байт больше 0, записать его в структуру и выйти
-			TT = T.word.HW;
-			//return 0;
-		}	
-	   	OC1CONbits.OCM = 0b100;	// включить модуль OC
-   	}
+    OCInit();
+     
    	while(1){
 	   	Nop();
    	}
-	Calc();
+
      
     // Initialize application specific hardware
     // ƒл€ работы A13  его нужно отключить от ADC
@@ -1544,181 +1449,4 @@ void Calc(void)
                  break;
          }
     }while(rr1.State == ST_STOP);     
-}
-int Run(RR * rr)
-{
-    // x = V*T
-    // T = X/V;
-    WORD i;
-    WORD j;
-    WORD FreeData = BUF_SIZE - rr->DataCount;  
-    double X = 0.0;
-    //X = rr->Vend * rr->TimeBeg;
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = rr->TimeBeg;// = 0;
-    for (i = 0; i < FreeData; i++){
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;  
-        X += rr->dx;
-        Xb++;
-        T = rr->TimeBeg + (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
-        if((Xe != 0) && (Xb >= Xe)){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        }
-        rr->IntervalArray[j] = T;
-        T1 = T;
-    }	
-    rr->TimeBeg = T1;        
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
-}
-// разгон с текущей скорости до требуемой
-//    ARR_TYPE    TimeBeg;  
-//    DWORD       XaccBeg;                    //(желательно целое число шагов)
-
-int Acceleration(RR * rr)
-{
-    WORD j;        
-    WORD FreeData = BUF_SIZE - rr->DataCount;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE dT = 0;
-    double X;       // временна€ переменна€ 
-    ARR_TYPE Tb = 0.0;  
-    double D;      
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
-    double K = rr->K;
-    double B = rr->B;
-    double VKpB = 0.0; 
-    double TimerStep;  
-    double dx;
-    double a;
-    double c;
-    double d;
-    WORD i = 0;
-    TimerStep = rr->TimerStep;  
-    dx = rr->dx;
-    X = rr->XaccBeg * rr->dx; 
-    d = K/(2.0 * B * TimerStep);
-    c = K*d;
-    a = 4.0 * B/(K*K);
-    
-    if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, rr->TimerStep);         
-    }
-    Tb = rr->TimeBeg - T1;    
-    
-    if(rr->Vend != 0.0){       
-        // фактически это реализаци€ формулы (производна€ X по T):
-        //X'(T) = V(T) = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));        
-        // VKpB = V*K+B;
-        // T = -VKpB+sqrt(B*VKpB)/(K*VKpB); (врем€ из скорости) «џ: VKpB? о_ќ  ¬ пЅ?        
-        VKpB = rr->Vend * K + B;
-        D = B * VKpB;
-        dT = (-VKpB + sqrtf(D))/(-K * VKpB * TimerStep);
-    }
-    // оптимизировано 35 uSec (1431.5 тактов за шаг)
-    for( i = 0; i < FreeData; i++) {        
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X += dx;    
-        Xb++;        
-        D = X *(X + a);
-        if(D >= 0.0){
-            T = (ARR_TYPE)((-X - sqrtf(D))*d);    
-        }               
-        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        }
-        rr->IntervalArray[j] = Tb + T;  
-        T1 = T;
-    }
-    rr->TimeBeg = Tb + T1;
-    rr->XaccBeg += FreeData; 
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
-}
-
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
-{
-    double D;	
-    double Kx;
-
-    Kx = X * K;
-    D = Kx * Kx + 4.0 * X * B;
-    if(D >= 0.0){
-        return (ARR_TYPE)((-Kx + sqrtf(D))/(2.0 * TimerStep * B ));    
-    }
-    return (ARR_TYPE) 0;
-}
-
-// торможение с текущей скорости до требуемой
-int Deceleration(RR * rr)
-{    
-    WORD j;        
-    WORD FreeData = BUF_SIZE - rr->DataCount;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE dT = 0;
-    double X;       // временны€ переменна€ 
-    ARR_TYPE Tb = 0.0; 
-    double K = rr->K;
-    double B = rr->B;
-    double VKpB = 0.0; 
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
-    double TimerStep = rr->TimerStep;
-    WORD i;
-
-    X = rr->XaccBeg * rr->dx; 
-    if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, TimerStep);         
-    }
-    Tb = rr->TimeBeg + T1;    
-
-    if(rr->Vend != 0.0){        
-        VKpB = rr->Vend * K + B;
-        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * TimerStep);
-    }
-
-    for(i = 0; i < FreeData; i++) {        
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X -= rr->dx;  
-        if(X<=0.0){
-            FreeData = i;
-            rr->State = rr->NextState;            
-            break;
-        }
-        Xb++;
-        T = CalculateT( X, K, B, TimerStep);           
-        if(((dT!=0)&&( T <= dT))||((Xe != 0)&&(Xb >= Xe))){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        }
-        rr->IntervalArray[j] = Tb - T;  
-        T1 = T;
-
-    }
-    rr->TimeBeg = Tb - T1;
-    rr->XaccBeg -= FreeData; 
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
 }
