@@ -135,6 +135,8 @@ int OCInit(void)
     
         TmrInit(2);
         InitRR(&rr1);        
+        InitRR(&rr2);
+        InitRR(&rr3);
         IFS1bits.U2RXIF = 1;
         
         // инициализация OC1
@@ -291,6 +293,8 @@ int Acceleration(RR * rr)
     WORD FreeData = BUF_SIZE - rr->DataCount;
     ARR_TYPE T = 0;
     ARR_TYPE T1 = 0;
+    ARR_TYPE T2 = 0;
+    ARR_TYPE T3 = 0;
     ARR_TYPE dT = 0;
     double X;       // временная переменная 
     ARR_TYPE Tb = 0.0;  
@@ -304,20 +308,28 @@ int Acceleration(RR * rr)
     double dx;
     double a;
     double c;
-    double d;
+    double d;    
     WORD i = 0;
+    ARR_TYPE e;
+    byte f = 0;
+     
     TimerStep = rr->TimerStep;  
+    e = 0.0001 / TimerStep; //100us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * TimerStep);
     c = K*d;
-    a = 4.0 * B/(K*K);
+    a = 4.0 * B/(K*K);    
     
     if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, rr->TimerStep);         
+        //T1 = CalculateT( X, K, B, rr->TimerStep);  
+        D = X *(X + a);
+        if(D >= 0.0){
+            T1 = (ARR_TYPE)((-X - sqrtf(D))*d);    
+        }         
     }
     Tb = rr->TimeBeg - T1;    
-    
+   	T2 = T1;
     if(rr->Vend != 0.0){       
         // фактически это реализация формулы (производная X по T):
         //X'(T) = V(T) = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));        
@@ -330,9 +342,9 @@ int Acceleration(RR * rr)
     // оптимизировано 35 uSec (1431.5 тактов за шаг)
     for( i = 0; i < FreeData; i++) {        
         j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X += dx;    
-        Xb++;        
+        if(j >= BUF_SIZE) j -= BUF_SIZE;        
+        Xb++;
+	    X += dx;            
         D = X *(X + a);
         if(D >= 0.0){
             T = (ARR_TYPE)((-X - sqrtf(D))*d);    
@@ -341,9 +353,35 @@ int Acceleration(RR * rr)
             FreeData = i;
             rr->State = rr->NextState;                                
             break;
-        }
-        rr->IntervalArray[j] = Tb + T;  
+        } 	    
+        rr->IntervalArray[j] = Tb + T;    
+        if(T-T1<e) {
+	        f = 1;      
+	        break;
+	    } 
         T1 = T;
+    }
+    if(f == 1){
+	    //ускорение x16
+	    T2 = T;
+		for( ; i < FreeData; i++) {        
+	        j = rr->NextWriteTo + i;
+	        if(j >= BUF_SIZE) j -= BUF_SIZE;        
+	        Xb += 16;
+		    X += dx*16.0;            
+	        D = X *(X + a);
+	        if(D >= 0.0){
+	            T3 = (ARR_TYPE)((-X - sqrtf(D))*d);    
+	        }               
+	        
+	        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+	            FreeData = i;
+	            rr->State = rr->NextState;                                
+	            break;
+	        } 	    
+	        rr->IntervalArray[j] = Tb + T;    
+	        T1 = T;
+	    }
     }
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
