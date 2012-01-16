@@ -12,29 +12,13 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 1024
+#define BUF_SIZE 256
 //static double Accelerate[ACCELERATE_SIZE];
 const double Grad_to_Rad = PI / 180.0;
 const double Rad_to_Grad = 180.0 / PI;
 
 typedef DWORD ARR_TYPE;
-typedef struct FREQ_POWER {
-    WORD Freq;
-    double Power;
-} FREQ_POWER;
-static FREQ_POWER FreqPower[] = {
-    {0,     0.850000000},
-    {100,   0.764642857},
-    {250,   0.666666667},
-    {500,   0.600000000},
-    {750,   0.533333333},
-    {1000,  0.466666667},
-    {1250,  0.400000000},
-    {1500,  0.333333333},
-    {1750,  0.222222222},
-    {2000,  0.100000000},
-    {2200,  0.000000000}
-};
+
 
 // Действия
 // 1 часовое ведение
@@ -379,9 +363,9 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 double LinInt(double x1,double y1,double x2,double y2, double x)
 {
-	if(x1!=x2) {
-		return y1+(y2-y1)*(x-x1)/(x2-x1);
-	}else return y1;
+    if(x1!=x2) {
+        return y1+(y2-y1)*(x-x1)/(x2-x1);
+    }else return y1;
 }
 void Calc(HWND hWnd, HDC hdc)
 {
@@ -410,6 +394,7 @@ void Calc(HWND hWnd, HDC hdc)
     double timer1 = 0;  // значение таймера
     //DWORD F = 0;
     DWORD i = 0;
+    BYTE L = 255;
     //DWORD k = 1;
     RECT rect;
     static double Mass = 500.0f;
@@ -422,8 +407,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.751428571 / I;
 
-    static DWORD SizeX = 200;
-    static DWORD SizeY = 20;
+    static DWORD SizeX = 400;
+    static DWORD SizeY = 40;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -511,39 +496,39 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.State = ST_ACCELERATE;
     rr1.NextState = ST_STOP;
    
-    do{		        
+    do {		        
          switch(rr1.State){
-             case ST_ACCELERATE:
-                 Acceleration(&rr1);                  
-                 if(rr1.State == ST_RUN){
-                     rr1.Vend = 20.0 * Grad_to_Rad;
-                     rr1.NextState = ST_DECELERATE;
-                 }
-                 if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = V0;
-                     rr1.Xend = 30.0 * Grad_to_Rad;
-                     rr1.NextState = ST_RUN;
-                 }
-                 break;
-             case ST_RUN:
-                 Run(&rr1);
-                 if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = 0.004166667 * Grad_to_Rad;
-                     rr1.Xend = 20.0 * Grad_to_Rad;
-                     rr1.NextState = ST_STOP;
-                 }
-                 break;
-             case ST_DECELERATE:                
-                 Deceleration(&rr1); 
-                 if(rr1.State == ST_RUN){
-                     rr1.Vend = V0;
-                     rr1.Xend = 30.0 * Grad_to_Rad;
-                     rr1.NextState = ST_STOP;
-                 }
-                 break;
-             case ST_STOP:
-                 break;
-         }
+         case ST_ACCELERATE:
+             Acceleration(&rr1);                  
+             if(rr1.State == ST_RUN){
+                 rr1.Vend = 20.0 * Grad_to_Rad;
+                 rr1.NextState = ST_DECELERATE;
+             }
+             if(rr1.State == ST_DECELERATE){
+                 rr1.Vend = V0;
+                 rr1.Xend = 30.0 * Grad_to_Rad;
+                 rr1.NextState = ST_RUN;
+             }
+             break;
+         case ST_RUN:
+             Run(&rr1);
+             if(rr1.State == ST_DECELERATE){
+                 rr1.Vend = 0.004166667 * Grad_to_Rad;
+                 rr1.Xend = 20.0 * Grad_to_Rad;
+                 rr1.NextState = ST_STOP;
+             }
+             break;
+         case ST_DECELERATE:                
+             Deceleration(&rr1); 
+             if(rr1.State == ST_RUN){
+                 rr1.Vend = V0;
+                 rr1.Xend = 30.0 * Grad_to_Rad;
+                 rr1.NextState = ST_STOP;
+             }
+             break;
+         case ST_STOP:
+             break;
+        }
         int j;     
         //V = 5.0*Grad_to_Rad;
         for( i = 0; i < rr1.DataCount; i++) 
@@ -563,14 +548,14 @@ void Calc(HWND hWnd, HDC hdc)
 //             A = (V-V1)/(T-T1);
             //  Формула для вычисления мгновенной скорости         
             //V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
-            //V2 = B*T/(1-K*T);
+            V2 = B*T/(1-K*T);
             X0 = XX + V0*T;
 
             K3 = (int)(T*SizeX);
             //if( K3 != K1)
             {
-                //Change the DC pen color
-                SetDCPenColor(hdc,RGB(0,0,255));
+                //Change the DC pen color                
+                SetDCPenColor(hdc,RGB(0,L,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
                 TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
@@ -629,6 +614,7 @@ void Calc(HWND hWnd, HDC hdc)
             V1 = V;
         }     
         rr1.DataCount = 0;
+        L+=128;
     }while ( /*(X < 0.590) && */(rr1.State!= ST_STOP)) /*rr1.State!=ST_STOP)*/;       
     //Restore original object.
     SelectObject(hdc,original);
@@ -701,10 +687,10 @@ int Acceleration(RR * rr)
     double TimerStep = rr->TimerStep;
 
     X = rr->XaccBeg * rr->dx; 
-//     if(rr->XaccBeg > 0){
-//         T1 = CalculateT( X, K, B, rr->TimerStep);         
-//     }
-//     Tb = rr->TimeBeg - T1;    
+     if(rr->XaccBeg > 0){
+         T1 = CalculateT( X, K, B, rr->TimerStep);         
+     }
+     Tb = rr->TimeBeg - T1;    
     
     if(rr->Vend != 0.0){       
         // фактически это реализация формулы (производная X по T):
@@ -726,10 +712,10 @@ int Acceleration(RR * rr)
             rr->State = rr->NextState;                                
             break;
         }
-        rr->IntervalArray[j] = /*Tb +*/ T - T1;  
+        rr->IntervalArray[j] = Tb + T;  
         T1 = T;
     }
-    //rr->TimeBeg =/* Tb +*/ T1;
+    rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
