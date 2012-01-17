@@ -62,7 +62,7 @@ typedef enum State {                // состояния
 	ST_DECELERATE           // тормозит
 } GD_STATE;
 typedef struct RR {
-    
+
     // Время
     // IntervalArray
     // |      NextWriteTo
@@ -78,32 +78,24 @@ typedef struct RR {
     //       v   v   v 
     // -------========--------
     // 
-    ARR_TYPE    LastInterval;
+    ARR_TYPE    Interval;                   // текущий интервал при расчетах. нужен для переключения на более "грубый" режим
     ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
     WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
     WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
     WORD        DataCount;                  // количество данных в массиве.
+    //DWORD_VAL   T;
+    ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
 
     // команды
     GD_CMD      Cmd;
-    GD_STATE    State;    
+    GD_STATE    State;   
+    GD_STATE    RunState; 
     GD_STATE    NextState;
-    
-    // настоящее состояние
-    DWORD       CurrentX;                   // текущий номер шага
-    short int   Direction;                  // направление движения
-    
-    // соманндные переменные
-    double      cmdTargetSpeed;             // разгоняемся до скорости
-    double      cmdTargetAngle;             // двигаемся до угла
-    //DWORD   TargetX;
-    
-    
+
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
     DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
     double      Xbeg;
-    
 
     // параметры указывающие на момент окончания
     double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
@@ -115,6 +107,10 @@ typedef struct RR {
     double      B;
     double      TimerStep;
     double      dx;
+    double      Mass;
+    double      Radius;
+    double      Length;
+    double      Reduction;
 
 } RR;
 RR rr1;
@@ -472,7 +468,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.dx = dX;
     rr1.TimerStep = 0.0000002;
     rr1.Vend = 0 * Grad_to_Rad;
-    rr1.LastInterval = 0;
+    rr1.Interval = 0xFFFF;
     V0 = 5.0 * Grad_to_Rad;
     double XX = 10.0 * Grad_to_Rad;
 
@@ -669,52 +665,112 @@ int Run(RR * rr)
 //    ARR_TYPE    TimeBeg;  
 //    DWORD       XaccBeg;                    //(желательно целое число шагов)
 
+
 int Acceleration(RR * rr)
 {
     WORD j;        
     WORD FreeData = BUF_SIZE - rr->DataCount;
     ARR_TYPE T = 0;
     ARR_TYPE T1 = 0;
+    ARR_TYPE T2 = 0;
+    ARR_TYPE T3 = 0;
     ARR_TYPE dT = 0;
-    double X;       // временныя переменная 
-    ARR_TYPE Tb = 0.0;    
-    
+    double X;       // временная переменная 
+    ARR_TYPE Tb = 0.0;  
+    double D;      
     DWORD Xb = rr->Xbeg/rr->dx;
     DWORD Xe = rr->Xend/rr->dx;
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
-    double TimerStep = rr->TimerStep;
-
-    X = rr->XaccBeg * rr->dx; 
-     if(rr->XaccBeg > 0){
-         T1 = CalculateT( X, K, B, rr->TimerStep);         
-     }
-     Tb = rr->TimeBeg - T1;    
     
+    double dx;
+    double a;
+    double c;
+    double d;    
+    WORD i = 0;
+    ARR_TYPE e;
+    WORD k = 0;
+    
+    e = 0.00007 / rr->TimerStep; //70us
+    dx = rr->dx;
+    X = rr->XaccBeg * rr->dx; 
+    d = K/(2.0 * B * rr->TimerStep);
+    c = K*d;
+    a = 4.0 * B/(K*K);    
+    
+    /* TODO: по-видимому не нужно, т.к. будем запоминать предыдущее значение
+    if(rr->XaccBeg > 0){        
+        D = X *(X + a);
+        if(D >= 0.0){
+            T1 = (ARR_TYPE)((-X - sqrtf(D))*d);    
+        }         
+    }*/
+    Tb = rr->TimeBeg - rr->T1;       	
+   	T1 = rr->T1;
+   	T = T1;
+   	
+   	// вычисление времени окончания
     if(rr->Vend != 0.0){       
-        // фактически это реализация формулы (производная X по T):
-        //X'(T) = V(T) = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));        
-        // VKpB = V*K+B;
-        // T = -VKpB+sqrt(B*VKpB)/(K*VKpB); (время из скорости) ЗЫ: VKpB? о_О  ВКпБ?        
         VKpB = rr->Vend * K + B;
-        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * TimerStep);
+        D = B * VKpB;
+        dT = (-VKpB + sqrtf(D))/(-K * VKpB * rr->TimerStep);
     }
-
-    for(WORD i = 0; i < FreeData; i++) {        
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X += rr->dx;    
-        Xb++;
-        T = CalculateT( X, K, B, rr->TimerStep);           
-        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        }
-        rr->IntervalArray[j] = Tb + T;  
-        T1 = T;
+    // оптимизировано 35 uSec (1431.5 тактов за шаг)
+    for( i = 0; i < FreeData; i++) {
+        if(rr->Interval >= e){
+            // вычисления каждого шага
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;        
+            Xb++;
+    	    X += dx;            
+            D = X *(X + a);
+            if(D >= 0.0){
+                T = (ARR_TYPE)((-X - sqrtf(D))*d);    
+            }               
+            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            } 	    
+            rr->IntervalArray[j] = Tb + T;    
+            rr->Interval = T - T1;
+            T1 = T;
+        } else {
+            // "грубые" вычисления
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;        
+            Xb++;
+            if(k == 0){
+                // вычисляем время через 16 шагов
+                X += dx*16.0;            
+                D = X *(X + a);
+                if(D >= 0.0){
+                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);    
+                } 
+                rr->Interval = (T2 - T1) / 16;   // число, которое будем прибавлять                                                                
+            } 
+            T += rr->Interval;                         
+               
+            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            } 	    
+            k++;
+            if(k >= 16){
+                rr->IntervalArray[j] = Tb + T2;                                
+                T1 = T2;
+                k = 0;
+            } else {
+                rr->IntervalArray[j] = Tb + T;
+                rr->Interval = T - T1;
+                T1 = T;    
+            }    
+            
+        }    
     }
+    rr->T1 = T1;
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
@@ -723,6 +779,7 @@ int Acceleration(RR * rr)
     rr->Xbeg = Xb * rr->dx;
     return 0;
 }
+
 
 ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
 {
