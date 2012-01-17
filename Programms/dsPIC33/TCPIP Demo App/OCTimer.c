@@ -11,26 +11,29 @@ static RR rr2;
 static RR rr3;
 
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
-{            
-	rr1.T.Val = rr1.IntervalArray[rr1.NextReadFrom]; 	
-   	rr1.NextReadFrom++;
+{       
    	if(rr1.DataCount>0){
        	rr1.DataCount--;
-       	if(rr1.DataCount < BUF_SIZE_2) {
+       	if((IFS1bits.U2RXIF != 1) && (rr1.DataCount <= BUF_SIZE_2)) {
             IFS1bits.U2RXIF = 1;    //  1 = вызов просчета буфера   	
        	}
    	} else {
    	    rr1.RunState = ST_STOP;
    	    OC1CONbits.OCM = 0b000; // выключить модуль OC
+   	    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
+   	    return;
    	}
-   	if(rr1.NextReadFrom>=BUF_SIZE) rr1.NextReadFrom-=BUF_SIZE;
+	rr1.T.Val = rr1.IntervalArray[rr1.NextReadFrom]; 	
+   	rr1.NextReadFrom++;
+   	if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
+   	
    	OC1CONbits.OCM = 0b000; // выключить модуль OC	   	
    	OC1R = rr1.T.word.LW;		// записать значение OCxR
-   	OC1RS = rr1.T.word.LW + 500; // записать значение OCxRS
+   	OC1RS = rr1.T.word.LW + 50; // записать значение OCxRS
    	Timer2Big.word.LW = TMR2;   	
-    if(Timer2Big.word.HW <= rr1.T.word.HW){     
-	    OC1CONbits.OCM = 0b100;	// включить модуль OC
-	}
+    //if((Timer2Big.Val <= rr1.T.Val)&&(Timer2Big.Val + 0x00010000 >= rr1.T.Val)){     
+	OC1CONbits.OCM = 0b100;	// включить модуль OC
+	//}
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
     
 }
@@ -72,14 +75,18 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC8Interrupt( void )
 void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
 {
     Timer2Big.word.HW++;
-	if(OC1CONbits.OCM == 0b000){
-    	if(rr1.RunState != ST_STOP){
-            Timer2Big.word.LW = TMR2;   	
-            if(Timer2Big.Val + 0x00010020 >= rr1.T.Val){     
+    Timer2Big.word.LW = TMR2;	
+    /*
+    if(OC1CONbits.OCM == 0b000){
+    	if(rr1.RunState != ST_STOP){               	
+            if((Timer2Big.Val <= rr1.T.Val)&&(Timer2Big.Val + 0x00010000 >= rr1.T.Val)){     
+        	    OC1CONbits.OCM = 0b100;	// включить модуль OC
+        	}
+        	if(Timer2Big.Val >= rr1.T.Val){     
         	    OC1CONbits.OCM = 0b100;	// включить модуль OC
         	}	
     	}
-	}
+	}*/
     IFS0bits.T2IF = 0; // Clear T2 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
@@ -89,11 +96,12 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
 {
+    
     // используем для вызова вычислений
     if(rr1.State != ST_STOP){
         Acceleration(&rr1);
-    }
-    IFS1bits.U2RXIF = 0;    
+    }        
+    IFS1bits.U2RXIF = 0;
 } 
 
 int OCInit(void)
@@ -168,7 +176,7 @@ int TmrInit(BYTE Num)
 		    T2CONbits.TCKPS = 0b01; // Select 8:1 Prescaler 200ns
 		    TMR2 = 0x00; 			// Clear timer register
 		    PR2 = 0xFFFF; 			// Load the period value
-		    IPC1bits.T2IP = 0x01; 	// Set Timer2 Interrupt Priority Level
+		    IPC1bits.T2IP = 7; 	// Set Timer2 Interrupt Priority Level
 		    IFS0bits.T2IF = 0; 		// Clear Timer2 Interrupt Flag
 		    IEC0bits.T2IE = 1; 		// Enable Timer2 interrupt
 		    T2CONbits.TON = 1; 		// Start Timer   
@@ -189,40 +197,7 @@ int TmrInit(BYTE Num)
 	}		
 	return 0;
 }
-/*
-int OCTimerInit(BYTE num,  	// номер таймера	
-	DWORD Steps,			// количество шагов, на которые нужно сдвинуться	
-	DWORD * Periods,		// указатель на массив периодов
-	DWORD * Pulses,			// указатель на массив пульсов
-	BYTE BufferLen,			// размер буфера периодов
-	BYTE TmrNum,			// Номер таймера (2 или 3)
-	BYTE ocm				// настройки
-	)
-{
-	BYTE i = num -1;
-	
-	switch(num){
-	case 1:
-		OCTimers[i].Periods = Periods;
-		OCTimers[i].Pulses  = Pulses;
-		
-		PORT1_NULL_Tris   = 1; // вход NULL
-		PORT1_POS_Tris    = 1; // вход POS
-		PORT1_POS2_Tris   = 1; // вход POS2	
-		
-		PORT1_ENABLE 	  = 0;// выход ENABLE   
-		PORT1_DIR 		  = 0;// выход DIR      
-		PORT1_STEP 		  = 0;// выход STEP	
 
-		PORT1_ENABLE_Tris = 0;// выход ENABLE
-		PORT1_DIR_Tris    = 0;// выход DIR
-		PORT1_STEP_Tris   = 0;// выход STEP		
-				
-	break;
-	}
-	return 0;		
-}
-*/
 int InitRR(RR * rr)
 {
     double I;
@@ -242,11 +217,12 @@ int InitRR(RR * rr)
     rr->NextReadFrom = 0;    
     rr->XaccBeg = 0;
     rr->Xbeg = 0;
-    rr->TimeBeg = Timer2Big.Val+0x0000B15C;       
+    rr->TimeBeg = Timer2Big.Val + (ARR_TYPE)(0.000035*BUF_SIZE/rr->TimerStep);       
     rr->State = ST_ACCELERATE;
     rr->NextState = ST_STOP;  
     rr->RunState = ST_ACCELERATE;
     rr->T.Val = 0;
+    rr->Interval = 0xFFFFFFFF;
         
 }
 int Run(RR * rr)
@@ -284,9 +260,6 @@ int Run(RR * rr)
     return 0;
 }
 // разгон с текущей скорости до требуемой
-//    ARR_TYPE    TimeBeg;  
-//    DWORD       XaccBeg;                    //(желательно целое число шагов)
-
 int Acceleration(RR * rr)
 {
     WORD j;        
@@ -304,85 +277,95 @@ int Acceleration(RR * rr)
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
-    double TimerStep;  
+    
     double dx;
     double a;
     double c;
     double d;    
     WORD i = 0;
     ARR_TYPE e;
-    byte f = 0;
-     
-    TimerStep = rr->TimerStep;  
-    e = 0.0001 / TimerStep; //100us
+    WORD k = 0;
+    
+    e = 0.00007 / rr->TimerStep; //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
-    d = K/(2.0 * B * TimerStep);
+    d = K/(2.0 * B * rr->TimerStep);
     c = K*d;
     a = 4.0 * B/(K*K);    
     
-    if(rr->XaccBeg > 0){
-        //T1 = CalculateT( X, K, B, rr->TimerStep);  
+    /* TODO: по-видимому не нужно, т.к. будем запоминать предыдущее значение
+    if(rr->XaccBeg > 0){        
         D = X *(X + a);
         if(D >= 0.0){
             T1 = (ARR_TYPE)((-X - sqrtf(D))*d);    
         }         
-    }
-    Tb = rr->TimeBeg - T1;    
-   	T2 = T1;
+    }*/
+    Tb = rr->TimeBeg - rr->T1;       	
+   	T1 = rr->T1;
+   	T = T1;
+   	
+   	// вычисление времени окончания
     if(rr->Vend != 0.0){       
-        // фактически это реализация формулы (производная X по T):
-        //X'(T) = V(T) = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));        
-        // VKpB = V*K+B;
-        // T = -VKpB+sqrt(B*VKpB)/(K*VKpB); (время из скорости) ЗЫ: VKpB? о_О  ВКпБ?        
         VKpB = rr->Vend * K + B;
         D = B * VKpB;
-        dT = (-VKpB + sqrtf(D))/(-K * VKpB * TimerStep);
+        dT = (-VKpB + sqrtf(D))/(-K * VKpB * rr->TimerStep);
     }
     // оптимизировано 35 uSec (1431.5 тактов за шаг)
-    for( i = 0; i < FreeData; i++) {        
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;        
-        Xb++;
-	    X += dx;            
-        D = X *(X + a);
-        if(D >= 0.0){
-            T = (ARR_TYPE)((-X - sqrtf(D))*d);    
-        }               
-        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        } 	    
-        rr->IntervalArray[j] = Tb + T;    
-        if(T-T1<e) {
-	        f = 1;      
-	        break;
-	    } 
-        T1 = T;
+    for( i = 0; i < FreeData; i++) {
+        if(rr->Interval >= e){
+            // вычисления каждого шага
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;        
+            Xb++;
+    	    X += dx;            
+            D = X *(X + a);
+            if(D >= 0.0){
+                T = (ARR_TYPE)((-X - sqrtf(D))*d);    
+            }               
+            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            } 	    
+            rr->IntervalArray[j] = Tb + T;    
+            rr->Interval = T - T1;
+            T1 = T;
+        } else {
+            // "грубые" вычисления
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;        
+            Xb++;
+            if(k == 0){
+                // вычисляем время через 16 шагов
+                X += dx*16.0;            
+                D = X *(X + a);
+                if(D >= 0.0){
+                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);    
+                } 
+                rr->Interval = (T2 - T1) / 16;   // число, которое будем прибавлять                                                                
+            } else {
+                T += rr->Interval;                         
+            }    
+            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            } 	    
+            k++;
+            if(k >= 16){
+                rr->IntervalArray[j] = Tb + T2;                
+                rr->Interval = T2 - T1;
+                T1 = T2;
+                k = 0;
+            } else {
+                rr->IntervalArray[j] = Tb + T;
+                rr->Interval = T - T1;
+                T1 = T;    
+            }    
+            
+        }    
     }
-    if(f == 1){
-	    //ускорение x16
-	    T2 = T;
-		for( ; i < FreeData; i++) {        
-	        j = rr->NextWriteTo + i;
-	        if(j >= BUF_SIZE) j -= BUF_SIZE;        
-	        Xb += 16;
-		    X += dx*16.0;            
-	        D = X *(X + a);
-	        if(D >= 0.0){
-	            T3 = (ARR_TYPE)((-X - sqrtf(D))*d);    
-	        }               
-	        
-	        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-	            FreeData = i;
-	            rr->State = rr->NextState;                                
-	            break;
-	        } 	    
-	        rr->IntervalArray[j] = Tb + T;    
-	        T1 = T;
-	    }
-    }
+    rr->T1 = T1;
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
