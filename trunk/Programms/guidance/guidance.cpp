@@ -12,7 +12,7 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 256
+#define BUF_SIZE 1024
 //static double Accelerate[ACCELERATE_SIZE];
 const double Grad_to_Rad = PI / 180.0;
 const double Rad_to_Grad = 180.0 / PI;
@@ -404,7 +404,7 @@ void Calc(HWND hWnd, HDC hdc)
     static double B = 0.751428571 / I;
 
     static DWORD SizeX = 400;
-    static DWORD SizeY = 40;
+    static DWORD SizeY = 50;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -692,7 +692,7 @@ int Acceleration(RR * rr)
     ARR_TYPE e;
     WORD k = 0;
     
-    e = 0.00007 / rr->TimerStep; //70us
+    e = 0.000035 / rr->TimerStep; //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -741,33 +741,28 @@ int Acceleration(RR * rr)
             j = rr->NextWriteTo + i;
             if(j >= BUF_SIZE) j -= BUF_SIZE;        
             Xb++;
-            if(k == 0){
-                // вычисляем время через 16 шагов
-                X += dx*16.0;            
+            if(k == 0) {
+                X += dx*16;
                 D = X *(X + a);
                 if(D >= 0.0){
-                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);    
-                } 
-                rr->Interval = (T2 - T1) / 16;   // число, которое будем прибавлять                                                                
-            } 
-            T += rr->Interval;                         
-               
+                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);
+                }
+                rr->Interval = (T2 - T1)/16;              
+            }
+            T = T1 + rr->Interval;
             if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
                 FreeData = i;
                 rr->State = rr->NextState;                                
                 break;
             } 	    
-            k++;
-            if(k >= 16){
-                rr->IntervalArray[j] = Tb + T2;                                
-                T1 = T2;
+            if(k >=16 ){
+                T = T2;
                 k = 0;
-            } else {
-                rr->IntervalArray[j] = Tb + T;
-                rr->Interval = T - T1;
-                T1 = T;    
-            }    
-            
+            }
+            rr->IntervalArray[j] = Tb + T;    
+            //rr->Interval = T - T1;
+            T1 = T;
+            k++;
         }    
     }
     rr->T1 = T1;
