@@ -44,7 +44,7 @@ typedef struct OC_TIMER_TYPE {
 // половина BUF_SIZE
 #define BUF_SIZE_2 128
 
-//static double Accelerate[ACCELERATE_SIZE];
+//static float Accelerate[ACCELERATE_SIZE];
 #define Grad_to_Rad  PI / 180.0
 #define Rad_to_Grad  180.0 / PI
 
@@ -98,22 +98,22 @@ typedef struct RR {
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
     DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
-    double      Xbeg;
+    float      Xbeg;
     
     // параметры указывающие на момент окончания
-    double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
-    double      Xend;
+    float      Vend;                       //(надо знать скорость, на которой завершится ускорение)
+    float      Xend;
     DWORD       XaccEnd;                    //координата ускорения (DWORD)
 
     // константы
-    double      K;
-    double      B;
-    double      TimerStep;
-    double      dx;
-    double      Mass;
-    double      Radius;
-    double      Length;
-    double      Reduction;
+    float      K;
+    float      B;
+    float      TimerStep;
+    float      dx;
+    float      Mass;
+    float      Radius;
+    float      Length;
+    float      Reduction;
 
 } RR;
 
@@ -246,7 +246,7 @@ int TmrInit(BYTE Num);
 int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
+ARR_TYPE CalculateT(float X, float K, float B, float TimerStep);
 
 
 #endif
