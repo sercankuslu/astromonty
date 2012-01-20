@@ -79,7 +79,7 @@
 		// All dsPIC33F and PIC24H PIMs
 		_FOSCSEL(FNOSC_PRIPLL)			// PLL enabled
 		_FOSC(OSCIOFNC_OFF & POSCMD_EC)	// EC Osc
-		_FWDT(FWDTEN_ON)				// Disable Watchdog timer
+		_FWDT(FWDTEN_OFF)				// Disable Watchdog timer
 		
 		// JTAG should be disabled as well
 	#endif
