@@ -12,7 +12,7 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 256
+#define BUF_SIZE 32000
 #define CQ_SIZE 10
 //static double Accelerate[ACCELERATE_SIZE];
 const double Grad_to_Rad = PI / 180.0;
@@ -397,17 +397,17 @@ void Calc(HWND hWnd, HDC hdc)
     DWORD i = 0;
     BYTE L = 255;
     RECT rect;
-    static double Mass = 500.0f;
+    static double Mass = 250.0f;
     static double Radius = 0.50f;
     static double Length = 3.0f;
     static double Reduction = 360.0f;
     static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    static double K = (-0.000349812 * 200 * 180/PI)/I;
+    static double K = (-0.000349812 * 200.0 *  180.0/PI )/I; //[Hm/Hz]
     //static double K = (-0.000154286 * 200 * 180/PI)/I;
     //static double B = 0.79962406 / I;
-    static double B = 0.751428571 / I;
+    static double B = 0.79962406 / I; //[Hm]
 
-    static DWORD SizeX = 800;
+    static DWORD SizeX = 400;
     static DWORD SizeY = 30;
     static double Pi = PI;
     static double TT[64];
@@ -490,7 +490,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.NextReadFrom = 0;    
     rr1.XaccBeg = 0;
     rr1.Xbeg = 0;   
-    rr1.TimeBeg = (ARR_TYPE)(0.0001*BUF_SIZE/rr1.TimerStep);
+    rr1.TimeBeg = 0;//(ARR_TYPE)(0.0001*BUF_SIZE/rr1.TimerStep);
        
     rr1.State = ST_STOP;    
     rr1.CalcDir = 1;
@@ -498,46 +498,14 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.NextReadCmd = 0;
     rr1.NextWriteCmd = 0;
 
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 0, 4 * Grad_to_Rad );
-    PushCmdToQueue(&rr1, ST_RUN, 0, 8 * Grad_to_Rad );
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 0 , 5 * Grad_to_Rad );
+    //PushCmdToQueue(&rr1, ST_RUN, 0 * Grad_to_Rad, 2 * Grad_to_Rad );
     PushCmdToQueue(&rr1, ST_DECELERATE, 0, 0 );
+    PushCmdToQueue(&rr1, ST_STOP, 0, 0 );
     SetNextState(&rr1);
    
     do {
-        /*
-         switch(rr1.State){
-         case ST_ACCELERATE:
-             Acceleration(&rr1);                  
-             if(rr1.State == ST_RUN){
-                 rr1.Vend = 10.0 * Grad_to_Rad;
-                 rr1.Xend = 10.0 * Grad_to_Rad;
-                 rr1.NextState = ST_DECELERATE;
-             }
-             if(rr1.State == ST_DECELERATE){
-                 rr1.Vend = 0;
-                 rr1.Xend = 00.0 * Grad_to_Rad;
-                 rr1.NextState = ST_STOP;
-             }
-             break;
-         case ST_RUN:
-             Run(&rr1);
-             if(rr1.State == ST_DECELERATE){
-                 rr1.Vend = 0.004166667 * Grad_to_Rad;
-                 rr1.Xend = 20.0 * Grad_to_Rad;
-                 rr1.NextState = ST_STOP;
-             }
-             break;
-         case ST_DECELERATE:                
-             Deceleration(&rr1); 
-             if(rr1.State == ST_RUN){
-                 rr1.Vend = V0;
-                 rr1.Xend = 30.0 * Grad_to_Rad;
-                 rr1.NextState = ST_STOP;
-             }
-             break;
-         case ST_STOP:
-             break;
-        }*/
+        
         Control(&rr1);
         //V = 5.0*Grad_to_Rad;
         for( i = 0; i < rr1.DataCount; i++) 
@@ -553,7 +521,7 @@ void Calc(HWND hWnd, HDC hdc)
                 }else {
                     V = 0.0;
                 }
-            X += dX;
+            //X += dX;
 //             A = (V-V1)/(T-T1);
             //  Формула для вычисления мгновенной скорости         
             //V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
@@ -567,7 +535,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(0,L,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
-                TX.y = Py - (int)(X*Rad_to_Grad*SizeY/2);
+                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
                 LineTo(hdc, TX.x, TX.y);  
 
                 
@@ -614,7 +582,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(200,200,0));
                 MoveToEx(hdc, X0T.x, X0T.y, NULL);
                 X0T.x = Px + (int)(T*SizeX);
-                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY/2);
+                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
                 LineTo(hdc, X0T.x, X0T.y);                  
                 
                 K1 = K3;
@@ -906,6 +874,7 @@ int Deceleration(RR * rr)
 
 int Control(RR * rr)
 {
+    while((rr->DataCount <= BUF_SIZE / 2)&&(rr->State != ST_STOP)){
         switch(rr->State){
         case ST_ACCELERATE:
             Acceleration(rr);                  
@@ -918,7 +887,8 @@ int Control(RR * rr)
             break;
         case ST_STOP:
         case ST_FREE:
-        break;
+            break;
+        }
     }
     return 0;
 }
