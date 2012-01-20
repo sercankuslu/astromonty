@@ -12,12 +12,13 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 256
-//static float Accelerate[ACCELERATE_SIZE];
-const float Grad_to_Rad = PI / 180.0;
-const float Rad_to_Grad = 180.0 / PI;
+#define BUF_SIZE 32768
+//static double Accelerate[ACCELERATE_SIZE];
+const double Grad_to_Rad = PI / 180.0;
+const double Rad_to_Grad = 180.0 / PI;
 
 typedef DWORD ARR_TYPE;
+//typedef double ARR_TYPE;
 
 
 // Действия
@@ -95,22 +96,22 @@ typedef struct RR {
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
     DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
-    float      Xbeg;
+    double      Xbeg;
 
     // параметры указывающие на момент окончания
-    float      Vend;                       //(надо знать скорость, на которой завершится ускорение)
-    float      Xend;
+    double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
+    double      Xend;
     DWORD       XaccEnd;                    //координата ускорения (DWORD)
 
     // константы
-    float      K;
-    float      B;
-    float      TimerStep;
-    float      dx;
-    float      Mass;
-    float      Radius;
-    float      Length;
-    float      Reduction;
+    double      K;
+    double      B;
+    double      TimerStep;
+    double      dx;
+    double      Mass;
+    double      Radius;
+    double      Length;
+    double      Reduction;
 
 } RR;
 RR rr1;
@@ -143,10 +144,10 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
-ARR_TYPE CalculateT(float X, float K, float B, float TimerStep);
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
 
 void Calc(HWND hWnd, HDC hdc);
-DWORD MaxAcceleration(DWORD Xb, DWORD Xe,float dx, float K, float B, float * T, DWORD Len, DWORD * Xpos);
+DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
 
 
 
@@ -316,8 +317,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				
 // 		if(k)
 // 		{
-// 			float X = 200+100*sin(T*PI/180);
-// 			float Y = 200+100*cos(T*PI/180);
+// 			double X = 200+100*sin(T*PI/180);
+// 			double Y = 200+100*cos(T*PI/180);
 // 			MoveToEx(hdc, 200,200, NULL);
 // 			LineTo(hdc,(int)X, (int)Y);
 // 			k=false;
@@ -357,7 +358,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	return (INT_PTR)FALSE;
 }
 
-float LinInt(float x1,float y1,float x2,float y2, float x)
+double LinInt(double x1,double y1,double x2,double y2, double x)
 {
     if(x1!=x2) {
         return y1+(y2-y1)*(x-x1)/(x2-x1);
@@ -365,48 +366,48 @@ float LinInt(float x1,float y1,float x2,float y2, float x)
 }
 void Calc(HWND hWnd, HDC hdc)
 {
-    float D = 0.0;
-    static float A = 0.0; //ускорение в радианах в сек за сек
-    static float A1 = 0.0; //ускорение в радианах в сек за сек
-    static float A2 = 0.0; //ускорение в радианах в сек за сек
-    static float dt = 0.0; // изменение времени
-    static float V0 = 1.0* Grad_to_Rad;  // мгновенная скорость в радианах
-    static float V = 0.0;  // мгновенная скорость в радианах
-    static float V1 = 0.0; //мгновенная скорость в радианах
-    static float V2 = 0.0;  // мгновенная скорость в радианах
-    //static float dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-    static float dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
-    static float X0 = 0;    // полное перемещение в радианах
-    static float X = 0;    // полное перемещение в радианах
-    static float X1 = 0;    // полное перемещение в радианах
-    static float T = 0;    // полное время
-    static float T1 = 0;    // полное время
-    static float T2 = 0;    // полное время
-    float dt1 = 0.0; // изменение времени
+    double D = 0.0;
+    static double A = 0.0; //ускорение в радианах в сек за сек
+    static double A1 = 0.0; //ускорение в радианах в сек за сек
+    static double A2 = 0.0; //ускорение в радианах в сек за сек
+    static double dt = 0.0; // изменение времени
+    static double V0 = 1.0* Grad_to_Rad;  // мгновенная скорость в радианах
+    static double V = 0.0;  // мгновенная скорость в радианах
+    static double V1 = 0.0; //мгновенная скорость в радианах
+    static double V2 = 0.0;  // мгновенная скорость в радианах
+    //static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
+    static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
+    static double X0 = 0;    // полное перемещение в радианах
+    static double X = 0;    // полное перемещение в радианах
+    static double X1 = 0;    // полное перемещение в радианах
+    static double T = 0;    // полное время
+    static double T1 = 0;    // полное время
+    static double T2 = 0;    // полное время
+    double dt1 = 0.0; // изменение времени
     int W = 0;       // флаги для оптимизации вывода
     int K1 = -1;
     int W1 = 0;
     int K3 = -1;
-    float timer1 = 0;  // значение таймера
+    double timer1 = 0;  // значение таймера
     //DWORD F = 0;
     DWORD i = 0;
     BYTE L = 255;
     //DWORD k = 1;
     RECT rect;
-    static float Mass = 500.0f;
-    static float Radius = 0.30f;
-    static float Length = 2.0f;
-    static float Reduction = 360.0f;
-    static float I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    static float K = (-0.000349812 * 200 * 180/PI)/I;
-    //static float K = (-0.000154286 * 200 * 180/PI)/I;
-    //static float B = 0.79962406 / I;
-    static float B = 0.751428571 / I;
+    static double Mass = 500.0f;
+    static double Radius = 0.30f;
+    static double Length = 2.0f;
+    static double Reduction = 360.0f;
+    static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
+    static double K = (-0.000349812 * 200 * 180/PI)/I;
+    //static double K = (-0.000154286 * 200 * 180/PI)/I;
+    //static double B = 0.79962406 / I;
+    static double B = 0.751428571 / I;
 
     static DWORD SizeX = 800;
-    static DWORD SizeY = 50;
-    static float Pi = PI;
-    static float TT[64];
+    static DWORD SizeY = 30;
+    static double Pi = PI;
+    static double TT[64];
     static DWORD TTLen = 64;
     static DWORD Count = 0;
     DWORD XPos = 0;
@@ -416,7 +417,7 @@ void Calc(HWND hWnd, HDC hdc)
     //Save original object.
     original = SelectObject(hdc,GetStockObject(DC_PEN));
 
-    //float Vf = 180 * 200/PI;
+    //double Vf = 180 * 200/PI;
     //char RRR[256];
     GetClientRect(hWnd, &rect);
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
@@ -470,17 +471,17 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.Vend = 0 * Grad_to_Rad;
     rr1.Interval = 0xFFFF;
     V0 = 5.0 * Grad_to_Rad;
-    float XX = 10.0 * Grad_to_Rad;
+    double XX = 5.0 * Grad_to_Rad;
 
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
     // x = B*T*T/(1-K*T)
     // надо еще учесть текущую координату
-    float TC = (((XX*K/2.0-V0)-sqrt((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
+    double TC = (((XX*K/2.0-V0)-sqrt((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
     
-    //float XC = V0 * TC + XX;
-    float XT = B * TC * TC / (1 - K * TC);
-    //float XL = (XC - XT)- XX / 2;
+    //double XC = V0 * TC + XX;
+    double XT = B * TC * TC / (1 - K * TC);
+    //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
     rr1.DataCount = 0;
     rr1.NextWriteTo = 0;
@@ -491,7 +492,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
        
     rr1.State = ST_ACCELERATE;
-    rr1.NextState = ST_STOP;
+    rr1.NextState = ST_DECELERATE;
    
     do {		        
          switch(rr1.State){
@@ -502,9 +503,9 @@ void Calc(HWND hWnd, HDC hdc)
                  rr1.NextState = ST_DECELERATE;
              }
              if(rr1.State == ST_DECELERATE){
-                 rr1.Vend = V0;
-                 rr1.Xend = 30.0 * Grad_to_Rad;
-                 rr1.NextState = ST_RUN;
+                 rr1.Vend = 0;
+                 rr1.Xend = 00.0 * Grad_to_Rad;
+                 rr1.NextState = ST_STOP;
              }
              break;
          case ST_RUN:
@@ -535,17 +536,17 @@ void Calc(HWND hWnd, HDC hdc)
             if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
              //V = 1.0*Grad_to_Rad;
              
-//                if(T-T1 != 0.0){
-//                    X += dX;
-//                    V = dX/(T-T1);
-//                }else {
-//                    V = 0.0;
-//                }
+                if(T-T1 != 0.0){
+                    X += dX;
+                    V = dX/(T-T1);
+                }else {
+                    V = 0.0;
+                }
             X += dX;
 //             A = (V-V1)/(T-T1);
             //  Формула для вычисления мгновенной скорости         
             //V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
-            V2 = B*T/(1-K*T);
+            //V2 = B*T/(1-K*T);
             X0 = XX + V0*T;
 
             //K3 = (int)(T*SizeX);
@@ -555,7 +556,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(0,L,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
-                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
+                TX.y = Py - (int)(X*Rad_to_Grad*SizeY/2);
                 LineTo(hdc, TX.x, TX.y);  
 
                 
@@ -602,7 +603,7 @@ void Calc(HWND hWnd, HDC hdc)
                 SetDCPenColor(hdc,RGB(200,200,0));
                 MoveToEx(hdc, X0T.x, X0T.y, NULL);
                 X0T.x = Px + (int)(T*SizeX);
-                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
+                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY/2);
                 LineTo(hdc, X0T.x, X0T.y);                  
                 
                 K1 = K3;
@@ -635,7 +636,7 @@ int Run(RR * rr)
     WORD i;
     WORD j;
     WORD FreeData = BUF_SIZE - rr->DataCount;  
-    float X = 0.0;
+    double X = 0.0;
     //X = rr->Vend * rr->TimeBeg;
     DWORD Xb = rr->Xbeg/rr->dx;
     DWORD Xe = rr->Xend/rr->dx;
@@ -675,19 +676,19 @@ int Acceleration(RR * rr)
     ARR_TYPE T1 = 0;
     ARR_TYPE T2 = 0;    
     ARR_TYPE dT = 0;
-    float X;       // временная переменная 
+    double X;       // временная переменная 
     ARR_TYPE Tb = 0.0;  
-    float D;      
+    double D;      
     DWORD Xb = rr->Xbeg/rr->dx;
     DWORD Xe = rr->Xend/rr->dx;
-    float K = rr->K;
-    float B = rr->B;
-    float VKpB = 0.0; 
+    double K = rr->K;
+    double B = rr->B;
+    double VKpB = 0.0; 
     
-    float dx;
-    float a;
-    float c;
-    float d;    
+    double dx;
+    double a;
+    double c;
+    double d;    
     WORD i = 0;
     ARR_TYPE e;
     WORD k = 0;
@@ -700,9 +701,17 @@ int Acceleration(RR * rr)
     c = K*d;
     a = 4.0 * B/(K*K);    
         
-    Tb = rr->TimeBeg - rr->T1;       	
-    T1 = rr->T1;
+//     Tb = rr->TimeBeg - rr->T1;       	
+//     T1 = rr->T1;
+    
+
+    X = rr->XaccBeg * rr->dx; 
+    if(rr->XaccBeg > 0){
+        T1 = CalculateT( X, K, B, rr->TimerStep);         
+    }
+    Tb = rr->TimeBeg - T1;
     T = T1;
+
     // вычисление времени окончания
     if(rr->Vend != 0.0){       
         VKpB = rr->Vend * K + B;
@@ -711,7 +720,7 @@ int Acceleration(RR * rr)
     }
     // оптимизировано 35 uSec (1431.5 тактов за шаг)
     for( i = 0; i < FreeData; i++) {
-        if(rr->Interval >= e){
+        if((rr->Interval >= e)&&(k==0)){
             // вычисления каждого шага
             j = rr->NextWriteTo + i;
             if(j >= BUF_SIZE) j -= BUF_SIZE;        
@@ -768,10 +777,10 @@ int Acceleration(RR * rr)
 }
 
 
-ARR_TYPE CalculateT(float X, float K, float B, float TimerStep)
+ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
 {
-    float D;	
-    float Kx;
+    double D;	
+    double Kx;
 
     Kx = X * K;
     D = Kx * Kx + 4.0 * X * B;
@@ -788,47 +797,105 @@ int Deceleration(RR * rr)
     WORD FreeData = BUF_SIZE - rr->DataCount;
     ARR_TYPE T = 0;
     ARR_TYPE T1 = 0;
+    ARR_TYPE T2 = 0;    
     ARR_TYPE dT = 0;
-    float X;       // временныя переменная 
-    ARR_TYPE Tb = 0.0; 
-    float K = rr->K;
-    float B = rr->B;
-    float VKpB = 0.0; 
+    double X;       // временная переменная 
+    ARR_TYPE Tb = 0.0;  
+    double D;      
     DWORD Xb = rr->Xbeg/rr->dx;
     DWORD Xe = rr->Xend/rr->dx;
-    float TimerStep = rr->TimerStep;
+    double K = rr->K;
+    double B = rr->B;
+    double VKpB = 0.0; 
 
+    double dx;
+    double a;
+    double c;
+    double d;    
+    WORD i = 0;
+    ARR_TYPE e;
+    WORD k = 0;
+    WORD m = 32;
+    e = 0.00007 / rr->TimerStep; //70us
+    dx = rr->dx;
+    X = rr->XaccBeg * rr->dx; 
+    d = K/(2.0 * B * rr->TimerStep);
+    c = K*d;
+    a = 4.0 * B/(K*K);    
+
+//     Tb = rr->TimeBeg + rr->T1;       	
+//     T1 = rr->T1;
     X = rr->XaccBeg * rr->dx; 
     if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, TimerStep);         
+        T1 = CalculateT( X, K, B, rr->TimerStep);         
     }
-    Tb = rr->TimeBeg + T1;    
+    Tb = rr->TimeBeg + T1;
+    T = T1; 
+
 
     if(rr->Vend != 0.0){        
         VKpB = rr->Vend * K + B;
-        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * TimerStep);
+        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * rr->TimerStep);
     }
 
-    for(WORD i = 0; i < FreeData; i++) {        
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        X -= rr->dx;  
-        if(X<=0.0){
-            FreeData = i;
-            rr->State = rr->NextState;            
-            break;
-        }
-        Xb++;
-        T = CalculateT( X, K, B, TimerStep);           
-        if(((dT!=0)&&( T <= dT))||((Xe != 0)&&(Xb >= Xe))){
-            FreeData = i;
-            rr->State = rr->NextState;                                
-            break;
-        }
-        rr->IntervalArray[j] = Tb - T;  
-        T1 = T;
-
+    for(WORD i = 0; i < FreeData; i++) {    
+        if((rr->Interval >= e)&&(k==0)){
+            // вычисления каждого шага
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;        
+            Xb++;
+            X -= dx; 
+            if(X<=0.0){
+                FreeData = i;
+                rr->State = rr->NextState;            
+                break;
+            }
+            D = X *(X + a);
+            if(D >= 0.0){
+                T = (ARR_TYPE)((-X - sqrtf(D))*d);    
+            }               
+            if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            } 	    
+            rr->IntervalArray[j] = Tb - T;    
+            rr->Interval = T1 - T;
+            T1 = T;           
+        } else {
+            // "грубые" вычисления
+            j = rr->NextWriteTo + i;
+            if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
+            if(k == 0) {
+                X -= dx*m;
+                if(X<=0.0){
+                    FreeData = i;
+                    rr->State = rr->NextState;       
+                    break;
+                }
+                D = X *(X + a);
+                if(D >= 0.0){
+                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);
+                }                
+                rr->Interval = (T1 - T2) / m;
+            }             
+            Xb++;
+            T -= rr->Interval;
+            if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                rr->State = rr->NextState;                                
+                break;
+            }
+            k++;
+            if(k >= m){
+                T = T2;
+                k = 0;
+            } 
+            rr->IntervalArray[j] = Tb - T;                    
+            T1 = T;  
+        }    
     }
+    rr->T1 = T1;
     rr->TimeBeg = Tb - T1;
     rr->XaccBeg -= FreeData; 
     rr->DataCount += FreeData;
