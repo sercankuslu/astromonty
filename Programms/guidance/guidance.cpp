@@ -12,7 +12,7 @@
 #define PI 3.1415926535897932384626433832795
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
-#define BUF_SIZE 32768
+#define BUF_SIZE 256
 //static double Accelerate[ACCELERATE_SIZE];
 const double Grad_to_Rad = PI / 180.0;
 const double Rad_to_Grad = 180.0 / PI;
@@ -469,7 +469,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.dx = dX;
     rr1.TimerStep = 0.0000002;
     rr1.Vend = 0 * Grad_to_Rad;
-    rr1.Interval = 0xFFFF;
+    rr1.Interval = 355;
     V0 = 5.0 * Grad_to_Rad;
     double XX = 5.0 * Grad_to_Rad;
 
@@ -549,8 +549,8 @@ void Calc(HWND hWnd, HDC hdc)
             //V2 = B*T/(1-K*T);
             X0 = XX + V0*T;
 
-            //K3 = (int)(T*SizeX);
-            //if( K3 != K1)
+            K3 = (int)(T*SizeX);
+            if( K3 != K1)
             {
                 //Change the DC pen color                
                 SetDCPenColor(hdc,RGB(0,L,255));
@@ -692,23 +692,23 @@ int Acceleration(RR * rr)
     WORD i = 0;
     ARR_TYPE e;
     WORD k = 0;
-    WORD m = 32;
+    WORD m = 1;
     
-    e = 0.00007 / rr->TimerStep; //70us
+    e = 0.000070 / rr->TimerStep; //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
     c = K*d;
-    a = 4.0 * B/(K*K);    
-        
+    a = 4.0 * B/(K*K);   
 //     Tb = rr->TimeBeg - rr->T1;       	
-//     T1 = rr->T1;
-    
-
-    X = rr->XaccBeg * rr->dx; 
+//     T1 = rr->T1;  
     if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, rr->TimerStep);         
-    }
+        X = rr->XaccBeg * rr->dx; 
+        D = X *(X + a);
+        if(D >= 0.0){
+            T1 = (ARR_TYPE)((-X - sqrt(D))*d);
+        }  
+    } else T1 = 0;
     Tb = rr->TimeBeg - T1;
     T = T1;
 
@@ -716,55 +716,41 @@ int Acceleration(RR * rr)
     if(rr->Vend != 0.0){       
         VKpB = rr->Vend * K + B;
         D = B * VKpB;
-        dT = (-VKpB + sqrtf(D))/(-K * VKpB * rr->TimerStep);
+        dT = (-VKpB + sqrt(D))/(-K * VKpB * rr->TimerStep);
     }
     // оптимизировано 35 uSec (1431.5 тактов за шаг)
-    for( i = 0; i < FreeData; i++) {
-        if((rr->Interval >= e)&&(k==0)){
-            // вычисления каждого шага
-            j = rr->NextWriteTo + i;
-            if(j >= BUF_SIZE) j -= BUF_SIZE;        
-            Xb++;
-    	    X += dx;            
+    for( i = 0; i < FreeData; i++) {       
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
+        if(k == 0) {
+            if(rr->Interval < e){
+                //if(m < 32) m++;
+                m = 32;
+            } else {
+                //if( m > 1) m--;
+                m = 1;
+            } 
+            X += dx*m;
             D = X *(X + a);
             if(D >= 0.0){
-                T = (ARR_TYPE)((-X - sqrtf(D))*d);    
-            }               
-            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-                FreeData = i;
-                rr->State = rr->NextState;                                
-                break;
-            } 	    
-            rr->IntervalArray[j] = Tb + T;    
-            rr->Interval = T - T1;
-            T1 = T;
-        } else {
-            // "грубые" вычисления
-            j = rr->NextWriteTo + i;
-            if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
-            if(k == 0) {
-                X += dx*m;
-                D = X *(X + a);
-                if(D >= 0.0){
-                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);
-                }                
-                rr->Interval = (T2 - T1) / m;
-            }             
-            Xb++;
-            T += rr->Interval;
-            if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
-                FreeData = i;
-                rr->State = rr->NextState;                                
-                break;
-            }
-            k++;
-            if(k >= m){
-                T = T2;
-                k = 0;
-            } 
-            rr->IntervalArray[j] = Tb + T;                    
-            T1 = T;  
-        }    
+                T2 = (ARR_TYPE)((-X - sqrt(D))*d);
+            }                
+            rr->Interval = (T2 - T1) / m;            
+        }             
+        Xb++;
+        T += rr->Interval;
+        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        k++;
+        if(k >= m){
+            T = T2;
+            k = 0;
+        } 
+        rr->IntervalArray[j] = Tb + T;                    
+        T1 = T;            
     }
     rr->T1 = T1;
     rr->TimeBeg = Tb + T1;
@@ -815,8 +801,8 @@ int Deceleration(RR * rr)
     WORD i = 0;
     ARR_TYPE e;
     WORD k = 0;
-    WORD m = 32;
-    e = 0.00007 / rr->TimerStep; //70us
+    WORD m = 1;
+    e = 0.000070 / rr->TimerStep; //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -826,8 +812,11 @@ int Deceleration(RR * rr)
 //     Tb = rr->TimeBeg + rr->T1;       	
 //     T1 = rr->T1;
     X = rr->XaccBeg * rr->dx; 
-    if(rr->XaccBeg > 0){
-        T1 = CalculateT( X, K, B, rr->TimerStep);         
+    if(rr->XaccBeg > 0){        
+        D = X *(X + a);
+        if(D >= 0.0){
+            T1 = (ARR_TYPE)((-X - sqrt(D))*d);
+        } 
     }
     Tb = rr->TimeBeg + T1;
     T = T1; 
@@ -839,61 +828,43 @@ int Deceleration(RR * rr)
     }
 
     for(WORD i = 0; i < FreeData; i++) {    
-        if((rr->Interval >= e)&&(k==0)){
-            // вычисления каждого шага
-            j = rr->NextWriteTo + i;
-            if(j >= BUF_SIZE) j -= BUF_SIZE;        
-            Xb++;
-            X -= dx; 
+        // "грубые" вычисления
+        j = rr->NextWriteTo + i;
+        if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
+        if(k == 0) {
+            if(rr->Interval < e){                
+                m = 32;
+                //if( m < 32 ) m += 8;
+            } else {
+                //if( m > 1 ) m -= 8;
+                m = 1;
+            } 
+            X -= dx*m;
             if(X<=0.0){
                 FreeData = i;
-                rr->State = rr->NextState;            
+                rr->State = rr->NextState;       
                 break;
             }
             D = X *(X + a);
             if(D >= 0.0){
-                T = (ARR_TYPE)((-X - sqrtf(D))*d);    
-            }               
-            if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
-                FreeData = i;
-                rr->State = rr->NextState;                                
-                break;
-            } 	    
-            rr->IntervalArray[j] = Tb - T;    
-            rr->Interval = T1 - T;
-            T1 = T;           
-        } else {
-            // "грубые" вычисления
-            j = rr->NextWriteTo + i;
-            if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
-            if(k == 0) {
-                X -= dx*m;
-                if(X<=0.0){
-                    FreeData = i;
-                    rr->State = rr->NextState;       
-                    break;
-                }
-                D = X *(X + a);
-                if(D >= 0.0){
-                    T2 = (ARR_TYPE)((-X - sqrtf(D))*d);
-                }                
-                rr->Interval = (T1 - T2) / m;
-            }             
-            Xb++;
-            T -= rr->Interval;
-            if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
-                FreeData = i;
-                rr->State = rr->NextState;                                
-                break;
-            }
-            k++;
-            if(k >= m){
-                T = T2;
-                k = 0;
-            } 
-            rr->IntervalArray[j] = Tb - T;                    
-            T1 = T;  
-        }    
+                T2 = (ARR_TYPE)((-X - sqrt(D))*d);
+            }                
+            rr->Interval = (T1 - T2) / m;
+        }             
+        Xb++;
+        T -= rr->Interval;
+        if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
+            FreeData = i;
+            rr->State = rr->NextState;                                
+            break;
+        }
+        k++;
+        if(k >= m){
+            T = T2;
+            k = 0;
+        } 
+        rr->IntervalArray[j] = Tb - T;                    
+        T1 = T;      
     }
     rr->T1 = T1;
     rr->TimeBeg = Tb - T1;
