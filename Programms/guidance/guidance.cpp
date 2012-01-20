@@ -366,7 +366,6 @@ double LinInt(double x1,double y1,double x2,double y2, double x)
 }
 void Calc(HWND hWnd, HDC hdc)
 {
-    double D = 0.0;
     static double A = 0.0; //ускорение в радианах в сек за сек
     static double A1 = 0.0; //ускорение в радианах в сек за сек
     static double A2 = 0.0; //ускорение в радианах в сек за сек
@@ -384,15 +383,10 @@ void Calc(HWND hWnd, HDC hdc)
     static double T1 = 0;    // полное время
     static double T2 = 0;    // полное время
     double dt1 = 0.0; // изменение времени
-    int W = 0;       // флаги для оптимизации вывода
     int K1 = -1;
-    int W1 = 0;
     int K3 = -1;
-    double timer1 = 0;  // значение таймера
-    //DWORD F = 0;
     DWORD i = 0;
     BYTE L = 255;
-    //DWORD k = 1;
     RECT rect;
     static double Mass = 500.0f;
     static double Radius = 0.30f;
@@ -410,7 +404,6 @@ void Calc(HWND hWnd, HDC hdc)
     static double TT[64];
     static DWORD TTLen = 64;
     static DWORD Count = 0;
-    DWORD XPos = 0;
 
     HGDIOBJ original = NULL;
 
@@ -451,7 +444,7 @@ void Calc(HWND hWnd, HDC hdc)
     POINT TV = {Px,Py};
     POINT TV2 = {Px,Py};
     POINT TA = {Px,Py};
-    POINT VA = {Px,Py};
+//    POINT VA = {Px,Py};
     POINT X0T = {Px,Py};
        
     //SetDCPenColor(hdc,RGB(0,200,0));
@@ -488,7 +481,7 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.NextReadFrom = 0;    
     rr1.XaccBeg = 0;
     rr1.Xbeg = 0;
-    rr1.T1 = 0.0;
+    rr1.T1 = 0;
     rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
        
     rr1.State = ST_ACCELERATE;
@@ -527,7 +520,6 @@ void Calc(HWND hWnd, HDC hdc)
          case ST_STOP:
              break;
         }
-        int j;     
         //V = 5.0*Grad_to_Rad;
         for( i = 0; i < rr1.DataCount; i++) 
         {            
@@ -638,8 +630,8 @@ int Run(RR * rr)
     WORD FreeData = BUF_SIZE - rr->DataCount;  
     double X = 0.0;
     //X = rr->Vend * rr->TimeBeg;
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
+    DWORD Xb = (DWORD)(rr->Xbeg/rr->dx);
+    DWORD Xe = (DWORD)(rr->Xend/rr->dx);
     ARR_TYPE T = 0;
     ARR_TYPE T1 = rr->TimeBeg;// = 0;
     for (i = 0; i < FreeData; i++){
@@ -677,10 +669,10 @@ int Acceleration(RR * rr)
     ARR_TYPE T2 = 0;    
     ARR_TYPE dT = 0;
     double X;       // временная переменная 
-    ARR_TYPE Tb = 0.0;  
+    ARR_TYPE Tb = 0;  
     double D;      
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
+    DWORD Xb = (DWORD)(rr->Xbeg/rr->dx);
+    DWORD Xe = (DWORD)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
@@ -694,7 +686,7 @@ int Acceleration(RR * rr)
     WORD k = 0;
     WORD m = 1;
     
-    e = 0.000070 / rr->TimerStep; //70us
+    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -716,7 +708,7 @@ int Acceleration(RR * rr)
     if(rr->Vend != 0.0){       
         VKpB = rr->Vend * K + B;
         D = B * VKpB;
-        dT = (-VKpB + sqrt(D))/(-K * VKpB * rr->TimerStep);
+        dT = (ARR_TYPE)((-VKpB + sqrt(D))/(-K * VKpB * rr->TimerStep));
     }
     // оптимизировано 35 uSec (1431.5 тактов за шаг)
     for( i = 0; i < FreeData; i++) {       
@@ -786,10 +778,10 @@ int Deceleration(RR * rr)
     ARR_TYPE T2 = 0;    
     ARR_TYPE dT = 0;
     double X;       // временная переменная 
-    ARR_TYPE Tb = 0.0;  
+    ARR_TYPE Tb = 0;  
     double D;      
-    DWORD Xb = rr->Xbeg/rr->dx;
-    DWORD Xe = rr->Xend/rr->dx;
+    DWORD Xb = (ARR_TYPE)(rr->Xbeg/rr->dx);
+    DWORD Xe = (ARR_TYPE)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
@@ -802,7 +794,7 @@ int Deceleration(RR * rr)
     ARR_TYPE e;
     WORD k = 0;
     WORD m = 1;
-    e = 0.000070 / rr->TimerStep; //70us
+    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -824,10 +816,10 @@ int Deceleration(RR * rr)
 
     if(rr->Vend != 0.0){        
         VKpB = rr->Vend * K + B;
-        dT = (-VKpB + sqrt(B * VKpB))/(-K * VKpB * rr->TimerStep);
+        dT = (ARR_TYPE)((-VKpB + sqrt(B * VKpB))/(-K * VKpB * rr->TimerStep));
     }
 
-    for(WORD i = 0; i < FreeData; i++) {    
+    for( i = 0; i < FreeData; i++) {    
         // "грубые" вычисления
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
