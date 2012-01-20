@@ -43,6 +43,7 @@ typedef struct OC_TIMER_TYPE {
 #define BUF_SIZE 256
 // половина BUF_SIZE
 #define BUF_SIZE_2 128
+#define CQ_SIZE 10
 
 //static double Accelerate[ACCELERATE_SIZE];
 #define Grad_to_Rad  PI / 180.0
@@ -64,8 +65,15 @@ typedef enum State {                // состояния
 	ST_DECELERATE           // тормозит
 } GD_STATE;
 
+// очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
+typedef struct CMD_QUEUE {
+    GD_STATE    State;    
+    double      Vend;
+    double      Xend;
+} Cmd_Queue;
+
 typedef struct RR {
-    
+
     // Время
     // IntervalArray
     // |      NextWriteTo
@@ -87,23 +95,28 @@ typedef struct RR {
     WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
     WORD        DataCount;                  // количество данных в массиве.
     DWORD_VAL   T;
-    ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
-    
+    //ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
+
     // команды
     GD_CMD      Cmd;
     GD_STATE    State;   
     GD_STATE    RunState; 
-    GD_STATE    NextState;
-    
+    int         RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
+    int         CalcDir;                    // направление вращения при просчете
+
+    Cmd_Queue   CmdQueue[CQ_SIZE];          // очередь команд
+    WORD        NextReadCmd;
+    WORD        NextWriteCmd;
+    WORD        CmdCount;
+
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
-    DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
+    LONG        XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
     double      Xbeg;
-    
+
     // параметры указывающие на момент окончания
     double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
     double      Xend;
-    DWORD       XaccEnd;                    //координата ускорения (DWORD)
 
     // константы
     double      K;
@@ -246,7 +259,9 @@ int TmrInit(BYTE Num);
 int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
+int Control(RR * rr);
+int SetNextState(RR * rr);
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend );
 
 
 #endif

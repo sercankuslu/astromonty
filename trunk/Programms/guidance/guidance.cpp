@@ -13,6 +13,7 @@
 #define ACCELERATE_SIZE 111
 #define FREQ_STEP 20
 #define BUF_SIZE 256
+#define CQ_SIZE 10
 //static double Accelerate[ACCELERATE_SIZE];
 const double Grad_to_Rad = PI / 180.0;
 const double Rad_to_Grad = 180.0 / PI;
@@ -53,7 +54,8 @@ typedef DWORD ARR_TYPE;
 typedef enum Cmd {                  // команды
 	CM_STOP,                // Остановиться (снижаем скорость до остановки)
 	CM_RUN_WITH_SPEED,      // Двигаться с заданной скоростью до окончания 
-	CM_RUN_TO_POINT,        // Двигаться до указанного угла        
+	CM_RUN_TO_POINT,        // Двигаться до указанного угла      
+	CM_GO_TO                // наводиться на цель, движущуюся со скоростью V
 } GD_CMD;
 typedef enum State {                // состояния
         ST_FREE,                // ожидает получения команды (значение, устанавливаемое после каждого состояния)
@@ -62,6 +64,14 @@ typedef enum State {                // состояния
 	ST_RUN,                 // движется с постоянной скоростью
 	ST_DECELERATE           // тормозит
 } GD_STATE;
+
+// очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
+typedef struct CMD_QUEUE {
+    GD_STATE    State;    
+    double      Vend;
+    double      Xend;
+} Cmd_Queue;
+
 typedef struct RR {
 
     // Время
@@ -85,23 +95,28 @@ typedef struct RR {
     WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
     WORD        DataCount;                  // количество данных в массиве.
     //DWORD_VAL   T;
-    ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
+    //ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
 
     // команды
     GD_CMD      Cmd;
     GD_STATE    State;   
     GD_STATE    RunState; 
-    GD_STATE    NextState;
+    int         RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
+    int         CalcDir;                    // направление вращения при просчете
+
+    Cmd_Queue   CmdQueue[CQ_SIZE];          // очередь команд
+    WORD        NextReadCmd;
+    WORD        NextWriteCmd;
+    WORD        CmdCount;
 
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
-    DWORD       XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
+    LONG        XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
     double      Xbeg;
 
     // параметры указывающие на момент окончания
     double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
     double      Xend;
-    DWORD       XaccEnd;                    //координата ускорения (DWORD)
 
     // константы
     double      K;
@@ -144,12 +159,12 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep);
+int Control(RR * rr);
+int SetNextState(RR * rr);
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend );
+
 
 void Calc(HWND hWnd, HDC hdc);
-DWORD MaxAcceleration(DWORD Xb, DWORD Xe,double dx, double K, double B, double * T, DWORD Len, DWORD * Xpos);
-
-
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
 					 HINSTANCE hPrevInstance,
@@ -358,12 +373,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	return (INT_PTR)FALSE;
 }
 
-double LinInt(double x1,double y1,double x2,double y2, double x)
-{
-    if(x1!=x2) {
-        return y1+(y2-y1)*(x-x1)/(x2-x1);
-    }else return y1;
-}
 void Calc(HWND hWnd, HDC hdc)
 {
     static double A = 0.0; //ускорение в радианах в сек за сек
@@ -382,14 +391,14 @@ void Calc(HWND hWnd, HDC hdc)
     static double T = 0;    // полное время
     static double T1 = 0;    // полное время
     static double T2 = 0;    // полное время
-    double dt1 = 0.0; // изменение времени
+
     int K1 = -1;
     int K3 = -1;
     DWORD i = 0;
     BYTE L = 255;
     RECT rect;
     static double Mass = 500.0f;
-    static double Radius = 0.30f;
+    static double Radius = 0.50f;
     static double Length = 3.0f;
     static double Reduction = 360.0f;
     static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
@@ -480,14 +489,22 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.NextWriteTo = 0;
     rr1.NextReadFrom = 0;    
     rr1.XaccBeg = 0;
-    rr1.Xbeg = 0;
-    rr1.T1 = 0;
+    rr1.Xbeg = 0;   
     rr1.TimeBeg = (ARR_TYPE)(0.0001*BUF_SIZE/rr1.TimerStep);
        
-    rr1.State = ST_ACCELERATE;
-    rr1.NextState = ST_RUN;
+    rr1.State = ST_STOP;    
+    rr1.CalcDir = 1;
+    rr1.CmdCount = 0;
+    rr1.NextReadCmd = 0;
+    rr1.NextWriteCmd = 0;
+
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 0, 4 * Grad_to_Rad );
+    PushCmdToQueue(&rr1, ST_RUN, 0, 8 * Grad_to_Rad );
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0, 0 );
+    SetNextState(&rr1);
    
-    do {		        
+    do {
+        /*
          switch(rr1.State){
          case ST_ACCELERATE:
              Acceleration(&rr1);                  
@@ -520,7 +537,8 @@ void Calc(HWND hWnd, HDC hdc)
              break;
          case ST_STOP:
              break;
-        }
+        }*/
+        Control(&rr1);
         //V = 5.0*Grad_to_Rad;
         for( i = 0; i < rr1.DataCount; i++) 
         {            
@@ -640,6 +658,10 @@ int Run(RR * rr)
     ARR_TYPE T2 = 0;
     ARR_TYPE e;
     e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
+    if(rr->Vend == 0.0){
+        if(rr->Interval > 0)
+            rr->Vend = rr->dx / (rr->Interval*rr->TimerStep);
+    }
 
     for( i = 0; i < FreeData; i++) {       
         j = rr->NextWriteTo + i;
@@ -656,11 +678,12 @@ int Run(RR * rr)
             T2 = (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
             rr->Interval = (T2 - T1) / m;            
         }             
-        Xb++;
+        Xb+=rr->CalcDir;
         T += rr->Interval;
-        if((Xe != 0)&&(Xb >= Xe)){
+        if(((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
+           ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
             FreeData = i;
-            rr->State = rr->NextState;                                
+            SetNextState(rr);
             break;
         }
         k++;
@@ -695,8 +718,8 @@ int Acceleration(RR * rr)
     double X;       // временная переменная 
     ARR_TYPE Tb = 0;  
     double D;      
-    DWORD Xb = (DWORD)(rr->Xbeg/rr->dx);
-    DWORD Xe = (DWORD)(rr->Xend/rr->dx);
+    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
+    LONG Xe = (LONG)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
@@ -708,7 +731,7 @@ int Acceleration(RR * rr)
     WORD i = 0;
     ARR_TYPE e;
     WORD k = 0;
-    WORD m = 1;
+    WORD m = 1;    
     
     e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
     dx = rr->dx;
@@ -753,11 +776,14 @@ int Acceleration(RR * rr)
             }                
             rr->Interval = (T2 - T1) / m;            
         }             
-        Xb++;
+        Xb+=rr->CalcDir;
         T += rr->Interval;
-        if(((dT != 0)&&(T >= dT))||((Xe != 0)&&(Xb >= Xe))){
+
+        if(((dT != 0)&&(T >= dT))||
+            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
+            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
             FreeData = i;
-            rr->State = rr->NextState;                                
+            SetNextState(rr);
             break;
         }
         k++;
@@ -767,8 +793,7 @@ int Acceleration(RR * rr)
         } 
         rr->IntervalArray[j] = Tb + T;                    
         T1 = T;            
-    }
-    rr->T1 = T1;
+    }    
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
     rr->DataCount += FreeData;
@@ -776,20 +801,6 @@ int Acceleration(RR * rr)
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->Xbeg = Xb * rr->dx;
     return 0;
-}
-
-
-ARR_TYPE CalculateT(double X, double K, double B, double TimerStep)
-{
-    double D;	
-    double Kx;
-
-    Kx = X * K;
-    D = Kx * Kx + 4.0 * X * B;
-    if(D >= 0.0){
-        return (ARR_TYPE)((-Kx + sqrt(D))/(2.0 * TimerStep * B ));    
-    }
-    return (ARR_TYPE) 0;
 }
 
 // торможение с текущей скорости до требуемой
@@ -804,8 +815,8 @@ int Deceleration(RR * rr)
     double X;       // временная переменная 
     ARR_TYPE Tb = 0;  
     double D;      
-    DWORD Xb = (ARR_TYPE)(rr->Xbeg/rr->dx);
-    DWORD Xe = (ARR_TYPE)(rr->Xend/rr->dx);
+    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
+    LONG Xe = (LONG)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
     double VKpB = 0.0; 
@@ -858,7 +869,7 @@ int Deceleration(RR * rr)
             X -= dx*m;
             if(X<=0.0){
                 FreeData = i;
-                rr->State = rr->NextState;       
+                SetNextState(rr);
                 break;
             }
             D = X *(X + a);
@@ -867,11 +878,13 @@ int Deceleration(RR * rr)
             }                
             rr->Interval = (T1 - T2) / m;
         }             
-        Xb++;
+        Xb += rr->CalcDir;
         T -= rr->Interval;
-        if(((dT != 0)&&(T <= dT))||((Xe != 0)&&(Xb >= Xe))){
+        if(((dT != 0)&&(T >= dT))||
+            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
+            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
             FreeData = i;
-            rr->State = rr->NextState;                                
+            SetNextState(rr);
             break;
         }
         k++;
@@ -881,8 +894,7 @@ int Deceleration(RR * rr)
         } 
         rr->IntervalArray[j] = Tb - T;                    
         T1 = T;      
-    }
-    rr->T1 = T1;
+    }   
     rr->TimeBeg = Tb - T1;
     rr->XaccBeg -= FreeData; 
     rr->DataCount += FreeData;
@@ -890,4 +902,50 @@ int Deceleration(RR * rr)
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->Xbeg = Xb * rr->dx;
     return 0;
+}
+
+int Control(RR * rr)
+{
+        switch(rr->State){
+        case ST_ACCELERATE:
+            Acceleration(rr);                  
+            break;
+        case ST_RUN:
+            Run(rr);
+            break;
+        case ST_DECELERATE:                
+            Deceleration(rr); 
+            break;
+        case ST_STOP:
+        case ST_FREE:
+        break;
+    }
+    return 0;
+}
+
+int SetNextState(RR * rr)
+{
+    if(rr->CmdCount > 0){
+        rr->State = rr->CmdQueue[rr->NextReadCmd].State;        
+        rr->Vend  = rr->CmdQueue[rr->NextReadCmd].Vend;
+        rr->Xend  = rr->CmdQueue[rr->NextReadCmd].Xend;
+        rr->NextReadCmd++;
+        if(rr->NextReadCmd >= CQ_SIZE)rr->NextReadCmd -= CQ_SIZE;
+        rr->CmdCount--;
+    } else {
+        rr->State = ST_STOP;
+    }
+    return 0;
+}
+
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend )
+{
+    if(rr->CmdCount < CQ_SIZE){
+        rr->CmdQueue[rr->NextWriteCmd].State = State;
+        rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
+        rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
+        rr->NextWriteCmd++;
+        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
+        rr->CmdCount++;
+    } else return -1;
 }

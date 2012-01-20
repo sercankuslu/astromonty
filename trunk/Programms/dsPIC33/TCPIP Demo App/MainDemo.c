@@ -133,9 +133,6 @@ static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
 
-void Calc(void);
-
-
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
@@ -226,8 +223,6 @@ int main(void)
     static DWORD t = 0;
    // static DWORD d = 0;
     static DWORD dwLastIP = 0;
-    static DWORD_VAL GG;
-    static DWORD GG1 = 0x00350000;
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
@@ -1352,101 +1347,3 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 
 
 
-void Calc(void)
-{
-    static double dt = 0.0; // изменение времени
-    static double V0 = 1.0* Grad_to_Rad;  // мгновенная скорость в радианах
-    static double V = 0.0;  // мгновенная скорость в радианах
-    static double V1 = 0.0; //мгновенная скорость в радианах
-    //static double dX = 1.0/(200.0*16.0);// шаг перемещения в градусах (в 1 градусе 3200 шагов)
-    static double dX = PI/(180.0*200.0*16.0); // шаг перемещения в радианах
-    static double X = 0;    // полное перемещение в радианах
-    static double T = 0;    // полное время
-    static double T1 = 0;    // полное время
-    
-    static double Mass = 500.0f;
-    static double Radius = 0.30f;
-    static double Length = 2.0f;
-    static double Reduction = 360.0f;
-    static double I;// = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction;     
-    static double K;// = (-0.000349812 * 200 * 180/PI)/I;
-    //static double K = (-0.000154286 * 200 * 180/PI)/I;
-    //static double B = 0.79962406 / I;
-    static double B;// = 0.751428571 / I;
-    double XX = 9.0 * Grad_to_Rad;
-    double TC;
-    double XT;
-    
-    I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    K = (-0.000349812 * 200 * 180/PI)/I;
-    B = 0.751428571 / I;
-    
-    dt = 0.0;
-    T = 0.0;
-    T1 = 0.0;
-    X = 0.0;
-    V = 0.0;
-    V1 = 0.0;
-    rr1.B = B;
-    rr1.K = K;
-    rr1.dx = dX;
-    rr1.TimerStep = 0.0000002;
-    rr1.Vend = 0 * Grad_to_Rad;
-    V0 = 1.0 * Grad_to_Rad;
-    
-
-    // вычислим время в которое пересекутся две функции:
-    // x = X0 + V0*T
-    // x = B*T*T/(1-K*T)
-    // надо еще учесть текущую координату
-    TC = (((XX*K/2.0-V0)-sqrtf((V0-K*XX/2.0)*(V0-K*XX/2.0)+ 2.0*XX*(B+V0*K)))/(-2.0*(V0*K+B)));
-    
-    //double XC = V0 * TC + XX;
-    XT = B * TC * TC / (1 - K * TC);
-    //double XL = (XC - XT)- XX / 2;
-    rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
-    rr1.DataCount = 0;
-    rr1.NextWriteTo = 0;
-    rr1.NextReadFrom = 0;    
-    rr1.XaccBeg = 0;
-    rr1.Xbeg = 0;
-    rr1.TimeBeg = 0;//(ARR_TYPE)(1.0 * Grad_to_Rad/((rr1.B + 10.0 * Grad_to_Rad * rr1.K) * rr1.TimerStep));
-       
-    rr1.State = ST_ACCELERATE;
-    rr1.NextState = ST_STOP;
-   
-    do{		        
-         switch(rr1.State){
-             case ST_ACCELERATE:
-                 Acceleration(&rr1);                  
-                 if(rr1.State == ST_RUN){
-                     rr1.Vend = 10.0 * Grad_to_Rad;
-                     rr1.NextState = ST_DECELERATE;
-                 }
-                 if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = V0;
-                     rr1.Xend = 30.0 * Grad_to_Rad;
-                     rr1.NextState = ST_RUN;
-                 }
-                 break;
-             case ST_RUN:
-                 Run(&rr1);
-                 if(rr1.State == ST_DECELERATE){
-                     rr1.Vend = 0.004166667 * Grad_to_Rad;
-                     rr1.Xend = 20.0 * Grad_to_Rad;
-                     rr1.NextState = ST_STOP;
-                 }
-                 break;
-             case ST_DECELERATE:                
-                 Deceleration(&rr1); 
-                 if(rr1.State == ST_RUN){
-                     rr1.Vend = V0;
-                     rr1.Xend = 20.0 * Grad_to_Rad;
-                     rr1.NextState = ST_STOP;
-                 }
-                 break;
-             case ST_STOP:
-                 break;
-         }
-    }while(rr1.State == ST_STOP);     
-}
