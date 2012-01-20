@@ -119,7 +119,7 @@ DWORD_VAL CPUSPEED;
 
 
 
-RR rr1;
+
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
@@ -227,14 +227,7 @@ int main(void)
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
-    
-    OCInit();
-     
-   	while(1){
-	   	Nop();
-   	}
-
-     
+        
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
     {
@@ -380,7 +373,7 @@ int main(void)
 
 	
  	
-
+	OCInit();
 
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 

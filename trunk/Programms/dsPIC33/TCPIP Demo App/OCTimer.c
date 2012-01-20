@@ -107,8 +107,8 @@ int OCInit(void)
 	// MS1 = 1; MS2 = 1; 1/16
 	MS1         = 1;    // выход MS1  
 	MS2         = 1; 	// выход MS2  
-	SLEEP       = 0; 	// выход SLEEP
-	RESET       = 0; 	// выход RESET
+	SLEEP       = 1; 	// выход SLEEP
+	RESET       = 1; 	// выход RESET
 	
 	MS1_Tris    = 0; 	// выход MS1
 	MS2_Tris    = 0; 	// выход MS2
@@ -199,7 +199,7 @@ int InitRR(RR * rr)
     double I;
     rr->Mass = 500.0f;
     rr->Radius = 0.30f;
-    rr->Length = 2.0f;
+    rr->Length = 3.0f;
     rr->Reduction = 360.0f;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;     
     rr->K = (-0.000349812 * 200 * 180/PI)/I;
@@ -222,9 +222,10 @@ int InitRR(RR * rr)
     rr1.CmdCount = 0;
     rr1.NextReadCmd = 0;
     rr1.NextWriteCmd = 0;
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 0, 4 * Grad_to_Rad );
-    PushCmdToQueue(&rr1, ST_RUN, 0, 8 * Grad_to_Rad );
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 1 * Grad_to_Rad, 0 );
+    PushCmdToQueue(&rr1, ST_RUN, 1 * Grad_to_Rad, 1 * Grad_to_Rad );
     PushCmdToQueue(&rr1, ST_DECELERATE, 0, 0 );
+    PushCmdToQueue(&rr1, ST_STOP, 0, 0 );
     SetNextState(&rr1);
     return 0;    
 }
@@ -494,20 +495,22 @@ int Deceleration(RR * rr)
 
 int Control(RR * rr)
 {
-        switch(rr->State){
-        case ST_ACCELERATE:
-            Acceleration(rr);                  
-            break;
-        case ST_RUN:
-            Run(rr);
-            break;
-        case ST_DECELERATE:                
-            Deceleration(rr); 
-            break;
-        case ST_STOP:
-        case ST_FREE:
-        break;
-    }
+	while((rr->DataCount <= BUF_SIZE_2)&&(rr->State != ST_STOP)){
+		switch(rr->State){
+		case ST_ACCELERATE:
+		    Acceleration(rr);                  
+		    break;
+		case ST_RUN:
+		    Run(rr);
+		    break;
+		case ST_DECELERATE:                
+		    Deceleration(rr); 
+		    break;
+		case ST_STOP:
+		case ST_FREE:
+		break;
+	    }
+	}    
     return 0;
 }
 
