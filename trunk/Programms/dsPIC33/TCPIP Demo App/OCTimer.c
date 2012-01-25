@@ -127,7 +127,19 @@ int OCInit(void)
         	PORT1_DIR_Tris    = 0;// выход DIR
         	PORT1_STEP_Tris   = 0;// выход STEP		
         }    
-    
+    	{
+        	PORT2_NULL_Tris   = 1; // вход NULL
+        	PORT2_POS_Tris    = 1; // вход POS
+        	PORT2_POS2_Tris   = 1; // вход POS2	
+        	
+        	PORT2_ENABLE 	  = 0;// выход ENABLE   
+        	PORT2_DIR 		  = 0;// выход DIR      
+        	PORT2_STEP 		  = 0;// выход STEP	
+        
+        	PORT2_ENABLE_Tris = 0;// выход ENABLE
+        	PORT2_DIR_Tris    = 0;// выход DIR
+        	PORT2_STEP_Tris   = 0;// выход STEP		
+        }    
         TmrInit(2);
         InitRR(&rr1);  
         rr1.Index = 1;
@@ -355,8 +367,7 @@ int Acceleration(RR * rr)
     d = K/(2.0 * B * rr->TimerStep);
     c = K*d;
     a = 4.0 * B/(K*K);   
-//     Tb = rr->TimeBeg - rr->T1;       	
-//     T1 = rr->T1;  
+
     if(rr->XaccBeg > 0){
         X = rr->XaccBeg * rr->dx; 
         D = X *(X + a);
@@ -459,8 +470,6 @@ int Deceleration(RR * rr)
     c = K*d;
     a = 4.0 * B/(K*K);    
 
-//     Tb = rr->TimeBeg + rr->T1;       	
-//     T1 = rr->T1;
     X = rr->XaccBeg * rr->dx; 
     if(rr->XaccBeg > 0){        
         D = X *(X + a);
