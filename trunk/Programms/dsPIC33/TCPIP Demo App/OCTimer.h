@@ -69,6 +69,8 @@ typedef struct CMD_QUEUE {
     GD_STATE    State;    
     double      Vend;
     double      Xend;
+    DWORD       Direction;
+    DWORD       RunStep;        // указан номер шага, на котором начнется выполнение команды                                  
 } Cmd_Queue;
 
 typedef struct RR {
@@ -94,30 +96,36 @@ typedef struct RR {
     WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
     WORD        DataCount;                  // количество данных в массиве.
     DWORD_VAL   T;
-    //ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
+    
 
     // команды
     GD_CMD      Cmd;
     GD_STATE    State;   
     GD_STATE    RunState; 
-    int         RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
-    int         CalcDir;                    // направление вращения при просчете
 
     Cmd_Queue   CmdQueue[CQ_SIZE];          // очередь команд
     WORD        NextReadCmd;
     WORD        NextWriteCmd;
+    WORD        NextExecuteCmd;
     WORD        CmdCount;
 
+    // параметры исполнения
+    LONG        XPosition;
+    int         RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
+    // параметры предпросчета
+    LONG        XCachePos;                  // текущее положение в просчете
+    int         CalcDir;                    // направление вращения при просчете
     // исхoдные параметры:
     ARR_TYPE    TimeBeg;  
     LONG        XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
-    double      Xbeg;
-
+        
     // параметры указывающие на момент окончания
     double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
     double      Xend;
 
+
     // константы
+    ARR_TYPE    e;              // если интервал меньше этого значения, переходим на быстрые вычисления
     double      K;
     double      B;
     double      TimerStep;
@@ -126,7 +134,8 @@ typedef struct RR {
     double      Radius;
     double      Length;
     double      Reduction;
-
+    BYTE        Index;
+    BYTE        TmrId;
 } RR;
 
 
@@ -260,7 +269,14 @@ int Acceleration(RR * rr);
 int Deceleration(RR * rr);
 int Control(RR * rr);
 int SetNextState(RR * rr);
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend );
-
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
+int ProcessTimer(BYTE id, RR * rr);
+DWORD GetBigTmrValue(BYTE id);
+int DisableOC(BYTE oc);
+int EnableOC(BYTE oc);
+BOOL IsDisableOC(BYTE oc);
+int SetOC(BYTE oc, WORD LW);
+int ProcessOC(RR * rr);
+int SetDirection(BYTE oc, BYTE Dir);
 
 #endif

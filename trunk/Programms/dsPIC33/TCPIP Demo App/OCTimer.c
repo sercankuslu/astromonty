@@ -7,52 +7,30 @@
 static DWORD_VAL Timer2Big;
 static DWORD_VAL Timer3Big;
 static RR rr1;
-//static RR rr2;
-//static RR rr3;
+static RR rr2;
+static RR rr3;
 
 int InitRR(RR * rr);
 
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {       
-   	if(rr1.DataCount>0){
-       	rr1.DataCount--;
-       	if((IFS1bits.U2RXIF != 1) && (rr1.DataCount <= BUF_SIZE_2)) {
-            IFS1bits.U2RXIF = 1;    //  1 = вызов просчета буфера   	
-       	}
-   	} else {
-   	    rr1.RunState = ST_STOP;
-   	    OC1CONbits.OCM = 0b000; // выключить модуль OC
-   	    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
-   	    return;
-   	}
-	rr1.T.Val = rr1.IntervalArray[rr1.NextReadFrom]; 	
-   	rr1.NextReadFrom++;
-   	if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
-   	
-   	OC1CONbits.OCM = 0b000; // выключить модуль OC	   	
-   	OC1R = rr1.T.word.LW;		// записать значение OCxR
-   	OC1RS = rr1.T.word.LW + 50; // записать значение OCxRS
-   	Timer2Big.word.LW = TMR2;   	
-    if((Timer2Big.Val <= rr1.T.Val)&&(Timer2Big.Val + 0x00010000 >= rr1.T.Val)){     
-	    OC1CONbits.OCM = 0b100;	// включить модуль OC
-	}        		
-
+   	ProcessOC(&rr1);
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
     
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
 {
-
+    ProcessOC(&rr2);
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
 {
-
+    ProcessOC(&rr3);
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC4Interrupt( void )
 {
-
+    //ProcessOC(&rr4);
     IFS1bits.OC4IF = 0; // Clear OC4 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC5Interrupt( void )
@@ -76,22 +54,18 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC8Interrupt( void )
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
 {
-    Timer2Big.word.HW++;
-    Timer2Big.word.LW = TMR2;	
-    
-    if(OC1CONbits.OCM == 0b000){
-    	if(rr1.RunState != ST_STOP){               	
-            if((Timer2Big.Val <= rr1.T.Val)&&(Timer2Big.Val + 0x00010000 >= rr1.T.Val)){     
-        	    OC1CONbits.OCM = 0b100;	// включить модуль OC
-        	}        		
-    	}
-	}
+    Timer2Big.word.HW++;    	
+    ProcessTimer(2, &rr1);
+    ProcessTimer(2, &rr2);
+    ProcessTimer(2, &rr3);
     IFS0bits.T2IF = 0; // Clear T2 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
 {
 	Timer3Big.word.HW++;
-    Timer3Big.word.LW = TMR3;
+    ProcessTimer(3, &rr1);
+    ProcessTimer(3, &rr2);
+    ProcessTimer(3, &rr3);
     IFS0bits.T3IF = 0; // Clear T3 interrupt flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
@@ -99,7 +73,16 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
     Control(&rr1);    
     IFS1bits.U2RXIF = 0;
 } 
-
+void __attribute__((__interrupt__,__no_auto_psv__)) _U2TXInterrupt( void )
+{    
+    Control(&rr2); 
+    IFS1bits.U2TXIF = 0;
+} 
+void __attribute__((__interrupt__,__no_auto_psv__)) _U1RXInterrupt( void )
+{    
+    Control(&rr3);
+    IFS0bits.U1RXIF = 0;
+} 
 int OCInit(void)
 {
 	//BYTE i;		
@@ -118,7 +101,15 @@ int OCInit(void)
 	IFS1bits.U2RXIF = 0;
 	IPC7bits.U2RXIP = 6;		// Priority level 6
 	IEC1bits.U2RXIE = 1;
-	IFS1bits.U2RXIF = 0;    //  1 = вызов 
+
+	IFS1bits.U2TXIF = 0;
+	IPC7bits.U2TXIP = 6;		// Priority level 6
+	IEC1bits.U2TXIE = 1;
+
+	IFS0bits.U1RXIF = 0;
+	IPC2bits.U1RXIP = 6;		// Priority level 6
+	IEC0bits.U1RXIE = 1;
+
 	
 	//Инициализация порта1
 	{
@@ -138,10 +129,18 @@ int OCInit(void)
         }    
     
         TmrInit(2);
-        InitRR(&rr1);        
-        //InitRR(&rr2);
-        //InitRR(&rr3);
+        InitRR(&rr1);  
+        rr1.Index = 1;
+        rr1.TmrId = 2;
+        InitRR(&rr2);
+        rr2.Index = 2;
+        rr2.TmrId = 2;
+        InitRR(&rr3);
+        rr3.Index = 3;
+        rr3.TmrId = 2;
         IFS1bits.U2RXIF = 1;
+        IFS1bits.U2TXIF = 1;
+        //IFS0bits.U1RXIF = 1;
         
         // инициализация OC1
     	{
@@ -151,7 +150,27 @@ int OCInit(void)
             IFS0bits.OC1IF = 0;			// сбросить флаг прерывания
             IEC0bits.OC1IE = 1;			// разрешаем прерывания от OC1    
         }
+        // инициализация OC2
+    	{
+        	OC2CONbits.OCM = 0b000;
+            OC2CONbits.OCTSEL = 0;  	// выбрать Timer2
+            IPC1bits.OC2IP = 7;		    // выбрать приоритет прерывания для OC2
+            IFS0bits.OC2IF = 0;			// сбросить флаг прерывания
+            IEC0bits.OC2IE = 1;			// разрешаем прерывания от OC2    
+        }
+        /* / инициализация OC3
+    	{
+        	OC3CONbits.OCM = 0b000;
+            OC3CONbits.OCTSEL = 0;  	// выбрать Timer2
+            IPC6bits.OC3IP = 7;		    // выбрать приоритет прерывания для OC3
+            IFS1bits.OC3IF = 0;			// сбросить флаг прерывания
+            IEC1bits.OC3IE = 1;			// разрешаем прерывания от OC3    
+        }
+        */
         IFS0bits.OC1IF = 1;
+        IFS0bits.OC2IF = 1;
+        //IFS1bits.OC3IF = 1;
+        
     }       
     
 	return 0;
@@ -212,22 +231,25 @@ int InitRR(RR * rr)
     rr->NextWriteTo = 0;
     rr->NextReadFrom = 0;    
     rr->XaccBeg = 0;
-    rr->Xbeg = 0;
+    rr->XCachePos = 0;
     Timer2Big.word.LW = TMR2;
-    rr->TimeBeg = Timer2Big.Val + (ARR_TYPE)(1.0 /* * BUF_SIZE*/ /rr->TimerStep);       
+    rr->TimeBeg = Timer2Big.Val + (ARR_TYPE)(0.0002 * BUF_SIZE /rr->TimerStep);       
     rr->State = ST_STOP;    
     rr->RunState = ST_RUN;
     rr->T.Val = 0;
     rr->Interval = 0xFFFFFFFF;
-    rr1.CmdCount = 0;
+    rr->CmdCount = 0;
     rr->CalcDir = 1;
-    rr1.NextReadCmd = 0;
-    rr1.NextWriteCmd = 0;
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 1.0 * Grad_to_Rad, 0 );
-    PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad, 5.0 * Grad_to_Rad );
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0, 0 );
-    PushCmdToQueue(&rr1, ST_STOP, 0, 0 );
-    SetNextState(&rr1);
+    rr->XPosition = 0xFFFFFFFF;
+    rr->NextReadCmd = 0;
+    rr->NextWriteCmd = 0;
+    rr->NextExecuteCmd = 0;
+    rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
+    PushCmdToQueue(rr, ST_ACCELERATE, 8.0 * Grad_to_Rad, 0, 1);
+    PushCmdToQueue(rr, ST_RUN, 0.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_DECELERATE, 0, 0, 1);
+    PushCmdToQueue(rr, ST_STOP, 0, 0, 1 );
+    SetNextState(rr);
     return 0;    
 }
 int Run(RR * rr)
@@ -239,25 +261,23 @@ int Run(RR * rr)
     WORD i;
     WORD j;
     WORD FreeData = BUF_SIZE - rr->DataCount;  
-    double X = 0.0;
-    //X = rr->Vend * rr->TimeBeg;
-    DWORD Xb = (DWORD)(rr->Xbeg/rr->dx);
-    DWORD Xe = (DWORD)(rr->Xend/rr->dx);
+    double X = 0.0;    
+    LONG Xb = rr->XCachePos;
+    LONG Xe = (LONG)(rr->Xend/rr->dx);
     ARR_TYPE T = 0;
     ARR_TYPE T1 = 0;// = 0;
-    ARR_TYPE T2 = 0;
-    ARR_TYPE e;
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
+    ARR_TYPE T2 = 0;    
+    
     if(rr->Vend == 0.0){
         if(rr->Interval > 0)
             rr->Vend = rr->dx / (rr->Interval*rr->TimerStep);
     }
-
+    
     for( i = 0; i < FreeData; i++) {       
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
         if(k == 0) {
-            if(rr->Interval < e){
+            if(rr->Interval < rr->e){
                 //if(m < 32) m++;
                 m = 32;
             } else {
@@ -267,15 +287,23 @@ int Run(RR * rr)
             X += rr->dx*m;
             T2 = (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
             rr->Interval = (T2 - T1) / m;            
-        }             
-        Xb+=rr->CalcDir;
+        }                     
         T += rr->Interval;
-        if(((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-           ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
-        }
+        if(rr->CalcDir > 0){
+            Xb++;
+            if((Xe != 0)&&(Xb >= Xe)){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
+        } else {
+            Xb--;
+            if((Xe != 0)&&(Xb <= Xe)){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
+        }    
         k++;
         if(k >= m){
             T = T2;
@@ -289,7 +317,7 @@ int Run(RR * rr)
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
+    rr->XCachePos = Xb;    
     return 0;
 }
 // разгон с текущей скорости до требуемой
@@ -307,8 +335,8 @@ int Acceleration(RR * rr)
     ARR_TYPE dT = 0;
     double X;       // временная переменная 
     ARR_TYPE Tb = 0;  
-    double D;      
-    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
+    double D;  
+    LONG Xb = rr->XCachePos;    
     LONG Xe = (LONG)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
@@ -318,12 +346,10 @@ int Acceleration(RR * rr)
     double a;
     double c;
     double d;    
-    WORD i = 0;
-    ARR_TYPE e;
+    WORD i = 0;    
     WORD k = 0;
-    WORD m = 1;    
+    WORD m = 1;        
     
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -352,7 +378,7 @@ int Acceleration(RR * rr)
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
         if(k == 0) {
-            if(rr->Interval < e){
+            if(rr->Interval < rr->e){
                 //if(m < 32) m++;
                 m = 32;
             } else {
@@ -366,16 +392,25 @@ int Acceleration(RR * rr)
             }                
             rr->Interval = (T2 - T1) / m;            
         }             
-        Xb+=rr->CalcDir;
+       
         T += rr->Interval;
-
-        if(((dT != 0)&&(T >= dT))||
-            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
-        }
+        if(rr->CalcDir > 0){
+            Xb++;
+            if(((dT != 0)&&(T >= dT))||
+               ((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
+        } else {
+            Xb--;
+            if(((dT != 0)&&(T >= dT))||
+               ((Xe != 0)&&(Xb <= Xe))){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
+        }    
         k++;
         if(k >= m){
             T = T2;
@@ -389,7 +424,7 @@ int Acceleration(RR * rr)
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
+    rr->XCachePos = Xb;
     return 0;
 }
 
@@ -405,7 +440,7 @@ int Deceleration(RR * rr)
     double X;       // временная переменная 
     ARR_TYPE Tb = 0;  
     double D;      
-    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
+    LONG Xb = rr->XCachePos; //(LONG)(rr->Xbeg/rr->dx);
     LONG Xe = (LONG)(rr->Xend/rr->dx);
     double K = rr->K;
     double B = rr->B;
@@ -415,11 +450,9 @@ int Deceleration(RR * rr)
     double a;
     double c;
     double d;    
-    WORD i = 0;
-    ARR_TYPE e;
+    WORD i = 0;    
     WORD k = 0;
-    WORD m = 1;
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
+    WORD m = 1;    
     dx = rr->dx;
     X = rr->XaccBeg * rr->dx; 
     d = K/(2.0 * B * rr->TimerStep);
@@ -449,7 +482,7 @@ int Deceleration(RR * rr)
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
         if(k == 0) {
-            if(rr->Interval < e){                
+            if(rr->Interval < rr->e){                
                 m = 32;
                 //if( m < 32 ) m += 8;
             } else {
@@ -467,15 +500,24 @@ int Deceleration(RR * rr)
                 T2 = (ARR_TYPE)((-X - sqrt(D))*d);
             }                
             rr->Interval = (T1 - T2) / m;
-        }             
-        Xb += rr->CalcDir;
+        }                     
         T -= rr->Interval;
-        if(((dT != 0)&&(T >= dT))||
-            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
+        if(rr->CalcDir > 0){
+            Xb++;
+            if(((dT != 0)&&(T >= dT))||
+                ((Xe != 0)&&(Xb >= Xe))){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
+        } else {
+            Xb--;
+            if(((dT != 0)&&(T >= dT))||
+               ((Xe != 0)&&(Xb <= Xe))){
+                FreeData = i;
+                SetNextState(rr);
+                break;
+            }
         }
         k++;
         if(k >= m){
@@ -490,7 +532,7 @@ int Deceleration(RR * rr)
     rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
+    rr->XCachePos = Xb;    
     return 0;
 }
 
@@ -507,8 +549,7 @@ int Control(RR * rr)
 		case ST_DECELERATE:                
 		    Deceleration(rr); 
 		    break;
-		case ST_STOP:
-		case ST_FREE:
+		case ST_STOP:		
 		break;
 	    }
 	}    
@@ -517,27 +558,232 @@ int Control(RR * rr)
 
 int SetNextState(RR * rr)
 {
+    WORD CurrentCmd = 0;
     if(rr->CmdCount > 0){
         rr->State = rr->CmdQueue[rr->NextReadCmd].State;        
         rr->Vend  = rr->CmdQueue[rr->NextReadCmd].Vend;
         rr->Xend  = rr->CmdQueue[rr->NextReadCmd].Xend;
+        if(rr->NextReadCmd > 0) {
+            CurrentCmd = rr->NextReadCmd - 1;
+        } else {
+            if(rr->CmdCount > 0){
+                CurrentCmd = CQ_SIZE - 1;    
+            }
+        }
+        rr->CmdQueue[CurrentCmd].RunStep = rr->XCachePos;
         rr->NextReadCmd++;
         if(rr->NextReadCmd >= CQ_SIZE)rr->NextReadCmd -= CQ_SIZE;
-        rr->CmdCount--;
+        //rr->CmdCount--;
     } else {
         rr->State = ST_STOP;
     }
     return 0;
 }
 
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend )
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction )
 {
     if(rr->CmdCount < CQ_SIZE){
         rr->CmdQueue[rr->NextWriteCmd].State = State;
         rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
         rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
+        rr->CmdQueue[rr->NextWriteCmd].Direction = Direction;
+	    if(Xend != 0) {
+            rr->CmdQueue[rr->NextWriteCmd].RunStep = (LONG) (Xend / rr->dx);
+        } else {
+            rr->CmdQueue[rr->NextWriteCmd].RunStep = 0;
+        }
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
         rr->CmdCount++;
     } else return -1;
+    return 0;
+}
+
+int ProcessOC(RR * rr)
+{
+    DWORD Timer = 0;
+    if(rr->DataCount>0){
+       	rr->DataCount--;
+       	       	
+       	if(rr->DataCount <= BUF_SIZE_2) {
+           	switch(rr->Index){
+            case 1: IFS1bits.U2RXIF = 1;    //  1 = вызов просчета буфера   	
+            break;
+            case 2: IFS1bits.U2TXIF = 1;    //  1 = вызов просчета буфера   	
+            break;
+            case 3: IFS0bits.U1RXIF = 1;    //  1 = вызов просчета буфера   	
+            break;
+            }
+       	}
+   	} else {
+   	    rr->RunState = ST_STOP;
+   	    DisableOC(rr->Index);
+   	    return 0;
+   	}
+	rr->T.Val = rr->IntervalArray[rr->NextReadFrom]; 	
+   	rr->NextReadFrom++;
+   	if(rr->NextReadFrom >= BUF_SIZE) rr->NextReadFrom -= BUF_SIZE;
+   	
+   	SetOC(rr->Index, rr->T.word.LW);
+   	Timer = GetBigTmrValue(rr->TmrId);
+    if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){     
+        EnableOC(rr->Index);
+	}  
+	rr->XPosition+=(rr->RunDir>=0)?1:-1;  
+	if(rr->CmdQueue[rr->NextExecuteCmd].RunStep == rr->XPosition){
+    	if(rr->CmdCount > 0) rr->CmdCount--;
+    	rr->NextExecuteCmd++;
+    	if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
+    	rr->RunDir = rr->CmdQueue[rr->NextExecuteCmd].Direction;
+    	if(rr->RunDir>0){ // устанавливаем направление вращения        	
+        	SetDirection(rr->Index,1);
+    	} else {
+    	    SetDirection(rr->Index,0);
+    	}
+	}
+	return 0;
+}
+
+int SetOC(BYTE oc, WORD LW)
+{
+    switch (oc){
+    case 1:
+        OC1CONbits.OCM = 0b000; // выключить модуль OC	   	
+       	OC1R = LW;		// записать значение OCxR
+       	OC1RS = LW + 50; // записать значение OCxRS
+       	break;
+    case 2:
+        OC2CONbits.OCM = 0b000; // выключить модуль OC	   	
+       	OC2R = LW;		// записать значение OCxR
+       	OC2RS = LW + 50; // записать значение OCxRS
+        break; 
+    case 3:
+        OC3CONbits.OCM = 0b000; // выключить модуль OC	   	
+       	OC3R = LW;		// записать значение OCxR
+       	OC3RS = LW + 50; // записать значение OCxRS
+        break; 
+    case 4:
+        OC4CONbits.OCM = 0b000; // выключить модуль OC	   	
+       	OC4R = LW;		// записать значение OCxR
+       	OC4RS = LW + 50; // записать значение OCxRS
+        break; 
+    default :
+    return -1;
+   	}
+   	return 0;
+}
+int EnableOC(BYTE oc)
+{
+    switch (oc){
+    case 1:
+        OC1CONbits.OCM = 0b100; // выключить модуль OC	   	
+       	break;
+    case 2:
+        OC2CONbits.OCM = 0b100; // выключить модуль OC	   	
+        break; 
+    case 3:
+        OC3CONbits.OCM = 0b100; // выключить модуль OC	   	
+        break; 
+    case 4:
+        OC4CONbits.OCM = 0b100; // выключить модуль OC	   	
+        break; 
+    default :
+    return -1;
+   	}
+   	return 0;
+}
+int DisableOC(BYTE oc)
+{
+    switch (oc){
+    case 1:
+        OC1CONbits.OCM = 0b000; // выключить модуль OC	
+        IFS0bits.OC1IF = 0;     // Clear OC1 interrupt flag   	
+       	break;
+    case 2:
+        OC2CONbits.OCM = 0b000; // выключить модуль OC	 
+        IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag  	
+        break; 
+    case 3:
+        OC3CONbits.OCM = 0b000; // выключить модуль OC	  
+        IFS1bits.OC3IF = 0; // Clear OC1 interrupt flag 	
+        break; 
+    case 4:
+        OC4CONbits.OCM = 0b000; // выключить модуль OC	
+        IFS1bits.OC4IF = 0; // Clear OC1 interrupt flag   	
+        break; 
+    default :
+    return -1;
+   	}
+   	return 0;
+}
+
+DWORD GetBigTmrValue(BYTE id)
+{
+    switch (id){
+    case 2: 
+        Timer2Big.word.LW = TMR2;
+        return Timer2Big.Val;
+    case 3:
+        Timer3Big.word.LW = TMR3;
+        return Timer3Big.Val;
+    default:
+        return 0;
+    }
+}
+
+int ProcessTimer(BYTE id, RR * rr)
+{
+    DWORD Timer = GetBigTmrValue(id);    
+    if(rr->TmrId == id){
+        if(IsDisableOC(rr->Index)){
+        	if(rr->RunState != ST_STOP){               	
+                if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){     
+            	    EnableOC(rr->Index);
+            	}        		
+        	}
+    	}
+    }	
+    return 0;
+}
+
+BOOL IsDisableOC(BYTE oc)
+{
+    switch (oc){
+    case 1:
+        if(OC1CONbits.OCM == 0b000) return 1; 
+       	break;
+    case 2:
+        if(OC2CONbits.OCM == 0b000) return 1;
+        break; 
+    case 3:
+        if(OC3CONbits.OCM == 0b000) return 1;
+        break; 
+    case 4:
+        if(OC4CONbits.OCM == 0b000) return 1;
+        break; 
+    default :
+    return 0;
+   	}
+   	return 0;
+}
+
+int SetDirection(BYTE oc, BYTE Dir)
+{
+    switch (oc){
+    case 1:
+        PORT1_DIR = Dir;
+       	break;
+    case 2:
+        PORT2_DIR = Dir;
+        break; 
+    case 3:
+        PORT3_DIR = Dir;
+        break; 
+    case 4:
+        PORT4_DIR = Dir;
+        break; 
+    default :
+    return 0;
+   	}
+   	return 0;
 }
