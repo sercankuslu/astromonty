@@ -4,7 +4,7 @@
 //
 
 #pragma once
-
+#ifndef __C30__
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Исключите редко используемые компоненты из заголовков Windows
@@ -16,6 +16,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
+#endif
 
 // TODO. Установите здесь ссылки на дополнительные заголовки, требующиеся для программы
