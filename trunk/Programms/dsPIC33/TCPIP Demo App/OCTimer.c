@@ -211,6 +211,9 @@ int OCInit(void)
         IFS0bits.OC1IF = 1;
         IFS0bits.OC2IF = 1;
         IFS1bits.OC3IF = 1;
+        Timer2Big.Val = 0;
+        TMR2 = 0;
+        T2CONbits.TON = 1; 		// Start Timer        
 #endif //#ifdef __C30__
 
     return 0;
@@ -235,7 +238,7 @@ int TmrInit(BYTE Num)
                     IPC1bits.T2IP = 7; 	// Set Timer2 Interrupt Priority Level
                     IFS0bits.T2IF = 0; 		// Clear Timer2 Interrupt Flag
                     IEC0bits.T2IE = 1; 		// Enable Timer2 interrupt
-                    T2CONbits.TON = 1; 		// Start Timer   
+                    //T2CONbits.TON = 1; 		// Start Timer   
                     #endif //#ifdef __C30__
                     break;
                 case 3:		
@@ -277,7 +280,7 @@ int InitRR(RR * rr)
     rr->XaccBeg = 0;
     rr->XCachePos = 0;
     Timer2Big.word.LW = TMR2;
-    rr->TimeBeg = Timer2Big.Val + (ARR_TYPE)(0.0002 * BUF_SIZE /rr->TimerStep);
+    rr->TimeBeg = /* Timer2Big.Val */ + (ARR_TYPE)(0.0000 * BUF_SIZE /rr->TimerStep);
     rr->State = ST_STOP;    
     rr->RunState = ST_RUN;
     rr->T.Val = 0;
