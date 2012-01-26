@@ -5,139 +5,14 @@
 #include "guidance.h"
 #include <math.h>
 #include <stdio.h>
+#include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 
 
 #define MAX_LOADSTRING 100
 
-#define PI 3.1415926535897932384626433832795
-#define ACCELERATE_SIZE 111
-#define FREQ_STEP 20
-#define BUF_SIZE 32000
-#define CQ_SIZE 10
-//static double Accelerate[ACCELERATE_SIZE];
-const double Grad_to_Rad = PI / 180.0;
-const double Rad_to_Grad = 180.0 / PI;
-
-typedef DWORD ARR_TYPE;
-//typedef double ARR_TYPE;
-
-
-// Действия
-// 1 часовое ведение
-// 1.1 разгон до скорости
-// 1.2 движение до максимальной координаты
-// 2 наведение из нулевой позиции 
-// 2.1 разгон до максимальной скорости
-// 2.2 торможение до 0
-// 3 наведение на произвольную позицию
-// 3.1 если направление движения совпадает с текущим то:
-// 3.1.1 разгон до максимальной скорости
-// 3.1.2 торможение
-// 3.2 если направление движения не совпадает с текущим то:
-// 3.2.1 торможение до 0
-// 3.2.2 смена направления
-// 3.2.3 разгон до максимума
-// 3.2.4 торможение
-// 4 навеление на произвольную позицию с произвольной скорости в произвольную скорость
-// 4.1 если направление движения совпадает с текущим то:
-// 4.1.1 разгон до максимальной скорости
-// 4.1.2 торможение до требуемой скорости, если требуемая скорость совпадает с текущей
-// 4.1.3 торможение до нуля, если требуемая скорость не совпадает с текущей
-// 4.1.4 разгон до требуемой скорости
-// 4.2 если направление движения не совпадает с текущим то:
-// 4.2.1 торможение до 0
-// 4.2.2 смена направления
-// 4.2.3 разгон до максимума
-// 4.2.4 торможение
-
-
-typedef enum Cmd {                  // команды
-	CM_STOP,                // Остановиться (снижаем скорость до остановки)
-	CM_RUN_WITH_SPEED,      // Двигаться с заданной скоростью до окончания 
-	CM_RUN_TO_POINT,        // Двигаться до указанного угла      
-	CM_GO_TO                // наводиться на цель, движущуюся со скоростью V
-} GD_CMD;
-typedef enum State {                // состояния
-        ST_FREE,                // ожидает получения команды (значение, устанавливаемое после каждого состояния)
-	ST_STOP,                // остановлен
-	ST_ACCELERATE,          // разгоняется
-	ST_RUN,                 // движется с постоянной скоростью
-	ST_DECELERATE           // тормозит
-} GD_STATE;
-
-// очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
-typedef struct CMD_QUEUE {
-    GD_STATE    State;    
-    double      Vend;
-    double      Xend;
-} Cmd_Queue;
-
-typedef struct RR {
-
-    // Время
-    // IntervalArray
-    // |      NextWriteTo
-    // |      |      NextReadFrom
-    // |      |      | 
-    // v      v      v
-    // 0======-------=========
-    // 
-    //       окончание предыдущей операции ( исходные параметры операции)
-    //       |   промежуточное состояние
-    //       |   |   Конец операции 
-    //       |   |   |
-    //       v   v   v 
-    // -------========--------
-    // 
-    ARR_TYPE    Interval;                   // текущий интервал при расчетах. нужен для переключения на более "грубый" режим
-    ARR_TYPE    IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
-    WORD        NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
-    WORD        NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
-    WORD        DataCount;                  // количество данных в массиве.
-    //DWORD_VAL   T;
-    //ARR_TYPE    T1;                         // предыдущий интервал (оптимизация)
-
-    // команды
-    GD_CMD      Cmd;
-    GD_STATE    State;   
-    GD_STATE    RunState; 
-    int         RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
-    int         CalcDir;                    // направление вращения при просчете
-
-    Cmd_Queue   CmdQueue[CQ_SIZE];          // очередь команд
-    WORD        NextReadCmd;
-    WORD        NextWriteCmd;
-    WORD        CmdCount;
-
-    // исхoдные параметры:
-    ARR_TYPE    TimeBeg;  
-    LONG        XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
-    double      Xbeg;
-
-    // параметры указывающие на момент окончания
-    double      Vend;                       //(надо знать скорость, на которой завершится ускорение)
-    double      Xend;
-
-    // константы
-    double      K;
-    double      B;
-    double      TimerStep;
-    double      dx;
-    double      Mass;
-    double      Radius;
-    double      Length;
-    double      Reduction;
-
-} RR;
-RR rr1;
-// действия при командах
-// CM_STOP
-// 1. установить state = ST_DECELERATE
-//    задать Vend = 0.0
-//    установить NextState = ST_STOP
-//
-// CM_RUN_WITH_SPEED
-// 1. 
+extern RR rr1;
+extern RR rr2;
+extern RR rr3;
 
 
 // Глобальные переменные:
@@ -146,64 +21,55 @@ int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
 
-TCHAR szTitle[MAX_LOADSTRING];					// Текст строки заголовка
-TCHAR szWindowClass[MAX_LOADSTRING];			// имя класса главного окна
+TCHAR szTitle[MAX_LOADSTRING];                          // Текст строки заголовка
+TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса главного окна
 
 // Отправить объявления функций, включенных в этот модуль кода:
-ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
-LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+ATOM                    MyRegisterClass(HINSTANCE hInstance);
+BOOL                    InitInstance(HINSTANCE, int);
+LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
  
-
-int Run(RR * rr);
-int Acceleration(RR * rr);
-int Deceleration(RR * rr);
-int Control(RR * rr);
-int SetNextState(RR * rr);
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend );
-
-
 void Calc(HWND hWnd, HDC hdc);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-					 HINSTANCE hPrevInstance,
-					 LPTSTR    lpCmdLine,
-					 int       nCmdShow)
+                         HINSTANCE hPrevInstance,
+                         LPTSTR    lpCmdLine,
+                         int       nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// TODO: разместите код здесь.
+    // TODO: разместите код здесь.
 
-	MSG msg;
-	HACCEL hAccelTable;
+    MSG msg;
+    HACCEL hAccelTable;
 
-	// Инициализация глобальных строк
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_GUIDANCE, szWindowClass, MAX_LOADSTRING);
-	MyRegisterClass(hInstance);
+    // Инициализация глобальных строк
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_GUIDANCE, szWindowClass, MAX_LOADSTRING);
+    MyRegisterClass(hInstance);
 
-	// Выполнить инициализацию приложения:
-	if (!InitInstance (hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
-		
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
+    // Выполнить инициализацию приложения:
+    if (!InitInstance (hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
 
-	SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
-	// Цикл основного сообщения:
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
-	return (int) msg.wParam;
+    SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
+    // Цикл основного сообщения:
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    return (int) msg.wParam;
 }
 
 
@@ -223,23 +89,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEX wcex;
+        WNDCLASSEX wcex;
 
-	wcex.cbSize = sizeof(WNDCLASSEX);
+        wcex.cbSize = sizeof(WNDCLASSEX);
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GUIDANCE));
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_GUIDANCE);
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+        wcex.style			= CS_HREDRAW | CS_VREDRAW;
+        wcex.lpfnWndProc	= WndProc;
+        wcex.cbClsExtra		= 0;
+        wcex.cbWndExtra		= 0;
+        wcex.hInstance		= hInstance;
+        wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GUIDANCE));
+        wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
+        wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
+        wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_GUIDANCE);
+        wcex.lpszClassName	= szWindowClass;
+        wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-	return RegisterClassEx(&wcex);
+        return RegisterClassEx(&wcex);
 }
 
 //
@@ -254,22 +120,22 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	HWND hWnd;
+        HWND hWnd;
 
-	hInst = hInstance; // Сохранить дескриптор экземпляра в глобальной переменной
+        hInst = hInstance; // Сохранить дескриптор экземпляра в глобальной переменной
 
-	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+        hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+                CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-	if (!hWnd)
-	{
-		return FALSE;
-	}
+        if (!hWnd)
+        {
+            return FALSE;
+        }
 
-	ShowWindow(hWnd, nCmdShow);
-	UpdateWindow(hWnd);
-	hWindow = hWnd;
-	return TRUE;
+        ShowWindow(hWnd, nCmdShow);
+        UpdateWindow(hWnd);
+        hWindow = hWnd;
+        return TRUE;
 }
 
 //
@@ -284,52 +150,52 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int wmId, wmEvent;
-	PAINTSTRUCT ps;
-	HDC hdc;
-	RECT rect;
-	static int T = 0;
-	static bool k = false;
-	switch (message)
-	{
-	case WM_COMMAND:
-		wmId    = LOWORD(wParam);
-		wmEvent = HIWORD(wParam);
-		// Разобрать выбор в меню:
-		switch (wmId)
-		{
-		case IDM_ABOUT:
-			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-			break;
-		case IDM_EXIT:
-			DestroyWindow(hWnd);
-			break;
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
-		}
-		break;
-	case WM_TIMER: 
+        int wmId, wmEvent;
+        PAINTSTRUCT ps;
+        HDC hdc;
+        RECT rect;
+        static int T = 0;
+        static bool k = false;
+        switch (message)
+        {
+        case WM_COMMAND:
+                wmId    = LOWORD(wParam);
+                wmEvent = HIWORD(wParam);
+                // Разобрать выбор в меню:
+                switch (wmId)
+                {
+                case IDM_ABOUT:
+                        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                        break;
+                case IDM_EXIT:
+                        DestroyWindow(hWnd);
+                        break;
+                default:
+                        return DefWindowProc(hWnd, message, wParam, lParam);
+                }
+                break;
+        case WM_TIMER: 
 
-		switch (wParam) 
-		{ 
-		case FIRST_TIMER: 	
-			T++;
-			if(T>=360) T-=360;
-			//GetClientRect(hWnd, &rect);
-			rect.top = 100;
-			rect.bottom = 300;
-			rect.left = 100;
-			rect.right = 300;
-			//InvalidateRect(hWnd, &rect, TRUE);
-			k = true;
-		}
-		break;
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-				//LineTo(hdc, 100,100);
-		// TODO: добавьте любой код отрисовки...
+                switch (wParam) 
+                { 
+                case FIRST_TIMER: 	
+                        T++;
+                        if(T>=360) T-=360;
+                        //GetClientRect(hWnd, &rect);
+                        rect.top = 100;
+                        rect.bottom = 300;
+                        rect.left = 100;
+                        rect.right = 300;
+                        //InvalidateRect(hWnd, &rect, TRUE);
+                        k = true;
+                }
+                break;
+        case WM_PAINT:
+                hdc = BeginPaint(hWnd, &ps);
+                                //LineTo(hdc, 100,100);
+                // TODO: добавьте любой код отрисовки...
 
-				
+                                
 // 		if(k)
 // 		{
 // 			double X = 200+100*sin(T*PI/180);
@@ -338,39 +204,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // 			LineTo(hdc,(int)X, (int)Y);
 // 			k=false;
 // 		} else 
-			Calc(hWnd, hdc);	
-		EndPaint(hWnd, &ps);
-	
+                        Calc(hWnd, hdc);	
+                EndPaint(hWnd, &ps);
+        
 
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-		
-	return 0;
+                break;
+        case WM_DESTROY:
+                PostQuitMessage(0);
+                break;
+        default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+                
+        return 0;
 }
 
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
-	switch (message)
-	{
-	case WM_INITDIALOG:
-		return (INT_PTR)TRUE;
+        UNREFERENCED_PARAMETER(lParam);
+        switch (message)
+        {
+        case WM_INITDIALOG:
+                return (INT_PTR)TRUE;
 
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
-			EndDialog(hDlg, LOWORD(wParam));
-			return (INT_PTR)TRUE;
-		}
-		break;
-	}
-	return (INT_PTR)FALSE;
+        case WM_COMMAND:
+                if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+                {
+                        EndDialog(hDlg, LOWORD(wParam));
+                        return (INT_PTR)TRUE;
+                }
+                break;
+        }
+        return (INT_PTR)FALSE;
 }
 
 void Calc(HWND hWnd, HDC hdc)
@@ -407,8 +273,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.79962406 / I; //[Hm]
 
-    static DWORD SizeX = 400;
-    static DWORD SizeY = 30;
+    static DWORD SizeX = 800;
+    static DWORD SizeY = 60;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -455,10 +321,6 @@ void Calc(HWND hWnd, HDC hdc)
     POINT TA = {Px,Py};
 //    POINT VA = {Px,Py};
     POINT X0T = {Px,Py};
-       
-    //SetDCPenColor(hdc,RGB(0,200,0));
-    //MoveToEx(hdc, Px, Py - (int)(0.004166667*SizeY), NULL);
-    //LineTo(hdc, rect.right - 9, Py - (int)(0.004166667*SizeY));
 
     dt = 0.0;
     T = 0.0;
@@ -466,15 +328,9 @@ void Calc(HWND hWnd, HDC hdc)
     X = 0.0;
     V = 0.0;
     V1 = 0.0;
-    rr1.B = B;
-    rr1.K = K;
-    rr1.dx = dX;
-    rr1.TimerStep = 0.0000002;
-    rr1.Vend = 10 * Grad_to_Rad;
-    rr1.Interval = 355;
     V0 = 5.0 * Grad_to_Rad;
     double XX = 5.0 * Grad_to_Rad;
-
+/*
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
     // x = B*T*T/(1-K*T)
@@ -485,53 +341,31 @@ void Calc(HWND hWnd, HDC hdc)
     double XT = B * TC * TC / (1 - K * TC);
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
-    rr1.DataCount = 0;
-    rr1.NextWriteTo = 0;
-    rr1.NextReadFrom = 0;    
-    rr1.XaccBeg = 0;
-    rr1.Xbeg = 0;   
-    rr1.TimeBeg = 0;//(ARR_TYPE)(0.0001*BUF_SIZE/rr1.TimerStep);
-       
-    rr1.State = ST_STOP;    
-    rr1.CalcDir = 1;
-    rr1.CmdCount = 0;
-    rr1.NextReadCmd = 0;
-    rr1.NextWriteCmd = 0;
-
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 0 , 5 * Grad_to_Rad );
-    //PushCmdToQueue(&rr1, ST_RUN, 0 * Grad_to_Rad, 2 * Grad_to_Rad );
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0, 0 );
-    PushCmdToQueue(&rr1, ST_STOP, 0, 0 );
-    SetNextState(&rr1);
-   
-    do {
+*/
+    OCInit();
+    Control(&rr1);
+    Control(&rr2);
+    Control(&rr3);
+    do {        
         
-        Control(&rr1);
-        //V = 5.0*Grad_to_Rad;
-        for( i = 0; i < rr1.DataCount; i++) 
-        {            
-            T = rr1.IntervalArray[rr1.NextReadFrom] * rr1.TimerStep;
-            rr1.NextReadFrom++;
-            if(rr1.NextReadFrom >= BUF_SIZE) rr1.NextReadFrom -= BUF_SIZE;
+//         for( i = 0; i < rr1.DataCount; i++) 
+//         {
+            ProcessOC(&rr1);
+            ProcessOC(&rr2);
+            ProcessOC(&rr3);
+            T = (double)(rr1.T.Val * rr1.TimerStep);
              //V = 1.0*Grad_to_Rad;
-             
-                if(T-T1 != 0.0){
-                    X += dX;
-                    V = dX/(T-T1);
-                }else {
-                    V = 0.0;
-                }
-            //X += dX;
-//             A = (V-V1)/(T-T1);
-            //  Формула для вычисления мгновенной скорости         
-            //V2 = B * T *(2 - K * T) / ((1-K * T)*(1-K * T));
-            //V2 = B*T/(1-K*T);
+            if(T-T1 != 0.0){
+                X += dX;
+                V = dX/(T-T1);
+            }else {
+                V = 0.0;
+            }
             X0 = XX + V0*T;
-
             K3 = (int)(T*SizeX);
             if( K3 != K1)
             {
-                //Change the DC pen color                
+                //Change the DC pen color
                 SetDCPenColor(hdc,RGB(0,L,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
@@ -542,17 +376,17 @@ void Calc(HWND hWnd, HDC hdc)
                 MoveToEx(hdc, TV.x, TV.y, NULL);
                 TV.x = Px + (int)(T*SizeX);
                 TV.y = Py - (int)(V*Rad_to_Grad*SizeY);
-                if(rr1.State == ST_STOP){
+                if(rr1.RunState == ST_STOP){
                     SetDCPenColor(hdc,RGB(0,100,0));
                 }
-                if(rr1.State == ST_RUN){
+                if(rr1.RunState == ST_RUN){
                     SetDCPenColor(hdc,RGB(0,150,0));
                 }
-                if(rr1.State == ST_DECELERATE){
+                if(rr1.RunState == ST_DECELERATE){
                     SetDCPenColor(hdc,RGB(0,200,0));
                 }
-                if(rr1.State == ST_ACCELERATE){
-                    SetDCPenColor(hdc,RGB(0,255,0));                    
+                if(rr1.RunState == ST_ACCELERATE){
+                    SetDCPenColor(hdc,RGB(0,255,0));
                 }
                 LineTo(hdc, TV.x, TV.y);  
 
@@ -569,7 +403,7 @@ void Calc(HWND hWnd, HDC hdc)
                     SetDCPenColor(hdc,RGB(0,200,0));
                 }
                 if(rr1.State == ST_ACCELERATE){
-                    SetDCPenColor(hdc,RGB(0,255,0));                    
+                    SetDCPenColor(hdc,RGB(0,255,0));
                 }
                 LineTo(hdc, TV2.x, TV2.y);  
 
@@ -583,339 +417,17 @@ void Calc(HWND hWnd, HDC hdc)
                 MoveToEx(hdc, X0T.x, X0T.y, NULL);
                 X0T.x = Px + (int)(T*SizeX);
                 X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
-                LineTo(hdc, X0T.x, X0T.y);                  
+                LineTo(hdc, X0T.x, X0T.y);
                 
                 K1 = K3;
             }
             T1 = T;
             V1 = V;
-        }     
-        rr1.DataCount = 0;
+        //}     
         L+=128;
-    }while ( /*(X < 0.590) && */(rr1.State!= ST_STOP)) /*rr1.State!=ST_STOP)*/;       
+    }while ( /*(X < 0.590) && */(rr1.RunState != ST_STOP)) /*rr1.State!=ST_STOP)*/;
     //Restore original object.
     SelectObject(hdc,original);
 
 }
 
-// Время
-// IntervalArray
-// |      NextWriteTo
-// |	  |      NextReadFrom
-// |      |      | 
-// v      v      v
-// 0======-------=========
-// 
-
-
-int Run(RR * rr)
-{
-    // x = V*T
-    // T = X/V;
-    WORD k = 0;
-    WORD m = 32;
-    WORD i;
-    WORD j;
-    WORD FreeData = BUF_SIZE - rr->DataCount;  
-    double X = 0.0;
-    //X = rr->Vend * rr->TimeBeg;
-    DWORD Xb = (DWORD)(rr->Xbeg/rr->dx);
-    DWORD Xe = (DWORD)(rr->Xend/rr->dx);
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;// = 0;
-    ARR_TYPE T2 = 0;
-    ARR_TYPE e;
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
-    if(rr->Vend == 0.0){
-        if(rr->Interval > 0)
-            rr->Vend = rr->dx / (rr->Interval*rr->TimerStep);
-    }
-
-    for( i = 0; i < FreeData; i++) {       
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
-        if(k == 0) {
-            if(rr->Interval < e){
-                //if(m < 32) m++;
-                m = 32;
-            } else {
-                //if( m > 1) m--;
-                m = 1;
-            } 
-            X += rr->dx*m;
-            T2 = (ARR_TYPE)(X / (rr->Vend * rr->TimerStep));
-            rr->Interval = (T2 - T1) / m;            
-        }             
-        Xb+=rr->CalcDir;
-        T += rr->Interval;
-        if(((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-           ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
-        }
-        k++;
-        if(k >= m){
-            T = T2;
-            k = 0;
-        } 
-        rr->IntervalArray[j] = rr->TimeBeg + T;                    
-        T1 = T;            
-    }
-
-    rr->TimeBeg += T1;        
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
-}
-// разгон с текущей скорости до требуемой
-//    ARR_TYPE    TimeBeg;  
-//    DWORD       XaccBeg;                    //(желательно целое число шагов)
-
-
-int Acceleration(RR * rr)
-{
-    WORD j;        
-    WORD FreeData = BUF_SIZE - rr->DataCount;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE T2 = 0;    
-    ARR_TYPE dT = 0;
-    double X;       // временная переменная 
-    ARR_TYPE Tb = 0;  
-    double D;      
-    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
-    LONG Xe = (LONG)(rr->Xend/rr->dx);
-    double K = rr->K;
-    double B = rr->B;
-    double VKpB = 0.0; 
-    
-    double dx;
-    double a;
-    double c;
-    double d;    
-    WORD i = 0;
-    ARR_TYPE e;
-    WORD k = 0;
-    WORD m = 1;    
-    
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
-    dx = rr->dx;
-    X = rr->XaccBeg * rr->dx; 
-    d = K/(2.0 * B * rr->TimerStep);
-    c = K*d;
-    a = 4.0 * B/(K*K);   
-//     Tb = rr->TimeBeg - rr->T1;       	
-//     T1 = rr->T1;  
-    if(rr->XaccBeg > 0){
-        X = rr->XaccBeg * rr->dx; 
-        D = X *(X + a);
-        if(D >= 0.0){
-            T1 = (ARR_TYPE)((-X - sqrt(D))*d);
-        }  
-    } else T1 = 0;
-    Tb = rr->TimeBeg - T1;
-    T = T1;
-
-    // вычисление времени окончания
-    if(rr->Vend != 0.0){       
-        VKpB = rr->Vend * K + B;
-        D = B * VKpB;
-        dT = (ARR_TYPE)((-VKpB + sqrt(D))/(-K * VKpB * rr->TimerStep));
-    }
-    // оптимизировано 35 uSec (1431.5 тактов за шаг)
-    for( i = 0; i < FreeData; i++) {       
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
-        if(k == 0) {
-            if(rr->Interval < e){
-                //if(m < 32) m++;
-                m = 32;
-            } else {
-                //if( m > 1) m--;
-                m = 1;
-            } 
-            X += dx*m;
-            D = X *(X + a);
-            if(D >= 0.0){
-                T2 = (ARR_TYPE)((-X - sqrt(D))*d);
-            }                
-            rr->Interval = (T2 - T1) / m;            
-        }             
-        Xb+=rr->CalcDir;
-        T += rr->Interval;
-
-        if(((dT != 0)&&(T >= dT))||
-            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
-        }
-        k++;
-        if(k >= m){
-            T = T2;
-            k = 0;
-        } 
-        rr->IntervalArray[j] = Tb + T;                    
-        T1 = T;            
-    }    
-    rr->TimeBeg = Tb + T1;
-    rr->XaccBeg += FreeData; 
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
-}
-
-// торможение с текущей скорости до требуемой
-int Deceleration(RR * rr)
-{    
-    WORD j;        
-    WORD FreeData = BUF_SIZE - rr->DataCount;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE T2 = 0;    
-    ARR_TYPE dT = 0;
-    double X;       // временная переменная 
-    ARR_TYPE Tb = 0;  
-    double D;      
-    LONG Xb = (LONG)(rr->Xbeg/rr->dx);
-    LONG Xe = (LONG)(rr->Xend/rr->dx);
-    double K = rr->K;
-    double B = rr->B;
-    double VKpB = 0.0; 
-
-    double dx;
-    double a;
-    double c;
-    double d;    
-    WORD i = 0;
-    ARR_TYPE e;
-    WORD k = 0;
-    WORD m = 1;
-    e = (ARR_TYPE)(0.000070 / rr->TimerStep); //70us
-    dx = rr->dx;
-    X = rr->XaccBeg * rr->dx; 
-    d = K/(2.0 * B * rr->TimerStep);
-    c = K*d;
-    a = 4.0 * B/(K*K);    
-
-//     Tb = rr->TimeBeg + rr->T1;       	
-//     T1 = rr->T1;
-    X = rr->XaccBeg * rr->dx; 
-    if(rr->XaccBeg > 0){        
-        D = X *(X + a);
-        if(D >= 0.0){
-            T1 = (ARR_TYPE)((-X - sqrt(D))*d);
-        } 
-    }
-    Tb = rr->TimeBeg + T1;
-    T = T1; 
-
-
-    if(rr->Vend != 0.0){        
-        VKpB = rr->Vend * K + B;
-        dT = (ARR_TYPE)((-VKpB + sqrt(B * VKpB))/(-K * VKpB * rr->TimerStep));
-    }
-
-    for( i = 0; i < FreeData; i++) {    
-        // "грубые" вычисления
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;                                              
-        if(k == 0) {
-            if(rr->Interval < e){                
-                m = 32;
-                //if( m < 32 ) m += 8;
-            } else {
-                //if( m > 1 ) m -= 8;
-                m = 1;
-            } 
-            X -= dx*m;
-            if(X<=0.0){
-                FreeData = i;
-                SetNextState(rr);
-                break;
-            }
-            D = X *(X + a);
-            if(D >= 0.0){
-                T2 = (ARR_TYPE)((-X - sqrt(D))*d);
-            }                
-            rr->Interval = (T1 - T2) / m;
-        }             
-        Xb += rr->CalcDir;
-        T -= rr->Interval;
-        if(((dT != 0)&&(T >= dT))||
-            ((rr->CalcDir > 0)&&(Xe != 0)&&(Xb >= Xe))||
-            ((rr->CalcDir < 0)&&(Xe != 0)&&(Xb <= Xe))){
-            FreeData = i;
-            SetNextState(rr);
-            break;
-        }
-        k++;
-        if(k >= m){
-            T = T2;
-            k = 0;
-        } 
-        rr->IntervalArray[j] = Tb - T;                    
-        T1 = T;      
-    }   
-    rr->TimeBeg = Tb - T1;
-    rr->XaccBeg -= FreeData; 
-    rr->DataCount += FreeData;
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->Xbeg = Xb * rr->dx;
-    return 0;
-}
-
-int Control(RR * rr)
-{
-    while((rr->DataCount <= BUF_SIZE / 2)&&(rr->State != ST_STOP)){
-        switch(rr->State){
-        case ST_ACCELERATE:
-            Acceleration(rr);                  
-            break;
-        case ST_RUN:
-            Run(rr);
-            break;
-        case ST_DECELERATE:                
-            Deceleration(rr); 
-            break;
-        case ST_STOP:
-        case ST_FREE:
-            break;
-        }
-    }
-    return 0;
-}
-
-int SetNextState(RR * rr)
-{
-    if(rr->CmdCount > 0){
-        rr->State = rr->CmdQueue[rr->NextReadCmd].State;        
-        rr->Vend  = rr->CmdQueue[rr->NextReadCmd].Vend;
-        rr->Xend  = rr->CmdQueue[rr->NextReadCmd].Xend;
-        rr->NextReadCmd++;
-        if(rr->NextReadCmd >= CQ_SIZE)rr->NextReadCmd -= CQ_SIZE;
-        rr->CmdCount--;
-    } else {
-        rr->State = ST_STOP;
-    }
-    return 0;
-}
-
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend )
-{
-    if(rr->CmdCount < CQ_SIZE){
-        rr->CmdQueue[rr->NextWriteCmd].State = State;
-        rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-        rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
-        rr->NextWriteCmd++;
-        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
-        rr->CmdCount++;
-    } else return -1;
-}

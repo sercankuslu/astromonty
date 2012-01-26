@@ -154,9 +154,10 @@ file_126=TCPIP Stack
 file_127=TCPIP Stack
 file_128=.
 file_129=.
-file_130=TCPIP Stack
+file_130=.
 file_131=TCPIP Stack
-file_132=.
+file_132=TCPIP Stack
+file_133=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -291,6 +292,7 @@ file_129=no
 file_130=no
 file_131=no
 file_132=no
+file_133=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -424,7 +426,8 @@ file_128=no
 file_129=no
 file_130=no
 file_131=no
-file_132=yes
+file_132=no
+file_133=yes
 [FILE_INFO]
 file_000=..\Microchip\TCPIP Stack\Announce.c
 file_001=..\Microchip\TCPIP Stack\ARCFOUR.c
@@ -556,9 +559,10 @@ file_126=..\Microchip\Include\TCPIP Stack\ARCFOUR.h
 file_127=..\Microchip\Include\TCPIP Stack\SPIRTCSRAM.h
 file_128=OCTimer.h
 file_129=..\protocol.h
-file_130=..\Microchip\TCPIP Stack\BigInt_helper_elf.a
-file_131=..\Microchip\TCPIP Stack\BigInt_helper_coff.a
-file_132=..\Microchip\TCPIP Stack\TCPIP Stack Version.txt
+file_130=stdafx.h
+file_131=..\Microchip\TCPIP Stack\BigInt_helper_elf.a
+file_132=..\Microchip\TCPIP Stack\BigInt_helper_coff.a
+file_133=..\Microchip\TCPIP Stack\TCPIP Stack Version.txt
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=
