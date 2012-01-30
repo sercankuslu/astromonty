@@ -248,7 +248,11 @@ int main(void)
 	//	res = ProcessClients(0, bfr, &length);			
 	//}
 
-
+    OCInit();
+	while(1){
+		Nop();
+	}
+    
     InitializeBoard();
     // calculate CPU speed  
     {

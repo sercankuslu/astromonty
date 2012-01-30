@@ -273,8 +273,8 @@ void Calc(HWND hWnd, HDC hdc)
     //static double B = 0.79962406 / I;
     static double B = 0.79962406 / I; //[Hm]
 
-    static DWORD SizeX = 800;
-    static DWORD SizeY = 60;
+    static DWORD SizeX = 600;
+    static DWORD SizeY = 30;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -293,6 +293,8 @@ void Calc(HWND hWnd, HDC hdc)
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
     LineTo(hdc, rect.left+9, rect.top);        
     
+    DWORD Px = rect.left + 10;
+    DWORD Py = rect.bottom - 10 - 10 * SizeY ;//- (rect.bottom/4);
 
     for (DWORD i = 0; i < rect.bottom/SizeY ; i++) {
         if(i % 10 == 0){
@@ -313,8 +315,7 @@ void Calc(HWND hWnd, HDC hdc)
         LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
     }
 
-    DWORD Px = rect.left + 10;
-    DWORD Py = rect.bottom - 10 ;//- (rect.bottom/4);
+    
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
     POINT TV2 = {Px,Py};
@@ -344,6 +345,9 @@ void Calc(HWND hWnd, HDC hdc)
 */
     OCInit();
     Control(&rr1);
+
+    LONG Xbreak;
+    CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
     //Control(&rr2);
     //Control(&rr3);
     do {        
@@ -356,17 +360,19 @@ void Calc(HWND hWnd, HDC hdc)
             T = (double)(rr1.T.Val * rr1.TimerStep);
              //V = 1.0*Grad_to_Rad;
             if(T-T1 != 0.0){
-                if(rr1.RunDir >=0 )
+                if(rr1.RunDir >=0 ){
                     X += dX;
-                else 
+                    V = dX/(T-T1);
+                } else {
                     X-=dX;
-                V = dX/(T-T1);
-            }else {
+                    V = -dX/(T-T1);
+                }
+            } else {
                 V = 0.0;
             }
             X0 = XX + V0*T;
             K3 = (int)(T*SizeX);
-            if( K3 != K1)
+            //if( K3 != K1)
             {
                 //Change the DC pen color
                 SetDCPenColor(hdc,RGB(0,L,255));

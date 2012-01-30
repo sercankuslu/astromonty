@@ -88,7 +88,7 @@ typedef struct CMD_QUEUE{
     GD_STATE State;
     double Vend;
     double Xend;
-    DWORD Direction;
+    INT Direction;
     LONG RunStep; // указан номер шага, на котором начнется выполнение команды
 }Cmd_Queue;
 
@@ -134,6 +134,7 @@ typedef struct RR{
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
     int                     CalcDir;                    // направление вращения при просчете
+    LONG                    XCurCmdEnd;
     // исхoдные параметры:
     ARR_TYPE                TimeBeg;
     LONG                    XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
@@ -289,7 +290,7 @@ int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
 int Control(RR * rr);
-int RunCmd(RR * rr);
+
 int CacheNextCmd(RR * rr);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
 int ProcessTimer(BYTE id, RR * rr);
@@ -300,6 +301,8 @@ BOOL IsDisableOC(BYTE oc);
 int SetOC(BYTE oc, WORD LW);
 int ProcessOC(RR * rr);
 int SetDirection(BYTE oc, BYTE Dir);
+
+int CalculateBreakParam(RR * rr, GD_STATE State,int Direction, double Vbeg, double Xbeg, double Vend, double XLength, LONG * Xbreak);
 
 #endif
 
