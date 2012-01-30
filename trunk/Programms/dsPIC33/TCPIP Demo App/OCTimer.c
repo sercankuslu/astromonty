@@ -172,16 +172,16 @@ int OCInit(void)
         InitRR(&rr1);  
         rr1.Index = 1;
         rr1.TmrId = 2;
-        InitRR(&rr2);
-        rr2.Index = 2;
-        rr2.TmrId = 2;
-        InitRR(&rr3);
-        rr3.Index = 3;
-        rr3.TmrId = 2;
+//         InitRR(&rr2);
+//         rr2.Index = 2;
+//         rr2.TmrId = 2;
+//         InitRR(&rr3);
+//         rr3.Index = 3;
+//         rr3.TmrId = 2;
 #ifdef __C30__
         IFS1bits.U2RXIF = 1;
-        IFS1bits.U2TXIF = 1;
-        IFS0bits.U1RXIF = 1;
+        //IFS1bits.U2TXIF = 1;
+        //IFS0bits.U1RXIF = 1;
         
         // инициализация OC1
         {
@@ -209,8 +209,8 @@ int OCInit(void)
         }
         
         IFS0bits.OC1IF = 1;
-        IFS0bits.OC2IF = 1;
-        IFS1bits.OC3IF = 1;
+        //IFS0bits.OC2IF = 1;
+        //IFS1bits.OC3IF = 1;
         Timer2Big.Val = 0;
         TMR2 = 0;
         T2CONbits.TON = 1; 		// Start Timer        
@@ -282,21 +282,25 @@ int InitRR(RR * rr)
     Timer2Big.word.LW = TMR2;
     rr->TimeBeg = /* Timer2Big.Val */ + (ARR_TYPE)(0.0000 * BUF_SIZE /rr->TimerStep);
     rr->State = ST_STOP;    
-    rr->RunState = ST_RUN;
+    rr->RunState = ST_STOP;
     rr->T.Val = 0;
     rr->Interval = 0xFFFFFFFF;
     rr->CmdCount = 0;
     rr->CalcDir = 1;
-    rr->XPosition = 0xFFFFFFFF;
-    rr->NextReadCmd = 0;
+    rr->XPosition = 0;
+    rr->NextCacheCmd = 0;
     rr->NextWriteCmd = 0;
     rr->NextExecuteCmd = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
     PushCmdToQueue(rr, ST_ACCELERATE, 8.0 * Grad_to_Rad, 0, 1);
     PushCmdToQueue(rr, ST_RUN, 0.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 1);
     PushCmdToQueue(rr, ST_DECELERATE, 0, 0, 1);
-    PushCmdToQueue(rr, ST_STOP, 0, 0, 1 );
-    SetNextState(rr);
+    PushCmdToQueue(rr, ST_ACCELERATE, 8.0 * Grad_to_Rad, 0, -1);
+    PushCmdToQueue(rr, ST_RUN, 0.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(rr, ST_DECELERATE, 0, 0, -1);
+    PushCmdToQueue(rr, ST_STOP, 0, 0, -1 );
+    //RunCmd(rr);
+    CacheNextCmd(rr);
     return 0;    
 }
 int Run(RR * rr)
@@ -340,14 +344,14 @@ int Run(RR * rr)
             Xb++;
             if((Xe != 0)&&(Xb >= Xe)){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         } else {
             Xb--;
             if((Xe != 0)&&(Xb <= Xe)){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         }    
@@ -357,11 +361,13 @@ int Run(RR * rr)
             k = 0;
         } 
         rr->IntervalArray[j] = rr->TimeBeg + T;
+        rr->DataCount++;   
+        rr->CmdQueue[rr->NextCacheCmd].RunStep = Xb;
         T1 = T;            
     }
 
     rr->TimeBeg += T1;
-    rr->DataCount += FreeData;
+    //rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->XCachePos = Xb;
@@ -441,7 +447,7 @@ int Acceleration(RR * rr)
             if(((dT != 0)&&(T >= dT))||
                ((Xe != 0)&&(Xb >= Xe))){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         } else {
@@ -449,7 +455,7 @@ int Acceleration(RR * rr)
             if(((dT != 0)&&(T >= dT))||
                ((Xe != 0)&&(Xb <= Xe))){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         }    
@@ -459,11 +465,13 @@ int Acceleration(RR * rr)
             k = 0;
         } 
         rr->IntervalArray[j] = Tb + T;
+        rr->DataCount++;   
+        rr->CmdQueue[rr->NextCacheCmd].RunStep = Xb;
         T1 = T;
     }    
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
-    rr->DataCount += FreeData;
+    //rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->XCachePos = Xb;
@@ -531,7 +539,7 @@ int Deceleration(RR * rr)
             X -= dx*m;
             if(X<=0.0){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
             D = X *(X + a);
@@ -546,7 +554,7 @@ int Deceleration(RR * rr)
             if(((dT != 0)&&(T >= dT))||
                 ((Xe != 0)&&(Xb >= Xe))){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         } else {
@@ -554,7 +562,7 @@ int Deceleration(RR * rr)
             if(((dT != 0)&&(T >= dT))||
                ((Xe != 0)&&(Xb <= Xe))){
                 FreeData = i;
-                SetNextState(rr);
+                CacheNextCmd(rr);
                 break;
             }
         }
@@ -564,11 +572,13 @@ int Deceleration(RR * rr)
             k = 0;
         } 
         rr->IntervalArray[j] = Tb - T;
+		rr->DataCount++;   
+        rr->CmdQueue[rr->NextCacheCmd].RunStep = Xb;
         T1 = T;      
     }   
     rr->TimeBeg = Tb - T1;
     rr->XaccBeg -= FreeData; 
-    rr->DataCount += FreeData;
+    //rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->XCachePos = Xb;    
@@ -595,25 +605,39 @@ int Control(RR * rr)
     return 0;
 }
 
-int SetNextState(RR * rr)
-{
-    WORD CurrentCmd = 0;
-    if(rr->CmdCount > 0){
-        rr->State = rr->CmdQueue[rr->NextReadCmd].State;
-        rr->Vend  = rr->CmdQueue[rr->NextReadCmd].Vend;
-        rr->Xend  = rr->CmdQueue[rr->NextReadCmd].Xend;
-        if(rr->NextReadCmd > 0) {
-            CurrentCmd = rr->NextReadCmd - 1;
-        } else {
-            if(rr->CmdCount > 0){
-                CurrentCmd = CQ_SIZE - 1;
-            }
-        }
-        rr->CmdQueue[CurrentCmd].RunStep = rr->XCachePos;
-        rr->NextReadCmd++;
-        if(rr->NextReadCmd >= CQ_SIZE)rr->NextReadCmd -= CQ_SIZE;
-        //rr->CmdCount--;
+int CacheNextCmd(RR * rr)
+{    
+    if(rr->CmdCount > 0){           
+        rr->State = rr->CmdQueue[rr->NextCacheCmd].State;
+        rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
+        rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend; 
+        rr->NextCacheCmd++;
+        if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;
     } else {
+        rr->State = ST_STOP;
+    }
+    return 0;
+}
+
+int SetRunState(RR * rr)
+{         
+    rr->RunDir = rr->CmdQueue[rr->NextExecuteCmd].Direction;
+    rr->RunState = rr->CmdQueue[rr->NextExecuteCmd].State;
+    if(rr->RunDir>=0){ // устанавливаем направление вращения
+        SetDirection(rr->Index,1);
+    } else {
+        SetDirection(rr->Index,0);
+    }
+    return 0;
+}
+
+int RunCmd(RR * rr)
+{    
+    if(rr->CmdCount > 0){
+        rr->State = rr->CmdQueue[rr->NextCacheCmd].State;
+        rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
+        rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend;
+	} else {
         rr->State = ST_STOP;
     }
     return 0;
@@ -626,11 +650,22 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
         rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
         rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
         rr->CmdQueue[rr->NextWriteCmd].Direction = Direction;
-            if(Xend != 0) {
-            rr->CmdQueue[rr->NextWriteCmd].RunStep = (LONG) (Xend / rr->dx);
-        } else {
-            rr->CmdQueue[rr->NextWriteCmd].RunStep = 0;
-        }
+        if(Xend>0.0){
+            rr->CmdQueue[rr->NextWriteCmd].RunStep = (LONG)(Xend/rr->dx);
+        } else
+        switch (State){
+            case ST_STOP:
+                rr->CmdQueue[rr->NextWriteCmd].RunStep = 0;
+                break;
+            case ST_ACCELERATE:
+                break;
+            case ST_RUN:
+                break;
+            case ST_DECELERATE:
+                break;
+            default:
+                break;
+        }            
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
         rr->CmdCount++;
@@ -641,6 +676,7 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
 int ProcessOC(RR * rr)
 {
     DWORD Timer = 0;
+    WORD tmpcmd;
     if(rr->DataCount>0){
         if(rr->DataCount <= BUF_SIZE_2) {
 #ifdef __C30__
@@ -673,18 +709,34 @@ int ProcessOC(RR * rr)
     if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){     
         EnableOC(rr->Index);
     }
-    rr->XPosition+=(rr->RunDir>=0)?1:-1;  
-    if(rr->CmdQueue[rr->NextExecuteCmd].RunStep == rr->XPosition){
-        if(rr->CmdCount > 0) rr->CmdCount--;
-        rr->NextExecuteCmd++;
-        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
-        rr->RunDir = rr->CmdQueue[rr->NextExecuteCmd].Direction;
-        if(rr->RunDir>0){ // устанавливаем направление вращения
-            SetDirection(rr->Index,1);
-        } else {
-            SetDirection(rr->Index,0);
+    tmpcmd = rr->NextExecuteCmd + 1;
+    if(tmpcmd >= CQ_SIZE) tmpcmd -= CQ_SIZE;    
+    if(rr->RunDir >= 0){
+        rr->XPosition++;
+        if((rr->XPosition < rr->CmdQueue[tmpcmd].RunStep) && 
+           (rr->XPosition >= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){            
+            SetRunState(rr);
+        } else {            
+            if(rr->XPosition >= rr->CmdQueue[tmpcmd].RunStep){
+                rr->NextExecuteCmd = tmpcmd;
+                SetRunState(rr);
+                if(rr->CmdCount > 0) rr->CmdCount--;
+            }
         }
-    }
+        
+    } else {
+        rr->XPosition--;
+        if((rr->XPosition > rr->CmdQueue[tmpcmd].RunStep) && 
+            (rr->XPosition <= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){            
+                SetRunState(rr);
+        } else {            
+            if(rr->XPosition <= rr->CmdQueue[tmpcmd].RunStep){
+                rr->NextExecuteCmd = tmpcmd;
+                SetRunState(rr);
+                if(rr->CmdCount > 0) rr->CmdCount--;
+            }
+        }
+    }    
     if(rr->DataCount > 0) rr->DataCount--;
     return 0;
 }

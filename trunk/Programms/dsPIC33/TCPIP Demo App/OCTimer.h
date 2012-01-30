@@ -123,7 +123,7 @@ typedef struct RR{
     GD_STATE                RunState;
 
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
-    WORD                    NextReadCmd;
+    WORD                    NextCacheCmd;
     WORD                    NextWriteCmd;
     WORD                    NextExecuteCmd;
     WORD                    CmdCount;
@@ -289,7 +289,8 @@ int Run(RR * rr);
 int Acceleration(RR * rr);
 int Deceleration(RR * rr);
 int Control(RR * rr);
-int SetNextState(RR * rr);
+int RunCmd(RR * rr);
+int CacheNextCmd(RR * rr);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
 int ProcessTimer(BYTE id, RR * rr);
 DWORD GetBigTmrValue(BYTE id);

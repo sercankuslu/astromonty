@@ -344,19 +344,22 @@ void Calc(HWND hWnd, HDC hdc)
 */
     OCInit();
     Control(&rr1);
-    Control(&rr2);
-    Control(&rr3);
+    //Control(&rr2);
+    //Control(&rr3);
     do {        
         
 //         for( i = 0; i < rr1.DataCount; i++) 
 //         {
             ProcessOC(&rr1);
-            ProcessOC(&rr2);
-            ProcessOC(&rr3);
+            //ProcessOC(&rr2);
+            //ProcessOC(&rr3);
             T = (double)(rr1.T.Val * rr1.TimerStep);
              //V = 1.0*Grad_to_Rad;
             if(T-T1 != 0.0){
-                X += dX;
+                if(rr1.RunDir >=0 )
+                    X += dX;
+                else 
+                    X-=dX;
                 V = dX/(T-T1);
             }else {
                 V = 0.0;
@@ -390,22 +393,22 @@ void Calc(HWND hWnd, HDC hdc)
                 }
                 LineTo(hdc, TV.x, TV.y);  
 
-                MoveToEx(hdc, TV2.x, TV2.y, NULL);
-                TV2.x = Px + (int)(T*SizeX);
-                TV2.y = Py - (int)(V2*Rad_to_Grad*SizeY);
-                if(rr1.State == ST_STOP){
-                    SetDCPenColor(hdc,RGB(0,100,0));
-                }
-                if(rr1.State == ST_RUN){
-                    SetDCPenColor(hdc,RGB(0,150,0));
-                }
-                if(rr1.State == ST_DECELERATE){
-                    SetDCPenColor(hdc,RGB(0,200,0));
-                }
-                if(rr1.State == ST_ACCELERATE){
-                    SetDCPenColor(hdc,RGB(0,255,0));
-                }
-                LineTo(hdc, TV2.x, TV2.y);  
+//                 MoveToEx(hdc, TV2.x, TV2.y, NULL);
+//                 TV2.x = Px + (int)(T*SizeX);
+//                 TV2.y = Py - (int)(V2*Rad_to_Grad*SizeY);
+//                 if(rr1.State == ST_STOP){
+//                     SetDCPenColor(hdc,RGB(0,100,0));
+//                 }
+//                 if(rr1.State == ST_RUN){
+//                     SetDCPenColor(hdc,RGB(0,150,0));
+//                 }
+//                 if(rr1.State == ST_DECELERATE){
+//                     SetDCPenColor(hdc,RGB(0,200,0));
+//                 }
+//                 if(rr1.State == ST_ACCELERATE){
+//                     SetDCPenColor(hdc,RGB(0,255,0));
+//                 }
+//                 LineTo(hdc, TV2.x, TV2.y);  
 
                 SetDCPenColor(hdc,RGB(255,0,0));
                 MoveToEx(hdc, TA.x, TA.y, NULL);
@@ -425,7 +428,7 @@ void Calc(HWND hWnd, HDC hdc)
             V1 = V;
         //}     
         L+=128;
-    }while ( /*(X < 0.590) && */(rr1.RunState != ST_STOP)) /*rr1.State!=ST_STOP)*/;
+    }while ((rr1.RunState != ST_STOP)||(rr1.State != ST_STOP));
     //Restore original object.
     SelectObject(hdc,original);
 
