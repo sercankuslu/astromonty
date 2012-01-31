@@ -302,7 +302,7 @@ int SetOC(BYTE oc, WORD LW);
 int ProcessOC(RR * rr);
 int SetDirection(BYTE oc, BYTE Dir);
 
-int CalculateBreakParam(RR * rr, GD_STATE State,int Direction, double Vbeg, double Xbeg, double Vend, double XLength, LONG * Xbreak);
+int CalculateBreakParam(RR * rr, LONG * Xbreak);
 
 #endif
 

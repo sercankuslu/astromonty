@@ -347,7 +347,7 @@ void Calc(HWND hWnd, HDC hdc)
     Control(&rr1);
 
     LONG Xbreak;
-    CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
+    //CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
     //Control(&rr2);
     //Control(&rr3);
     do {        
@@ -372,7 +372,7 @@ void Calc(HWND hWnd, HDC hdc)
             }
             X0 = XX + V0*T;
             K3 = (int)(T*SizeX);
-            //if( K3 != K1)
+            if( K3 != K1)
             {
                 //Change the DC pen color
                 SetDCPenColor(hdc,RGB(0,L,255));
