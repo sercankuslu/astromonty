@@ -294,10 +294,12 @@ int InitRR(RR * rr)
     rr->NextWriteCmd = 0;
     rr->NextExecuteCmd = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-    PushCmdToQueue(rr, ST_ACCELERATE, 10.0 * Grad_to_Rad, 2.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_ACCELERATE, 3.0 * Grad_to_Rad, 2.0 * Grad_to_Rad, 1);
     PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(rr, ST_ACCELERATE, 10.0 * Grad_to_Rad, 2.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(rr, ST_ACCELERATE, 4.0 * Grad_to_Rad, -2.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, -6.0 * Grad_to_Rad, -1);
+    //PushCmdToQueue(rr, ST_ACCELERATE, 4.0 * Grad_to_Rad, -8.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, -8.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_RUN, 8.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 3.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 5.0 * Grad_to_Rad, 2.0 * Grad_to_Rad, 1);
@@ -529,9 +531,10 @@ int Deceleration(RR * rr)
                 X -= dx;
             }             
             if(X<=0.0){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
+                //X=0.0;
+                 FreeData = i;
+                 CacheNextCmd(rr);
+                 break;
             }
             D = X *(X + a);
             if(D >= 0.0){
@@ -893,6 +896,7 @@ int CalculateBreakParam(RR * rr, LONG * Xbreak)
     double c = rr->K * d;
     double a = 4.0 * rr->B/(rr->K * rr->K);   
     double T2;
+    double XmX;
 
     if(rr->CmdCount > 0){
         if(rr->NextWriteCmd > 0){
@@ -906,6 +910,7 @@ int CalculateBreakParam(RR * rr, LONG * Xbreak)
 
     switch (rr->CmdQueue[rr->NextWriteCmd].State) {
         case ST_ACCELERATE:
+        //case ST_DECELERATE:
             if(Vbeg!=0.0){
                 VKpB = Vbeg * rr->K + rr->B;
                 D = rr->B * VKpB;
@@ -920,50 +925,37 @@ int CalculateBreakParam(RR * rr, LONG * Xbreak)
                 Xe = (LONG)((rr->B * dTe * dTe) / ((1 - rr->K * dTe)*rr->dx));
             } else Xe = 0;
 
-            // количество шагов на которое сдвинулись
             dX = Xe - Xb;
-            dX2 = (LONG)((Xend - Xbeg)/rr->dx);
-
-            if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){
-                // значит мы двигаемся от меньших к большим
-                if (dX2 < dX) { 
-                    // если координата перемещения меньше, чем координата при заданной скорости                        
-                    (*Xbreak) = (LONG)((Xend)/rr->dx);
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
-
-                    XX = Xb * rr->dx + (Xend - Xbeg);
-                    D = XX *(XX + a);
-                    if(D >= 0.0){
-                        T2 = ((-XX - sqrt(D))*d);
-                    }
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = (rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
-                } else {
-                    // если координата перемещения больше, чем координата при заданной скорости                        
-                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) + dX;
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg + dX * rr->dx;
+            if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){   
+                // количество шагов на которое сдвинулись                
+                XmX = Xend - Xbeg;                
+            } else {                                
+                XmX = Xbeg - Xend;
+            }
+            //if(XmX < 0) XmX = -XmX;
+            dX2 = (LONG)(XmX/rr->dx);                
+            
+            if (dX2 < dX) { 
+                // если координата перемещения меньше, чем координата при заданной скорости                        
+                (*Xbreak) = (LONG)((Xend)/rr->dx);
+                rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
+                
+                XX = Xb * rr->dx + XmX;
+                D = XX *(XX + a);
+                if(D >= 0.0){
+                    T2 = ((-XX - sqrt(D))*d);
                 }
+                rr->CmdQueue[rr->NextWriteCmd].Vend = (rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
             } else {
-                // значит мы двигаемся от больших к меньшим 
-                if (dX2 < dX) { 
-                    // если координата перемещения меньше, чем координата при заданной скорости                        
-                    (*Xbreak) = (LONG)((Xend)/rr->dx);
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
-
-                    XX = Xb * rr->dx + (Xbeg - Xend);
-                    D = XX *(XX + a);
-                    if(D >= 0.0){
-                        T2 = ((-XX - sqrt(D))*d);
-                    }
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = (rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
+                // если координата перемещения больше, чем координата при заданной скорости  
+                if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){
+                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) + dX;                    
+                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg + dX * rr->dx;
                 } else {
-                    // если координата перемещения больше, чем координата при заданной скорости                        
                     (*Xbreak) = ((LONG)(Xbeg / rr->dx)) - dX;
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
                     rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg - dX * rr->dx;
                 }
-               
-            }
+            }            
             break;
         case ST_DECELERATE:
             if(Vbeg!=0.0){
@@ -982,66 +974,45 @@ int CalculateBreakParam(RR * rr, LONG * Xbreak)
 
             // количество шагов на которое сдвинулись
             dX = Xb - Xe;
-            dX2 = (LONG)((Xend - Xbeg)/rr->dx);
-
-            if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){
-                // значит мы двигаемся от меньших к большим
-                if (dX2 < dX) { 
-                    // если координата перемещения меньше, чем координата при заданной скорости                        
-                    (*Xbreak) = (LONG)((Xend)/rr->dx);
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
-
-                    XX = Xb * rr->dx - (Xend - Xbeg);
-                    D = XX *(XX + a);
-                    if(D >= 0.0){
-                        T2 = ((-XX - sqrt(D))*d);
-                    }
-                    rr->CmdQueue[rr->NextWriteCmd].Vend =(rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
-                } else {
-                    // если координата перемещения больше, чем координата при заданной скорости                        
-                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) + dX;
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg + dX * rr->dx;
+            if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){   
+                // количество шагов на которое сдвинулись                
+                XmX = Xend - Xbeg;
+                dX2 = (LONG)(XmX/rr->dx);                
+            } else {                                
+                XmX = Xbeg - Xend;
+                dX2 = (LONG)(XmX/rr->dx);                
+            }
+            // значит мы двигаемся от меньших к большим
+            if (dX2 < dX) { 
+                // если координата перемещения меньше, чем координата при заданной скорости                        
+                (*Xbreak) = (LONG)((Xend)/rr->dx);
+                XX = Xb * rr->dx - XmX;
+                D = XX *(XX + a);
+                if(D >= 0.0){
+                    T2 = ((-XX - sqrt(D))*d);
                 }
-            } else {
-                // значит мы двигаемся от больших к меньшим 
-                if (dX2 < dX) { 
-                    // если координата перемещения меньше, чем координата при заданной скорости                        
-                    (*Xbreak) = (LONG)((Xend)/rr->dx);
-                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
-
-                    XX = Xb * rr->dx + (Xbeg - Xend);
-                    D = XX *(XX + a);
-                    if(D >= 0.0){
-                        T2 = ((-XX - sqrt(D))*d);
-                    }
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = (rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
-                } else {
-                    // если координата перемещения больше, чем координата при заданной скорости                        
-                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) - dX;
-                    rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
+                rr->CmdQueue[rr->NextWriteCmd].Vend =(rr->B * T2*(2-rr->K*T2))/((1 - rr->K * T2)* (1 - rr->K * T2)); // вычислить скорость  V = BT/(1-KT)  T = 
+            }else {
+                if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){
+                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) + dX;                    
+                    rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg + dX * rr->dx;              
+                } else {                
+                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) - dX;                    
                     rr->CmdQueue[rr->NextWriteCmd].Xend = Xbeg - dX * rr->dx;
                 }
-
             }
             break;
-        case ST_RUN: /*
+        case ST_RUN: 
             if(rr->CmdCount == 0) {
                 return -1;  // это ошибка: перед командой ST_RUN должна быть еще команда
                 // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
             } else {
-                if(rr->NextWriteCmd > 1){
-                    LastCmd = rr->NextWriteCmd - 1;
-                } else {
-                    LastCmd = CQ_SIZE - 1;
-                }
-                rr->CmdQueue[rr->NextWriteCmd].Vend = rr->CmdQueue[LastCmd].Vend;
             }
-            if(Direction >=0 ){
+            if(rr->CmdQueue[rr->NextWriteCmd].Direction >=0 ){
                 (*Xbreak) = (LONG)((Xbeg + Xend)/rr->dx);
             } else {
                 (*Xbreak) = (LONG)((Xbeg - Xend)/rr->dx);
-            }*/
+            }
             break;
         default:
             break;
