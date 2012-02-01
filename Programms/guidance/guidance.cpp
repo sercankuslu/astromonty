@@ -241,6 +241,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void Calc(HWND hWnd, HDC hdc)
 {
+
     static double A = 0.0; //ускорение в радианах в сек за сек
     static double A1 = 0.0; //ускорение в радианах в сек за сек
     static double A2 = 0.0; //ускорение в радианах в сек за сек
@@ -263,18 +264,10 @@ void Calc(HWND hWnd, HDC hdc)
     DWORD i = 0;
     BYTE L = 255;
     RECT rect;
-    static double Mass = 250.0f;
-    static double Radius = 0.50f;
-    static double Length = 3.0f;
-    static double Reduction = 360.0f;
-    static double I = ((Mass*Radius*Radius/4) + (Mass*Length*Length/12))/Reduction; 
-    static double K = (-0.000349812 * 200.0 *  180.0/PI )/I; //[Hm/Hz]
-    //static double K = (-0.000154286 * 200 * 180/PI)/I;
-    //static double B = 0.79962406 / I;
-    static double B = 0.79962406 / I; //[Hm]
+    
 
-    static DWORD SizeX = 600;
-    static DWORD SizeY = 30;
+    static DWORD SizeX = 100;
+    static DWORD SizeY = 10;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -294,26 +287,36 @@ void Calc(HWND hWnd, HDC hdc)
     LineTo(hdc, rect.left+9, rect.top);        
     
     DWORD Px = rect.left + 10;
-    DWORD Py = rect.bottom - 10 - 10 * SizeY ;//- (rect.bottom/4);
+    DWORD Py = rect.bottom - 10 - 30 * SizeY ;//- (rect.bottom/4);
 
+    
     for (DWORD i = 0; i < rect.bottom/SizeY ; i++) {
         if(i % 10 == 0){
             SetDCPenColor(hdc,RGB(0,0,0));
+            MoveToEx(hdc, rect.left + 10, rect.bottom - 10 - (int)(i*SizeY), NULL);
+            LineTo(hdc,   rect.right -10, rect.bottom - 10 - (int)(i*SizeY) );  
         } else {
             SetDCPenColor(hdc,RGB(200,200,200));
-        }
-        MoveToEx(hdc, rect.left + 10, rect.bottom - 10 - (int)(i*SizeY), NULL);
-        LineTo(hdc,   rect.right -10, rect.bottom - 10 - (int)(i*SizeY) );  
-    }
+            if(SizeY >= 10) {
+                MoveToEx(hdc, rect.left + 10, rect.bottom - 10 - (int)(i*SizeY), NULL);
+                LineTo(hdc,   rect.right -10, rect.bottom - 10 - (int)(i*SizeY) );  
+            }
+        }       
+    }   
     for (DWORD i = 0; i < rect.right*10/(SizeX) ; i++) {
         if(i % 10 == 0){
             SetDCPenColor(hdc,RGB(0,0,0));
+            MoveToEx(hdc, rect.left + 10 + (int)(i*SizeX/10), rect.bottom - 10, NULL);
+            LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
         } else {
             SetDCPenColor(hdc,RGB(200,200,200));
-        }
-        MoveToEx(hdc, rect.left + 10 + (int)(i*SizeX/10), rect.bottom - 10, NULL);
-        LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
+            if(SizeX >= 20){
+                MoveToEx(hdc, rect.left + 10 + (int)(i*SizeX/10), rect.bottom - 10, NULL);
+                LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
+            }
+        }        
     }
+    
 
     
     POINT TX = {Px,Py};
@@ -375,10 +378,22 @@ void Calc(HWND hWnd, HDC hdc)
             if( K3 != K1)
             {
                 //Change the DC pen color
-                SetDCPenColor(hdc,RGB(0,L,255));
+                //SetDCPenColor(hdc,RGB(0,L,255));
                 MoveToEx(hdc, TX.x, TX.y, NULL);
                 TX.x = Px + (int)(T*SizeX);
                 TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
+                if(rr1.RunState == ST_STOP){
+                    SetDCPenColor(hdc,RGB(0,100,100));
+                }
+                if(rr1.RunState == ST_RUN){
+                    SetDCPenColor(hdc,RGB(0,200,200));
+                }
+                if(rr1.RunState == ST_DECELERATE){
+                    SetDCPenColor(hdc,RGB(0,150,150));
+                }
+                if(rr1.RunState == ST_ACCELERATE){
+                    SetDCPenColor(hdc,RGB(0,255,255));
+                }
                 LineTo(hdc, TX.x, TX.y);  
 
                 
@@ -389,10 +404,10 @@ void Calc(HWND hWnd, HDC hdc)
                     SetDCPenColor(hdc,RGB(0,100,0));
                 }
                 if(rr1.RunState == ST_RUN){
-                    SetDCPenColor(hdc,RGB(0,150,0));
+                    SetDCPenColor(hdc,RGB(0,200,0));
                 }
                 if(rr1.RunState == ST_DECELERATE){
-                    SetDCPenColor(hdc,RGB(0,200,0));
+                    SetDCPenColor(hdc,RGB(0,150,0));
                 }
                 if(rr1.RunState == ST_ACCELERATE){
                     SetDCPenColor(hdc,RGB(0,255,0));
@@ -416,11 +431,11 @@ void Calc(HWND hWnd, HDC hdc)
 //                 }
 //                 LineTo(hdc, TV2.x, TV2.y);  
 
-                SetDCPenColor(hdc,RGB(255,0,0));
-                MoveToEx(hdc, TA.x, TA.y, NULL);
-                TA.x = Px + (int)(T*SizeX);
-                TA.y = Py - (int)(A*Rad_to_Grad*SizeY/30)- (rect.bottom/2);
-                LineTo(hdc, TA.x, TA.y);  
+//                 SetDCPenColor(hdc,RGB(255,0,0));
+//                 MoveToEx(hdc, TA.x, TA.y, NULL);
+//                 TA.x = Px + (int)(T*SizeX);
+//                 TA.y = Py - (int)(A*Rad_to_Grad*SizeY/30)- (rect.bottom/2);
+//                 LineTo(hdc, TA.x, TA.y);  
 
                 SetDCPenColor(hdc,RGB(200,200,0));
                 MoveToEx(hdc, X0T.x, X0T.y, NULL);
