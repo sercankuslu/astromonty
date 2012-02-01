@@ -64,8 +64,8 @@ typedef struct OC_TIMER_TYPE{
 #define CQ_SIZE 10
 
 //static double Accelerate[ACCELERATE_SIZE];
-#define Grad_to_Rad PI / 180.0
-#define Rad_to_Grad 180.0 / PI
+#define Grad_to_Rad 0.017453292519943295
+#define Rad_to_Grad 57.295779513082323
 
 typedef DWORD ARR_TYPE;
 
@@ -154,6 +154,8 @@ typedef struct RR{
     double Radius;
     double Length;
     double Reduction;
+    WORD StepPerTurn;
+    WORD uStepPerStep;
     BYTE Index;
     BYTE TmrId;
 }RR;
@@ -302,7 +304,7 @@ int SetOC(BYTE oc, WORD LW);
 int ProcessOC(RR * rr);
 int SetDirection(BYTE oc, BYTE Dir);
 
-int CalculateBreakParam(RR * rr, LONG * Xbreak);
+int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
 
 #endif
 
