@@ -980,3 +980,148 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
     }
     return 0;
 }
+
+static int JuliantoDate(double JulianDate,int& CalendarDate, int& CalendarHour)
+//*-----------------------------------------------------------------------
+//*
+//*     Object :
+//*     Conversion		Julian date ---> Calendar date    (Meeus formular).
+//*
+//*     Input :
+//*     JulianDate      julian date (real double precision).
+//*
+//*     Ouput :
+//*     CalendarDate    calendar date (integer).  
+//*						julian calendar before 1582 october 15
+//*						gregorian calendar after.
+//*						code: *yyyymmdd (* sign).
+//*     CalendarHour    hour (integer). 
+//*						code: hhmmss.
+//*
+//*-----------------------------------------------------------------------
+{
+	//implicit double precision (a-h,o-z)
+	int day;
+	int month;
+	int year;
+	CalendarDate=0;
+	CalendarHour=0;
+	if (JulianDate < 0) return -1;
+	double t = JulianDate + 0.5 / 86400.0 + 0.5;	
+	double z = (int)(t);
+	double f = t - z;
+	double a;
+	double x;
+	if (z < 2299161.0) {
+		a = z;
+	}
+	else {
+		x = (int)((z - 1867216.25)/36524.25);
+		a = z + 1.0 + x - (int)(x / 4.0);
+	}
+	double b = a + 1524.0;
+	double c = (int)((b - 122.1) / 365.25);
+	double d = (int)(365.25 * c);
+	double e = (int)((b - d) / 30.6001);
+	day = (int)b - (int)d - (int)(30.6001 * e);
+	month = (int)(e - 1.0);
+	if (e < 13.5) {
+		month = (int)(e - 1.0);
+	}
+	else {
+		month = (int)(e - 13.0);
+	}
+	if (month < 3){
+		year = (int)(c - 4715.0);
+	}
+	else {
+		year = (int)(c - 4716.0);
+	}	
+	int is = 1;
+	if (year < 0) is = -1;
+	CalendarDate = ((abs(year) * 100 + month) * 100 + day) * is;
+	f = f * 24.0;
+	int ih = (int)f;
+	f = (f - ih)*60.0;
+	int im = (int)f;
+	f = (f - im)*60.0;
+	is = (int)f;
+	CalendarHour = (ih * 100 + im) * 100 + is;
+	return 0;
+}
+
+static int DateToJulian (int CalendarDate, int CalendarHour, double& JulianDate)
+// *-----------------------------------------------------------------------
+// *
+// *     Object :
+// *     Conversion   Calendar date -> Julian date    (Meeus formular).
+// *
+// *     Input :
+// *     CalendarDate   calendar date gregorian/julian (integer).
+// *					julian calendar before 1582 october 15
+// *					gregorian calendar after.
+// *					code: *yyyymmdd (* sign).
+// *     CalendarHour	hour (integer).
+// *					code: hhmmss.
+// *
+// *     Output
+// *     JulianDate		julian date (real double precision).
+// *
+// *-----------------------------------------------------------------------
+{
+	int day,month,year;
+	int lm[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+
+	JulianDate = 0.0;
+	year = CalendarDate/10000;
+	if ((year < -4713) || (year > 5000)) return -1;
+	int kdate = abs(CalendarDate) - abs(year)*10000;
+	month = kdate / 100;
+	if ((month < 1)|| (month > 12)) return -1;
+	day = kdate - month * 100;
+	lm[2] = 28;
+	int ncent;
+	if ((year % 4) == 0) {
+		lm[2] = 29;
+		if (year > 1582) {
+			ncent = year/100;
+			if (((year % 100) == 0)||((ncent % 4) != 0)) {
+				lm[2]=28;
+			}
+		}
+	}
+	if ((day < 1)|| (day > lm[month])) return -1;
+	int is = CalendarHour;
+	int ih = CalendarHour/10000;
+	if ((ih < 0)||(ih > 24)) return -1;
+	is = is - ih * 10000;
+	int im = is / 100;
+	if ((im < 0)||(im > 60)) return -1;
+	is = is - im * 100;
+	if ((is < 0)||(is > 60)) return -1;
+	double a=0.0;
+	double b=0.0;
+	double c=0.0;
+	int y;
+	int m;
+	if (month > 2) {
+		y = year;
+		m = month;
+	}
+	else {
+		y=year-1;
+		m=month + 12;
+	}	
+	if (y < 0.0){
+		c=-0.75;
+	}
+	else {
+		if (CalendarDate > 15821015) {
+			a=(int)(y/100.0);
+			b=2.0 - a + (int)(a/4.0);
+		}
+	}
+	JulianDate = (int)(365.25*y + c) + (int)(30.6001 * ( m + 1)) + day 
+		+ (double)(ih)/24.0 + (double)(im)/1440.0 + (double)(is)/86400.0 + 1720994.5 + b;
+	return 0;
+}
