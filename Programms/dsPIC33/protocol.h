@@ -1,6 +1,9 @@
 #ifndef __PROTOCOL_H_
 #define __PROTOCOL_H_
+#include "..\guidance\stdafx.h"
+#ifdef __C30__
 #include "TCPIP Stack/TCPIP.h"
+#endif
 // 
 #define STR_OK                              0
 #define STR_NEED_ANSWER                     1
@@ -75,6 +78,7 @@
 */
 #define MEM_BUFFER_LEN 64
 #define MAX_ATTRIBUTE 10
+
 typedef BYTE ST_ATTRIBUTE_TYPE;
 typedef struct ST_ATTRIBUTE {
     ST_ATTRIBUTE_TYPE   type;
@@ -86,6 +90,13 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 #define OUT_BUFFER 1
 #define FALSE   0
 #define TRUE    1
+
+#ifdef __C30__
+typedef struct {
+    char NetBIOSName[16];
+
+} AppConfig;
+#endif
 
 
 

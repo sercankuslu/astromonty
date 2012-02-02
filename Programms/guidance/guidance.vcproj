@@ -191,6 +191,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\dsPIC33\protocol.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -222,6 +234,10 @@
 			</File>
 			<File
 				RelativePath="..\dsPIC33\TCPIP Demo App\OCTimer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\dsPIC33\protocol.h"
 				>
 			</File>
 			<File

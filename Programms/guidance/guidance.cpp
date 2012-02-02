@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
+#include "..\dsPIC33\protocol.h"
 
 
 #define MAX_LOADSTRING 100
@@ -13,7 +14,6 @@
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
-
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
@@ -261,7 +261,7 @@ void Calc(HWND hWnd, HDC hdc)
 
     int K1 = -1;
     int K3 = -1;
-    DWORD i = 0;
+    //DWORD i = 0;
     BYTE L = 255;
     RECT rect;
     
@@ -316,13 +316,26 @@ void Calc(HWND hWnd, HDC hdc)
             }
         }        
     }
+//     WORD Year;
+//     BYTE Month;
+//     BYTE Day;
+//     BYTE DayOfWeak;
+//     BYTE Hour;
+//     BYTE Min;
+//     BYTE Sec;
+//     double uSec;
+    DateTime GDate = {2012,2,2,4,13,02,00,0};
+    DateTime GDate1 = {0,0,0,0,0,0,0,0};
+    int JDN;
+    double JD;
     
-
+    GDateToJD(GDate, &JDN, &JD);
+    JDToGDate(JD, &GDate1);
     
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
-    POINT TV2 = {Px,Py};
-    POINT TA = {Px,Py};
+    //POINT TV2 = {Px,Py};
+    //POINT TA = {Px,Py};
 //    POINT VA = {Px,Py};
     POINT X0T = {Px,Py};
 
@@ -349,7 +362,7 @@ void Calc(HWND hWnd, HDC hdc)
     OCInit();
     Control(&rr1);
 
-    LONG Xbreak;
+    //LONG Xbreak;
     //CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
     //Control(&rr2);
     //Control(&rr3);

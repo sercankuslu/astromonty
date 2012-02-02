@@ -26,34 +26,18 @@
 #define OCT_USE_STEPS_LEFT          0x08 // 1 - используем StepsLeft(). 0 - Продолжающееся движение до достижения максимального значения
 #define OCT_IS_USE                  0x80 // Этот таймер используется
 
-#ifndef __C30__
 
-typedef struct _WORD
-{
-    WORD LW;
-    WORD HW;
-} _WORD;
 
-typedef union 
-{
-    DWORD Val;
-    _WORD word;
-
-} DWORD_VAL;
-
-#endif
-
-typedef struct OC_TIMER_TYPE{
-    BYTE            OCTFlags; // флаги режима
-    BYTE            PeriodsLeft; // оставшееся количество периодов в буфере
-    WORD            OCMFlags; // настройки OC
-    DWORD           StepsCurrent; // количество пройденных шагов
-    DWORD           StepsLeft; // осталось шагов до остановки
-    DWORD_VAL       Low; // число интервалов от спада импульса до фронта
-    DWORD_VAL       High; // число интервалов от фронта импульса до спада
-    DWORD *         Periods; // буфер периодов
-    DWORD *         Pulses; // буфер импульсов
-}OC_TIMER_TYPE;
+typedef struct DateTimeStruct {
+    WORD Year;
+    BYTE Month;
+    BYTE Day;
+    BYTE DayOfWeak;
+    BYTE Hour;
+    BYTE Min;
+    BYTE Sec;
+    double uSec;
+} DateTime;
 
 #define PI 3.1415926535897932384626433832795
 #define FREQ_STEP 20
@@ -306,5 +290,7 @@ int SetDirection(BYTE oc, BYTE Dir);
 
 int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
 
-#endif
+int GDateToJD(DateTime GDate, int * JDN, double * JD);
+int JDToGDate(double JD, DateTime * GDate );
+#endif //__OC_TIMER_H_
 

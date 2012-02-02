@@ -1,4 +1,4 @@
-
+#include "stdafx.h"
 #include "protocol.h"
 
 typedef struct ST_CONNECTION {
@@ -23,7 +23,11 @@ static ST_ATTRIBUTE RequestData[] = {
     {STA_COMMAND,  sizeof(BYTE), &datareq},
     {STA_TIME_SNTP,  0, NULL},
 };
+#ifdef __C30__
 extern DWORD_VAL CPUSPEED;
+#else
+       DWORD_VAL CPUSPEED;  
+#endif
 /******************************************************************************
 *
 *

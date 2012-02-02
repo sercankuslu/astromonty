@@ -16,6 +16,20 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+
+typedef struct _WORD
+{
+    WORD LW;
+    WORD HW;
+} _WORD;
+
+typedef union 
+{
+    DWORD Val;
+    _WORD word;
+
+} DWORD_VAL;
+
 #endif
 
 // TODO. Установите здесь ссылки на дополнительные заголовки, требующиеся для программы
