@@ -1,4 +1,6 @@
+#ifndef __OCTIMER_C
 #define __OCTIMER_C
+#endif
 #include "stdafx.h"
 
 #ifdef __C30__
@@ -399,8 +401,7 @@ int Acceleration(RR * rr)
     ARR_TYPE Tb = 0;  
     double D;
     LONG Xb = rr->XCachePos;
-    double a;
-    double c;
+    double a;    
     double d;
     WORD i = 0;
     WORD k = 0;
@@ -408,8 +409,7 @@ int Acceleration(RR * rr)
    
 
     X = rr->XaccBeg * rr->dx; 
-    d = rr->K/(2.0 * rr->B * rr->TimerStep);
-    c = rr->K * d;
+    d = rr->K/(2.0 * rr->B * rr->TimerStep);    
     a = 4.0 * rr->B/(rr->K * rr->K);   
 
     if(rr->XaccBeg > 0){
@@ -903,10 +903,9 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
     LONG dX2;
     double XX;
     double D;   
-    double d = rr->K/(2.0 * rr->B);
-    double c = rr->K * d;
+    double d = rr->K/(2.0 * rr->B);    
     double a = 4.0 * rr->B/(rr->K * rr->K);   
-    double T2;
+    double T2 = 0.0;
     double OmKT;
     double XmX;
 
@@ -981,147 +980,43 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
     return 0;
 }
 
-static int JuliantoDate(double JulianDate,int& CalendarDate, int& CalendarHour)
-//*-----------------------------------------------------------------------
-//*
-//*     Object :
-//*     Conversion		Julian date ---> Calendar date    (Meeus formular).
-//*
-//*     Input :
-//*     JulianDate      julian date (real double precision).
-//*
-//*     Ouput :
-//*     CalendarDate    calendar date (integer).  
-//*						julian calendar before 1582 october 15
-//*						gregorian calendar after.
-//*						code: *yyyymmdd (* sign).
-//*     CalendarHour    hour (integer). 
-//*						code: hhmmss.
-//*
-//*-----------------------------------------------------------------------
+int GDateToJD(DateTime GDate, int * JDN, double * JD)
 {
-	//implicit double precision (a-h,o-z)
-	int day;
-	int month;
-	int year;
-	CalendarDate=0;
-	CalendarHour=0;
-	if (JulianDate < 0) return -1;
-	double t = JulianDate + 0.5 / 86400.0 + 0.5;	
-	double z = (int)(t);
-	double f = t - z;
-	double a;
-	double x;
-	if (z < 2299161.0) {
-		a = z;
-	}
-	else {
-		x = (int)((z - 1867216.25)/36524.25);
-		a = z + 1.0 + x - (int)(x / 4.0);
-	}
-	double b = a + 1524.0;
-	double c = (int)((b - 122.1) / 365.25);
-	double d = (int)(365.25 * c);
-	double e = (int)((b - d) / 30.6001);
-	day = (int)b - (int)d - (int)(30.6001 * e);
-	month = (int)(e - 1.0);
-	if (e < 13.5) {
-		month = (int)(e - 1.0);
-	}
-	else {
-		month = (int)(e - 13.0);
-	}
-	if (month < 3){
-		year = (int)(c - 4715.0);
-	}
-	else {
-		year = (int)(c - 4716.0);
-	}	
-	int is = 1;
-	if (year < 0) is = -1;
-	CalendarDate = ((abs(year) * 100 + month) * 100 + day) * is;
-	f = f * 24.0;
-	int ih = (int)f;
-	f = (f - ih)*60.0;
-	int im = (int)f;
-	f = (f - im)*60.0;
-	is = (int)f;
-	CalendarHour = (ih * 100 + im) * 100 + is;
-	return 0;
+    double  a;
+    double  y;
+    double  m;   
+
+    a = (14-GDate.Month)/12;
+    y = GDate.Year + 4800 - a;
+    m = GDate.Month + 12 * a - 3;
+    (*JDN) = (int)(GDate.Day + (int)((153*m + 2)/5) + (int)(365 * y) + (int)(y / 4)-(int)(y / 100)+(int)(y / 400) - 32045);
+    (*JD) = (double)(*JDN) + (double)(((double)GDate.Hour - 12.0)/24.0) + (double)((double)GDate.Min/1440.0) + (double)((double)GDate.Sec/86400.0);
+    return 0;
 }
 
-static int DateToJulian (int CalendarDate, int CalendarHour, double& JulianDate)
-// *-----------------------------------------------------------------------
-// *
-// *     Object :
-// *     Conversion   Calendar date -> Julian date    (Meeus formular).
-// *
-// *     Input :
-// *     CalendarDate   calendar date gregorian/julian (integer).
-// *					julian calendar before 1582 october 15
-// *					gregorian calendar after.
-// *					code: *yyyymmdd (* sign).
-// *     CalendarHour	hour (integer).
-// *					code: hhmmss.
-// *
-// *     Output
-// *     JulianDate		julian date (real double precision).
-// *
-// *-----------------------------------------------------------------------
+int JDToGDate(double JD, DateTime * GDate )
 {
-	int day,month,year;
-	int lm[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    int a;
+    double b;
+    double c;
+    double d;
+    double e;
+    double m;
+    double s;
+    
+    a = (int)(JD) + 32044;
+    b = (4.0*a + 3.0)/146097.0;
+    c = a - 146097.0*b/4.0;
+    d = (4.0*c+3.0)/1461.0;
+    e = c - 1461.0 * d / 4.0;
+    m = (5.0* e + 2.0)/153.0;
+    s = JD - (int)(JD);
 
-	JulianDate = 0.0;
-	year = CalendarDate/10000;
-	if ((year < -4713) || (year > 5000)) return -1;
-	int kdate = abs(CalendarDate) - abs(year)*10000;
-	month = kdate / 100;
-	if ((month < 1)|| (month > 12)) return -1;
-	day = kdate - month * 100;
-	lm[2] = 28;
-	int ncent;
-	if ((year % 4) == 0) {
-		lm[2] = 29;
-		if (year > 1582) {
-			ncent = year/100;
-			if (((year % 100) == 0)||((ncent % 4) != 0)) {
-				lm[2]=28;
-			}
-		}
-	}
-	if ((day < 1)|| (day > lm[month])) return -1;
-	int is = CalendarHour;
-	int ih = CalendarHour/10000;
-	if ((ih < 0)||(ih > 24)) return -1;
-	is = is - ih * 10000;
-	int im = is / 100;
-	if ((im < 0)||(im > 60)) return -1;
-	is = is - im * 100;
-	if ((is < 0)||(is > 60)) return -1;
-	double a=0.0;
-	double b=0.0;
-	double c=0.0;
-	int y;
-	int m;
-	if (month > 2) {
-		y = year;
-		m = month;
-	}
-	else {
-		y=year-1;
-		m=month + 12;
-	}	
-	if (y < 0.0){
-		c=-0.75;
-	}
-	else {
-		if (CalendarDate > 15821015) {
-			a=(int)(y/100.0);
-			b=2.0 - a + (int)(a/4.0);
-		}
-	}
-	JulianDate = (int)(365.25*y + c) + (int)(30.6001 * ( m + 1)) + day 
-		+ (double)(ih)/24.0 + (double)(im)/1440.0 + (double)(is)/86400.0 + 1720994.5 + b;
-	return 0;
+    GDate->Day = (BYTE)(e - ((153.0 * m + 2.0)/5.0) + 1);
+    GDate->Month = (BYTE)(m + 3 - 12 * (m / 10.0));
+    GDate->Year = (WORD)(100 * b + d - 4800 + (m/10));
+    GDate->Hour = (BYTE)(s * 24 + 12);
+    GDate->Min = (BYTE)((s * 24 + 12 - GDate->Hour) * 60);
+    GDate->Sec = (BYTE)(((s * 24 + 12 - GDate->Hour) * 60 - GDate->Min) * 60);
+    return 0;
 }
