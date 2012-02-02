@@ -1,6 +1,7 @@
-#ifndef __OCTIMER_C
-#define __OCTIMER_C
-#endif
+// #ifndef __OCTIMER_C
+// #define __OCTIMER_C
+// #endif
+
 #include "stdafx.h"
 
 #ifdef __C30__
@@ -786,8 +787,11 @@ int EnableOC(BYTE oc)
     default :
     return -1;
     }
-#endif
     return 0;
+#else
+    return oc;
+#endif
+    
 }
 int DisableOC(BYTE oc)
 {
@@ -812,8 +816,10 @@ int DisableOC(BYTE oc)
     default :
     return -1;
     }
-#endif
     return 0;
+#else
+    return oc;
+#endif    
 }
 
 DWORD GetBigTmrValue(BYTE id)
@@ -864,8 +870,11 @@ BOOL IsDisableOC(BYTE oc)
     default :
     return 0;
     }
-#endif
     return 0;
+#else
+    return oc;
+#endif
+    
 }
 
 int SetDirection(BYTE oc, BYTE Dir)
@@ -887,8 +896,10 @@ int SetDirection(BYTE oc, BYTE Dir)
     default :
     return 0;
     }
-#endif
     return 0;
+#else
+    return oc + Dir;
+#endif
 }
 
 
