@@ -91,11 +91,11 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 #define FALSE   0
 #define TRUE    1
 
-#ifdef __C30__
+#ifndef __C30__
 typedef struct {
     char NetBIOSName[16];
 
-} AppConfig;
+} AppConfigType;
 #endif
 
 
@@ -106,13 +106,8 @@ BYTE ProtocolInit();
 BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
 BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
 BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
-BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, int* pbBlobLen);
-BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, int *pbDataLength);
+BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
+BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
 BYTE CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
-#if defined(__18CXX)
-int PushAttr(ST_ATTRIBUTE Data, BYTE BufNumber);
-int PopAttr(ST_ATTRIBUTE *Data, BYTE BufNumber);
-BOOL IsDataInBuffer(BYTE BufNumber);
-BOOL RoundBufferInit(void);
-#endif
+
 #endif //__PROTOCOL_H_

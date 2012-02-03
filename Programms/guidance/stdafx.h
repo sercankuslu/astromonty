@@ -17,6 +17,10 @@
 #include <memory.h>
 #include <tchar.h>
 
+#define USE_PROTOCOL_SERVER
+#define USE_PROTOCOL_CLIENT
+
+
 typedef struct _WORD
 {
     WORD LW;

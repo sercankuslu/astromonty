@@ -318,7 +318,7 @@ int InitRR(RR * rr)
 //     PushCmdToQueue(rr, ST_DECELERATE, 0, 0, -1);
     PushCmdToQueue(rr, ST_STOP, 0, 0, 1 );
     //RunCmd(rr);
-    CacheNextCmd(rr);
+    //CacheNextCmd(rr);
     return 0;    
 }
 int Run(RR * rr)
@@ -473,6 +473,9 @@ int Acceleration(RR * rr)
         rr->IntervalArray[j] = Tb + T;
         rr->DataCount++;
         T1 = T;
+        if(rr->RunState == ST_STOP){
+            ProcessOC(rr);
+        }
     }
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
@@ -654,13 +657,16 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
         }    
         CalculateBreakParam(rr, State, Direction, Vbeg, Xbeg, 
             &(rr->CmdQueue[rr->NextWriteCmd].Vend), 
-            &(rr->CmdQueue[rr->NextWriteCmd].Xend = Xend), &Xbreak);
+            &(rr->CmdQueue[rr->NextWriteCmd].Xend), &Xbreak);
 
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
         rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
         rr->CmdCount++;
     } else return -1;
+    if((rr->CmdCount>0)&&(rr->State == ST_STOP)){
+        CacheNextCmd(rr);
+    }
     return 0;
 }
 
@@ -683,7 +689,8 @@ int ProcessOC(RR * rr)
                 break;
             }
 #else
-            Control(rr);
+            if(rr->DataCount == 0)
+                Control(rr);
 #endif
         }
     } else {
@@ -705,7 +712,7 @@ int ProcessOC(RR * rr)
     if(rr->RunDir >= 0){
         rr->XPosition++;
         if((rr->XPosition < rr->CmdQueue[tmpcmd].RunStep) && 
-           (rr->XPosition >= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){            
+           (rr->XPosition >= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){
             SetRunState(rr);
         } else {            
             if(rr->XPosition >= rr->CmdQueue[tmpcmd].RunStep){
@@ -1023,11 +1030,18 @@ int JDToGDate(double JD, DateTime * GDate )
     m = (5.0* e + 2.0)/153.0;
     s = JD - (int)(JD);
 
-    GDate->Day = (BYTE)(e - ((153.0 * m + 2.0)/5.0) + 1);
-    GDate->Month = (BYTE)(m + 3 - 12 * (m / 10.0));
+    GDate->Day = (BYTE)(e - (int)((153.0 * m + 2.0)/5.0) + 1);
+    GDate->Month = (BYTE)(m + 3 - 12 * (int)(m / 10.0));
     GDate->Year = (WORD)(100 * b + d - 4800 + (m/10));
     GDate->Hour = (BYTE)(s * 24 + 12);
     GDate->Min = (BYTE)((s * 24 + 12 - GDate->Hour) * 60);
     GDate->Sec = (BYTE)(((s * 24 + 12 - GDate->Hour) * 60 - GDate->Min) * 60);
+    return 0;
+}
+
+int GoToCmd(RR * rr, double VTarget, double XTarget)
+{
+    if((rr == NULL) || (VTarget == 0.0) || (XTarget == 0.0)) 
+        return -1;
     return 0;
 }
