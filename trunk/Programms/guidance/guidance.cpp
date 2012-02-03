@@ -93,12 +93,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
         wcex.cbSize = sizeof(WNDCLASSEX);
 
-        wcex.style			= CS_HREDRAW | CS_VREDRAW;
+        wcex.style		= CS_HREDRAW | CS_VREDRAW;
         wcex.lpfnWndProc	= WndProc;
         wcex.cbClsExtra		= 0;
         wcex.cbWndExtra		= 0;
         wcex.hInstance		= hInstance;
-        wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GUIDANCE));
+        wcex.hIcon		= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GUIDANCE));
         wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
         wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
         wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_GUIDANCE);
@@ -360,7 +360,6 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
     OCInit();
-    Control(&rr1);
 
     //LONG Xbreak;
     //CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
@@ -370,6 +369,7 @@ void Calc(HWND hWnd, HDC hdc)
         
 //         for( i = 0; i < rr1.DataCount; i++) 
 //         {
+            Control(&rr1);
             ProcessOC(&rr1);
             //ProcessOC(&rr2);
             //ProcessOC(&rr3);

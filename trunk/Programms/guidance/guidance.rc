@@ -1,11 +1,11 @@
-//Описание ресурсов, созданное в Microsoft Visual C++.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
-// Создано из ресурса TEXTINCLUDE 2.
+// Generated from the TEXTINCLUDE 2 resource.
 //
 #ifndef APSTUDIO_INVOKED
 #include "targetver.h"
@@ -13,48 +13,53 @@
 #define APSTUDIO_HIDDEN_SYMBOLS
 #include "windows.h"
 #undef APSTUDIO_HIDDEN_SYMBOLS
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
+/////////////////////////////////////////////////////////////////////////////
+// русский resources
+
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
-LANGUAGE 25, 1
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 #pragma code_page(1251)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Значок
+// Icon
 //
 
-// Значок с наименьшим значением идентификатора помещается первым, чтобы гарантировать использование
-// идентичного значка приложения для всех систем.
-
-IDI_GUIDANCE       ICON         "guidance.ico"
-IDI_SMALL               ICON         "small.ico"
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_GUIDANCE            ICON                    "guidance.ico"
+IDI_SMALL               ICON                    "small.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Меню
+// Menu
 //
 
-IDC_GUIDANCE MENU
+IDC_GUIDANCE MENU 
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "В&ыход",                IDM_EXIT
+        MENUITEM "В&ыход",                      IDM_EXIT
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе ...",           IDM_ABOUT
+        MENUITEM "&О программе ...",            IDM_ABOUT
     END
 END
 
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Сочетание клавиш
+// Accelerator
 //
 
-IDC_GUIDANCE ACCELERATORS
+IDC_GUIDANCE ACCELERATORS 
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -63,19 +68,21 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Диалоговое окно
+// Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_ABOUTBOX DIALOGEX 0, 0, 176, 63
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_NOFAILCREATE | DS_CENTER | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_THICKFRAME
+EXSTYLE WS_EX_OVERLAPPEDWINDOW | WS_EX_TOPMOST | WS_EX_CONTROLPARENT | WS_EX_APPWINDOW | WS_EX_NOACTIVATE
 CAPTION "О проекте guidance"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
-    LTEXT           "guidance, версия 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2011",IDC_STATIC,42,26,114,8
-    DEFPUSHBUTTON   "ОК",IDOK,113,41,50,14,WS_GROUP
+    ICON            128,IDC_STATIC,14,14,21,20
+    LTEXT           "guidance, версия 1.0",IDC_STATIC,55,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2011",IDC_STATIC,55,26,114,8
+    DEFPUSHBUTTON   "ОК",IDOK,119,42,50,14,WS_GROUP
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -83,31 +90,33 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 163
+        RIGHTMARGIN, 169
         TOPMARGIN, 7
-        BOTTOMMARGIN, 55
+        BOTTOMMARGIN, 56
     END
 END
 #endif    // APSTUDIO_INVOKED
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
 //
-1 TEXTINCLUDE
+
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
-	"#ifndef APSTUDIO_INVOKED\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
     "#include ""targetver.h""\r\n"
     "#endif\r\n"
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
@@ -116,7 +125,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -124,18 +133,19 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
-// Таблица строк
+// String Table
 //
 
-STRINGTABLE
+STRINGTABLE 
 BEGIN
-   IDC_GUIDANCE   "GUIDANCE"
-   IDS_APP_TITLE       "guidance"
+    IDS_APP_TITLE           "guidance"
+    IDC_GUIDANCE            "GUIDANCE"
 END
 
-#endif
+#endif    // русский resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -143,8 +153,10 @@ END
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
-// Создано из ресурса TEXTINCLUDE 3.
+// Generated from the TEXTINCLUDE 3 resource.
 //
 
+
 /////////////////////////////////////////////////////////////////////////////
-#endif    // не APSTUDIO_INVOKED
+#endif    // not APSTUDIO_INVOKED
+
