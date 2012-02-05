@@ -656,8 +656,8 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
             Xbeg = rr->CmdQueue[LastCmd].Xend;
         }    
         CalculateBreakParam(rr, State, Direction, Vbeg, Xbeg, 
-            &(rr->CmdQueue[rr->NextWriteCmd].Vend), 
-            &(rr->CmdQueue[rr->NextWriteCmd].Xend), &Xbreak);
+            &rr->CmdQueue[rr->NextWriteCmd].Vend, 
+            &rr->CmdQueue[rr->NextWriteCmd].Xend, &Xbreak);
 
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;

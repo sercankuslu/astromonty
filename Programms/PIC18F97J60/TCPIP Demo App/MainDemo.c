@@ -110,6 +110,7 @@
 #include "MainDemo.h"
 #include "DisplayBuffer.h"
 #include "pcf8535.h"
+#include "roundbuffer.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -118,7 +119,15 @@
 APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
-static BYTE CKeys=0;
+static struct SCKeys {
+	BYTE up;
+	BYTE down;
+	BYTE left;
+	BYTE right;
+	BYTE menu;
+	BYTE enter;
+} CKeys;
+//static BYTE CKeys=0;
 static BYTE add1 = PCF8535_BUS_ADDRESS;
 static int DisplayBright = 0x0F00;
 static int DisplaydB = 0;      // changing the value DisplayBright of every second 
@@ -135,12 +144,12 @@ static int DisplaydB = 0;      // changing the value DisplayBright of every seco
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
+static void UpdateKey();
+static void InitTimerAndPWM();
 
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
-
-
 
 void LCDUpdate(void){	
     if(PIR1bits.TMR1IF) {	    
@@ -161,53 +170,34 @@ void UpdateKey()
     TRISBbits.TRISB2 = 1;
     TRISBbits.TRISB3 = 1;
     TRISBbits.TRISB4 = 1;
+    TRISDbits.TRISD0 = 0;
+    TRISDbits.TRISD1 = 0;
+    TRISDbits.TRISD2 = 0;
+    TRISBbits.TRISB5 = 0;
+    LATD = 0;
+	LATBbits.LATB1 = 0;
+	LATBbits.LATB2 = 0;
+	LATBbits.LATB3 = 0;
+	LATBbits.LATB4 = 0;
+	LATBbits.LATB5 = 0;
+	
+	LATDbits.LATD0 = 1; // первая строка (menu и enter)
+	Nop();Nop();
+	CKeys.enter = PORTBbits.RB1;
+	CKeys.menu = PORTBbits.RB3;	
+	LATDbits.LATD0 = 0; // первая строка (menu и enter)	
+	Nop();
+	LATDbits.LATD1 = 1; // первая строка (menu и enter)
+	Nop();Nop();
+	CKeys.left = PORTBbits.RB1;
+	CKeys.right = PORTBbits.RB2;	
+	CKeys.up = PORTBbits.RB3;
+	CKeys.down = PORTBbits.RB4;	
+	LATDbits.LATD1 = 0; // первая строка (menu и enter)	
+	Nop();
+		
+}
 
-    TRISD=0x07; //порт D на чтение строки 1-3
-    TRISBbits.TRISB5 = 1;  //строка 4
-    LATD = 0x07; //
-    LATBbits.LATB5 = 1;
-
-    TRISDbits.TRISD0 = 0; //первая строка
-    Nop();
-    a=(PORTB>>1);
-    TRISDbits.TRISD0 = 1; //первая строка
-    Nop();
-    TRISDbits.TRISD1 = 0; //вторая строка
-    Nop();
-    b=(PORTB<<3);
-    TRISDbits.TRISD1 = 1; //вторая строка
-    k=a&0x0F;
-    k|=b&0xF0;
-    CKeys = k;
-}
-BYTE IsRightKey()
-{
-    if((CKeys&KEY_RIGHT)>0){
-        return 1;
-    }
-    return 0;
-}
-BYTE IsLeftKey()
-{
-    if((CKeys&KEY_LEFT)>0){
-        return 1;
-    }
-    return 0;
-}
-BYTE IsUpKey()
-{
-    if((CKeys&KEY_UP)>0){
-        return 1;
-    }
-    return 0;
-}
-BYTE IsDownKey()
-{
-    if((CKeys&KEY_DOWN)>0){
-        return 1;
-    }
-    return 0;
-}
 //
 // PIC18 Interrupt Service Routines
 // 
@@ -324,12 +314,12 @@ int main(void)
 	static DWORD displayup = 0;
 	static DWORD dwLastIP = 0;
 	static DWORD tt = 0;
-    static BYTE x = 0;
-    static BYTE y = 0;
-    static BYTE x1 = 0;
-    static BYTE y1 = 0;
-    static BYTE sx1 = 2;
-    static BYTE sy1 = 2;
+    static int x = 0;
+    static int y = 0;
+    static int x1 = 0;
+    static int y1 = 0;
+    static int sx1 = 2;
+    static int sy1 = 2;
     static BYTE RBuffer[30];	
     ST_ATTRIBUTE ReceivePacket = {
 		0, 0, RBuffer
@@ -342,6 +332,8 @@ int main(void)
     unsigned char Text4[] = " Соединение установлено";
     
     BYTE count;
+	UpdateKey();
+	
     memset(RBuffer, 0, sizeof(RBuffer));    
     pcfLCDInit(add1);
     DisplayInit();
@@ -353,7 +345,7 @@ int main(void)
 	OutTextXY(0,12,Text4,0); // msg
 	   
     DisplayDraw(add1);
-	
+
 	
 	// Initialize stack-related hardware components that may be 
 	// required by the UART configuration routines
@@ -474,14 +466,14 @@ int main(void)
                 //AnnounceIP();
             }    
             UpdateKey();
-            if(IsUpKey()) y++;
-            if(IsRightKey()) x++;
-            if(IsDownKey()) y--;
-            if (IsLeftKey())x--;
-            //OutTextXY(x,y,Text,1);
-            //OutTextXY(x,y,RBuffer,1);  
+            if(CKeys.up) y++;
+            if(CKeys.right) x++;
+            if(CKeys.down) y--;
+            if (CKeys.left)x--;
+            OutTextXY(x,y,Text,1);
+            OutTextXY(x,y,RBuffer,1);  
             PushAttr(ReceivePacket, OUT_BUFFER);            
-            
+            DisplayDraw(add1);
         }
         if(0){
         if(TickGet() - displayup >= TICK_SECOND/10){
