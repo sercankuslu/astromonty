@@ -1,8 +1,9 @@
 #ifndef __PROTOCOL_H_
 #define __PROTOCOL_H_
-#include "..\guidance\stdafx.h"
-#ifdef __C30__
-#include "TCPIP Stack/TCPIP.h"
+#ifdef _WINDOWS
+#   include "..\guidance\stdafx.h"
+#else
+#   include "TCPIP Stack/TCPIP.h"
 #endif
 // 
 #define STR_OK                              0
@@ -91,7 +92,7 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 #define FALSE   0
 #define TRUE    1
 
-#ifndef __C30__
+#ifdef _WINDOWS
 typedef struct {
     char NetBIOSName[16];
 

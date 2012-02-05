@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "protocol.h"
 #ifndef __C30__
-#include "..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
+#   include "..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
 #endif
 typedef struct ST_CONNECTION {
     BYTE Mode;
@@ -25,7 +25,7 @@ static ST_ATTRIBUTE RequestData[] = {
     {STA_COMMAND,  sizeof(BYTE), &datareq},
     {STA_TIME_SNTP,  0, NULL},
 };
-#ifdef __C30__
+#ifndef _WINDOWS
 extern DWORD_VAL CPUSPEED;
 #   define ULtoA(x,y) ultoa(x, y)
 #else

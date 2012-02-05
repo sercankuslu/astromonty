@@ -3,8 +3,8 @@
 // не часто измен€ютс€
 //
 
-#pragma once
-#ifndef __C30__
+//#pragma once
+#ifdef _WINDOWS
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // »сключите редко используемые компоненты из заголовков Windows
@@ -20,6 +20,8 @@
 #define USE_PROTOCOL_SERVER
 #define USE_PROTOCOL_CLIENT
 
+#ifndef _DWORD_VAL_
+#define _DWORD_VAL_
 
 typedef struct _WORD
 {
@@ -33,6 +35,7 @@ typedef union
     _WORD word;
 
 } DWORD_VAL;
+#endif
 
 #endif
 

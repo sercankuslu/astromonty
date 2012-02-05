@@ -31,6 +31,7 @@ LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
  
 void Calc(HWND hWnd, HDC hdc);
+void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -256,13 +257,15 @@ void Calc(HWND hWnd, HDC hdc)
     static double X = 0;    // полное перемещение в радианах
     static double X1 = 0;    // полное перемещение в радианах
     static double T = 0;    // полное время
-    static double T1 = 0;    // полное время
+    static double TL = 0;    // полное время
     static double T2 = 0;    // полное время
+    static double T2L = 0;    // полное время
+    
 
-    int K1 = -1;
-    int K3 = -1;
+//    int K1 = -1;
+//    int K3 = -1;
     //DWORD i = 0;
-    BYTE L = 255;
+//    BYTE L = 255;
     RECT rect;
     
 
@@ -334,19 +337,21 @@ void Calc(HWND hWnd, HDC hdc)
     
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
+    POINT TX2 = {Px,Py};
+    POINT TV2 = {Px,Py};
     //POINT TV2 = {Px,Py};
     //POINT TA = {Px,Py};
 //    POINT VA = {Px,Py};
-    POINT X0T = {Px,Py};
+    //POINT X0T = {Px,Py};
 
     dt = 0.0;
     T = 0.0;
-    T1 = 0.0;
+    TL = 0.0;
     X = 0.0;
     V = 0.0;
     V1 = 0.0;
     V0 = 5.0 * Grad_to_Rad;
-    double XX = 5.0 * Grad_to_Rad;
+//    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
@@ -360,111 +365,110 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
     OCInit();
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_STOP, 0, 0, 1 );
 
-    //LONG Xbreak;
-    //CalculateBreakParam(&rr1,ST_ACCELERATE, 1, 0.0 * Grad_to_Rad, 1.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 6.0 * Grad_to_Rad, &Xbreak);
-    //Control(&rr2);
-    //Control(&rr3);
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 5.0 * Grad_to_Rad, 30.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(rr2, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+//     PushCmdToQueue(rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_STOP, 0, 0, 1 );
+
+    Control(&rr1);    
+    Control(&rr2);
     do {        
         
 //         for( i = 0; i < rr1.DataCount; i++) 
 //         {
             Control(&rr1);
             ProcessOC(&rr1);
-            //ProcessOC(&rr2);
+            Control(&rr2);
+            ProcessOC(&rr2);
             //ProcessOC(&rr3);
-            T = (double)(rr1.T.Val * rr1.TimerStep);
-             //V = 1.0*Grad_to_Rad;
-            if(T-T1 != 0.0){
-                if(rr1.RunDir >=0 ){
-                    X += dX;
-                    V = dX/(T-T1);
-                } else {
-                    X-=dX;
-                    V = -dX/(T-T1);
-                }
-            } else {
-                V = 0.0;
-            }
-            X0 = XX + V0*T;
-            K3 = (int)(T*SizeX);
-            if( K3 != K1)
-            {
-                //Change the DC pen color
-                //SetDCPenColor(hdc,RGB(0,L,255));
-                MoveToEx(hdc, TX.x, TX.y, NULL);
-                TX.x = Px + (int)(T*SizeX);
-                TX.y = Py - (int)(X*Rad_to_Grad*SizeY);
-                if(rr1.RunState == ST_STOP){
-                    SetDCPenColor(hdc,RGB(0,100,100));
-                }
-                if(rr1.RunState == ST_RUN){
-                    SetDCPenColor(hdc,RGB(0,200,200));
-                }
-                if(rr1.RunState == ST_DECELERATE){
-                    SetDCPenColor(hdc,RGB(0,150,150));
-                }
-                if(rr1.RunState == ST_ACCELERATE){
-                    SetDCPenColor(hdc,RGB(0,255,255));
-                }
-                LineTo(hdc, TX.x, TX.y);  
-
-                
-                MoveToEx(hdc, TV.x, TV.y, NULL);
-                TV.x = Px + (int)(T*SizeX);
-                TV.y = Py - (int)(V*Rad_to_Grad*SizeY);
-                if(rr1.RunState == ST_STOP){
-                    SetDCPenColor(hdc,RGB(0,100,0));
-                }
-                if(rr1.RunState == ST_RUN){
-                    SetDCPenColor(hdc,RGB(0,200,0));
-                }
-                if(rr1.RunState == ST_DECELERATE){
-                    SetDCPenColor(hdc,RGB(0,150,0));
-                }
-                if(rr1.RunState == ST_ACCELERATE){
-                    SetDCPenColor(hdc,RGB(0,255,0));
-                }
-                LineTo(hdc, TV.x, TV.y);  
-
-//                 MoveToEx(hdc, TV2.x, TV2.y, NULL);
-//                 TV2.x = Px + (int)(T*SizeX);
-//                 TV2.y = Py - (int)(V2*Rad_to_Grad*SizeY);
-//                 if(rr1.State == ST_STOP){
-//                     SetDCPenColor(hdc,RGB(0,100,0));
-//                 }
-//                 if(rr1.State == ST_RUN){
-//                     SetDCPenColor(hdc,RGB(0,150,0));
-//                 }
-//                 if(rr1.State == ST_DECELERATE){
-//                     SetDCPenColor(hdc,RGB(0,200,0));
-//                 }
-//                 if(rr1.State == ST_ACCELERATE){
-//                     SetDCPenColor(hdc,RGB(0,255,0));
-//                 }
-//                 LineTo(hdc, TV2.x, TV2.y);  
-
-//                 SetDCPenColor(hdc,RGB(255,0,0));
-//                 MoveToEx(hdc, TA.x, TA.y, NULL);
-//                 TA.x = Px + (int)(T*SizeX);
-//                 TA.y = Py - (int)(A*Rad_to_Grad*SizeY/30)- (rect.bottom/2);
-//                 LineTo(hdc, TA.x, TA.y);  
-
-                SetDCPenColor(hdc,RGB(200,200,0));
-                MoveToEx(hdc, X0T.x, X0T.y, NULL);
-                X0T.x = Px + (int)(T*SizeX);
-                X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
-                LineTo(hdc, X0T.x, X0T.y);
-                
-                K1 = K3;
-            }
-            T1 = T;
-            V1 = V;
-        //}     
-        L+=128;
-    }while ((rr1.RunState != ST_STOP)||(rr1.State != ST_STOP));
+            DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL);
+            DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L);
+    } while ((rr1.RunState != ST_STOP)||(rr1.State != ST_STOP));
     //Restore original object.
     SelectObject(hdc,original);
 
 }
+void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL)
+{
+    double T = 0.0;
+    //double TL = 0.0;
+    double X = 0.0;
+    double V = 0.0;
+    DWORD K1 = 0;
+    DWORD K3 = 0;
 
+
+    T = (double)(rr->T.Val * rr->TimerStep);
+    //V = 1.0*Grad_to_Rad;
+    if(T - (*TL) != 0.0){
+        X = rr->XPosition * rr->dx;
+        if(rr->RunDir >=0 ){
+            V = rr->dx/(T - (*TL));
+        } else {
+            V = -rr->dx/(T - (*TL));
+        }
+    } else {
+        V = 0.0;
+    }
+//     X0 = XX + V0*T;
+//     K3 = (int)(T*SizeX);
+    //if( K3 != K1)
+    {
+        //Change the DC pen color
+        //SetDCPenColor(hdc,RGB(0,L,255));
+        MoveToEx(hdc, TX->x, TX->y, NULL);
+        TX->x = Px + (int)(T * SizeX);
+        TX->y = Py - (int)(X * Rad_to_Grad * SizeY);
+        if(rr1.RunState == ST_STOP){
+            SetDCPenColor(hdc,RGB(0,100,100));
+        }
+        if(rr1.RunState == ST_RUN){
+            SetDCPenColor(hdc,RGB(0,200,200));
+        }
+        if(rr1.RunState == ST_DECELERATE){
+            SetDCPenColor(hdc,RGB(0,150,150));
+        }
+        if(rr1.RunState == ST_ACCELERATE){
+            SetDCPenColor(hdc,RGB(0,255,255));
+        }
+        LineTo(hdc, TX->x, TX->y);  
+
+
+        MoveToEx(hdc, TV->x, TV->y, NULL);
+        TV->x = Px + (int)(T*SizeX);
+        TV->y = Py - (int)(V*Rad_to_Grad * SizeY);
+        if(rr->RunState == ST_STOP){
+            SetDCPenColor(hdc,RGB(0,100,0));
+        }
+        if(rr->RunState == ST_RUN){
+            SetDCPenColor(hdc,RGB(0,200,0));
+        }
+        if(rr->RunState == ST_DECELERATE){
+            SetDCPenColor(hdc,RGB(0,150,0));
+        }
+        if(rr->RunState == ST_ACCELERATE){
+            SetDCPenColor(hdc,RGB(0,255,0));
+        }
+        LineTo(hdc, TV->x, TV->y);  
+
+//         SetDCPenColor(hdc,RGB(200,200,0));
+//         MoveToEx(hdc, X0T.x, X0T.y, NULL);
+//         X0T.x = Px + (int)(T*SizeX);
+//         X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
+//         LineTo(hdc, X0T.x, X0T.y);
+
+        K1 = K3;
+    }
+    (*TL) = T;
+}
