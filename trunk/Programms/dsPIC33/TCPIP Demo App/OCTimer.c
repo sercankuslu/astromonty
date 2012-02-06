@@ -22,6 +22,7 @@ RR rr2;
 RR rr3;
 
 int InitRR(RR * rr);
+int SetRunState(RR * rr);
 
 #ifdef __C30__
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
@@ -284,10 +285,10 @@ int InitRR(RR * rr)
     rr->NextReadFrom = 0;    
     rr->XaccBeg = 0;
     rr->XCachePos = 0;
-    rr->XCurCmdEnd = 0;
+    rr->CacheCmdCounter = 0;
     Timer2Big.word.LW = TMR2;
     rr->TimeBeg = /* Timer2Big.Val */ + (ARR_TYPE)(0.0000 * BUF_SIZE /rr->TimerStep);
-    rr->State = ST_STOP;    
+    rr->CacheState = ST_STOP;    
     rr->RunState = ST_STOP;
     rr->T.Val = 0;
     rr->Interval = 0xFFFFFFFF;
@@ -298,13 +299,14 @@ int InitRR(RR * rr)
     rr->NextCacheCmd = 0;
     rr->NextWriteCmd = 0;
     rr->NextExecuteCmd = 0;
+    rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-    PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(rr, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
-     PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-     PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
-     PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(rr, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
+//      PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+//      PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+//      PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 4.0 * Grad_to_Rad, -8.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, -8.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_RUN, 8.0 * Grad_to_Rad, 5.0 * Grad_to_Rad, 1);
@@ -316,7 +318,7 @@ int InitRR(RR * rr)
 //     PushCmdToQueue(rr, ST_ACCELERATE, 8.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //     PushCmdToQueue(rr, ST_RUN, 8.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //     PushCmdToQueue(rr, ST_DECELERATE, 0, 0, -1);
-    PushCmdToQueue(rr, ST_STOP, 0, 0, 1 );
+    //PushCmdToQueue(rr, ST_STOP, 0, 0, 1 );
     //RunCmd(rr);
     //CacheNextCmd(rr);
     return 0;    
@@ -359,27 +361,22 @@ int Run(RR * rr)
         T += rr->Interval;
         if(rr->CalcDir >= 0){
             Xb++;
-            if(Xb >= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
         } else {
-            Xb--;
-            if(Xb <= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
-        } 
+            Xb--;            
+        }
+        rr->CacheCmdCounter--;
+        if(rr->CacheCmdCounter <= 0){
+            FreeData = i;
+            CacheNextCmd(rr);
+            break;
+        }
         k++;
         if(k >= m){
             T = T2;
             k = 0;
         } 
         rr->IntervalArray[j] = rr->TimeBeg + T;
-        rr->DataCount++;   
-        rr->CmdQueue[rr->NextCacheCmd].RunStep = Xb;
+        rr->DataCount++;           
         T1 = T;            
     }
 
@@ -448,22 +445,17 @@ int Acceleration(RR * rr)
                 rr->Interval = (T2 - T1);
             }
         }
-
         T += rr->Interval;
         if(rr->CalcDir >= 0){
             Xb++;
-            if(Xb >= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
         } else {
-            Xb--;
-            if(Xb <= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
+            Xb--;            
+        }
+        rr->CacheCmdCounter--;
+        if(rr->CacheCmdCounter <= 0){
+            FreeData = i;
+            CacheNextCmd(rr);
+            break;
         }
         k++;
         if(k >= m){
@@ -473,7 +465,8 @@ int Acceleration(RR * rr)
         rr->IntervalArray[j] = Tb + T;
         rr->DataCount++;
         T1 = T;
-        if(rr->RunState == ST_STOP){
+        if(rr->RunState == ST_STOP){            
+            SetRunState(rr);
             ProcessOC(rr);
         }
     }
@@ -552,18 +545,14 @@ int Deceleration(RR * rr)
         T -= rr->Interval;
         if(rr->CalcDir >= 0){
             Xb++;
-            if(Xb >= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
         } else {
-            Xb--;
-            if(Xb <= rr->XCurCmdEnd){
-                FreeData = i;
-                CacheNextCmd(rr);
-                break;
-            }
+            Xb--;            
+        }
+        rr->CacheCmdCounter--;
+        if(rr->CacheCmdCounter <= 0){
+            FreeData = i;
+            CacheNextCmd(rr);
+            break;
         }
         k++;
         if(k >= m){
@@ -584,8 +573,8 @@ int Deceleration(RR * rr)
 
 int Control(RR * rr)
 {
-    while((rr->DataCount <= BUF_SIZE_2)&&(rr->State != ST_STOP)){
-        switch(rr->State){
+    while((rr->DataCount <= BUF_SIZE_2)&&(rr->CacheState != ST_STOP)){
+        switch(rr->CacheState){
         case ST_ACCELERATE:
             Acceleration(rr);
             break;
@@ -605,15 +594,15 @@ int Control(RR * rr)
 int CacheNextCmd(RR * rr)
 {    
     if(rr->CmdCount > 0){
-        rr->State = rr->CmdQueue[rr->NextCacheCmd].State;
+        rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
         rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
         rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend; 
-        rr->CalcDir = rr->CmdQueue[rr->NextCacheCmd].Direction;
+        rr->CalcDir = rr->CmdQueue[rr->NextCacheCmd].Direction;        
+        rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
         rr->NextCacheCmd++;
-        if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;
-        rr->XCurCmdEnd = rr->CmdQueue[rr->NextCacheCmd].RunStep;
+        if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;        
     } else {
-        rr->State = ST_STOP;
+        rr->CacheState = ST_STOP;
     }
     return 0;
 }
@@ -622,6 +611,7 @@ int SetRunState(RR * rr)
 {         
     rr->RunDir = rr->CmdQueue[rr->NextExecuteCmd].Direction;
     rr->RunState = rr->CmdQueue[rr->NextExecuteCmd].State;
+    rr->RunCmdCounter = rr->CmdQueue[rr->NextExecuteCmd].RunStep;
     if(rr->RunDir>=0){ // устанавливаем направление вращения
         SetDirection(rr->Index,1);
     } else {
@@ -658,13 +648,13 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
         CalculateBreakParam(rr, State, Direction, Vbeg, Xbeg, 
             &rr->CmdQueue[rr->NextWriteCmd].Vend, 
             &rr->CmdQueue[rr->NextWriteCmd].Xend, &Xbreak);
+         rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
 
         rr->NextWriteCmd++;
-        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
-        rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
+        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;       
         rr->CmdCount++;
     } else return -1;
-    if((rr->CmdCount>0)&&(rr->State == ST_STOP)){
+    if((rr->CmdCount>0)&&(rr->CacheState == ST_STOP)){
         CacheNextCmd(rr);
     }
     return 0;
@@ -673,7 +663,6 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
 int ProcessOC(RR * rr)
 {
     DWORD Timer = 0;
-    WORD tmpcmd;
     if(rr->DataCount>0){
         if(rr->DataCount <= BUF_SIZE_2) {
 #ifdef __C30__
@@ -698,43 +687,26 @@ int ProcessOC(RR * rr)
         DisableOC(rr->Index);
         return 0;
     }
-    rr->T.Val = rr->IntervalArray[rr->NextReadFrom]; 	
+    rr->T.Val = rr->IntervalArray[rr->NextReadFrom];
     rr->NextReadFrom++;
     if(rr->NextReadFrom >= BUF_SIZE) rr->NextReadFrom -= BUF_SIZE;
     
     SetOC(rr->Index, rr->T.word.LW);
     Timer = GetBigTmrValue(rr->TmrId);
-    if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){     
+    if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){
         EnableOC(rr->Index);
     }
-    tmpcmd = rr->NextExecuteCmd + 1;
-    if(tmpcmd >= CQ_SIZE) tmpcmd -= CQ_SIZE;    
     if(rr->RunDir >= 0){
         rr->XPosition++;
-        if((rr->XPosition < rr->CmdQueue[tmpcmd].RunStep) && 
-           (rr->XPosition >= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){
-            SetRunState(rr);
-        } else {            
-            if(rr->XPosition >= rr->CmdQueue[tmpcmd].RunStep){
-                rr->NextExecuteCmd = tmpcmd;
-                SetRunState(rr);
-                if(rr->CmdCount > 0) rr->CmdCount--;
-            }
-        }
-        
     } else {
         rr->XPosition--;
-        if((rr->XPosition > rr->CmdQueue[tmpcmd].RunStep) && 
-            (rr->XPosition <= rr->CmdQueue[rr->NextExecuteCmd].RunStep)){
-                SetRunState(rr);
-        } else {            
-            if(rr->XPosition <= rr->CmdQueue[tmpcmd].RunStep){
-                rr->NextExecuteCmd = tmpcmd;
-                SetRunState(rr);
-                if(rr->CmdCount > 0) rr->CmdCount--;
-            }
-        }
-    }    
+    }
+    rr->RunCmdCounter--;
+    if(rr->RunCmdCounter <= 0 ){
+        rr->NextExecuteCmd++;
+        if(rr->NextExecuteCmd >= CQ_SIZE) rr->NextExecuteCmd -= CQ_SIZE;
+        SetRunState(rr);
+    }
     if(rr->DataCount > 0) rr->DataCount--;
     return 0;
 }
@@ -958,7 +930,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
 
             if (dX2 < dX) { 
                 // если координата перемещения меньше, чем координата при заданной скорости                        
-                (*Xbreak) = (LONG)((*Xend)/rr->dx);  
+                (*Xbreak) = dX2;
                 if(State != ST_DECELERATE){
                     XX = Xb * rr->dx + XmX;
                 } else {
@@ -973,10 +945,10 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             } else {
                 // если координата перемещения больше, чем координата при заданной скорости  
                 if(Direction >=0 ){
-                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) + dX;                    
+                    (*Xbreak) = dX;                    
                     (*Xend) = Xbeg + dX * rr->dx;
                 } else {
-                    (*Xbreak) = ((LONG)(Xbeg / rr->dx)) - dX;
+                    (*Xbreak) = dX;
                     (*Xend) = Xbeg - dX * rr->dx;
                 }
             }            
@@ -986,12 +958,21 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
                 return -1;  // это ошибка: перед командой ST_RUN должна быть еще команда
                 // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
             } else {
-                (*Xbreak) = (LONG)((*Xend)/rr->dx);               
+                if(Direction >=0 ){   
+                    // количество шагов на которое сдвинулись                
+                    XmX = (*Xend) - Xbeg;                
+                } else {                                
+                    XmX = Xbeg - (*Xend);
+                }  
+                (*Xbreak) = (LONG)(XmX /rr->dx);               
                 (*Vend) = Vbeg;                
             }
             break;
         case ST_BUFFER_FREE:
         case ST_STOP:
+            (*Xbreak) = 0;
+            (*Vend) = 0;
+            (*Vend) = Xbeg;
         default:
             break;
     }
@@ -1043,5 +1024,23 @@ int GoToCmd(RR * rr, double VTarget, double XTarget)
 {
     if((rr == NULL) || (VTarget == 0.0) || (XTarget == 0.0)) 
         return -1;
+    if((rr->RunState != ST_STOP)||(rr->CacheState != ST_STOP)){
+        // прервать выполнение текущей команды и остановить движение
+        //BreakCurrentCmd(rr);
+        if(rr->CalcDir>=0){
+            PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, rr->CalcDir);
+        } else {
+            PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, rr->CalcDir);
+        }
+        // тут мы уже знаем какая координата будет
+        // как-то нужно дождаться выполнения команды Deceleration
+    }
+    // V == 0;
+    //X == rr->XPosition;
+    // теперь два варианта : количество шагов до нужного положения     
+    // 1. больше, чем разгон до максимума + торможение до нужной скорости
+    //    => вычисляем сумму разгон+ торможение + движение по линейному закону
+    // 2. меньше
+    //    => вычисляем максимальную скорость до которой успеем разогнаться
     return 0;
 }
