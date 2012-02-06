@@ -31,7 +31,7 @@ LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
  
 void Calc(HWND hWnd, HDC hdc);
-void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL);
+void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -337,8 +337,8 @@ void Calc(HWND hWnd, HDC hdc)
     
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
-//    POINT TX2 = {Px,Py};
-//    POINT TV2 = {Px,Py};
+    POINT TX2 = {Px,Py};
+    POINT TV2 = {Px,Py};
     //POINT TV2 = {Px,Py};
     //POINT TA = {Px,Py};
 //    POINT VA = {Px,Py};
@@ -368,45 +368,44 @@ void Calc(HWND hWnd, HDC hdc)
     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
-     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-     PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
-     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-//     PushCmdToQueue(&rr1, ST_STOP, 0, 0, 1 );
-// 
-//     PushCmdToQueue(&rr2, ST_ACCELERATE, 5.0 * Grad_to_Rad, 30.0 * Grad_to_Rad, 1);
-//     PushCmdToQueue(&rr2, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
-//     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
-//     PushCmdToQueue(rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-//     PushCmdToQueue(rr2, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
-//     PushCmdToQueue(rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr2, ST_STOP, 0, 0, 1 );
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, -180.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_RUN, 0.0, -45.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, -90.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 0.0, -16.69 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
 
     //Control(&rr1);    
     //Control(&rr2);
     do {        
-        
+        static int K1 = 0;
+        static int K2 = 0;
 //         for( i = 0; i < rr1.DataCount; i++) 
 //         {
             Control(&rr1);
             ProcessOC(&rr1);
-//             Control(&rr2);
-//             ProcessOC(&rr2);
+            Control(&rr2);
+            ProcessOC(&rr2);
             //ProcessOC(&rr3);
-            DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL);
-            //DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L);
+            DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL, &K1);
+            DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L, &K2);
     } while ((rr1.RunState != ST_STOP)||(rr1.CacheState != ST_STOP));
     //Restore original object.
     SelectObject(hdc,original);
 
 }
-void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL)
+void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K)
 {
     double T = 0.0;
     //double TL = 0.0;
     double X = 0.0;
-    double V = 0.0;
-    DWORD K1 = 0;
-    DWORD K3 = 0;
+    double V = 0.0;    
+    static int K3 = 0;
+
 
 
     T = (double)(rr->T.Val * rr->TimerStep);
@@ -422,8 +421,8 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
         V = 0.0;
     }
 //     X0 = XX + V0*T;
-//     K3 = (int)(T*SizeX);
-    //if( K3 != K1)
+    K3 = (int)(T * SizeX);
+    if( K3 != (*K))
     {
         //Change the DC pen color
         //SetDCPenColor(hdc,RGB(0,L,255));
@@ -468,7 +467,7 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
 //         X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
 //         LineTo(hdc, X0T.x, X0T.y);
 
-        K1 = K3;
+        (*K) = K3;
     }
     (*TL) = T;
 }

@@ -176,9 +176,9 @@ int OCInit(void)
         InitRR(&rr1);  
         rr1.Index = 1;
         rr1.TmrId = 2;
-//         InitRR(&rr2);
-//         rr2.Index = 2;
-//         rr2.TmrId = 2;
+         InitRR(&rr2);
+         rr2.Index = 2;
+         rr2.TmrId = 2;
 //         InitRR(&rr3);
 //         rr3.Index = 3;
 //         rr3.TmrId = 2;
@@ -464,11 +464,11 @@ int Acceleration(RR * rr)
         } 
         rr->IntervalArray[j] = Tb + T;
         rr->DataCount++;
-        T1 = T;
-        if(rr->RunState == ST_STOP){            
-            SetRunState(rr);
-            ProcessOC(rr);
-        }
+        T1 = T;        
+    }
+    if(rr->RunState == ST_STOP){            
+        SetRunState(rr);
+        ProcessOC(rr);
     }
     rr->TimeBeg = Tb + T1;
     rr->XaccBeg += FreeData; 
