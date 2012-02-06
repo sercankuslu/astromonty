@@ -337,8 +337,8 @@ void Calc(HWND hWnd, HDC hdc)
     
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
-    POINT TX2 = {Px,Py};
-    POINT TV2 = {Px,Py};
+//    POINT TX2 = {Px,Py};
+//    POINT TV2 = {Px,Py};
     //POINT TV2 = {Px,Py};
     //POINT TA = {Px,Py};
 //    POINT VA = {Px,Py};
@@ -368,33 +368,33 @@ void Calc(HWND hWnd, HDC hdc)
     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr1, ST_STOP, 0, 0, 1 );
-
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 5.0 * Grad_to_Rad, 30.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+     PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr1, ST_STOP, 0, 0, 1 );
+// 
+//     PushCmdToQueue(&rr2, ST_ACCELERATE, 5.0 * Grad_to_Rad, 30.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr2, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //     PushCmdToQueue(rr2, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
 //     PushCmdToQueue(rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
     PushCmdToQueue(&rr2, ST_STOP, 0, 0, 1 );
 
-    Control(&rr1);    
-    Control(&rr2);
+    //Control(&rr1);    
+    //Control(&rr2);
     do {        
         
 //         for( i = 0; i < rr1.DataCount; i++) 
 //         {
             Control(&rr1);
             ProcessOC(&rr1);
-            Control(&rr2);
-            ProcessOC(&rr2);
+//             Control(&rr2);
+//             ProcessOC(&rr2);
             //ProcessOC(&rr3);
             DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL);
-            DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L);
-    } while ((rr1.RunState != ST_STOP)||(rr1.State != ST_STOP));
+            //DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L);
+    } while ((rr1.RunState != ST_STOP)||(rr1.CacheState != ST_STOP));
     //Restore original object.
     SelectObject(hdc,original);
 

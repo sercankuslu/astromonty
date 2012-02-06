@@ -73,7 +73,7 @@ typedef struct CMD_QUEUE{
     double Vend;
     double Xend;
     INT Direction;
-    LONG RunStep; // указан номер шага, на котором начнется выполнение команды
+    LONG RunStep; //  количество шагов на выполнение команды
 }Cmd_Queue;
 
 typedef struct RR{
@@ -103,7 +103,7 @@ typedef struct RR{
 
     // команды
     GD_CMD                  Cmd;
-    GD_STATE                State;
+    GD_STATE                CacheState;
     GD_STATE                RunState;
 
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
@@ -115,10 +115,11 @@ typedef struct RR{
     // параметры исполнения
     LONG                    XPosition;
     int                     RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )
+    LONG                    RunCmdCounter;
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
     int                     CalcDir;                    // направление вращения при просчете
-    LONG                    XCurCmdEnd;
+    LONG                    CacheCmdCounter;
     // исхoдные параметры:
     ARR_TYPE                TimeBeg;
     LONG                    XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
