@@ -20,6 +20,7 @@ extern RR rr3;
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
+HWND hwndDialog = NULL;
 
 TCHAR szTitle[MAX_LOADSTRING];                          // Текст строки заголовка
 TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса главного окна
@@ -29,6 +30,8 @@ ATOM                    MyRegisterClass(HINSTANCE hInstance);
 BOOL                    InitInstance(HINSTANCE, int);
 LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK        KeyDialog(HWND, UINT, WPARAM, LPARAM);
+void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc(HWND hWnd, HDC hdc);
 void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
@@ -166,8 +169,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 switch (wmId)
                 {
                 case IDM_ABOUT:
-                        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                        break;
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                    break;
+                case IDM_KEYS:
+                    if (!IsWindow(hwndDialog)) { 
+                        // окно в немодальном режиме                        
+                        hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, (DLGPROC)KeyDialog); 
+                        ShowWindow(hwndDialog, SW_SHOW);
+                    }
+                    break;
                 case IDM_EXIT:
                         DestroyWindow(hWnd);
                         break;
@@ -238,6 +248,62 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
         }
         return (INT_PTR)FALSE;
+}
+// Обработчик сообщений для окна "О программе".
+INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    HDC hdc;    
+    RECT rect;
+    PAINTSTRUCT ps;    
+    static int X = 100;
+    static int Y = 100;
+    HWND hDisplay = NULL;
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+    case WM_PAINT:
+        hdc = BeginPaint(hDlg, &ps); 
+        GetItemRect(hDlg,&rect,IDC_STATIC);
+        MoveToEx(hdc, rect.left, rect.top, NULL);
+        LineTo(hdc, rect.left + X, rect.top + Y);
+        EndPaint(hDlg, &ps);
+    case WM_COMMAND:
+        switch (LOWORD(wParam)){        
+        case IDC_BUTTON_UP:
+            {                
+                X = 200;
+                GetItemRect(hDlg,&rect,IDC_STATIC);
+                hDisplay = GetDlgItem (hDlg, IDC_STATIC);
+                InvalidateRect(hDlg, &rect, TRUE);
+            }
+            break;
+        case IDC_BUTTON_DOWN:
+            break;
+        case IDC_BUTTON_LEFT:
+            break;
+        case IDC_BUTTON_RIGHT:
+            break;
+        case IDC_BUTTON_ESC:
+            break;
+        case IDC_BUTTON_ENTER:
+            break;
+        case IDOK: 
+        case IDCANCEL:
+            {
+                //EndDialog(hDlg, LOWORD(wParam));
+                DestroyWindow(hDlg); 
+                hwndDialog = NULL; 
+                //return TRUE; 
+                return (INT_PTR)TRUE;
+            }            
+            break;
+        default:
+            break;
+        }
+    }
+    return (INT_PTR)FALSE;
 }
 
 void Calc(HWND hWnd, HDC hdc)
@@ -470,4 +536,20 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
         (*K) = K3;
     }
     (*TL) = T;
+}
+void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
+{
+    POINT topleft;
+    POINT bottright;
+    GetWindowRect (GetDlgItem (hDlg, nIDDlgItem), rect);
+    topleft.x = rect->left;
+    topleft.y = rect->top;
+    bottright.x = rect->right;
+    bottright.y = rect->bottom;
+    ScreenToClient(hDlg, &topleft);
+    ScreenToClient(hDlg, &bottright);
+    rect->bottom = bottright.y;
+    rect->left = topleft.x;
+    rect->right = bottright.x;
+    rect->top = topleft.y;
 }
