@@ -25,6 +25,8 @@ HWND hwndDialog = NULL;
 TCHAR szTitle[MAX_LOADSTRING];                          // Текст строки заголовка
 TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса главного окна
 
+char Text[256] = "Test";
+
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                    MyRegisterClass(HINSTANCE hInstance);
 BOOL                    InitInstance(HINSTANCE, int);
@@ -35,6 +37,7 @@ void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc(HWND hWnd, HDC hdc);
 void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
+void DrawMenu( LPPAINTSTRUCT ps, RECT * rect);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -63,6 +66,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
     SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
+    if (!IsWindow(hwndDialog)) { 
+        // окно в немодальном режиме                        
+        hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
+        ShowWindow(hwndDialog, SW_SHOW);
+    }
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -139,6 +147,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         ShowWindow(hWnd, nCmdShow);
         UpdateWindow(hWnd);
         hWindow = hWnd;
+
         return TRUE;
 }
 
@@ -257,7 +266,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     PAINTSTRUCT ps;    
     static int X = 100;
     static int Y = 100;
-    HWND hDisplay = NULL;
+    //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
@@ -265,21 +274,31 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         return (INT_PTR)TRUE;
     case WM_PAINT:
         hdc = BeginPaint(hDlg, &ps); 
+
         GetItemRect(hDlg,&rect,IDC_STATIC);
-        MoveToEx(hdc, rect.left, rect.top, NULL);
-        LineTo(hdc, rect.left + X, rect.top + Y);
+        DrawMenu(&ps, &rect);
+
         EndPaint(hDlg, &ps);
     case WM_COMMAND:
         switch (LOWORD(wParam)){        
         case IDC_BUTTON_UP:
             {                
                 X = 200;
-                GetItemRect(hDlg,&rect,IDC_STATIC);
-                hDisplay = GetDlgItem (hDlg, IDC_STATIC);
-                InvalidateRect(hDlg, &rect, TRUE);
+                //GetItemRect(hDlg,&rect,IDC_STATIC);
+                //hDisplay = GetDlgItem (hDlg, IDC_STATIC);
+                char temp[] = ("No text");
+                memset(Text,0,sizeof(Text));
+                memcpy((void*)Text,(void*)temp,sizeof(temp));
+                InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_DOWN:
+            {
+                char temp[] ="Text";
+                memset(Text,0,sizeof(Text));
+                memcpy((void*)Text,(void*)temp,sizeof(temp));
+                InvalidateRect(hDlg, NULL, FALSE);
+            }
             break;
         case IDC_BUTTON_LEFT:
             break;
@@ -349,7 +368,7 @@ void Calc(HWND hWnd, HDC hdc)
 
     //double Vf = 180 * 200/PI;
     //char RRR[256];
-    GetClientRect(hWnd, &rect);
+    GetClientRect(hWnd, &rect);    
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
     LineTo(hdc, rect.right - 9, rect.bottom - 9);
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
@@ -552,4 +571,23 @@ void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
     rect->left = topleft.x;
     rect->right = bottright.x;
     rect->top = topleft.y;
+}
+
+
+void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
+{    
+    HFONT hFont;
+    hFont =  CreateFont(36,0,0,0,FW_DONTCARE,FALSE,FALSE,FALSE,ANSI_CHARSET,OUT_OUTLINE_PRECIS,
+        CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH,TEXT("Times New Roman"));
+    SelectObject(ps->hdc, hFont);
+
+    SelectObject(ps->hdc, GetStockObject(WHITE_BRUSH)); 
+    Rectangle(ps->hdc,rect->left,rect->top,rect->right,rect->bottom);
+    
+//     MoveToEx(ps->hdc, rect->left, rect->top, NULL);
+//     LineTo(ps->hdc, rect->left + 100, rect->top + 100);
+    TextOutA(ps->hdc, rect->left,rect->top, Text ,sizeof(Text)/sizeof(Text[0]));
+
+    DeleteObject(hFont);    
+     
 }
