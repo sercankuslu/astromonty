@@ -451,11 +451,11 @@ void Calc(HWND hWnd, HDC hdc)
     
     DisplayInit();
     
-//     OutTextXY(0,54,Text1,1); // ___    
-//     OutTextXY(0,10,Text1,1); // ___
-    //OutTextXY(0,38,Text2,1); // a
+     OutTextXY(0,54,Text1,1); // ___    
+     OutTextXY(0,10,Text1,1); // ___
+    OutTextXY(0,38,Text2,1); // a
     OutTextXY(0,24,Text3,1); // d  	
-    //OutTextXY(0,12,Text4,0); // msg
+    OutTextXY(0,12,Text4,0); // msg
 //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:

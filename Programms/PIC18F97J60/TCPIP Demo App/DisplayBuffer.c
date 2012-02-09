@@ -56,19 +56,19 @@ void SetPixelDB(WORD X, WORD Y, BOOL color)
     if( (X < SIZE_X)&&(Y < SIZE_Y)){
         a = GetAddr((Y >> 3) * SIZE_X + X);   
         if(color){
-            (*a) = (*a)|(1 << (Y & 0x07));
+            (*a) = (*a)|(0x80 >> (Y & 0x07));
         } else {
-            (*a) =(*a)&(~(1 << (Y & 0x07)));
+            (*a) =(*a)&(~(0x80 >> (Y & 0x07)));
         }
 
     }
 }
 BOOL GetPixelDB(WORD X, WORD Y)
 { 
-    BYTE * a;    
+    BYTE * a;        
     if( (X < SIZE_X )&&(Y < SIZE_Y )){
         a = GetAddr(((Y >> 3) * SIZE_X) + X);   
-        if(((*a)&(1 << (Y & 0x07)))>0) {
+        if(((*a)&(0x80 >> (Y & 0x07)))>0) {
             return TRUE;
         }else{
             return FALSE;
@@ -208,25 +208,27 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
             Data3 = Data.byte.HB;
             Data.Val  = (I<<(16-YPos));
             Data1 = Data.byte.HB;
-            WriteByteAtBank(YBank,   XPos, Data3,Mask3);
+            WriteByteAtBank(YBank,   XPos, Data1,Mask1);
             WriteByteAtBank(YBank+1, XPos, Data2,Mask2);
-            WriteByteAtBank(YBank+2, XPos, Data1,Mask1);            
+            WriteByteAtBank(YBank+2, XPos, Data3,Mask3);            
             XPos++;
             Image++;
         }
         //промежуток между символами
-        WriteByteAtBank(YBank,   XPos, 0,Mask3);
+        WriteByteAtBank(YBank,   XPos, 0,Mask1);
         WriteByteAtBank(YBank+1, XPos, 0,Mask2);
-        WriteByteAtBank(YBank+2, XPos, 0,Mask1);            
+        WriteByteAtBank(YBank+2, XPos, 0,Mask3);            
         XPos++;
     }    
 }
 //битовое изображение, хранится построчно 
 void OutImage(BYTE X, BYTE Y, BYTE SX, BYTE SY,BYTE* Image)
 {
+	#ifdef _WINDOWS
     UNUSED(X);
     UNUSED(Y);
     UNUSED(SX);
     UNUSED(SY);
     UNUSED(Image);
+    #endif
 }
