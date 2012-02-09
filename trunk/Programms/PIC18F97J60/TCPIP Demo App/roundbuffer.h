@@ -1,4 +1,4 @@
-#include "../guidance/stdafx.h"
+#include "stdafx.h"
 #ifndef _ROUNDBUFFER_H_
 #define _ROUNDBUFFER_H_
 

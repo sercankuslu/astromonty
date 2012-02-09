@@ -338,11 +338,11 @@ int main(void)
     pcfLCDInit(add1);
     DisplayInit();
     InitializeBoard();
-    OutTextXY(0,54,Text1,1); // ___    
-    OutTextXY(0,10,Text1,1); // ___
-    OutTextXY(0,38,Text2,1); // a
-    OutTextXY(0,24,Text3,1); // d  	
-	OutTextXY(0,12,Text4,0); // msg
+//    OutTextXY(0,54,Text1,1); // ___    
+//    OutTextXY(0,10,Text1,1); // ___
+//    OutTextXY(0,38,Text2,1); // a
+//    OutTextXY(0,24,Text3,1); // d  	
+//	OutTextXY(0,12,Text4,0); // msg
 	   
     DisplayDraw(add1);
 
@@ -466,12 +466,14 @@ int main(void)
                 //AnnounceIP();
             }    
             UpdateKey();
+            SetPixelDB(x, y, 0); 
             if(CKeys.up) y++;
             if(CKeys.right) x++;
             if(CKeys.down) y--;
             if (CKeys.left)x--;
-            OutTextXY(x,y,Text,1);
-            OutTextXY(x,y,RBuffer,1);  
+//            OutTextXY(x,y,Text,1);
+//            OutTextXY(x,y,RBuffer,1);  
+			SetPixelDB(x, y, 1); 
             PushAttr(ReceivePacket, OUT_BUFFER);            
             DisplayDraw(add1);
         }
