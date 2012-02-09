@@ -30,22 +30,35 @@ typedef struct _WORD
     WORD LW;
     WORD HW;
 } _WORD;
-typedef struct _BYTE
+typedef struct DWBYTE
 {
     BYTE LB;
     BYTE HB;
     BYTE UB;
     BYTE MB;
-} _BYTE;
+} DWBYTE;
 typedef union 
 {
     DWORD Val;
     _WORD word;
-    _BYTE byte;
+    DWBYTE byte;
 
 } DWORD_VAL;
 #endif
+#ifndef _WORD_VAL_
+#define _WORD_VAL_
+typedef struct WBYTE
+{
+    BYTE LB;
+    BYTE HB;
+} WBYTE;
+typedef union 
+{
+    WORD Val;    
+    WBYTE byte;
 
+} WORD_VAL;
+#endif
 #endif
 
 // TODO. Установите здесь ссылки на дополнительные заголовки, требующиеся для программы

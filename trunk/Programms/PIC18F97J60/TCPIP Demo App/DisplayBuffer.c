@@ -27,6 +27,55 @@ static BYTE DisplayBuffer3[256];
 static BYTE DisplayBuffer4[40];
 #endif
 
+
+
+BYTE * GetAddr(WORD addr)
+{
+    WORD_VAL aa;
+    aa.Val = addr;
+    switch (aa.byte.HB){
+        case 0:
+            return &DisplayBuffer0[aa.byte.LB];
+        case 1:
+            return &DisplayBuffer1[aa.byte.LB];
+        case 2:
+            return &DisplayBuffer2[aa.byte.LB];
+        case 3:
+            return &DisplayBuffer3[aa.byte.LB];
+        case 4:
+            if(aa.byte.LB < 40)
+                return &DisplayBuffer4[aa.byte.LB];
+        default:
+            return NULL;
+    }    
+}
+void SetPixelDB(WORD X, WORD Y, BOOL color)
+{ 
+    BYTE * a;
+    BYTE b = 0;
+    if( (X < SIZE_X)&&(Y < SIZE_Y)){
+        a = GetAddr((Y >> 3) * SIZE_X + X);   
+        if(color){
+            (*a) = (*a)|(1 << (Y & 0x07));
+        } else {
+            (*a) =(*a)&(~(1 << (Y & 0x07)));
+        }
+
+    }
+}
+BOOL GetPixelDB(WORD X, WORD Y)
+{ 
+    BYTE * a;    
+    if( (X < SIZE_X )&&(Y < SIZE_Y )){
+        a = GetAddr(((Y >> 3) * SIZE_X) + X);   
+        if(((*a)&(1 << (Y & 0x07)))>0) {
+            return TRUE;
+        }else{
+            return FALSE;
+        }
+    }
+    return FALSE;
+}
 void DisplayInit()
 {
     DisplayClear();

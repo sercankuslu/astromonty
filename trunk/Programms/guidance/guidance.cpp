@@ -423,8 +423,8 @@ void Calc(HWND hWnd, HDC hdc)
     int JDN;
     double JD;
     
-    GDateToJD(GDate, &JDN, &JD);
-    JDToGDate(JD, &GDate1);
+     GDateToJD(GDate, &JDN, &JD);
+     JDToGDate(JD, &GDate1);
     
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
@@ -442,6 +442,20 @@ void Calc(HWND hWnd, HDC hdc)
     V = 0.0;
     V1 = 0.0;
     V0 = 5.0 * Grad_to_Rad;
+   
+    unsigned char Text[20] = "Testing";
+    unsigned char Text1[] = "_______________________";
+    unsigned char Text2[] = " a: 06h 45m 08.9173s";
+    unsigned char Text3[] = " d:-16  42' 58.017\"";
+    unsigned char Text4[] = " Соединение установлено";
+    
+    DisplayInit();
+    
+//     OutTextXY(0,54,Text1,1); // ___    
+//     OutTextXY(0,10,Text1,1); // ___
+    //OutTextXY(0,38,Text2,1); // a
+    OutTextXY(0,24,Text3,1); // d  	
+    //OutTextXY(0,12,Text4,0); // msg
 //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
@@ -587,6 +601,7 @@ void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
     int iHeight = rect->bottom - rect->top;
     HDC hMemDC; 
     HBITMAP hbmScreen = NULL;
+    BOOL b = FALSE;
     hMemDC = CreateCompatibleDC(ps->hdc);
 
     BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, SRCCOPY);
@@ -594,10 +609,16 @@ void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
     hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
     SelectObject(hMemDC, hbmScreen);
 
+    SetPixelDB(7, 7, true);    
     
     for(int i = 0; i < iHeight; i++)
         for(int j = 0; j < iWidth; j++){
-            SetPixel(hMemDC, j, i, RGB(255,0,0));
+            b = GetPixelDB(j/3, i/3);
+            if(!b){
+                SetPixel(hMemDC, j, i, RGB(255,255,255));
+            } else {
+                SetPixel(hMemDC, j, i, RGB(0,0,0));
+            }
         }
     // быстро копируем результат отрисовки
     BitBlt(ps->hdc, rect->left,rect->top, iWidth, iHeight, hMemDC, 0, 0, SRCCOPY);

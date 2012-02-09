@@ -52,7 +52,7 @@
 				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="1"
 				WarningLevel="4"
-				WarnAsError="true"
+				WarnAsError="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
