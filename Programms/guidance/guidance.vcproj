@@ -178,11 +178,47 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\font.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\guidance.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\dsPIC33\TCPIP Demo App\OCTimer.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\pcf8535.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -244,11 +280,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\font.h"
+				>
+			</File>
+			<File
 				RelativePath=".\guidance.h"
 				>
 			</File>
 			<File
 				RelativePath="..\dsPIC33\TCPIP Demo App\OCTimer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\PCF8535.h"
 				>
 			</File>
 			<File

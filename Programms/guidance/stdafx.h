@@ -20,6 +20,8 @@
 #define USE_PROTOCOL_SERVER
 #define USE_PROTOCOL_CLIENT
 
+#define UNUSED(x) x
+
 #ifndef _DWORD_VAL_
 #define _DWORD_VAL_
 
@@ -28,11 +30,18 @@ typedef struct _WORD
     WORD LW;
     WORD HW;
 } _WORD;
-
+typedef struct _BYTE
+{
+    BYTE LB;
+    BYTE HB;
+    BYTE UB;
+    BYTE MB;
+} _BYTE;
 typedef union 
 {
     DWORD Val;
     _WORD word;
+    _BYTE byte;
 
 } DWORD_VAL;
 #endif

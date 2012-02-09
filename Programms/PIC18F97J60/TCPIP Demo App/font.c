@@ -1,7 +1,13 @@
+#include "stdafx.h"
 #include "font.h"
+#ifndef _WINDOWS
 #include "GenericTypeDefs.h"
 #pragma romdata overlay FONT_SECTION =0x00AC00
-static rom BYTE Arial_Data[] = {
+static rom 
+#else
+static
+#endif
+    WORD Arial_Data[] = {
     0x0,0x0,0x0,0x0,0x0,    	
 	0x02F,
 	0x003,0x00,0x000,
@@ -164,7 +170,12 @@ static rom BYTE Arial_Data[] = {
 	0x03E,0x008,0x01C,0x022,0x022,0x01C,
 	0x02C,0x012,0x012,0x012,0x03E,
 };
-static rom WORD Arial_B_Data[]={
+#ifndef _WINDOWS
+static rom 
+#else
+static
+#endif
+    WORD Arial_B_Data[]={
     0x000,0x000,0x000,0x000,0x000,    
     0x0DF,0x0DE,
     0x007,0x007,0x000,0x007,0x007,
@@ -329,7 +340,12 @@ static rom WORD Arial_B_Data[]={
 
 
 };
-static rom WORD Arial_cp1251[257] = {
+#ifndef _WINDOWS
+static rom 
+#else
+static
+#endif
+WORD Arial_cp1251[257] = {
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  5,  6,  9, 15, 20, 28, 35, 36, 38, 40, 47, 50, 52, 55, 56,
@@ -347,7 +363,12 @@ static rom WORD Arial_cp1251[257] = {
     538,543,547,552,556,561,566,571,575,579,583,587,592,597,601,605,
     609,613,617,622,626,631,635,640,644,649,655,660,665,669,674,680,685
 };
-static rom WORD Arial_B_cp1251[257]={
+#ifndef _WINDOWS
+static rom 
+#else
+static
+#endif
+WORD Arial_B_cp1251[257]={
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  5,  7, 12, 18, 23, 31, 38, 40, 43, 46, 49, 54, 56, 59, 61,
@@ -365,14 +386,15 @@ static rom WORD Arial_B_cp1251[257]={
     742,747,753,759,763,770,776,784,789,795,801,807,813,820,826,832,
     838,844,849,853,860,868,873,880,885,893,902,908,915,920,925,933,939  
 };
+#ifndef _WINDOWS
 #pragma romdata
-
+#endif
 WORD* GetSymbolImage(BYTE symbol,WORD* OutWordCount,BYTE CFont){
     static WORD Image[12];
     BYTE i;        
     WORD Begin =  0;
     WORD End   =  0;    
-    INT32 Size =  0;
+    WORD Size =  0;
     switch(CFont){
         case 0:
             Begin = Arial_cp1251[symbol];
