@@ -1,13 +1,21 @@
 #ifndef PCF8535_H__
 #define PCF8535_H__
-#include "TCPIP Stack/TCPIP.h"
+
+#ifdef _WINDOWS
+#   include "..\..\guidance\stdafx.h"
+#else
+#   include "TCPIP Stack/TCPIP.h"
+#endif
+
 /*
 PCF8535 lcd controller control codes
 */
 
 #define PCF8535_BUS_ADDRESS 0x78
-#define LCD_RESET LATCbits.LATC5 
-#define LCD_RESET_TRIS TRISCbits.TRISC5
+#ifndef _WINDOWS
+#   define LCD_RESET LATCbits.LATC5 
+#   define LCD_RESET_TRIS TRISCbits.TRISC5
+#endif
 #define LCD_SIZE_X 133
 #define LCD_SIZE_Y 64
 

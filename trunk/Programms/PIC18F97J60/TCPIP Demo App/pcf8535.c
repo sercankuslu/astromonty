@@ -1,6 +1,21 @@
+#include "stdafx.h"
 #include "PCF8535.h"
+
+#ifndef _WINDOWS
 #include "TCPIP Stack/TCPIP.h"
 #include <i2c.h>
+#endif
+
+#ifdef _WINDOWS
+struct LATCbits {
+    BYTE LATC5;
+}LATCbits;
+struct TRISCbits {
+    BYTE TISC5;
+}TRISCbits;
+#   define LCD_RESET LATCbits.LATC5
+#   define LCD_RESET_TRIS TRISCbits.TRISC5
+#endif
 
 // LCD controller init sequence
 static BYTE INIT_SEQUENCE[] =
@@ -83,6 +98,7 @@ BYTE I2C_Recv[21];
 static char START = 0;
 void pcfLCDInit(BYTE addr)
 {
+#ifndef _WINDOWS
 	WORD i;
 	BYTE sync_mode=0;
 	BYTE slew=0; 
@@ -122,10 +138,16 @@ void pcfLCDInit(BYTE addr)
     //---START I2C---
     //StartI2C();
     LCDSendCommand(addr,(BYTE*)INIT_SEQUENCE,sizeof(INIT_SEQUENCE));
+#else 
+    UNUSED(addr); // заглушка
+#endif
 }
 
 void LCDSetContrast(BYTE contrast)
 {
+#ifdef _WINDOWS
+    UNUSED(contrast); // заглушка
+#endif
 /*	if(lcd_start_write(modeLCD_CMD_TILL_STOP)){
 		WriteI2C1(cmdLCD_DEFAULT_PAGE);
 		WriteI2C1(cmdLCD_COMMAND_PAGE | paramLCD_PAGE_HV_GEN);
@@ -152,12 +174,13 @@ void LCDSetContrast(BYTE contrast)
 
 int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
 {
+#ifndef _WINDOWS
 	BYTE data; 
 	BYTE status; 
 	BYTE i;
 	
 	RestartI2C();
-    IdleI2C();
+        IdleI2C();
 
 	//****write the address of the device for communication***
     data = SSPBUF;        //read any previous stored content in buffer to clear buffer full status
@@ -207,13 +230,23 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
     
 	
 //---TERMINATE COMMUNICATION FROM MASTER SIDE---
-     IdleI2C(); 
+     IdleI2C();
+#else
+    UNUSED(add1);
+    UNUSED(wrptr);
+    UNUSED(size);
+#endif
      return 0;
 }
 /************************************************************
 ************************************************************/
 int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
 {
+#ifdef _WINDOWS
+    UNUSED(add1);
+    UNUSED(wrptr);
+    UNUSED(size);
+#else
     BYTE i;
 	BYTE data; 
 	BYTE status; 
@@ -273,6 +306,7 @@ int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
 	wrptr ++;                        // increment pointer
 	}            
     IdleI2C();
+#endif
     return 0;
 }
 /************************************************************
@@ -280,6 +314,9 @@ int LCDSendCommand(BYTE add1,BYTE* wrptr, BYTE size)
 
 int LCDClearData(BYTE add1)
 {
+#ifdef _WINDOWS
+    UNUSED(add1);
+#else
 	BYTE i; 
 	BYTE j; 
 	BYTE data; 
@@ -339,6 +376,7 @@ int LCDClearData(BYTE add1)
 	//---TERMINATE COMMUNICATION FROM MASTER SIDE---
 	     IdleI2C();
 	}
+#endif
 	return 0;
 }
 /************************************************************

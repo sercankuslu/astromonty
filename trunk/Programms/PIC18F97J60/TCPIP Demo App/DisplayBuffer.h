@@ -1,6 +1,10 @@
 #ifndef _DISPLAY_BUFFER_H
 #define _DISPLAY_BUFFER_H
-#include "TCPIP Stack/TCPIP.h"
+#ifdef _WINDOWS
+#   include "..\..\guidance\stdafx.h"
+#else
+#   include "TCPIP Stack/TCPIP.h"
+#endif
 
 void DisplayInit(void);
 void DisplayClear(void);

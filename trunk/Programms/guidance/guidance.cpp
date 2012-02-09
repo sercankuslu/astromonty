@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 #include "..\dsPIC33\protocol.h"
+#include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
 
 
 #define MAX_LOADSTRING 100
@@ -14,6 +15,11 @@
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
+extern BYTE DisplayBuffer0[256];
+extern BYTE DisplayBuffer1[256];
+extern BYTE DisplayBuffer2[256];
+extern BYTE DisplayBuffer3[256];
+extern BYTE DisplayBuffer4[40];
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
@@ -574,20 +580,29 @@ void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
 }
 
 
+
 void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
 {    
-    HFONT hFont;
-    hFont =  CreateFont(36,0,0,0,FW_DONTCARE,FALSE,FALSE,FALSE,ANSI_CHARSET,OUT_OUTLINE_PRECIS,
-        CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH,TEXT("Times New Roman"));
-    SelectObject(ps->hdc, hFont);
+    int iWidth = rect->right - rect->left;
+    int iHeight = rect->bottom - rect->top;
+    HDC hMemDC; 
+    HBITMAP hbmScreen = NULL;
+    hMemDC = CreateCompatibleDC(ps->hdc);
 
-    SelectObject(ps->hdc, GetStockObject(WHITE_BRUSH)); 
-    Rectangle(ps->hdc,rect->left,rect->top,rect->right,rect->bottom);
+    BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, SRCCOPY);
+
+    hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
+    SelectObject(hMemDC, hbmScreen);
+
     
-//     MoveToEx(ps->hdc, rect->left, rect->top, NULL);
-//     LineTo(ps->hdc, rect->left + 100, rect->top + 100);
-    TextOutA(ps->hdc, rect->left,rect->top, Text ,sizeof(Text)/sizeof(Text[0]));
+    for(int i = 0; i < iHeight; i++)
+        for(int j = 0; j < iWidth; j++){
+            SetPixel(hMemDC, j, i, RGB(255,0,0));
+        }
+    // быстро копируем результат отрисовки
+    BitBlt(ps->hdc, rect->left,rect->top, iWidth, iHeight, hMemDC, 0, 0, SRCCOPY);
+    // освобождаем контекст
+    DeleteDC(hMemDC);
+    DeleteObject(hbmScreen);
 
-    DeleteObject(hFont);    
-     
 }

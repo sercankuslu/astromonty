@@ -1,9 +1,13 @@
 
-#include "GenericTypeDefs.h"
-#include "DisplayBuffer.h"
+#include "stdafx.h"
+#ifndef _WINDOWS
+#   include "GenericTypeDefs.h"
+#endif
 #include "pcf8535.h"
+#include "DisplayBuffer.h"
 #include "font.h"
 
+#ifndef _WINDOWS
 #pragma udata DISPLAY0 =0x800
 static BYTE DisplayBuffer0[256];
 #pragma udata DISPLAY1 =0x900
@@ -15,6 +19,13 @@ static BYTE DisplayBuffer3[256];
 #pragma udata DISPLAY4 =0xC00
 static BYTE DisplayBuffer4[40];
 #pragma udata
+#else
+static BYTE DisplayBuffer0[256];
+static BYTE DisplayBuffer1[256];
+static BYTE DisplayBuffer2[256];
+static BYTE DisplayBuffer3[256];
+static BYTE DisplayBuffer4[40];
+#endif
 
 void DisplayInit()
 {
@@ -22,47 +33,36 @@ void DisplayInit()
 }
 
 void DisplayClear(void)
-{
-    WORD i;
+{    
     //очистка буфера экрана
-    for(i=0;i<256;i++){
-        DisplayBuffer0[i]=0;
-        DisplayBuffer1[i]=0;
-        DisplayBuffer2[i]=0;
-        DisplayBuffer3[i]=0;
-        if(i<40) DisplayBuffer4[i]=0;
-    }
+    memset(DisplayBuffer0, 0, sizeof(DisplayBuffer0));
+    memset(DisplayBuffer1, 0, sizeof(DisplayBuffer1));
+    memset(DisplayBuffer2, 0, sizeof(DisplayBuffer2));
+    memset(DisplayBuffer3, 0, sizeof(DisplayBuffer3));
+    memset(DisplayBuffer4, 0, sizeof(DisplayBuffer4));
 }
 
 void DisplayDraw(BYTE addr)
 {    
-	WORD i;
-	#define BLOCK_SIZE 64
+    WORD i;
+    #define BLOCK_SIZE 64
+
     LCDSetXY(addr,0,0);	
-	for(i=0;i<256;i+=BLOCK_SIZE){			
-    	LCDSendData(addr, &DisplayBuffer0[i],BLOCK_SIZE);
- 	}   
-	for(i=0;i<256;i+=64){			
-    	LCDSendData(addr, &DisplayBuffer1[i],BLOCK_SIZE);
- 	}   
-	for(i=0;i<256;i+=64){			
-    	LCDSendData(addr, &DisplayBuffer2[i],BLOCK_SIZE);
- 	}   
-	for(i=0;i<256;i+=64){			
-    	LCDSendData(addr, &DisplayBuffer3[i],BLOCK_SIZE);
- 	}   
-    LCDSendData(addr, DisplayBuffer4,      40);
-	/*
-	LCDSendData(addr, DisplayBuffer4,      40);
-    LCDSendData(addr,&DisplayBuffer3[128], 128);
-    LCDSendData(addr, DisplayBuffer3,      128);
-    LCDSendData(addr,&DisplayBuffer2[128], 128);
-    LCDSendData(addr, DisplayBuffer2,      128);
-    LCDSendData(addr,&DisplayBuffer1[128], 128);
-    LCDSendData(addr, DisplayBuffer1,      128);
-    LCDSendData(addr,&DisplayBuffer0[128], 128);
-    LCDSendData(addr, DisplayBuffer0,      128);
-	*/
+
+    for(i=0;i<256;i+=BLOCK_SIZE){			
+        LCDSendData(addr, &DisplayBuffer0[i],BLOCK_SIZE);
+    }   
+    for(i=0;i<256;i+=64){			
+        LCDSendData(addr, &DisplayBuffer1[i],BLOCK_SIZE);
+    }   
+    for(i=0;i<256;i+=64){			
+        LCDSendData(addr, &DisplayBuffer2[i],BLOCK_SIZE);
+    }   
+    for(i=0;i<256;i+=64){			
+        LCDSendData(addr, &DisplayBuffer3[i],BLOCK_SIZE);
+    }   
+    LCDSendData(addr, DisplayBuffer4, 40);
+
 }
 void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
 {   
@@ -105,13 +105,13 @@ void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
 }
 void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 {    
-    BYTE  count;    
+    WORD  count;    
     BYTE i;	
     BYTE  YBank = (Y >> 3);    
     BYTE  YPos  =  Y&0x07;  
     BYTE  XPos  = X;
-    UINT16_VAL Mask;
-    UINT16_VAL Data;
+    DWORD_VAL Mask;
+    DWORD_VAL Data;
     BYTE  Data1;
     BYTE  Data2;
     BYTE  Data3;
@@ -175,5 +175,9 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 //битовое изображение, хранится построчно 
 void OutImage(BYTE X, BYTE Y, BYTE SX, BYTE SY,BYTE* Image)
 {
-    
+    UNUSED(X);
+    UNUSED(Y);
+    UNUSED(SX);
+    UNUSED(SY);
+    UNUSED(Image);
 }

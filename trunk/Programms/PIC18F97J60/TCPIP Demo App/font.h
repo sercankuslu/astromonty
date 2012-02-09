@@ -1,6 +1,12 @@
 #ifndef _FONT_H
 #define _FONT_H
-#include "GenericTypeDefs.h"
+
+#ifdef _WINDOWS
+#   include "..\..\guidance\stdafx.h"
+#else
+#   include "GenericTypeDefs.h"
+#endif
+
 
 #define ARIAL   0
 #define ARIAL_B 1
