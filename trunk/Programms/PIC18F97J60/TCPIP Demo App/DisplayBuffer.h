@@ -15,4 +15,7 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont);
 void SetPixelDB(WORD X, WORD Y, BOOL color);
 BYTE * GetAddr(WORD addr);
 BOOL GetPixelDB(WORD X, WORD Y);
+void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image);
+void OutImage(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image);
+
 #endif //_DISPLAY_BUFFER_H

@@ -56,11 +56,10 @@ void SetPixelDB(WORD X, WORD Y, BOOL color)
     if( (X < SIZE_X)&&(Y < SIZE_Y)){
         a = GetAddr((Y >> 3) * SIZE_X + X);   
         if(color){
-            (*a) = (*a)|(0x80 >> (Y & 0x07));
+            (*a) = (*a)|(0x01 << (Y & 0x07));
         } else {
-            (*a) =(*a)&(~(0x80 >> (Y & 0x07)));
+            (*a) =(*a)&(~(0x01 << (Y & 0x07)));
         }
-
     }
 }
 BOOL GetPixelDB(WORD X, WORD Y)
@@ -68,7 +67,7 @@ BOOL GetPixelDB(WORD X, WORD Y)
     BYTE * a;        
     if( (X < SIZE_X )&&(Y < SIZE_Y )){
         a = GetAddr(((Y >> 3) * SIZE_X) + X);   
-        if(((*a)&(0x80 >> (Y & 0x07)))>0) {
+        if(((*a)&(0x01 << (Y & 0x07)))>0) {
             return TRUE;
         }else{
             return FALSE;
@@ -78,6 +77,7 @@ BOOL GetPixelDB(WORD X, WORD Y)
 }
 void DisplayInit()
 {
+    InitFonts();
     DisplayClear();
 }
 
@@ -156,79 +156,49 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 {    
     WORD  count;    
     BYTE i;	
-    BYTE  YBank = (Y >> 3);    
-    BYTE  YPos  =  Y&0x07;  
-    BYTE  XPos  = X;
-    DWORD_VAL Mask;
-    DWORD_VAL Data;
-    BYTE  Data1;
-    BYTE  Data2;
-    BYTE  Data3;
-    BYTE  Mask1;//^
-    BYTE  Mask2;//=    
-    BYTE  Mask3;//v
-    WORD  FontMask;
+    WORD FontSize = 0;
+    WORD XX = 0;
     BYTE* ptr;
     WORD* Image;
-	WORD  I;
-	switch(CFont){
-        case 0:
-            FontMask = (WORD)ARIAL_MASK<<8;
-        break;
-        case 1:
-            FontMask = (WORD)ARIAL_B_MASK<<6;
-        break;
-        default:
-            FontMask = 0;
-    }       
-    
-    Mask.Val  = (FontMask>>YPos);
-    Mask2 = Mask.byte.LB;
-    Mask3 = Mask.byte.HB;
-    Mask.Val  = (FontMask<<(16-YPos));
-    Mask1 = Mask.byte.HB;
-        
     ptr = Text;
+    XX = X;
     while ( *ptr ){
         Image = GetSymbolImage(*ptr++,&count,CFont);		
-        for(i=0;i<count;i++){
-            	switch(CFont){
-            case 0:
-                I = *Image<<8;
+        switch(CFont){
+        case 0: FontSize = SIZE_ARIAL;
             break;
-            case 1:
-                I = *Image<<6;
+        case 1: FontSize = SIZE_ARIAL_B;
             break;
-            default:      
-                I=0;              
-         }       
-			
-            Data.Val = I>>YPos;
-            Data2 = Data.byte.LB;
-            Data3 = Data.byte.HB;
-            Data.Val  = (I<<(16-YPos));
-            Data1 = Data.byte.HB;
-            WriteByteAtBank(YBank,   XPos, Data1,Mask1);
-            WriteByteAtBank(YBank+1, XPos, Data2,Mask2);
-            WriteByteAtBank(YBank+2, XPos, Data3,Mask3);            
-            XPos++;
-            Image++;
+        default: ;
         }
-        //промежуток между символами
-        WriteByteAtBank(YBank,   XPos, 0,Mask1);
-        WriteByteAtBank(YBank+1, XPos, 0,Mask2);
-        WriteByteAtBank(YBank+2, XPos, 0,Mask3);            
-        XPos++;
+         OutImage(XX,Y,count,FontSize,Image);
+         XX += count+1;
     }    
 }
-//битовое изображение, хранится построчно 
-void OutImage(BYTE X, BYTE Y, BYTE SX, BYTE SY,BYTE* Image)
+//битовое изображение
+// формат изображения:
+// байты : 0 1 2 3 4 ...
+// биты ( строки)
+// 0
+// 1
+// 2
+// 3
+// 4
+// ...
+// 0.0 в верхнем левом углу
+void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image)
 {
-	#ifdef _WINDOWS
-    UNUSED(X);
-    UNUSED(Y);
-    UNUSED(SX);
-    UNUSED(SY);
-    UNUSED(Image);
-    #endif
+    for(WORD i = 0; i < SX; i++){
+        for(WORD j = 0; j < SY; j++){            
+            SetPixelDB( X + i, Y + j, (Image[i] & ( 0x01 << (j & 0x07)))?TRUE:FALSE);
+        }
+    }
+}
+void OutImage(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
+{
+    for(WORD i = 0; i < SX; i++){
+        for(WORD j = 0; j < SY; j++){            
+            SetPixelDB( X + i, Y + j, (Image[i] & ( 0x01 << (j & 0x0F)))?TRUE:FALSE);
+        }
+    }
 }
