@@ -270,8 +270,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     HDC hdc;    
     RECT rect;
     PAINTSTRUCT ps;    
-    static int X = 100;
-    static int Y = 100;
+    static int X = 10;
+    static int Y = 10;
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
@@ -286,29 +286,35 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
         EndPaint(hDlg, &ps);
     case WM_COMMAND:
+        SetPixelDB(X, Y, false);
         switch (LOWORD(wParam)){        
         case IDC_BUTTON_UP:
-            {                
-                X = 200;
-                //GetItemRect(hDlg,&rect,IDC_STATIC);
-                //hDisplay = GetDlgItem (hDlg, IDC_STATIC);
-                char temp[] = ("No text");
-                memset(Text,0,sizeof(Text));
-                memcpy((void*)Text,(void*)temp,sizeof(temp));
+            {      
+                if(Y>0) Y--;
+                SetPixelDB(X, Y, true);
                 InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_DOWN:
-            {
-                char temp[] ="Text";
-                memset(Text,0,sizeof(Text));
-                memcpy((void*)Text,(void*)temp,sizeof(temp));
+            {      
+                if(Y<SIZE_Y) Y++;
+                SetPixelDB(X, Y, true);
                 InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_LEFT:
+            {      
+                if(X>0) X--;
+                SetPixelDB(X, Y, true);
+                InvalidateRect(hDlg, NULL, FALSE);
+            }
             break;
         case IDC_BUTTON_RIGHT:
+            {      
+                if(X<SIZE_Y) X++;
+                SetPixelDB(X, Y, true);
+                InvalidateRect(hDlg, NULL, FALSE);
+            }
             break;
         case IDC_BUTTON_ESC:
             break;
@@ -451,12 +457,12 @@ void Calc(HWND hWnd, HDC hdc)
     
     DisplayInit();
     
-     OutTextXY(0,54,Text1,1); // ___    
-     OutTextXY(0,10,Text1,1); // ___
-    OutTextXY(0,38,Text2,1); // a
-    OutTextXY(0,24,Text3,1); // d  	
-    OutTextXY(0,12,Text4,0); // msg
-//    double XX = 5.0 * Grad_to_Rad;
+//      OutTextXY(0,54,Text1,1); // ___    
+//      OutTextXY(0,10,Text1,1); // ___
+//     OutTextXY(0,38,Text2,1); // a
+//     OutTextXY(0,24,Text3,1); // d  	
+//     OutTextXY(0,12,Text4,0); // msg
+// //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
@@ -607,10 +613,7 @@ void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
     BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, SRCCOPY);
 
     hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
-    SelectObject(hMemDC, hbmScreen);
-
-    SetPixelDB(7, 7, true);    
-    
+    SelectObject(hMemDC, hbmScreen);   
     for(int i = 0; i < iHeight; i++)
         for(int j = 0; j < iWidth; j++){
             b = GetPixelDB(j/3, i/3);
