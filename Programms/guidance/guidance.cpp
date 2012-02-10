@@ -276,10 +276,10 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
 
     };
-    unsigned char Text[20] = "Testing";
+    unsigned char Text[] = {'1',0x60,0x00};
     unsigned char Text1[] = "_______________________";
-    unsigned char Text2[] = " a: 06:45:08.9173 (hours)";
-    unsigned char Text3[] = " d:-16*:42':58.017\" (gradus)";
+    unsigned char Text2[] = "a: 06:45:08.9173 (hours)";
+    unsigned char Text3[] = "d:-16`:42':58.017\"  (gradus)";    
     unsigned char Text4[] = " Соединение установлено";
 
 
@@ -339,8 +339,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         }
         DisplayInit();
-        OutTextXY(X,Y,Text3,0);
-        OutTextXY(X,Y + 8,Text3,1);
+        OutTextXY(X,Y,Text2,0);
+        OutTextXY(X,Y + 8,Text3,0);
         //SetPixelDB(X, Y, true);
         //OutImage(X,Y,7,7,b);
         InvalidateRect(hDlg, NULL, FALSE);
