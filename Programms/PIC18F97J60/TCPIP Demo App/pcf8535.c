@@ -178,6 +178,8 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
 	BYTE data; 
 	BYTE status; 
 	BYTE i;
+        BYTE_VAL d;
+        BYTE_VAL d1;
 	
 	RestartI2C();
         IdleI2C();
@@ -214,8 +216,19 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
 	  	if ( SSP1CON1bits.SSPM3 )      // if Master transmitter then execute the following
 		{
 			//temp = putcI2C1 ( *wrptr );
-			//if (temp ) return ( temp );   	
-			if ( WriteI2C1( *wrptr ) )    // write 1 byte
+			//if (temp ) return ( temp );   
+			d.Val = *wrptr;
+                        // swapping bits
+                        d1.bits.b0 = d.bits.b7; 
+                        d1.bits.b1 = d.bits.b6; 
+                        d1.bits.b2 = d.bits.b5; 
+                        d1.bits.b3 = d.bits.b4; 
+                        d1.bits.b4 = d.bits.b3; 
+                        d1.bits.b5 = d.bits.b2; 
+                        d1.bits.b6 = d.bits.b1; 
+                        d1.bits.b7 = d.bits.b0; 
+
+			if ( WriteI2C1( d1.Val ) )    // write 1 byte
 			{
 			  return ( -3 );             // return with write collision error
 			}

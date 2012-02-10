@@ -272,6 +272,17 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     PAINTSTRUCT ps;    
     static int X = 10;
     static int Y = 10;
+    BYTE b[7] = {
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
+
+    };
+    unsigned char Text[20] = "Testing";
+    unsigned char Text1[] = "_______________________";
+    unsigned char Text2[] = " a: 06:45:08.9173 (hours)";
+    unsigned char Text3[] = " d:-16*:42':58.017\" (gradus)";
+    unsigned char Text4[] = " Соединение установлено";
+
+
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
@@ -286,34 +297,28 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
         EndPaint(hDlg, &ps);
     case WM_COMMAND:
-        SetPixelDB(X, Y, false);
+        //SetPixelDB(X, Y, false);
+        //XorImage(X,Y,4,8,b);
+        
         switch (LOWORD(wParam)){        
         case IDC_BUTTON_UP:
             {      
                 if(Y>0) Y--;
-                SetPixelDB(X, Y, true);
-                InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_DOWN:
             {      
                 if(Y<SIZE_Y) Y++;
-                SetPixelDB(X, Y, true);
-                InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_LEFT:
             {      
                 if(X>0) X--;
-                SetPixelDB(X, Y, true);
-                InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_RIGHT:
             {      
                 if(X<SIZE_Y) X++;
-                SetPixelDB(X, Y, true);
-                InvalidateRect(hDlg, NULL, FALSE);
             }
             break;
         case IDC_BUTTON_ESC:
@@ -333,6 +338,12 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         default:
             break;
         }
+        DisplayInit();
+        OutTextXY(X,Y,Text3,0);
+        OutTextXY(X,Y + 8,Text3,1);
+        //SetPixelDB(X, Y, true);
+        //OutImage(X,Y,7,7,b);
+        InvalidateRect(hDlg, NULL, FALSE);
     }
     return (INT_PTR)FALSE;
 }
@@ -449,13 +460,12 @@ void Calc(HWND hWnd, HDC hdc)
     V1 = 0.0;
     V0 = 5.0 * Grad_to_Rad;
    
-    unsigned char Text[20] = "Testing";
-    unsigned char Text1[] = "_______________________";
-    unsigned char Text2[] = " a: 06h 45m 08.9173s";
-    unsigned char Text3[] = " d:-16  42' 58.017\"";
-    unsigned char Text4[] = " Соединение установлено";
+
     
     DisplayInit();
+
+    volatile DWORD_VAL I;
+    
     
 //      OutTextXY(0,54,Text1,1); // ___    
 //      OutTextXY(0,10,Text1,1); // ___
@@ -516,9 +526,7 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
     double X = 0.0;
     double V = 0.0;    
     static int K3 = 0;
-
-
-
+    
     T = (double)(rr->T.Val * rr->TimerStep);
     //V = 1.0*Grad_to_Rad;
     if(T - (*TL) != 0.0){
