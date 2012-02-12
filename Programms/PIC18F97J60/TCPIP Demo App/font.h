@@ -15,9 +15,9 @@
 #define SIZE_ARIAL_B 10
 #define SIZE_ARIAL 8
 
-WORD* GetSymbolImage(BYTE symbol,WORD* OutWordCount,BYTE CFont);
+int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, BYTE CFont);
 WORD* GetStringImage(BYTE* string, WORD* OutWordCount);
-void InitFonts(void);
+
  
 
 //#define ARIAL_B  0   //Arial_B

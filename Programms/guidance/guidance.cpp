@@ -270,17 +270,27 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     HDC hdc;    
     RECT rect;
     PAINTSTRUCT ps;    
-    static int X = 10;
-    static int Y = 10;
+    static int X = 0;
+    static int Y = 0;
     BYTE b[7] = {
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
 
     };
-    unsigned char Text[] = {'1',0x60,0x00};
-    unsigned char Text1[] = "_______________________";
-    unsigned char Text2[] = "a: 06:45:08.9173 (hours)";
-    unsigned char Text3[] = "d:-16`:42':58.017\"  (gradus)";    
-    unsigned char Text4[] = " Соединение установлено";
+//     unsigned char Text[] = " !";
+//     unsigned char Text2[] = "!\"#$%&'()*+,-./";
+//     unsigned char Text3[] = "0123456789:;<=>?";
+//     unsigned char Text4[] = "@ABCDEFGHIJKLMNO";
+//     unsigned char Text5[] = "PQRSTUVWXYZ[\\]^_";
+//     unsigned char Text6[] = "`abcdefghijklmno";
+//     unsigned char Text7[] = "pqrstuvwxyz{|}~";
+//     unsigned char TextA[] = {0xA0,0xB0,0xC0,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9,0xCA,0xCB,0xCC,0xCD,0xCE,0xCF,0x00};//"ЁёАБВГДЕЖЗИЙКЛМНОП";
+//     unsigned char TextB[] = {0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xdA,0xdB,0xdC,0xdD,0xdE,0xdF,0x00}; //"РСТУФХЦЧШЩЪЫЬЭЮЯ";
+//     unsigned char TextC[] = {0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xE8,0xE9,0xEA,0xEB,0xEC,0xED,0xEE,0xEF,0x00};//"абвгдежзийклмноп";
+//     unsigned char TextD[] = {0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF,0x00};//"рстуфхцчшщъыьэюя";
+
+     unsigned char TextA[] = "a: 06:45:08.9173";
+     unsigned char TextD[] = "d:-16`:42':58.017\"";    
+//     unsigned char Text4[] = " Соединение установлено";
 
 
     //HWND hDisplay = NULL;
@@ -339,8 +349,16 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         }
         DisplayInit();
-        OutTextXY(X,Y,Text2,0);
-        OutTextXY(X,Y + 8,Text3,0);
+        OutTextXY(X,Y,TextA,1);
+        OutTextXY(X,Y + 10,TextD,1);
+        OutTextXY(X,Y + 20,TextA,0);
+        OutTextXY(X,Y + 28,TextD,0);
+//         OutTextXY(X,Y + 40,Text6,1);
+//         OutTextXY(X,Y + 50,Text7,1);
+//         OutTextXY(X,Y + 48,TextA,0);
+//         OutTextXY(X,Y + 56,TextB,0);
+        //OutTextXY(X,Y+10,Text2,0);
+//         OutTextXY(X,Y + 30,Text5,1);
         //SetPixelDB(X, Y, true);
         //OutImage(X,Y,7,7,b);
         InvalidateRect(hDlg, NULL, FALSE);

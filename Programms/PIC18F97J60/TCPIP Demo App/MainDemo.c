@@ -311,6 +311,7 @@ int main(void)
 #endif
 {
 	static DWORD t = 0;
+	static DWORD t1 = 0;
 	static DWORD displayup = 0;
 	static DWORD dwLastIP = 0;
 	static DWORD tt = 0;
@@ -325,10 +326,10 @@ int main(void)
 		0, 0, RBuffer
 	};
 	// Initialize application specific hardware
-    unsigned char Text[20] = "Testing";
+    unsigned char Text[] = "Testing";
     unsigned char Text1[] = "_______________________";
     unsigned char Text2[] = " a: 06h 45m 08.9173s";
-    unsigned char Text3[] = " d:-16  42' 58.017\"";
+    unsigned char Text3[] = " d:-16` 42' 58.017\"";
     unsigned char Text4[] = " Соединение установлено";
     
     BYTE count;
@@ -465,18 +466,27 @@ int main(void)
             	//SendRequestIP();                	
                 //AnnounceIP();
             }    
-            UpdateKey();
-            SetPixelDB(x, y, 0); 
+            
+            PushAttr(ReceivePacket, OUT_BUFFER);            
+            DisplayDraw(add1);
+        }
+        if(TickGet() - t1 >= TICK_SECOND/10)
+        {
+	     	t1 = TickGet();   
+	        UpdateKey();
+            //SetPixelDB(x, y, 0); 
+            DisplayClear();
             if(CKeys.up) y++;
             if(CKeys.right) x++;
             if(CKeys.down) y--;
             if (CKeys.left)x--;
-//            OutTextXY(x,y,Text,1);
+            OutTextXY(x,y,Text2,1);
+            OutTextXY(x,y+10,Text3,1);
+            //OutTextXY(x,y+8,Text,1);
 //            OutTextXY(x,y,RBuffer,1);  
-			SetPixelDB(x, y, 1); 
-            PushAttr(ReceivePacket, OUT_BUFFER);            
-            DisplayDraw(add1);
-        }
+			//SetPixelDB(x, y, 1); 
+			
+	    } 
         if(0){
         if(TickGet() - displayup >= TICK_SECOND/10){
 	        displayup = TickGet();
