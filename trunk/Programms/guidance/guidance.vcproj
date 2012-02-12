@@ -197,6 +197,8 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						EnableFunctionLevelLinking="false"
+						CallingConvention="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>

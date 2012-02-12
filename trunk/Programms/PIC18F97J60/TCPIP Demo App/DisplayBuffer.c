@@ -52,7 +52,6 @@ BYTE * GetAddr(WORD addr)
 void SetPixelDB(WORD X, WORD Y, BOOL color)
 { 
     BYTE * a;
-    BYTE b = 0;
     if( (X < SIZE_X)&&(Y < SIZE_Y)){
         a = GetAddr((Y >> 3) * SIZE_X + X);   
         if(color){
@@ -77,7 +76,7 @@ BOOL GetPixelDB(WORD X, WORD Y)
 }
 void DisplayInit()
 {
-    InitFonts();
+    //InitFonts();
     DisplayClear();
 }
 
@@ -154,16 +153,17 @@ void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
 }
 void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 {    
-    WORD  count;    
-    BYTE i;	
+      
     WORD FontSize = 0;
     WORD XX = 0;
     BYTE* ptr;
-    WORD* Image;
+    static WORD Image[12];
+    WORD count = 12;  
     ptr = Text;
     XX = X;
     while ( *ptr ){
-        Image = GetSymbolImage(*ptr++,&count,CFont);		
+        count = 12;
+        GetSymbolImage(*ptr++, Image, &count, CFont);		
         switch(CFont){
         case 0: FontSize = SIZE_ARIAL;
             break;
@@ -171,7 +171,7 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
             break;
         default: ;
         }
-         OutImage(XX,Y,count,FontSize,Image);
+         OutImageW(XX,Y,count,FontSize,Image);
          XX += count+1;
     }    
 }
@@ -188,16 +188,20 @@ void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
 // 0.0 в верхнем левом углу
 void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image)
 {
-    for(WORD i = 0; i < SX; i++){
-        for(WORD j = 0; j < SY; j++){            
+	WORD i;
+	WORD j;
+    for(i = 0; i < SX; i++){
+        for(j = 0; j < SY; j++){            
             SetPixelDB( X + i, Y + j, (Image[i] & ( 0x01 << (j & 0x07)))?TRUE:FALSE);
         }
     }
 }
-void OutImage(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
+void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
 {
-    for(WORD i = 0; i < SX; i++){
-        for(WORD j = 0; j < SY; j++){            
+	WORD i;
+	WORD j;
+    for( i = 0; i < SX; i++){
+        for( j = 0; j < SY; j++){            
             SetPixelDB( X + i, Y + j, (Image[i] & ( 0x01 << (j & 0x0F)))?TRUE:FALSE);
         }
     }
