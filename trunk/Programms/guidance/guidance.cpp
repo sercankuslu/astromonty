@@ -272,6 +272,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     PAINTSTRUCT ps;    
     static int X = 5;
     static int Y = 2;
+    static bool bb = false;
     BYTE b[7] = {
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
 
@@ -295,21 +296,22 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
+    switch (message) {
     case WM_INITDIALOG:
+        DisplayClear();
+        DrawMenu(MAIN_WINDOW, 0);
         return (INT_PTR)TRUE;
     case WM_PAINT:
-        hdc = BeginPaint(hDlg, &ps); 
-
-        GetItemRect(hDlg,&rect,IDC_STATIC);
+        GetItemRect(hDlg,&rect,IDC_STATIC);        
+        hdc = BeginPaint(hDlg, &ps);         
         DrawIface(&ps, &rect);
-
         EndPaint(hDlg, &ps);
-    case WM_COMMAND:
+        break;
+    case WM_COMMAND:{
+
         //SetPixelDB(X, Y, false);
         //XorImage(X,Y,4,8,b);
-        
+
         switch (LOWORD(wParam)){        
         case IDC_BUTTON_UP:
             {      
@@ -348,23 +350,14 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         default:
             break;
         }
-        DisplayClear();
-//         FloodRectangle(1,1,132,11,1);
-//         DrawRectangle(0,0,132,63,1);
-        DrawMenu(MAIN_WINDOW, 0);
-//         OutTextXY(X,Y,TextA,ARIAL_B,INVERT);
-//         OutTextXY(X,Y + 11,TextD,ARIAL_B,NORMAL);
-//         OutTextXY(X,Y + 22,TextA,ARIAL_L,NORMAL);
-//         OutTextXY(X,Y + 31,TextD,ARIAL_L,NORMAL);
-//         OutTextXY(X,Y + 40,Text6,1);
-//         OutTextXY(X,Y + 50,Text7,1);
-//         OutTextXY(X,Y + 48,TextA,0);
-//         OutTextXY(X,Y + 56,TextB,0);
-        //OutTextXY(X,Y+10,Text2,0);
-//         OutTextXY(X,Y + 30,Text5,1);
-        //SetPixelDB(X, Y, true);
-        //OutImage(X,Y,7,7,b);
-        InvalidateRect(hDlg, NULL, FALSE);
+            {
+                DisplayClear();
+                DrawMenu(MAIN_WINDOW, 0);
+                GetItemRect(hDlg,&rect,IDC_STATIC);      
+                InvalidateRect(hDlg, &rect, false);
+                //RedrawWindow(hDlg,&rect,NULL,RDW_INTERNALPAINT);
+            }       
+        }        
     }
     return (INT_PTR)FALSE;
 }
@@ -639,19 +632,20 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
     BOOL b = FALSE;
     hMemDC = CreateCompatibleDC(ps->hdc);
 
-    BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, SRCCOPY);
+    BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, WHITENESS);
 
     hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
     SelectObject(hMemDC, hbmScreen);   
     for(int i = 0; i < iHeight; i++)
         for(int j = 0; j < iWidth; j++){
-            b = GetPixelDB(j/2, i/2);
+            if((j % 3 == 0)||(i % 3 == 0))
+                b = GetPixelDB(j/3, i/3);
             if(!b){
                 SetPixel(hMemDC, j, i, RGB(255,255,255));
             } else {
                 SetPixel(hMemDC, j, i, RGB(0,0,0));
             }
-        }
+        }    
     // быстро копируем результат отрисовки
     BitBlt(ps->hdc, rect->left,rect->top, iWidth, iHeight, hMemDC, 0, 0, SRCCOPY);
     // освобождаем контекст
