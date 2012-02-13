@@ -259,45 +259,92 @@ void FloodRectangle(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color)
         }
     }
 }
+// положение элементов
+#define  Con_FlagX  0
+#define  A_FlagX    26
+#define  D_FlagX    57
+#define  G_FlagX    98
 
 void DrawMenu(MENU_ID Menu, BYTE Select_id)
 {
-    BYTE TextA[] = "a: 06`45'08.9173\"";
-    BYTE TextD[] = "d:-16`42'58.0170\"";    
+    BYTE TextA[] = "A: 06`45'08.9173\"";
+    BYTE TextD[] = "D:-16`42'58.0170\"";    
+    BYTE TextG[] = "G:-06`45'08.0170\"";    
     BYTE TimeT[] = "23:56";
     BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-    BYTE ConnectFlag[] = {0xCF,0xE4,0xEA,0xEB,0x00};//{"Con"}; // Пдкл   
+    BYTE ConnectFlag[] = {0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
     BYTE AlphaFlag[] = {0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
     BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
     BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
-    #define  Con_FlagX  0
-    #define  A_FlagX    26
-    #define  D_FlagX    57
-    #define  G_FlagX    98
+    // признаки: true- белый фон, false-черный фон
+    static BOOL Con = true;
+    static BOOL A_Run = true;
+    static BOOL D_Run = true;
+    static BOOL G_Run = false;
+    static BOOL Time_Run = true;
+    BYTE color = 0;
+    EFFECT Effect = NORMAL;
+
+//     Con ^= 1;
+//     A_Run ^= 1;
+//     D_Run ^= 1;
+    Time_Run ^= 1;
+
+    if(Time_Run){
+        TimeT[2] = ':';
+    } else {
+        TimeT[2] = ' ';
+    }
 
     DisplayClear();
     switch (Menu) {
     case MAIN_WINDOW:  
         DrawRectangle(0,51,132,63,1);
-        OutTextXY(5,20,TextA,ARIAL_B,NORMAL);
-        OutTextXY(5,20 + 15,TextD,ARIAL_B,NORMAL);
-        OutTextXY(3,53,MenuB,ARIAL_B,NORMAL);
+        OutTextXY(15,13,TextA,ARIAL_B,NORMAL);
+        OutTextXY(15,13 + 13,TextD,ARIAL_B,NORMAL);
+        OutTextXY(15,13 + 26,TextG,ARIAL_B,NORMAL);
+        OutTextXY(2,53,MenuB,ARIAL_B,NORMAL);
         Line(36,52,36,63,1);
         OutTextXY(105,53,TimeT,ARIAL_B,NORMAL);
         Line(103,52,103,63,1);
         DrawRectangle(0,0,132,10,1);   
 
-        FloodRectangle(Con_FlagX+1,1,Con_FlagX+30,9,0);
-        OutTextXY(Con_FlagX+3,2,ConnectFlag,ARIAL_L,NORMAL);
-
-        FloodRectangle(A_FlagX+1,1,A_FlagX+30,9,0);
-        OutTextXY(A_FlagX+3,2,AlphaFlag,ARIAL_L,NORMAL);
-
-        FloodRectangle(D_FlagX+1,1,D_FlagX+30,9,0);
-        OutTextXY(D_FlagX+3,2,DeltaFlag,ARIAL_L,NORMAL);
-
-        FloodRectangle(G_FlagX+1,1,G_FlagX+30,9,0);
-        OutTextXY(G_FlagX+3,2,GammaFlag,ARIAL_L,NORMAL);
+        if(Con){
+            color = 0;
+            Effect = NORMAL;
+        } else {
+            color = 1;
+            Effect = INVERT;
+        }
+        FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
+        OutTextXY(Con_FlagX+3,2,ConnectFlag,ARIAL_L,Effect);
+        if(A_Run){
+            color = 0;
+            Effect = NORMAL;
+        } else {
+            color = 1;
+            Effect = INVERT;
+        }
+        FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
+        OutTextXY(A_FlagX+3,2,AlphaFlag,ARIAL_L,Effect);
+        if(D_Run){
+            color = 0;
+            Effect = NORMAL;
+        } else {
+            color = 1;
+            Effect = INVERT;
+        }
+        FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
+        OutTextXY(D_FlagX+3,2,DeltaFlag,ARIAL_L,Effect);
+        if(G_Run){
+            color = 0;
+            Effect = NORMAL;
+        } else {
+            color = 1;
+            Effect = INVERT;
+        }
+        FloodRectangle(G_FlagX+1,1,131,9,color);
+        OutTextXY(G_FlagX+3,2,GammaFlag,ARIAL_L,Effect);
 
     	break;
     case SETTINGS:
