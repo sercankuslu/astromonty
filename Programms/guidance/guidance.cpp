@@ -43,7 +43,7 @@ void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc(HWND hWnd, HDC hdc);
 void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
-void DrawMenu( LPPAINTSTRUCT ps, RECT * rect);
+void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -270,8 +270,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     HDC hdc;    
     RECT rect;
     PAINTSTRUCT ps;    
-    static int X = 0;
-    static int Y = 0;
+    static int X = 5;
+    static int Y = 2;
     BYTE b[7] = {
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
 
@@ -288,8 +288,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 //     unsigned char TextC[] = {0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xE8,0xE9,0xEA,0xEB,0xEC,0xED,0xEE,0xEF,0x00};//"абвгдежзийклмноп";
 //     unsigned char TextD[] = {0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF,0x00};//"рстуфхцчшщъыьэюя";
 
-     unsigned char TextA[] = "a: 06:45:08.9173";
-     unsigned char TextD[] = "d:-16`:42':58.017\"";    
+//      unsigned char TextA[] = "a: 06:45:08.9173";
+//      unsigned char TextD[] = "d:-16`:42':58.017\"";    
 //     unsigned char Text4[] = " Соединение установлено";
 
 
@@ -303,7 +303,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         hdc = BeginPaint(hDlg, &ps); 
 
         GetItemRect(hDlg,&rect,IDC_STATIC);
-        DrawMenu(&ps, &rect);
+        DrawIface(&ps, &rect);
 
         EndPaint(hDlg, &ps);
     case WM_COMMAND:
@@ -348,11 +348,14 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         default:
             break;
         }
-        DisplayInit();
-        OutTextXY(X,Y,TextA,1);
-        OutTextXY(X,Y + 10,TextD,1);
-        OutTextXY(X,Y + 20,TextA,0);
-        OutTextXY(X,Y + 28,TextD,0);
+        DisplayClear();
+//         FloodRectangle(1,1,132,11,1);
+//         DrawRectangle(0,0,132,63,1);
+        DrawMenu(MAIN_WINDOW, 0);
+//         OutTextXY(X,Y,TextA,ARIAL_B,INVERT);
+//         OutTextXY(X,Y + 11,TextD,ARIAL_B,NORMAL);
+//         OutTextXY(X,Y + 22,TextA,ARIAL_L,NORMAL);
+//         OutTextXY(X,Y + 31,TextD,ARIAL_L,NORMAL);
 //         OutTextXY(X,Y + 40,Text6,1);
 //         OutTextXY(X,Y + 50,Text7,1);
 //         OutTextXY(X,Y + 48,TextA,0);
@@ -627,7 +630,7 @@ void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
 
 
 
-void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
+void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
 {    
     int iWidth = rect->right - rect->left;
     int iHeight = rect->bottom - rect->top;
@@ -642,7 +645,7 @@ void DrawMenu( LPPAINTSTRUCT ps, RECT * rect)
     SelectObject(hMemDC, hbmScreen);   
     for(int i = 0; i < iHeight; i++)
         for(int j = 0; j < iWidth; j++){
-            b = GetPixelDB(j/3, i/3);
+            b = GetPixelDB(j/2, i/2);
             if(!b){
                 SetPixel(hMemDC, j, i, RGB(255,255,255));
             } else {

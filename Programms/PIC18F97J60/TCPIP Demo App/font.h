@@ -7,15 +7,17 @@
 #   include "GenericTypeDefs.h"
 #endif
 
+typedef enum FONT {
+    ARIAL_L, 
+    ARIAL_B
+} FONT;
 
-#define ARIAL   0
-#define ARIAL_B 1
 #define ARIAL_B_MASK 0x03FF
 #define ARIAL_MASK 0x00FF
 #define SIZE_ARIAL_B 10
 #define SIZE_ARIAL 8
 
-int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, BYTE CFont);
+int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont);
 WORD* GetStringImage(BYTE* string, WORD* OutWordCount);
 
  
