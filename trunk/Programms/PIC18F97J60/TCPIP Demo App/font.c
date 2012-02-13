@@ -347,17 +347,16 @@ const
 #define Arial_Data_L_Size 834
 #define Arial_Data_B_Size 1104
 
-
-
-int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, BYTE CFont)
+int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
 {
     WORD i;        
     WORD Begin =  0;
     WORD Size =  0;
     WORD_VAL c;
+    c.Val = 0;
     memset(Image,0,(*ImageSize));
     switch(CFont){
-        case 0:        
+        case ARIAL_L:        
             for(i = 0;i < Arial_Data_L_Size;){
                 c.Val = Arial_Data_L[i];
                 if(c.byte.HB == symbol) {
@@ -376,7 +375,7 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, BYTE CFont)
             }
             //memcpy(Image,&Arial_Data_L[Begin],Size*sizeof(WORD));
         break;
-         case 1:
+         case ARIAL_B:
              for(i = 0;i < Arial_Data_B_Size;){
                  c.Val = Arial_Data_B[i];
                  if(c.byte.HB == symbol) {

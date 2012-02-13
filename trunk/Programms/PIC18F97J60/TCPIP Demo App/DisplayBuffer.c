@@ -112,67 +112,50 @@ void DisplayDraw(BYTE addr)
     LCDSendData(addr, DisplayBuffer4, 40);
 
 }
-void WriteByteAtBank(BYTE Bank, BYTE Pos, BYTE Data,BYTE Mask)
-{   
-    WORD Address;
-    WORD MemBank;
-    WORD MemPos;
-    BYTE Temp = 0;
-    BYTE TempMask = 0xFF^Mask;
-    
-    if(Mask == 0) return;
-    if(Bank>7) return;
-    if(Pos>132) return;
-    Address = Bank; 
-    Address = Address*133+Pos;
-    MemBank = (Address>>8);
-    MemPos  = (Address&0x00FF);
-    switch(MemBank){
-        case 0: 
-            Temp = DisplayBuffer0[MemPos]&TempMask;
-            DisplayBuffer0[MemPos]=Temp|(Data&Mask);                
-        break;
-        case 1: 
-            Temp = DisplayBuffer1[MemPos]&TempMask;
-            DisplayBuffer1[MemPos]=Temp|(Data&Mask);                
-        break;
-        case 2: 
-            Temp = DisplayBuffer2[MemPos]&TempMask;
-            DisplayBuffer2[MemPos]=Temp|(Data&Mask);                
-        break;
-        case 3: 
-            Temp = DisplayBuffer3[MemPos]&TempMask;
-            DisplayBuffer3[MemPos]=Temp|(Data&Mask);                
-        break;
-        case 4: 
-            Temp = DisplayBuffer4[MemPos]&TempMask;
-            DisplayBuffer4[MemPos]=Temp|(Data&Mask);                
-        break;
-    }
-    
-}
-void OutTextXY(BYTE X,BYTE Y,BYTE* Text,BYTE CFont)
-{    
-      
+
+
+
+void OutTextXY(WORD X,WORD Y,BYTE* Text,FONT CFont,EFFECT Effect)
+{          
     WORD FontSize = 0;
+    WORD FontMask = 0xFFFF;
     WORD XX = 0;
     BYTE* ptr;
-    static WORD Image[12];
-    WORD count = 12;  
+    static WORD Image[13];
+    WORD count = 13;  
+    WORD i = 0;
     ptr = Text;
     XX = X;
     while ( *ptr ){
-        count = 12;
+        count = 13;
         GetSymbolImage(*ptr++, Image, &count, CFont);		
         switch(CFont){
-        case 0: FontSize = SIZE_ARIAL;
+        case ARIAL_L: 
+            FontSize = SIZE_ARIAL;
+            FontMask = ARIAL_MASK;
             break;
-        case 1: FontSize = SIZE_ARIAL_B;
+        case ARIAL_B: 
+            FontSize = SIZE_ARIAL_B;
+            FontMask = ARIAL_B_MASK;
             break;
         default: ;
         }
-         OutImageW(XX,Y,count,FontSize,Image);
-         XX += count+1;
+        switch(Effect){
+            case NORMAL:
+                Image[count] = 0;
+                count++;
+                break;
+            case INVERT:
+                for(i = 0;i<count;i++)
+                {
+                    Image[i] = Image[i]^FontMask;
+                }
+                Image[count] = FontMask;
+                count++;                
+                break;
+        }
+        OutImageW(XX,Y,count,FontSize,Image);
+        XX += count;
     }    
 }
 //битовое изображение
@@ -204,5 +187,128 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
         for( j = 0; j < SY; j++){            
             SetPixelDB( X + i, Y + j, (Image[i] & ( 0x01 << (j & 0x0F)))?TRUE:FALSE);
         }
+    }
+}
+void Line(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color)
+{
+    WORD i = 0;
+    WORD j = 0;
+    WORD Xb = 0;
+    WORD Yb = 0;
+    WORD Sx = 0;
+    WORD Sy = 0;
+    if(X1 >= X) {
+        Xb = X;
+        Sx = X1 - X;
+    } else {
+        Xb = X1;
+        Sx = X - X1;
+    }    
+    if(Y1 >= Y) {
+        Yb = Y;
+        Sy = Y1 - Y;
+    } else {
+        Yb = Y1;
+        Sy = Y - Y1;
+    }
+    if(Sx < Sy){
+        if(Sy == 0) Sy = 1;
+        for (j = 0; j <= Sy; j++){
+            SetPixelDB( Xb + j * Sx / Sy, Yb + j, color);
+        }
+    } else {
+        if(Sx == 0) Sx = 1;
+        for (i = 0; i <= Sx; i++){
+            SetPixelDB( Xb + i, Yb + i * Sy / Sx, color);
+        }
+    }
+}
+
+void DrawRectangle(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color)
+{
+    Line(X,Y,X,Y1,color);
+    Line(X,Y,X1,Y,color);
+    Line(X,Y1,X1,Y1,color);
+    Line(X1,Y,X1,Y1,color);
+}
+void FloodRectangle(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color)
+{
+    WORD i = 0;
+    WORD j = 0;
+    WORD Xb = 0;
+    WORD Yb = 0;
+    WORD Sx = 0;
+    WORD Sy = 0;
+    if(X1 >= X) {
+        Xb = X;
+        Sx = X1 - X;
+    } else {
+        Xb = X1;
+        Sx = X - X1;
+    }
+    if(Y1 >= Y) {
+        Yb = Y;
+        Sy = Y1 - Y;
+    } else {
+        Yb = Y1;
+        Sy = Y - Y1;
+    }
+    for (j = 0; j <= Sy; j++){
+        for (i = 0; i <= Sx; i++){
+            SetPixelDB( Xb + i, Yb + j, color);
+        }
+    }
+}
+
+void DrawMenu(MENU_ID Menu, BYTE Select_id)
+{
+    BYTE TextA[] = "a: 06`45'08.9173\"";
+    BYTE TextD[] = "d:-16`42'58.0170\"";    
+    BYTE TimeT[] = "23:56";
+    BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+    BYTE ConnectFlag[] = {0xCF,0xE4,0xEA,0xEB,0x00};//{"Con"}; // Пдкл   
+    BYTE AlphaFlag[] = {0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+    BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+    BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
+    #define  Con_FlagX  0
+    #define  A_FlagX    26
+    #define  D_FlagX    57
+    #define  G_FlagX    98
+
+    DisplayClear();
+    switch (Menu) {
+    case MAIN_WINDOW:  
+        DrawRectangle(0,51,132,63,1);
+        OutTextXY(5,20,TextA,ARIAL_B,NORMAL);
+        OutTextXY(5,20 + 15,TextD,ARIAL_B,NORMAL);
+        OutTextXY(3,53,MenuB,ARIAL_B,NORMAL);
+        Line(36,52,36,63,1);
+        OutTextXY(105,53,TimeT,ARIAL_B,NORMAL);
+        Line(103,52,103,63,1);
+        DrawRectangle(0,0,132,10,1);   
+
+        FloodRectangle(Con_FlagX+1,1,Con_FlagX+30,9,0);
+        OutTextXY(Con_FlagX+3,2,ConnectFlag,ARIAL_L,NORMAL);
+
+        FloodRectangle(A_FlagX+1,1,A_FlagX+30,9,0);
+        OutTextXY(A_FlagX+3,2,AlphaFlag,ARIAL_L,NORMAL);
+
+        FloodRectangle(D_FlagX+1,1,D_FlagX+30,9,0);
+        OutTextXY(D_FlagX+3,2,DeltaFlag,ARIAL_L,NORMAL);
+
+        FloodRectangle(G_FlagX+1,1,G_FlagX+30,9,0);
+        OutTextXY(G_FlagX+3,2,GammaFlag,ARIAL_L,NORMAL);
+
+    	break;
+    case SETTINGS:
+        break;
+    case S_MONTY:
+        break;
+    case S_NETWORK:
+        break;
+    case SM_TYPESELECT:
+        break;
+    default:
+        break;
     }
 }
