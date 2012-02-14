@@ -8,6 +8,7 @@
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 #include "..\dsPIC33\protocol.h"
 #include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
+#include "..\PIC18F97J60\TCPIP Demo App\Control.h"
 
 
 #define MAX_LOADSTRING 100
@@ -23,6 +24,7 @@ extern BYTE DisplayBuffer4[40];
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
+#define FIRST_TIMER_INTERVAL 1000 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -71,11 +73,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
-    SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
+    //SetTimer(hWindow, FIRST_TIMER, 1, (TIMERPROC) NULL);
     if (!IsWindow(hwndDialog)) { 
         // окно в немодальном режиме                        
         hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
         ShowWindow(hwndDialog, SW_SHOW);
+        SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
     }
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -172,7 +175,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int wmId, wmEvent;
         PAINTSTRUCT ps;
         HDC hdc;
-        RECT rect;
+        //RECT rect;
         static int T = 0;
         static bool k = false;
         switch (message)
@@ -189,8 +192,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_KEYS:
                     if (!IsWindow(hwndDialog)) { 
                         // окно в немодальном режиме                        
-                        hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, (DLGPROC)KeyDialog); 
+                        hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, (DLGPROC)KeyDialog);                         
                         ShowWindow(hwndDialog, SW_SHOW);
+                        SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
                     }
                     break;
                 case IDM_EXIT:
@@ -200,22 +204,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         return DefWindowProc(hWnd, message, wParam, lParam);
                 }
                 break;
-        case WM_TIMER: 
-
-                switch (wParam) 
-                { 
-                case FIRST_TIMER: 	
-                        T++;
-                        if(T>=360) T-=360;
-                        //GetClientRect(hWnd, &rect);
-                        rect.top = 100;
-                        rect.bottom = 300;
-                        rect.left = 100;
-                        rect.right = 300;
-                        //InvalidateRect(hWnd, &rect, TRUE);
-                        k = true;
-                }
-                break;
+//         case WM_TIMER: 
+// 
+// //                 switch (wParam) 
+// //                 { 
+// //                 case FIRST_TIMER: 	
+// //                         T++;
+// //                         if(T>=360) T-=360;
+// //                         //GetClientRect(hWnd, &rect);
+// //                         rect.top = 100;
+// //                         rect.bottom = 300;
+// //                         rect.left = 100;
+// //                         rect.right = 300;
+// //                         //InvalidateRect(hWnd, &rect, TRUE);
+// //                         k = true;
+// //                }
+//                 break;
         case WM_PAINT:
                 hdc = BeginPaint(hWnd, &ps);
                                 //LineTo(hdc, 100,100);
@@ -273,10 +277,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static int X = 5;
     static int Y = 2;
     static bool bb = false;
-    BYTE b[7] = {
-        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA
-
-    };
+    BYTE Key = 0;
+    
 //     unsigned char Text[] = " !";
 //     unsigned char Text2[] = "!\"#$%&'()*+,-./";
 //     unsigned char Text3[] = "0123456789:;<=>?";
@@ -296,13 +298,22 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
+    GetItemRect(hDlg,&rect,IDC_STATIC);
     switch (message) {
-    case WM_INITDIALOG:
-        DisplayClear();
-        DrawMenu(MAIN_WINDOW, 0);
+    case WM_TIMER: 
+        switch (wParam) 
+        { 
+        case FIRST_TIMER: 
+            ProcessMenu(&Key);                      
+            InvalidateRect(hDlg, &rect, false);
+            break;
+        }
+        break;
+    case WM_INITDIALOG:        
+        ProcessMenu(&Key);
         return (INT_PTR)TRUE;
     case WM_PAINT:
-        GetItemRect(hDlg,&rect,IDC_STATIC);        
+        //GetItemRect(hDlg,&rect,IDC_STATIC);        
         hdc = BeginPaint(hDlg, &ps);         
         DrawIface(&ps, &rect);
         EndPaint(hDlg, &ps);
@@ -316,44 +327,47 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         case IDC_BUTTON_UP:
             {      
                 if(Y>0) Y--;
+                Key = 0x01;
+                
             }
             break;
         case IDC_BUTTON_DOWN:
             {      
                 if(Y<SIZE_Y) Y++;
+                Key = 0x02;
             }
             break;
         case IDC_BUTTON_LEFT:
             {      
                 if(X>0) X--;
+                Key = 0x04;
             }
             break;
         case IDC_BUTTON_RIGHT:
             {      
                 if(X<SIZE_Y) X++;
+                Key = 0x08;
             }
             break;
         case IDC_BUTTON_ESC:
+            Key = 0x80;
             break;
         case IDC_BUTTON_ENTER:
+            Key = 0x40;
             break;
         case IDOK: 
         case IDCANCEL:
-            {
-                //EndDialog(hDlg, LOWORD(wParam));
+            {                
                 DestroyWindow(hDlg); 
                 hwndDialog = NULL; 
-                //return TRUE; 
                 return (INT_PTR)TRUE;
             }            
             break;
         default:
             break;
         }
-            {
-                DisplayClear();
-                DrawMenu(MAIN_WINDOW, 0);
-                GetItemRect(hDlg,&rect,IDC_STATIC);      
+            {                         
+                ProcessMenu(&Key);
                 InvalidateRect(hDlg, &rect, false);
                 //RedrawWindow(hDlg,&rect,NULL,RDW_INTERNALPAINT);
             }       
@@ -478,7 +492,7 @@ void Calc(HWND hWnd, HDC hdc)
     
     DisplayInit();
 
-    volatile DWORD_VAL I;
+//    volatile DWORD_VAL I;
     
     
 //      OutTextXY(0,54,Text1,1); // ___    
@@ -625,8 +639,8 @@ void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
 
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
 {    
-    int iWidth = rect->right - rect->left;
-    int iHeight = rect->bottom - rect->top;
+    LONG iWidth = rect->right - rect->left;
+    LONG iHeight = rect->bottom - rect->top;
     HDC hMemDC; 
     HBITMAP hbmScreen = NULL;
     BOOL b = FALSE;
@@ -636,10 +650,10 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
 
     hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
     SelectObject(hMemDC, hbmScreen);   
-    for(int i = 0; i < iHeight; i++)
-        for(int j = 0; j < iWidth; j++){
+    for(LONG i = 0; i < iHeight; i++)
+        for(LONG j = 0; j < iWidth; j++){
             if((j % 3 == 0)||(i % 3 == 0))
-                b = GetPixelDB(j/3, i/3);
+                b = GetPixelDB((WORD)j/3, (WORD)i/3);
             if(!b){
                 SetPixel(hMemDC, j, i, RGB(255,255,255));
             } else {
