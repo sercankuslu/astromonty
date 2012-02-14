@@ -17,7 +17,8 @@
 #define  Line1      25
 #define  Line2      38
 #define  Line3      51
-void DrawMenuLine(BYTE ID, BYTE * Name, BYTE Select);
+void DrawMenuLine(BYTE ID, BYTE * Name, int Select);
+void DrawScrollBar(int Pos, int Max);
 
 void ProcessMenu( BYTE * KeyPressed )
 {
@@ -31,15 +32,27 @@ void ProcessMenu( BYTE * KeyPressed )
     BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
     BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
     
-    BYTE SettingsName[] = "Настройки";
-    BYTE S_ObservName[] = "Наблюдение";
+    BYTE SettingsName[] = "Настройки";    
+    BYTE ObservName[] = "Наблюдение";
+    BYTE O_GoTo[] = "Навести";
+    BYTE O_Manual[] = "Ручной режим";
+    BYTE O_Space[] = "Режим спутников";
+    BYTE S_Observ[] = "Наблюдение";
     BYTE S_NetName[] = "Сеть";
     BYTE S_AlphaName[] = "Альфа";
     BYTE S_DeltaName[] = "Дельта";
     BYTE S_GammaName[] = "Гамма";
-    BYTE S_TypeName[] = "Тип монтировки";
+    BYTE S_MontyName[] = "Монтировка";
     BYTE S_Display[] = "Экран";
-    BYTE S_AxisName[] = "Оси монтировки";
+    BYTE S_MontyTypeName[] = "Тип монтировки";
+    BYTE SN_Name[] = "Имя:      Interface";
+    BYTE SN_IP[] =   "IP:   192.168.001.002";
+    BYTE SN_Mask[] = "Mask: 255.255.255.000";
+    BYTE SN_Gate[] = "Gate: 192.168.001.001";
+    BYTE SN_DNS1[] = "DNS1: 192.168.001.001";
+    BYTE SN_DNS2[] = "DNS2: 192.168.001.003";
+    BYTE SN_NTP[] =  "NTP : nrepus.cp.ru";
+    
 
     static MENU_ID State = MAIN_WINDOW;
     // признаки: true- белый фон, false-черный фон
@@ -72,6 +85,13 @@ void ProcessMenu( BYTE * KeyPressed )
                 (*KeyPressed) ^= 0x80;
                 Select = 0;
                 Page = 0;
+                break;
+            }
+            if((*KeyPressed) & 0x40) { //Enter                
+                State = OBSERV;                    
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x40;
                 break;
             }
             DisplayClear();
@@ -134,6 +154,7 @@ void ProcessMenu( BYTE * KeyPressed )
             if((*KeyPressed) & 0x40) { //Enter
                 switch(Select){
                 case 0:
+                     State = OBSERV;
                     break;
                 case 1:
                     State = SETTINGS;
@@ -152,36 +173,16 @@ void ProcessMenu( BYTE * KeyPressed )
                 break;
             }
             if((*KeyPressed) & 0x02) { //DOWN
-                if(Select < 6) Select++;
+                if(Select < 2) Select++;
                 (*KeyPressed) ^= 0x02;
                 break;
             }
             DisplayClear();
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,MenuB,ARIAL_L,NORMAL);
-            DrawRectangle(122,10,132,63,1);
-            FloodRectangle(123,11,131,31,1);
-
-            if(Select == 0){
-                color = 1;
-                Effect = INVERT;
-            } else {
-                color = 0;
-                Effect = NORMAL;
-            }
-            FloodRectangle(1,Line0,120,Line0+13,color);
-            OutTextXY(15,Line0 + 2,S_ObservName,ARIAL_B,Effect);
-
-            if(Select == 1){
-                color = 1;
-                Effect = INVERT;
-            } else {
-                color = 0;
-                Effect = NORMAL;
-            }
-            FloodRectangle(1,Line1,120,Line1+13,color);
-            OutTextXY(15,Line1 + 2,SettingsName,ARIAL_B,Effect);            
-
+            DrawScrollBar(Select, 2);
+            DrawMenuLine(0,ObservName, Select);
+            DrawMenuLine(1,SettingsName, Select);
             EndProcess = true;
             break;
         case SETTINGS:
@@ -192,55 +193,206 @@ void ProcessMenu( BYTE * KeyPressed )
                 (*KeyPressed) ^= 0x80;
                 break;
             }
+            if((*KeyPressed) & 0x40) { //Enter
+                switch(Select){
+                case 0:
+                    State = S_NETWORK;
+                    break;
+                case 1:
+                    State = S_MONTY;
+                    break;
+                case 2:
+                    State = S_DISPLAY;
+                    break;
+                case 3:
+                    State = S_OBSERV;
+                    break;                
+                }         
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x40;
+                break;
+            }
             if((*KeyPressed) & 0x01) { //UP
-                if((Select == 0)&&(Page>0)){
-                    Select = 3;
-                    Page--;
-                } else {
-                    if(Select > 0) Select--;
-                }
+                if(Select > 0) Select--;
                 (*KeyPressed) ^= 0x01;
                 break;
             }
             if((*KeyPressed) & 0x02) { //DOWN
-                Select++;
-                if(Select > 3) {
-                    Page++;
-                    Select = 0;
-                }
+                if(Select < 3) Select++;
                 (*KeyPressed) ^= 0x02;
                 break;
             }
             DisplayClear();
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,SettingsName,ARIAL_L,NORMAL);
-            DrawRectangle(122,10,132,63,1);
-            FloodRectangle(123,11,131,31,1);
-        
+            DrawScrollBar(Select, 4);        
             DrawMenuLine(0,S_NetName, Select);
-            DrawMenuLine(1,S_AxisName, Select);
-            DrawMenuLine(2,S_TypeName, Select);
-            DrawMenuLine(3,S_Display, Select);
+            DrawMenuLine(1,S_MontyName, Select);
+            DrawMenuLine(2,S_Display, Select);
+            DrawMenuLine(3,S_Observ, Select);
             
             EndProcess = true;
             break;
         case S_MONTY:
+            if((*KeyPressed) & 0x80) { //ESC
+                State = SETTINGS;
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x80;
+                break;
+            }
+            if((*KeyPressed) & 0x40) { //Enter
+                switch(Select){
+                case 0:
+                    State = SM_ALPHA;
+                    break;
+                case 1:
+                    State = SM_DELTA;
+                    break;
+                case 2:
+                    State = SM_GAMMA;
+                    break;
+                case 3:
+                    State = SM_TYPESELECT;
+                    break;
+                case 4:
+                    break;
+                }         
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x40;
+                break;
+            }
+            if((*KeyPressed) & 0x01) { //UP
+                if(Select > 0) Select--;
+                (*KeyPressed) ^= 0x01;
+                break;
+            }
+            if((*KeyPressed) & 0x02) { //DOWN
+                if(Select < 3) Select++;
+                (*KeyPressed) ^= 0x02;
+                break;
+            }
+            DisplayClear();
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,S_MontyName,ARIAL_L,NORMAL);
+            DrawScrollBar(Select, 4);        
+            DrawMenuLine(0,S_MontyTypeName, Select);
+            DrawMenuLine(1,S_AlphaName, Select);
+            DrawMenuLine(2,S_DeltaName, Select);
+            DrawMenuLine(3,S_GammaName, Select);            
+
+            EndProcess = true;
             break;
         case S_NETWORK:
+            if((*KeyPressed) & 0x80) { //ESC
+                State = SETTINGS;
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x80;
+                break;
+            }
+            if((*KeyPressed) & 0x40) { //Enter
+//                 switch(Select){
+//                 case 0:
+//                     State = SM_ALPHA;
+//                     break;
+
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x40;
+                break;
+            }
+            if((*KeyPressed) & 0x01) { //UP
+                if(Select > 0) Select--;
+                (*KeyPressed) ^= 0x01;
+                break;
+            }
+            if((*KeyPressed) & 0x02) { //DOWN
+                if(Select < 6) Select++;
+                (*KeyPressed) ^= 0x02;
+                break;
+            }
+            DisplayClear();
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,S_NetName,ARIAL_L,NORMAL);
+            DrawScrollBar(Select, 7);        
+            DrawMenuLine(0,SN_Name, Select);
+            DrawMenuLine(1,SN_IP, Select);
+            DrawMenuLine(2,SN_Mask, Select);
+            DrawMenuLine(3,SN_Gate, Select);
+            DrawMenuLine(4,SN_DNS1, Select);            
+            DrawMenuLine(5,SN_DNS2, Select);            
+            DrawMenuLine(6,SN_NTP, Select);            
+
+            EndProcess = true;
             break;
         case SM_TYPESELECT:
+            if((*KeyPressed) & 0x80) { //ESC
+                State = S_MONTY;
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x80;
+                break;
+            }
+            DisplayClear();
+            EndProcess = true;
+            break;
+        case OBSERV:
+            if((*KeyPressed) & 0x80) { //ESC
+                State = MENU;
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x80;
+                break;
+            }
+            if((*KeyPressed) & 0x01) { //UP
+                if(Select > 0) Select--;
+                (*KeyPressed) ^= 0x01;
+                break;
+            }
+            if((*KeyPressed) & 0x02) { //DOWN
+                if(Select < 2) Select++;
+                (*KeyPressed) ^= 0x02;
+                break;
+            }
+            DisplayClear();
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,ObservName,ARIAL_L,NORMAL);
+            DrawScrollBar(Select, 3);        
+            DrawMenuLine(0,O_GoTo, Select);
+            DrawMenuLine(1,O_Manual, Select);
+            DrawMenuLine(2,O_Space, Select);                       
+            
+            EndProcess = true;
             break;
         default:
+            if((*KeyPressed) & 0x80) { //ESC
+                State = MENU;
+                Select = 0;
+                Page = 0;
+                (*KeyPressed) ^= 0x80;
+                break;
+            }
+            DisplayClear();
+            EndProcess = true;
             break;
         }
     }
 }
 
-void DrawMenuLine(BYTE ID, BYTE * Name, BYTE Select)
+void DrawMenuLine(BYTE ID, BYTE * Name, int Select)
 {
     BYTE color =0;
     BYTE Line;
     EFFECT Effect;
+    static int Pos = 0;
+    if(Select < 0) return;
+    if(Select == 0) Pos = 0;
+    while(Select > Pos + 3) Pos++;
+    while(Select < Pos) Pos--;
+
     if(Select == ID){
         color = 1;
         Effect = INVERT;
@@ -248,7 +400,7 @@ void DrawMenuLine(BYTE ID, BYTE * Name, BYTE Select)
         color = 0;
         Effect = NORMAL;
     }
-    switch (ID){
+    switch ((int)ID - Pos){
         case 0:
             Line = Line0;
             break;
@@ -261,7 +413,16 @@ void DrawMenuLine(BYTE ID, BYTE * Name, BYTE Select)
         case 3:
             Line = Line3;
             break;
+        default : return;
     }
     FloodRectangle(1,Line,120,Line+13,color);
-    OutTextXY(15,Line + 2,Name,ARIAL_B,Effect);            
+    OutTextXY(5,Line + 2,Name,ARIAL_B,Effect);            
+}
+void DrawScrollBar(int Pos, int Max)
+{
+    int Size = 53 / Max;
+    int Y = Pos * Size;
+    DrawRectangle(122,10,132,63,1);
+    FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
+
 }
