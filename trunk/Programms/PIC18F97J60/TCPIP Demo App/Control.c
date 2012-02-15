@@ -19,52 +19,57 @@
 #define  Line1      25
 #define  Line2      38
 #define  Line3      51
-
-
+#define true 1
+#define false 0
+#ifndef _WINDOWS
+#define TEXT static rom
+#else
+#define TEXT static
+#endif
 static ALL_PARAMS Params;
 
 
 void DrawMenuLine(BYTE ID, BYTE * Name, int Select);
 void DrawScrollBar(int Pos, int Max);
-void DoubleXtoTime( char* Text, double X, bool hour );
+void DoubleXtoTime( char * Text, double X, BOOL hour );
 
 void ProcessMenu( BYTE * KeyPressed )
 {
 
-    static double Xa = 91.3 * PI / 180.0;
+    static double Xa = 0.0;//91.3 * PI / 180.0;
     static double Xd = -33.1 * PI / 180.0;
     static double Xg = 47.2 * PI / 180.0;
     
     BYTE TextA[20] = "A:";
     BYTE TextD[20] = "D:";    
     BYTE TextG[20] = "G:";    
-    BYTE TimeT[] = "23:56";
-    BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-    BYTE ConnectFlag[] = {0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
-    BYTE AlphaFlag[] = {0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
-    BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
-    BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
+    TEXT BYTE TimeT[] = "23:56";
+    TEXT BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+    TEXT BYTE ConnectFlag[] = {0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
+    TEXT BYTE AlphaFlag[] = {0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+    TEXT BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+    TEXT BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
     
-    BYTE SettingsName[] = "Настройки";    
-    BYTE ObservName[] = "Наблюдение";
-    BYTE O_GoTo[] = "Навести";
-    BYTE O_Manual[] = "Ручной режим";
-    BYTE O_Space[] = "Режим спутников";
-    BYTE S_Observ[] = "Наблюдение";
-    BYTE S_NetName[] = "Сеть";
-    BYTE S_AlphaName[] = "Альфа";
-    BYTE S_DeltaName[] = "Дельта";
-    BYTE S_GammaName[] = "Гамма";
-    BYTE S_MontyName[] = "Монтировка";
-    BYTE S_Display[] = "Экран";
-    BYTE S_MontyTypeName[] = "Тип монтировки";
-    BYTE SN_Name[] = "Имя:      Interface";
-    BYTE SN_IP[] =   "IP:   192.168.1.2";
-    BYTE SN_Mask[] = "Mask: 255.255.255.0";
-    BYTE SN_Gate[] = "Gate: 192.168.1.1";
-    BYTE SN_DNS1[] = "DNS1: 192.168.1.1";
-    BYTE SN_DNS2[] = "DNS2: 192.168.1.3";
-    BYTE SN_NTP[] =  "NTP : nrepus.cp.ru";
+    TEXT BYTE SettingsName[] = "Настройки";    
+    TEXT BYTE ObservName[] = "Наблюдение";
+    TEXT BYTE O_GoTo[] = "Навести";
+    TEXT BYTE O_Manual[] = "Ручной режим";
+    TEXT BYTE O_Space[] = "Режим спутников";
+    TEXT BYTE S_Observ[] = "Наблюдение";
+    TEXT BYTE S_NetName[] = "Сеть";
+    TEXT BYTE S_AlphaName[] = "Альфа";
+    TEXT BYTE S_DeltaName[] = "Дельта";
+    TEXT BYTE S_GammaName[] = "Гамма";
+    TEXT BYTE S_MontyName[] = "Монтировка";
+    TEXT BYTE S_Display[] = "Экран";
+    TEXT BYTE S_MontyTypeName[] = "Тип монтировки";
+    TEXT BYTE SN_Name[] = "Имя:      Interface";
+    TEXT BYTE SN_IP[] =   "IP:   192.168.1.2";
+    TEXT BYTE SN_Mask[] = "Mask: 255.255.255.0";
+    TEXT BYTE SN_Gate[] = "Gate: 192.168.1.1";
+    TEXT BYTE SN_DNS1[] = "DNS1: 192.168.1.1";
+    TEXT BYTE SN_DNS2[] = "DNS2: 192.168.1.3";
+    TEXT BYTE SN_NTP[] =  "NTP : nrepus.cp.ru";
     
 
     static MENU_ID State = MAIN_WINDOW;
@@ -107,7 +112,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 (*KeyPressed) ^= 0x40;
                 break;
             }
-            Xa += 2.0 * PI /(360.0 * 200.0 * 16.0);
+            Xa += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/2.0;
             DoubleXtoTime((char*)&TextA[2], Xa, 1 );
             DoubleXtoTime((char*)&TextD[2], Xd, 0 );
             DoubleXtoTime((char*)&TextG[2], Xg, 0 );
@@ -119,8 +124,8 @@ void ProcessMenu( BYTE * KeyPressed )
             OutTextXY(15,13 + 26,TextG,ARIAL_B,NORMAL);
             OutTextXY(2,53,MenuB,ARIAL_B,NORMAL);
             Line(36,52,36,63,1);
-            OutTextXY(105,53,TimeT,ARIAL_B,NORMAL);
-            Line(103,52,103,63,1);
+            OutTextXY(101,53,TimeT,ARIAL_B,NORMAL);
+            Line(99,52,99,63,1);
             DrawRectangle(0,0,132,10,1);   
 
             if(Con){
@@ -445,22 +450,27 @@ void DrawScrollBar(int Pos, int Max)
 
 }
 
-void DoubleXtoTime( char* Text, double X, bool hour )
+void DoubleXtoTime( char * Text, double X, BOOL hour )
 {    
-    double Xg = X * 180/(PI); // в часах времени
+    double Xg;
+    signed short Grad;
+    BYTE Min;
+    BYTE Sec;
+    BYTE mSec;
+    Xg = X * 180/(PI); // в часах времени
     if (hour) {
         Xg /= 15.0;
     }
-    signed char Grad = (signed char)(Xg);    
+    Grad = (signed short)Xg;    
     Xg -= (double)Grad;
     Xg *= 60;
     if(Xg < 0.0) Xg = -Xg;
-    BYTE Min = (BYTE)(Xg);
+    Min = (BYTE)(Xg);
     Xg -= (double)Min;
     Xg *= 60;
-    BYTE Sec = (BYTE)(Xg);
+    Sec = (BYTE)(Xg);
     Xg -= (double)Sec;
     Xg *= 100;
-    BYTE mSec = (BYTE)(Xg);
+    mSec = (BYTE)(Xg);
     sprintf (Text, "%+0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
 }
