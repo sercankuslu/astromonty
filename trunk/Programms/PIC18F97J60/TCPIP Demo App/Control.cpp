@@ -7,7 +7,9 @@
 #include "..\..\dsPIC33\protocol.h"
 #include "DisplayBuffer.h"
 #include "Control.h"
+#include <stdio.h>
 
+#define PI 3.1415926535897932384626433832795
 // положение элементов
 #define  Con_FlagX  0
 #define  A_FlagX    26
@@ -17,14 +19,25 @@
 #define  Line1      25
 #define  Line2      38
 #define  Line3      51
+
+
+static ALL_PARAMS Params;
+
+
 void DrawMenuLine(BYTE ID, BYTE * Name, int Select);
 void DrawScrollBar(int Pos, int Max);
+void DoubleXtoTime( char* Text, double X, bool hour );
 
 void ProcessMenu( BYTE * KeyPressed )
 {
-    BYTE TextA[] = "A: 06`45'08.9173\"";
-    BYTE TextD[] = "D:-16`42'58.0170\"";    
-    BYTE TextG[] = "G:-06`45'08.0170\"";    
+
+    static double Xa = 91.3 * PI / 180.0;
+    static double Xd = -33.1 * PI / 180.0;
+    static double Xg = 47.2 * PI / 180.0;
+    
+    BYTE TextA[20] = "A:";
+    BYTE TextD[20] = "D:";    
+    BYTE TextG[20] = "G:";    
     BYTE TimeT[] = "23:56";
     BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
     BYTE ConnectFlag[] = {0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
@@ -46,11 +59,11 @@ void ProcessMenu( BYTE * KeyPressed )
     BYTE S_Display[] = "Экран";
     BYTE S_MontyTypeName[] = "Тип монтировки";
     BYTE SN_Name[] = "Имя:      Interface";
-    BYTE SN_IP[] =   "IP:   192.168.001.002";
-    BYTE SN_Mask[] = "Mask: 255.255.255.000";
-    BYTE SN_Gate[] = "Gate: 192.168.001.001";
-    BYTE SN_DNS1[] = "DNS1: 192.168.001.001";
-    BYTE SN_DNS2[] = "DNS2: 192.168.001.003";
+    BYTE SN_IP[] =   "IP:   192.168.1.2";
+    BYTE SN_Mask[] = "Mask: 255.255.255.0";
+    BYTE SN_Gate[] = "Gate: 192.168.1.1";
+    BYTE SN_DNS1[] = "DNS1: 192.168.1.1";
+    BYTE SN_DNS2[] = "DNS2: 192.168.1.3";
     BYTE SN_NTP[] =  "NTP : nrepus.cp.ru";
     
 
@@ -94,6 +107,11 @@ void ProcessMenu( BYTE * KeyPressed )
                 (*KeyPressed) ^= 0x40;
                 break;
             }
+            Xa += 2.0 * PI /(360.0 * 200.0 * 16.0);
+            DoubleXtoTime((char*)&TextA[2], Xa, 1 );
+            DoubleXtoTime((char*)&TextD[2], Xd, 0 );
+            DoubleXtoTime((char*)&TextG[2], Xg, 0 );
+            
             DisplayClear();
             DrawRectangle(0,51,132,63,1);
             OutTextXY(15,13,TextA,ARIAL_B,NORMAL);
@@ -425,4 +443,24 @@ void DrawScrollBar(int Pos, int Max)
     DrawRectangle(122,10,132,63,1);
     FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
 
+}
+
+void DoubleXtoTime( char* Text, double X, bool hour )
+{    
+    double Xg = X * 180/(PI); // в часах времени
+    if (hour) {
+        Xg /= 15.0;
+    }
+    signed char Grad = (signed char)(Xg);    
+    Xg -= (double)Grad;
+    Xg *= 60;
+    if(Xg < 0.0) Xg = -Xg;
+    BYTE Min = (BYTE)(Xg);
+    Xg -= (double)Min;
+    Xg *= 60;
+    BYTE Sec = (BYTE)(Xg);
+    Xg -= (double)Sec;
+    Xg *= 100;
+    BYTE mSec = (BYTE)(Xg);
+    sprintf (Text, "%+0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
 }

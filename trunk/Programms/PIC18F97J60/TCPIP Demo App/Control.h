@@ -12,9 +12,10 @@ typedef struct AXIS_PARAM
 {
     BYTE  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
     BYTE  NeedToCommit;     // необходимо отправить на сервер указанные параметры
-    DWORD AbsAngle;         // текущее положение оси в милисекундах дуги
-    DWORD LogicalAngle;     // текущее направление в милисекундах времени
+
+    double Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     DWORD AbsSteps;         // текущий номер шага    
+
 } AXIS_PARAM;
 
 typedef struct NETWORK_SETTINGS
