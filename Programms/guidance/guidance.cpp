@@ -24,7 +24,7 @@ extern BYTE DisplayBuffer4[40];
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
-#define FIRST_TIMER_INTERVAL 1000 
+#define FIRST_TIMER_INTERVAL 500 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -644,6 +644,7 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
     HDC hMemDC; 
     HBITMAP hbmScreen = NULL;
     BOOL b = FALSE;
+    int R = 2;
     hMemDC = CreateCompatibleDC(ps->hdc);
 
     BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, WHITENESS);
@@ -652,8 +653,8 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
     SelectObject(hMemDC, hbmScreen);   
     for(LONG i = 0; i < iHeight; i++)
         for(LONG j = 0; j < iWidth; j++){
-            if((j % 3 == 0)||(i % 3 == 0))
-                b = GetPixelDB((WORD)j/3, (WORD)i/3);
+            if((j % R == 0)||(i % R == 0))
+                b = GetPixelDB((WORD)j/R, (WORD)i/R);
             if(!b){
                 SetPixel(hMemDC, j, i, RGB(255,255,255));
             } else {

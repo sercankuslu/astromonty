@@ -480,8 +480,9 @@ int main(void)
             if(CKeys.right) x++;
             if(CKeys.down) y--;
             if (CKeys.left)x--;
-            OutTextXY(x,y,Text2,1);
-            OutTextXY(x,y+10,Text3,1);
+            ProcessMenu( 0x80 );
+            //OutTextXY(x,y,Text2,1);
+            //OutTextXY(x,y+10,Text3,1);
             //OutTextXY(x,y+8,Text,1);
 //            OutTextXY(x,y,RBuffer,1);  
 			//SetPixelDB(x, y, 1); 
@@ -490,7 +491,7 @@ int main(void)
         if(0){
         if(TickGet() - displayup >= TICK_SECOND/10){
 	        displayup = TickGet();
-	        OutTextXY(x1,y1,Text,0);	 
+	        //OutTextXY(x1,y1,Text,0);	 
 	        x1+=sx1;
 	        y1+=sy1;
 	        if((x1>130)||(x1<1)) {
@@ -569,7 +570,7 @@ int main(void)
 		
 		if(IsDataInBuffer(IN_BUFFER)){
 			if(PopAttr(&ReceivePacket, IN_BUFFER) == 0){
-				OutTextXY(x,y,RBuffer,0);
+				//OutTextXY(x,y,RBuffer,0);
 				DisplayDraw(add1);
 			}
 		}
