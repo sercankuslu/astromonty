@@ -159,6 +159,55 @@ WORD OutTextXY( WORD X,WORD Y,BYTE* Text,FONT CFont, EFFECT Effect )
     }   
     return XX;
 }
+WORD OutTextXYx( WORD X,WORD Y,BYTE* Text, BYTE SymbolCount,FONT CFont, EFFECT Effect )
+{          
+    WORD FontSize = 0;
+    WORD FontMask = 0xFFFF;
+    WORD XX = 0;
+    BYTE* ptr;
+    static WORD Image[13];
+    WORD count = 13;  
+    WORD i = 0;
+    ptr = Text;
+    XX = X;
+    if(SymbolCount == 0) return XX;
+    while ( *ptr ){
+        count = 13;
+        GetSymbolImage(*ptr++, Image, &count, CFont);		
+        switch(CFont){
+        case ARIAL_L: 
+            FontSize = SIZE_ARIAL;
+            FontMask = ARIAL_MASK;
+            break;
+        case ARIAL_B: 
+            FontSize = SIZE_ARIAL_B;
+            FontMask = ARIAL_B_MASK;
+            break;
+        default: ;
+        }
+        switch(Effect){
+            case NORMAL:
+                Image[count] = 0;
+                count++;
+                break;
+            case INVERT:
+                for(i = 0;i<count;i++)
+                {
+                    Image[i] = Image[i]^FontMask;
+                }
+                Image[count] = FontMask;
+                count++;                
+                break;
+        }
+        OutImageW(XX,Y,count,FontSize,Image);
+        XX += count;   
+        if(SymbolCount == 1) {
+            break;
+        }
+        SymbolCount--;
+    }   
+    return XX;
+}
 //битовое изображение
 // формат изображения:
 // байты : 0 1 2 3 4 ...

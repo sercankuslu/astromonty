@@ -344,8 +344,8 @@ const
 #ifndef _WINDOWS
 #pragma romdata
 #endif
-#define Arial_Data_L_Size 834
-#define Arial_Data_B_Size 1104
+#define Arial_Data_L_Size 835
+#define Arial_Data_B_Size 1115
 
 int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
 {
