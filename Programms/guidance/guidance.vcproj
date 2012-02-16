@@ -178,8 +178,16 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\PIC18F97J60\TCPIP Demo App\Control.cpp"
+				RelativePath="..\PIC18F97J60\TCPIP Demo App\Control.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.c"
