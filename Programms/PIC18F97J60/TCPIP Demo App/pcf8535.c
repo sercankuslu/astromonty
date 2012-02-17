@@ -3,7 +3,7 @@
 
 #ifndef _WINDOWS
 #include "TCPIP Stack/TCPIP.h"
-#include <i2c.h>
+#include "i2c.h"
 #endif
 
 #ifdef _WINDOWS

@@ -100,17 +100,18 @@
 #if defined(STACK_USE_ZEROCONF_MDNS_SD)
 #include "TCPIP Stack/ZeroconfMulticastDNS.h"
 #endif
-#define USE_OR_MASKS
-#include <p18cxxx.h>
-#include <i2c.h>
-#include <timers.h>
-#include <pwm.h>
-#include <flash.h>
+
 // Include functions specific to this stack application
+#define USE_OR_MASKS
+#include "p18cxxx.h"
+#include "timers.h"
+#include "pwm.h"
+#include "flash.h"
 #include "MainDemo.h"
 #include "DisplayBuffer.h"
 #include "pcf8535.h"
 #include "roundbuffer.h"
+#include "Control.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO

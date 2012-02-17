@@ -2,7 +2,7 @@
 #include "../../dsPIC33/protocol.h"
 
 #define ATTR_BUFF_SIZE 8
-#define MEM_BUF_SIZE 16
+#define MEM_BUF_SIZE 32
 #define BUFFERS_COUNT 2
 
 typedef struct MEMORY_BUFFER {
