@@ -24,7 +24,7 @@ extern BYTE DisplayBuffer4[40];
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
-#define FIRST_TIMER_INTERVAL 500 
+#define FIRST_TIMER_INTERVAL 200 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;

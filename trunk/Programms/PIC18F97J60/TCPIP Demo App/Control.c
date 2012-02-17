@@ -23,19 +23,16 @@
 #define false 0
 #define ENTER 1
 #define ESC   2
-#ifndef _WINDOWS
-#define TEXT static rom
-#else
-#define TEXT static
-#endif
+
 static ALL_PARAMS Params;
 
 
-void DrawMenuLine( BYTE ID, BYTE * Name, BYTE * Value, int PosY,int PosX );
+void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY,int PosX , SELECT_MODE Mode );
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, double X, BOOL hour );
 BYTE ProcessKeys(BYTE * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
+int SubStrToInt(const char* Text, int Beg, int * Val);
 
 void ProcessMenu( BYTE * KeyPressed )
 {
@@ -43,41 +40,43 @@ void ProcessMenu( BYTE * KeyPressed )
     static double Xa = 0.0;//91.3 * PI / 180.0;
     static double Xd = -33.1 * PI / 180.0;
     static double Xg = 47.2 * PI / 180.0;
+    static char TimeT[] = "23:56";    
+
+#define TextA "A:"
+#define TextD "D:"
+#define TextG "G:"
+#define TextStart "Старт"
+#define MenuB "Меню" //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+#define ConnectFlag "Сеть"  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
+#define AlphaFlag   "Альфа" //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+#define DeltaFlag   "Дельта" //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+#define GammaFlag   "Гамма"  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
     
-    BYTE TextA[20] = "A:";
-    BYTE TextD[20] = "D:";    
-    BYTE TextG[20] = "G:";    
-    TEXT BYTE TimeT[] = "23:56";
-    TEXT BYTE MenuB[] = {0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-    TEXT BYTE ConnectFlag[] = {0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
-    TEXT BYTE AlphaFlag[] = {0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
-    TEXT BYTE DeltaFlag[] = {0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
-    TEXT BYTE GammaFlag[] = {0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
-    
-    TEXT BYTE SettingsName[] = "Настройки";    
-    TEXT BYTE ObservName[] = "Наблюдение";
-    TEXT BYTE O_GoTo[] = "Навести";
-    TEXT BYTE O_Manual[] = "Ручной режим";
-    TEXT BYTE O_Space[] = "Режим спутников";
-    TEXT BYTE S_Observ[] = "Наблюдение";
-    TEXT BYTE S_NetName[] = "Сеть";
-    TEXT BYTE S_AlphaName[] = "Альфа";
-    TEXT BYTE S_DeltaName[] = "Дельта";
-    TEXT BYTE S_GammaName[] = "Гамма";
-    TEXT BYTE S_MontyName[] = "Монтировка";
-    TEXT BYTE S_Display[] = "Экран";
-    TEXT BYTE S_MontyTypeName[] = "Тип монтировки";
-    TEXT BYTE SN_Name[] = "Имя:";
-    TEXT BYTE SN_IP[] =   "IP:";    
-    TEXT BYTE SN_Mask[] = "Mask:";
-    TEXT BYTE SN_Gate[] = "Gate:";
-    TEXT BYTE SN_DNS1[] = "DNS1:";
-    TEXT BYTE SN_DNS2[] = "DNS2:";
-    TEXT BYTE SN_NTP[] =  "NTP:";
-    
+#define SettingsName    "Настройки"
+#define ObservName      "Наблюдение"
+#define O_GoTo          "Навести"
+#define O_Manual        "Ручной режим"
+#define O_Space         "Режим спутников"
+#define S_Observ        "Наблюдение"
+#define S_NetName       "Сеть"
+#define S_AlphaName     "Альфа"
+#define S_DeltaName     "Дельта"
+#define S_GammaName     "Гамма"
+#define S_MontyName     "Монтировка"
+#define S_Display	"Экран"
+#define S_MontyTypeName	"Тип монтировки"
+#define SN_Name		"Имя:"
+#define SN_IP           "IP:"    
+#define SN_Mask         "Mask:"
+#define SN_Gate         "Gate:"
+#define SN_DNS1         "DNS1:"
+#define SN_DNS2         "DNS2:"
+#define SN_NTP          "NTP:"
+               		
 
     static MENU_ID State = MAIN_WINDOW;
     static MENU_ID LastState = MAIN_WINDOW;
+
     // признаки: true- белый фон, false-черный фон
     static BOOL Con = true;
     static BOOL A_Run = true;
@@ -89,20 +88,27 @@ void ProcessMenu( BYTE * KeyPressed )
     EFFECT Effect = NORMAL;
     static BYTE PosX = 0;
     static BYTE PosY = 0;
+    static BYTE LastPosX = 0;
+    static BYTE LastPosY = 0;
     static BYTE TmpPosY = 0;
     static BYTE SelPosX = 0;
     static BYTE SelPosY = 0;
-    static BYTE TmpValue[20];
+    static char TmpValue[20];
     static DWORD * TmpDWValue = NULL;
+    static double * TmpDoValue = NULL;
+    static BOOL TmpIsHours = false;
     BYTE Selected = 0;
-    static BYTE * EditTxt = NULL; 
+    static char * EditTxt = NULL; 
     DWORD_VAL TmpDWval;
-    static bool Init = false;
-
+    static BOOL Init = false;
+    static int TimerCount = 0;
     //     Con ^= 1;
     //     A_Run ^= 1;
     //     D_Run ^= 1;
-    Time_Run ^= 1;
+    TimerCount+=2;
+    if(TimerCount % 5 == 0){
+        Time_Run ^= 1;
+    }
 
     if(Time_Run){
         TimeT[2] = ':';
@@ -110,22 +116,23 @@ void ProcessMenu( BYTE * KeyPressed )
         TimeT[2] = ' ';
     }
     if(!Init){
-    Params.Local.IP = 0xA8C00105;
-    Params.Local.Mask = 0xFFFFFF00;
-    Params.Local.Gate = 0xC0A80101;
-    Params.Local.DNS1 = 0xC0A80101;
-    Params.Local.DNS2 = 0xC0A80102;
-    Init = true;
+        Params.Local.IP = 0xA8C00105;
+        Params.Local.Mask = 0xFFFFFF00;
+        Params.Local.Gate = 0xC0A80101;
+        Params.Local.DNS1 = 0xC0A80101;
+        Params.Local.DNS2 = 0xC0A80102;
+        Init = true;
     }
-
+    Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
     while(!EndProcess){
         switch (State) {
-        case MAIN_WINDOW:  
+        case MAIN_WINDOW:   // ***************************************************************************************************************
             if((*KeyPressed) & 0x80) {
                 State = MENU;
                 (*KeyPressed) ^= 0x80;
                 PosX = 0;
                 PosY = 0;
+                DisplayClear();
                 break;
             }
             if((*KeyPressed) & 0x40) { //Enter                
@@ -133,23 +140,23 @@ void ProcessMenu( BYTE * KeyPressed )
                 PosX = 0;
                 PosY = 0;
                 (*KeyPressed) ^= 0x40;
+                DisplayClear();
                 break;
-            }
-            Xa += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/2.0;
-            XtoTimeString((char*)&TextA[2], Xa, 1 );
-            XtoTimeString((char*)&TextD[2], Xd, 0 );
-            XtoTimeString((char*)&TextG[2], Xg, 0 );
-            
-            DisplayClear();
+            }                        
+
+            XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );
+            DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, 0, 0, NO_SELECT);
+            XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );
+            DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, 0, 0, NO_SELECT);
+            XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );
+            DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, 0, 0, NO_SELECT);
+
+            OutTextXY(2,53,(const char*)MenuB,ARIAL_B,NORMAL);
+            OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
             DrawRectangle(0,51,132,63,1);
-            OutTextXY(15,13,TextA,ARIAL_B,NORMAL);
-            OutTextXY(15,13 + 13,TextD,ARIAL_B,NORMAL);
-            OutTextXY(15,13 + 26,TextG,ARIAL_B,NORMAL);
-            OutTextXY(2,53,MenuB,ARIAL_B,NORMAL);
-            Line(36,52,36,63,1);
-            OutTextXY(101,53,TimeT,ARIAL_B,NORMAL);
-            Line(99,52,99,63,1);
             DrawRectangle(0,0,132,10,1);   
+            Line(36,52,36,63,1);
+            Line(99,52,99,63,1);
 
             if(Con){
                 color = 0;
@@ -159,7 +166,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 Effect = INVERT;
             }
             FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
-            OutTextXY(Con_FlagX+3,2,ConnectFlag,ARIAL_L,Effect);
+            OutTextXY(Con_FlagX+3,2,(const char*)ConnectFlag,ARIAL_L,Effect);
             if(A_Run){
                 color = 0;
                 Effect = NORMAL;
@@ -168,7 +175,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 Effect = INVERT;
             }
             FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
-            OutTextXY(A_FlagX+3,2,AlphaFlag,ARIAL_L,Effect);
+            OutTextXY(A_FlagX+3,2,(const char*)AlphaFlag,ARIAL_L,Effect);
             if(D_Run){
                 color = 0;
                 Effect = NORMAL;
@@ -177,7 +184,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 Effect = INVERT;
             }
             FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
-            OutTextXY(D_FlagX+3,2,DeltaFlag,ARIAL_L,Effect);
+            OutTextXY(D_FlagX+3,2,(const char*)DeltaFlag,ARIAL_L,Effect);
             if(G_Run){
                 color = 0;
                 Effect = NORMAL;
@@ -186,10 +193,10 @@ void ProcessMenu( BYTE * KeyPressed )
                 Effect = INVERT;
             }
             FloodRectangle(G_FlagX+1,1,131,9,color);
-            OutTextXY(G_FlagX+3,2,GammaFlag,ARIAL_L,Effect);
+            OutTextXY(G_FlagX+3,2,(const char*)GammaFlag,ARIAL_L,Effect);
             EndProcess = true;
             break;
-        case MENU:
+        case MENU: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 2, &PosY, 0, MAIN_WINDOW, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { 
                 switch(SelPosX){
@@ -201,21 +208,23 @@ void ProcessMenu( BYTE * KeyPressed )
                     break;
                 case 2:
                     break;
-                }                                     
+                }     
+                DisplayClear();
                 break;
             } else {
-                if(Selected == ESC) break;
-            }
-
-            DisplayClear();
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
+            }            
             DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,MenuB,ARIAL_L,NORMAL);
+            OutTextXY(15,2,(const char*)MenuB,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 2);
-            DrawMenuLine(0, ObservName, NULL, PosX, 0);
-            DrawMenuLine(1, SettingsName, NULL, PosX, 0);
+            DrawMenuLine(0, (const char*)ObservName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(1, (const char*)SettingsName, NULL, PosX, 0, SELECT_LINE);
             EndProcess = true;
             break;
-        case SETTINGS:
+        case SETTINGS: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 4, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);
             
             if(Selected == ENTER) { //Enter
@@ -232,24 +241,26 @@ void ProcessMenu( BYTE * KeyPressed )
                 case 3:
                     State = S_OBSERV;
                     break;                
-                }                                      
+                }      
+                DisplayClear();
                 break;
             } else {
-                if(Selected == ESC) break;
-            }
-
-            DisplayClear();
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
+            }            
             DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,SettingsName,ARIAL_L,NORMAL);
+            OutTextXY(15,2,(const char*)SettingsName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
-            DrawMenuLine(0,S_NetName, NULL, PosX, 0);
-            DrawMenuLine(1,S_MontyName, NULL, PosX, 0);
-            DrawMenuLine(2,S_Display, NULL, PosX, 0);
-            DrawMenuLine(3,S_Observ, NULL, PosX, 0);
+            DrawMenuLine(0,(const char*)S_NetName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(1,(const char*)S_MontyName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(2,(const char*)S_Display, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(3,(const char*)S_Observ, NULL, PosX, 0, SELECT_LINE);
             
             EndProcess = true;
             break;
-        case S_MONTY:
+        case S_MONTY: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 4, &PosY, 0, SETTINGS, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter
                 switch(SelPosX){
@@ -267,144 +278,354 @@ void ProcessMenu( BYTE * KeyPressed )
                     break;
                 case 4:
                     break;
-                }                         
+                }    
+                DisplayClear();
                 break;
             }else {
-                if(Selected == ESC) break;
-            }
+                if(Selected == ESC) 
+                {
+                    DisplayClear();
+                    break;
+                }
+            }            
             
-            DisplayClear();
             DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,S_MontyName,ARIAL_L,NORMAL);
+            OutTextXY(15,2,(const char*)S_MontyName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
-            DrawMenuLine(0,S_MontyTypeName, NULL, PosX, 0);
-            DrawMenuLine(1,S_AlphaName, NULL, PosX, 0);
-            DrawMenuLine(2,S_DeltaName, NULL, PosX, 0);
-            DrawMenuLine(3,S_GammaName, NULL, PosX, 0);            
+            DrawMenuLine(0,(const char*)S_MontyTypeName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(1,(const char*)S_AlphaName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(2,(const char*)S_DeltaName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(3,(const char*)S_GammaName, NULL, PosX, 0, SELECT_LINE);            
 
             EndProcess = true;
             break;
-        case S_NETWORK:
+        case S_NETWORK: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 7, &PosY, 0, SETTINGS, &State, &SelPosX, &SelPosY);            
-            if(Selected == ENTER) { //Enter            
-                State = EDIT_IP;
-                //EditTxt = SN_IP;                                
+            if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
                 case 1:
-                     EditTxt = SN_IP;
-                     TmpDWValue = &Params.Local.IP;      
-                     LastState = S_NETWORK;
-                     break;                
+                     EditTxt = (char*)SN_IP;
+                     TmpDWValue = &Params.Local.IP;
+                     break;
+                case 2:
+                    EditTxt = (char*)SN_Mask;
+                    TmpDWValue = &Params.Local.Mask;
+                    break;
+                case 3:
+                    EditTxt = (char*)SN_Gate;
+                    TmpDWValue = &Params.Local.Gate;
+                    break;
+                case 4:
+                    EditTxt = (char*)SN_DNS1;
+                    TmpDWValue = &Params.Local.DNS1;
+                    break;
+                case 5:
+                    EditTxt = (char*)SN_DNS2;
+                    TmpDWValue = &Params.Local.DNS2;
+                    break; 
+                default:
+                    TmpDWValue = NULL;
+                    break;
+                }   
+                if(TmpDWValue != NULL) {
+                    IPtoText(*TmpDWValue,(char*)TmpValue, 1);
+                    State = EDIT_IP;
+                    LastState = S_NETWORK;
+                    LastPosX = SelPosX;
+                    LastPosY = SelPosY;
                 }
-                IPtoText(*TmpDWValue,(char*)TmpValue, 1);
+                DisplayClear();
                 break;
             } else {
-                if(Selected == ESC) break;
-            }
-            DisplayClear();
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
+            }            
             DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,S_NetName,ARIAL_L,NORMAL);
+            OutTextXY(15,2,(const char*)S_NetName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 7);              
-            DrawMenuLine(0,SN_Name, (BYTE*)Params.Local.Name, PosX, 0);
+            DrawMenuLine(0,(const char*)SN_Name, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE);
             IPtoText(Params.Local.IP,   (char*)TmpValue, 0);
-            DrawMenuLine(1,SN_IP, TmpValue, PosX, 0);
+            DrawMenuLine(1,(const char*)SN_IP, TmpValue, PosX, 0, SELECT_LINE);
             IPtoText(Params.Local.Mask, (char*)TmpValue, 0);
-            DrawMenuLine(2,SN_Mask, TmpValue, PosX, 0);
+            DrawMenuLine(2,(const char*)SN_Mask, TmpValue, PosX, 0, SELECT_LINE);
             IPtoText(Params.Local.Gate, (char*)TmpValue, 0);
-            DrawMenuLine(3,SN_Gate, TmpValue, PosX, 0);
+            DrawMenuLine(3,(const char*)SN_Gate, TmpValue, PosX, 0, SELECT_LINE);
             IPtoText(Params.Local.DNS1, (char*)TmpValue, 0);
-            DrawMenuLine(4,SN_DNS1, TmpValue, PosX, 0);            
+            DrawMenuLine(4,(const char*)SN_DNS1, TmpValue, PosX, 0, SELECT_LINE);            
             IPtoText(Params.Local.DNS2, (char*)TmpValue, 0);
-            DrawMenuLine(5,SN_DNS2, TmpValue, PosX, 0);            
-            DrawMenuLine(6,SN_NTP, NULL, PosX, 0);            
+            DrawMenuLine(5,(const char*)SN_DNS2, TmpValue, PosX, 0, SELECT_LINE);            
+            DrawMenuLine(6,(const char*)SN_NTP, NULL, PosX, 0, SELECT_LINE);            
 
             EndProcess = true;
             break;
-        case SM_TYPESELECT:
+        case SM_TYPESELECT: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 0, &PosY, 0, S_MONTY, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter   
+                DisplayClear();
             } else {
-                if(Selected == ESC) break;
-            }            
-            DisplayClear();
-            EndProcess = true;
-            break;
-        case OBSERV:
-            Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
-            if(Selected == ENTER) { //Enter   
-            } else {
-                if(Selected == ESC) break;
-            }             
-            DisplayClear();
-            DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,ObservName,ARIAL_L,NORMAL);
-            DrawScrollBar(PosX, 3);        
-            DrawMenuLine(0,O_GoTo, NULL, PosX, 0);
-            DrawMenuLine(1,O_Manual, NULL, PosX, 0);
-            DrawMenuLine(2,O_Space, NULL, PosX, 0);                      
-            
-            EndProcess = true;
-            break;
-        case EDIT_IP:
-            TmpPosY = PosY;
-            Selected = ProcessKeys(KeyPressed, &PosX, 10, &PosY, strlen((const char*)TmpValue) + 1, S_NETWORK, &State, &SelPosX, &SelPosY);            
-            if(Selected == ENTER) { //Enter   
-                //(*TmpDWValue)
-                for(int i = 0;i<strlen((const char*)TmpValue);i++){
-                    if(TmpValue[i]=='.') TmpValue[i] = ' ';
+                if(Selected == ESC){ 
+                    DisplayClear();
+                    break;
                 }
-                int UB=0;
-                int MB=0;
-                int HB=0;
-                int LB=0;
-                sscanf((const char*)TmpValue,"%d %d %d %d",&UB,&MB,&HB,&LB);
-                TmpDWval.byte.UB = (BYTE)UB;
-                TmpDWval.byte.MB = (BYTE)MB;
-                TmpDWval.byte.HB = (BYTE)HB;
-                TmpDWval.byte.LB = (BYTE)LB;
-                (*TmpDWValue) = TmpDWval.Val;
-                State = LastState;
+            }            
+            EndProcess = true;
+            break;
+        case OBSERV: // ***************************************************************************************************************
+            Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter  
+                switch(SelPosX){
+                case 0:
+                    State = O_GOTO;
+                    break;                
+                }    
+                DisplayClear();
                 break;
             } else {
-                if(Selected == ESC) break;
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
             }             
-            DisplayClear();
             DrawRectangle(0,0,132,10,1);
-            OutTextXY(15,2,EditTxt,ARIAL_L,NORMAL);
+            OutTextXY(15,2,(const char*)ObservName,ARIAL_L,NORMAL);
+            DrawScrollBar(PosX, 3);        
+            //DrawMenuLine(0,O_GoTo, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(0,(const char*)O_GoTo, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(1,(const char*)O_Manual, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(2,(const char*)O_Space, NULL, PosX, 0, SELECT_LINE);                      
+            
+            EndProcess = true;
+            break;
+        case O_GOTO: // ***************************************************************************************************************
+            Selected = ProcessKeys(KeyPressed, &PosX, 4, &PosY, 0, OBSERV, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter   
+                switch(SelPosX){
+                case 0:
+                    EditTxt = (char*)TextA;                    
+                    TmpDoValue = &Params.TargetAlpha.Angle;
+                    TmpIsHours = true;
+                    XtoTimeString((char*)TmpValue,*TmpDoValue, 1);
+                    break;
+                case 1:
+                    EditTxt = (char*)TextD;                    
+                    TmpDoValue = &Params.TargetDelta.Angle;
+                    TmpIsHours = false;
+                    XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
+                    break;
+                case 2:
+                    EditTxt = (char*)TextG;                    
+                    TmpDoValue = &Params.TargetGamma.Angle;
+                    TmpIsHours = false;
+                    XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
+                    break;
+                case 3:
+                    State = MAIN_WINDOW;  
+                    // TODO: отправка команды на перевод телескопа на координаты
+                    break;
+                default:
+                    TmpDoValue = NULL;
+                    break;
+                }   
+                if(TmpDoValue != NULL) {                    
+                    State = EDIT_ANGLE;
+                    LastState = O_GOTO;
+                    LastPosX = SelPosX;
+                    LastPosY = SelPosY;
+                }
+                DisplayClear();
+                break;
+            } else {
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
+            }                
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,(const char*)O_GoTo,ARIAL_L,NORMAL);
+            DrawScrollBar(PosX, 3);        
+            XtoTimeString((char*)&TmpValue, Params.TargetAlpha.Angle, 1 );
+            DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, PosX, 0, SELECT_LINE);
+            XtoTimeString((char*)&TmpValue, Params.TargetDelta.Angle, 0 );
+            DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, PosX, 0, SELECT_LINE);
+            XtoTimeString((char*)&TmpValue, Params.TargetGamma.Angle, 0 );
+            DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, PosX, 0, SELECT_LINE);    
+            DrawMenuLine(3, (const char*)TextStart, NULL, PosX, 0, SELECT_LINE);  
+            EndProcess = true;
+            break;
+        case EDIT_IP: {// ***************************************************************************************************************
+            int i;
+            TmpPosY = PosY;   
+            PosX = '9' - TmpValue[PosY];
+            Selected = ProcessKeys(KeyPressed, &PosX, 10, &PosY, strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter   
+                //(*TmpDWValue)
+                for(i = 0;i < strlen((const char*)TmpValue);i++){
+                    if(TmpValue[i]=='.') TmpValue[i] = ' ';
+                }
+                {                
+                    int UB=0;
+                    int MB=0;
+                    int HB=0;
+                    int LB=0;
+                    int c = 0;                    
+                    c = SubStrToInt((const char*)TmpValue, 0, &UB);
+                    c = SubStrToInt((const char*)TmpValue, c, &MB);
+                    c = SubStrToInt((const char*)TmpValue, c, &HB);
+                    c = SubStrToInt((const char*)TmpValue, c, &LB);
+                    TmpDWval.byte.UB = (BYTE)UB;
+                    TmpDWval.byte.MB = (BYTE)MB;
+                    TmpDWval.byte.HB = (BYTE)HB;
+                    TmpDWval.byte.LB = (BYTE)LB;
+                }
+                (*TmpDWValue) = TmpDWval.Val;
+                TmpDWValue = NULL;
+                State = LastState;
+                PosX = LastPosX;
+                PosY = LastPosY;
+                DisplayClear();
+                break;
+            } else {
+                if(Selected == ESC) {
+                    TmpDWValue = NULL;                    
+                    PosX = LastPosX;
+                    PosY = LastPosY;
+                    DisplayClear();
+                    break;
+                }
+            }
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,(const char*)EditTxt,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);    
             
-            if(PosY>0){                
-                if(TmpValue[PosY-1] == '.'){
+            if(PosY>=0){                
+                if(TmpValue[PosY] == '.'){
                     if(TmpPosY < PosY) {
                         PosY++;         
                     }else PosY--;
                 }
                 if(TmpPosY != PosY){
-                    PosX = '9' - TmpValue[PosY-1];
+                    PosX = '9' - TmpValue[PosY];
                 }
-                TmpValue[PosY-1] = '9' - PosX;
+                TmpValue[PosY] = '9' - PosX;
             }
-            DrawMenuLine(0, NULL, TmpValue, 0, PosY);
+            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN);
             EndProcess = true;
             break;
-        default:
-            Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
+        }    
+        case EDIT_ANGLE: {// ***************************************************************************************************************
+            int i;
+            BYTE MaxX = 10;
+            BYTE TmpPosX = PosX;
+            TmpPosY = PosY;            
+            if(PosY == 0) MaxX = 2;
+            Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter   
+                //(*TmpDWValue)
+                for(i = 0;i<strlen((const char*)TmpValue);i++){
+                    switch(TmpValue[i]){
+                    case '`':
+                    case ':':
+                    case '.':
+                    case '\'':
+                    case '"':
+                        TmpValue[i] = ' ';
+                    }
+                }
+                {
+                    int UB=0;
+                    int MB=0;
+                    int HB=0;
+                    int LB=0;
+                    double Xg = 0.0;                    
+                    int c = 0;                    
+                    c = SubStrToInt((const char*)TmpValue, 0, &UB);
+                    c = SubStrToInt((const char*)TmpValue, c, &MB);
+                    c = SubStrToInt((const char*)TmpValue, c, &HB);
+                    c = SubStrToInt((const char*)TmpValue, c, &LB);
+
+                    Xg = (double)LB/100.0;
+                    Xg += (double)HB;
+                    Xg /= 60.0;
+                    Xg += (double)MB;
+                    Xg /= 60.0;
+                    if(UB >= 0){
+                        Xg += (double)UB;
+                    } else {
+                        Xg = -Xg + (double)UB;
+                    }
+                    if(TmpIsHours){
+                        Xg *= 15.0;
+                    }
+                    Xg = Xg * (PI)/180.0;
+                    (*TmpDoValue) = Xg;
+                }                
+                TmpDoValue = NULL;
+                State = LastState;
+                PosX = LastPosX;
+                PosY = LastPosY;
+                DisplayClear();
+                break;
             } else {
-                if(Selected == ESC) break;
+                if(Selected == ESC) {
+                    TmpDWValue = NULL;                   
+                    PosX = LastPosX;
+                    PosY = LastPosY;
+                    DisplayClear();
+                    break;
+                }
+            }             
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,(const char*)EditTxt,ARIAL_L,NORMAL);
+            //DrawScrollBar(PosX, 1);   
+            if(PosY>=0){                
+                if((TmpValue[PosY] == '.')||(TmpValue[PosY] == '`')||(TmpValue[PosY] == '\'')||(TmpValue[PosY] == '"')){
+                    if(TmpPosY < PosY) {
+                        PosY++;         
+                    }else PosY--;
+                }
+                if(PosY ==0){
+                    if(TmpPosX != PosX){
+                        if(TmpValue[PosY]=='+'){
+                            TmpValue[PosY]='-';
+                        } else {
+                            TmpValue[PosY]='+';
+                        }
+                        PosX = TmpValue[PosY];
+                    }   
+                } else {
+                    if(TmpPosY != PosY){
+                        PosX = '9' - TmpValue[PosY];
+                    }
+                    TmpValue[PosY] = '9' - PosX;
+                }
+            }
+            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN);
+            EndProcess = true;
+            break;
+            }
+        default: // ***************************************************************************************************************
+            Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter  
+                DisplayClear();
+            } else {
+                if(Selected == ESC) {
+                    DisplayClear();
+                    break;
+                }
             } 
-            DisplayClear();
             EndProcess = true;
             break;
         }
     }
 }
 
-void DrawMenuLine( BYTE ID, BYTE * Name, BYTE * Value, int PosY, int PosX )
+void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int PosX, SELECT_MODE Mode )
 {
     BYTE color =0;
     BYTE Line;
-    BYTE * ptr = Value;
+    char * ptr = (char*)Value;
     EFFECT Effect;
     EFFECT Effect1;
     static int CPosY = 0;
@@ -420,15 +641,20 @@ void DrawMenuLine( BYTE ID, BYTE * Name, BYTE * Value, int PosY, int PosX )
     if(PosX == 0) CPosX = 0;
     while(PosX > CPosX) CPosX++;
     while(PosX < CPosX) CPosX--;
-
-    if(PosY == ID){
-        color = 1;
-        Effect = INVERT;
-        Effect1 = NORMAL;
+    if(Mode!=NO_SELECT){
+        if(PosY == ID){
+            color = 1;
+            Effect = INVERT;
+            Effect1 = NORMAL;
+        } else {
+            color = 0;
+            Effect = NORMAL;
+            Effect1 = INVERT;
+        }
     } else {
         color = 0;
         Effect = NORMAL;
-        Effect1 = INVERT;
+        Effect1 = NORMAL;
     }
     switch ((int)ID - CPosY){
         case 0:
@@ -450,13 +676,13 @@ void DrawMenuLine( BYTE ID, BYTE * Name, BYTE * Value, int PosY, int PosX )
         StringXPos = OutTextXY(5,Line + 2,Name,ARIAL_B,Effect); 
     if(Value!= NULL){
         ValueLength = strlen((const char*)Value);
-        if(PosX > 0 ){            
-            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,Value, PosX-1, ARIAL_B,Effect);
-            StringXPos = OutTextXYx(StringXPos,Line + 2,&Value[PosX-1], 1, ARIAL_B, Effect1 );
-            if(PosX - 1 < ValueLength)
-                OutTextXYx(StringXPos,Line + 2,&Value[PosX], ValueLength - PosX, ARIAL_B, Effect );
+        if(Mode == SELECT_COLUMN ){            
+            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,(const char*)Value, PosX, ARIAL_B,Effect);
+            StringXPos = OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX], 1, ARIAL_B, Effect1 );
+            if(PosX < ValueLength)
+                OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX + 1], ValueLength - PosX, ARIAL_B, Effect );
         } else {
-            OutTextXY(StringXPos + 5,Line + 2,Value, ARIAL_B,Effect);
+            OutTextXY(StringXPos + 5,Line + 2,(const char*)Value, ARIAL_B,Effect);
         }
     }
 }
@@ -464,6 +690,7 @@ void DrawScrollBar(int Pos, int Max)
 {
     int Size = 53 / Max;
     int Y = Pos * Size;
+    FloodRectangle(122,10,132,63,0);
     DrawRectangle(122,10,132,63,1);
     FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
 
@@ -544,8 +771,23 @@ void IPtoText (DWORD IP, char * Text, BOOL ForEdit)
         sprintf (Text, "%d.%d.%d.%d", T.byte.UB,T.byte.MB,T.byte.HB,T.byte.LB);
     }
 }
-
-void EditIp(char * Text, DWORD * IP)
+// распознает число с заданной позиции до любого символа, не являющегося числом int
+int SubStrToInt(const char* Text, int Beg, int * Val)
 {
-    
+    int i = 0;    
+    int Tmp = 0;
+    int Sig = 1;
+    int Tsize = strlen(Text);
+    for(i = Beg; i < Tsize;i++){
+        if((Text[i] == '+') || (Text[i] == '-')||((Text[i] >= '0')&&(Text[i] <= '9'))){
+            if(Text[i] == '+') {Sig = 1;} else {
+                if(Text[i] == '-') {Sig = -1;} else {                    
+                    Tmp *= 10;
+                    Tmp += Text[i] - '0';
+                }            
+            }
+        } else break;
+    }
+    (*Val) = Tmp*Sig;
+    return i+1;
 }

@@ -8,15 +8,15 @@
 #include "font.h"
 
 #ifndef _WINDOWS
-#pragma udata DISPLAY0 =0x800
+#pragma udata DISPLAY0 =0x900
 static BYTE DisplayBuffer0[256];
-#pragma udata DISPLAY1 =0x900
+#pragma udata DISPLAY1 =0xA00
 static BYTE DisplayBuffer1[256];
-#pragma udata DISPLAY2 =0xA00
+#pragma udata DISPLAY2 =0xB00
 static BYTE DisplayBuffer2[256];
-#pragma udata DISPLAY3 =0xB00
+#pragma udata DISPLAY3 =0xC00
 static BYTE DisplayBuffer3[256];
-#pragma udata DISPLAY4 =0xC00
+#pragma udata DISPLAY4 =0x8D8
 static BYTE DisplayBuffer4[40];
 #pragma udata
 #else
@@ -115,16 +115,16 @@ void DisplayDraw(BYTE addr)
 
 
 
-WORD OutTextXY( WORD X,WORD Y,BYTE* Text,FONT CFont, EFFECT Effect )
+WORD OutTextXY( WORD X,WORD Y,const char * Text,FONT CFont, EFFECT Effect )
 {          
     WORD FontSize = 0;
     WORD FontMask = 0xFFFF;
     WORD XX = 0;
-    BYTE* ptr;
+    char * ptr;
     static WORD Image[13];
     WORD count = 13;  
     WORD i = 0;
-    ptr = Text;
+    ptr = (char*)Text;
     XX = X;
     while ( *ptr ){
         count = 13;
@@ -159,16 +159,16 @@ WORD OutTextXY( WORD X,WORD Y,BYTE* Text,FONT CFont, EFFECT Effect )
     }   
     return XX;
 }
-WORD OutTextXYx( WORD X,WORD Y,BYTE* Text, BYTE SymbolCount,FONT CFont, EFFECT Effect )
+WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, EFFECT Effect )
 {          
     WORD FontSize = 0;
     WORD FontMask = 0xFFFF;
     WORD XX = 0;
-    BYTE* ptr;
+    char * ptr;
     static WORD Image[13];
     WORD count = 13;  
     WORD i = 0;
-    ptr = Text;
+    ptr = (char*)Text;
     XX = X;
     if(SymbolCount == 0) return XX;
     while ( *ptr ){
