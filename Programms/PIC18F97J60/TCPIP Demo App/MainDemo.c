@@ -184,8 +184,8 @@ void UpdateKey()
 	
 	LATDbits.LATD0 = 1; // первая строка (menu и enter)
 	Nop();Nop();
-	CKeys.enter = PORTBbits.RB1;
-	CKeys.menu = PORTBbits.RB3;	
+	CKeys.enter = PORTBbits.RB1^0x01;
+	CKeys.menu = PORTBbits.RB3^0x01;	
 	LATDbits.LATD0 = 0; // первая строка (menu и enter)	
 	Nop();
 	LATDbits.LATD1 = 1; // первая строка (menu и enter)
@@ -473,37 +473,22 @@ int main(void)
         }
         if(TickGet() - t1 >= TICK_SECOND/10)
         {
+            BYTE K = 0;
 	     	t1 = TickGet();   
 	        UpdateKey();
             //SetPixelDB(x, y, 0); 
-            DisplayClear();
-            if(CKeys.up) y++;
-            if(CKeys.right) x++;
-            if(CKeys.down) y--;
-            if (CKeys.left)x--;
-            ProcessMenu( 0x80 );
-            //OutTextXY(x,y,Text2,1);
-            //OutTextXY(x,y+10,Text3,1);
-            //OutTextXY(x,y+8,Text,1);
-//            OutTextXY(x,y,RBuffer,1);  
-			//SetPixelDB(x, y, 1); 
-			
+            //DisplayClear();
+            if(CKeys.up) K |= 0x01;
+            if(CKeys.right) K |= 0x02;
+            if(CKeys.down) K |= 0x04;
+            if (CKeys.left) K |= 0x08;
+            if (CKeys.enter) K |= 0x40;
+            if (CKeys.menu) K |= 0x80;
+            
+            ProcessMenu( K );
+            DisplayDraw(add1);
+		
 	    } 
-        if(0){
-        if(TickGet() - displayup >= TICK_SECOND/10){
-	        displayup = TickGet();
-	        //OutTextXY(x1,y1,Text,0);	 
-	        x1+=sx1;
-	        y1+=sy1;
-	        if((x1>130)||(x1<1)) {
-		        sx1 = -sx1;		        
-		    } 
-	        if((y1>63)||(y1<1)) {
-		        sy1 = -sy1;		        
-		    } 
-		    DisplayDraw(add1);	        
-        }
-		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
