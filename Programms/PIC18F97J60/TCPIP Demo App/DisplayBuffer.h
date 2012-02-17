@@ -21,8 +21,8 @@ typedef enum EFFECT {
 void DisplayInit(void);
 void DisplayClear(void);
 void DisplayDraw(BYTE addr);
-WORD OutTextXY(WORD X,WORD Y,BYTE* Text,FONT CFont, EFFECT Effect);
-WORD OutTextXYx( WORD X,WORD Y,BYTE* Text, BYTE SymbolCount,FONT CFont, EFFECT Effect );
+WORD OutTextXY(WORD X,WORD Y,const char * Text,FONT CFont, EFFECT Effect);
+WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, EFFECT Effect );
 void SetPixelDB(WORD X, WORD Y, BOOL color);
 BYTE * GetAddr(WORD addr);
 BOOL GetPixelDB(WORD X, WORD Y);

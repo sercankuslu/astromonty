@@ -2,7 +2,7 @@
 #include "../../dsPIC33/protocol.h"
 
 #define ATTR_BUFF_SIZE 8
-#define MEM_BUF_SIZE 32
+#define MEM_BUF_SIZE 16
 #define BUFFERS_COUNT 2
 
 typedef struct MEMORY_BUFFER {
@@ -23,7 +23,7 @@ typedef struct ATTR_BUFFER {
 } ATTR_BUFFER;
 
 #if defined(__18CXX)
-#pragma udata ATTRIBUTE = 0x700
+#pragma udata ATTRIBUTE = 0x800
 #endif
 static ST_ATTRIBUTE AttrBuffer1[ATTR_BUFF_SIZE];
 static ST_ATTRIBUTE AttrBuffer2[ATTR_BUFF_SIZE];
