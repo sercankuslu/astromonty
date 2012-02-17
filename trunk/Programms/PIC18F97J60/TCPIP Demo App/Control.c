@@ -2,6 +2,15 @@
 
 #ifndef _WINDOWS
 #include "GenericTypeDefs.h"
+#else
+#define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
+#define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
+#define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (111ul)
+#define MY_DEFAULT_MASK_BYTE1           (255ul)
+#define MY_DEFAULT_MASK_BYTE2           (255ul)
+#define MY_DEFAULT_MASK_BYTE3           (255ul)
+#define MY_DEFAULT_MASK_BYTE4           (0ul)
 #endif
 
 #include "..\..\dsPIC33\protocol.h"
@@ -116,11 +125,11 @@ void ProcessMenu( BYTE * KeyPressed )
         TimeT[2] = ' ';
     }
     if(!Init){
-        Params.Local.IP = 0xA8C00105;
-        Params.Local.Mask = 0xFFFFFF00;
-        Params.Local.Gate = 0xC0A80101;
-        Params.Local.DNS1 = 0xC0A80101;
-        Params.Local.DNS2 = 0xC0A80102;
+        Params.Local.IP = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | MY_DEFAULT_IP_ADDR_BYTE4<<24ul;
+        Params.Local.Mask = MY_DEFAULT_MASK_BYTE1 | MY_DEFAULT_MASK_BYTE2<<8ul | MY_DEFAULT_MASK_BYTE3<<16ul | MY_DEFAULT_MASK_BYTE4<<24ul;
+        Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
+        Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
+        Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
         Init = true;
     }
     Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
@@ -470,10 +479,11 @@ void ProcessMenu( BYTE * KeyPressed )
                     int HB=0;
                     int LB=0;
                     int c = 0;                    
-                    c = SubStrToInt((const char*)TmpValue, 0, &UB);
-                    c = SubStrToInt((const char*)TmpValue, c, &MB);
+                    c = SubStrToInt((const char*)TmpValue, 0, &LB);
                     c = SubStrToInt((const char*)TmpValue, c, &HB);
-                    c = SubStrToInt((const char*)TmpValue, c, &LB);
+                    c = SubStrToInt((const char*)TmpValue, c, &UB);
+                    c = SubStrToInt((const char*)TmpValue, c, &MB);
+
                     TmpDWval.byte.UB = (BYTE)UB;
                     TmpDWval.byte.MB = (BYTE)MB;
                     TmpDWval.byte.HB = (BYTE)HB;
@@ -540,8 +550,8 @@ void ProcessMenu( BYTE * KeyPressed )
                     int LB=0;
                     double Xg = 0.0;                    
                     int c = 0;                    
-                    c = SubStrToInt((const char*)TmpValue, 0, &UB);
-                    c = SubStrToInt((const char*)TmpValue, c, &MB);
+                    c = SubStrToInt((const char*)TmpValue, 0, &MB);
+                    c = SubStrToInt((const char*)TmpValue, c, &UB);
                     c = SubStrToInt((const char*)TmpValue, c, &HB);
                     c = SubStrToInt((const char*)TmpValue, c, &LB);
 
@@ -766,9 +776,9 @@ void IPtoText (DWORD IP, char * Text, BOOL ForEdit)
     DWORD_VAL T;
     T.Val = IP;
     if(ForEdit){
-        sprintf (Text, "%0.3d.%0.3d.%0.3d.%0.3d", T.byte.UB,T.byte.MB,T.byte.HB,T.byte.LB);
+        sprintf (Text, "%0.3d.%0.3d.%0.3d.%0.3d", T.byte.LB,T.byte.HB,T.byte.UB,T.byte.MB);
     } else {
-        sprintf (Text, "%d.%d.%d.%d", T.byte.UB,T.byte.MB,T.byte.HB,T.byte.LB);
+        sprintf (Text, "%d.%d.%d.%d", T.byte.LB,T.byte.HB,T.byte.UB,T.byte.MB);
     }
 }
 // распознает число с заданной позиции до любого символа, не являющегося числом int
