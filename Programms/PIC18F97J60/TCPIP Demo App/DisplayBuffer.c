@@ -8,15 +8,15 @@
 #include "font.h"
 
 #ifndef _WINDOWS
-#pragma udata DISPLAY0 =0xA00
+#pragma udata DISPLAY0 =0x800
 static BYTE DisplayBuffer0[256];
-#pragma udata DISPLAY1 =0xB00
+#pragma udata DISPLAY1 =0x900
 static BYTE DisplayBuffer1[256];
-#pragma udata DISPLAY2 =0xC00
+#pragma udata DISPLAY2 =0xA00
 static BYTE DisplayBuffer2[256];
-#pragma udata DISPLAY3 =0xD00
+#pragma udata DISPLAY3 =0xB00
 static BYTE DisplayBuffer3[256];
-#pragma udata DISPLAY4 =0xE00
+#pragma udata DISPLAY4 =0xC00
 static BYTE DisplayBuffer4[40];
 #pragma udata
 #else

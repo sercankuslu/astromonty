@@ -77,6 +77,7 @@ void ProcessMenu( BYTE * KeyPressed )
     
 
     static MENU_ID State = MAIN_WINDOW;
+    static MENU_ID LastState = MAIN_WINDOW;
     // признаки: true- белый фон, false-черный фон
     static BOOL Con = true;
     static BOOL A_Run = true;
@@ -96,6 +97,7 @@ void ProcessMenu( BYTE * KeyPressed )
     BYTE Selected = 0;
     static BYTE * EditTxt = NULL; 
     DWORD_VAL TmpDWval;
+    static bool Init = false;
 
     //     Con ^= 1;
     //     A_Run ^= 1;
@@ -107,13 +109,14 @@ void ProcessMenu( BYTE * KeyPressed )
     } else {
         TimeT[2] = ' ';
     }
-    
+    if(!Init){
     Params.Local.IP = 0xA8C00105;
     Params.Local.Mask = 0xFFFFFF00;
     Params.Local.Gate = 0xC0A80101;
     Params.Local.DNS1 = 0xC0A80101;
     Params.Local.DNS2 = 0xC0A80102;
-
+    Init = true;
+    }
 
     while(!EndProcess){
         switch (State) {
@@ -289,7 +292,8 @@ void ProcessMenu( BYTE * KeyPressed )
                 switch(SelPosX){
                 case 1:
                      EditTxt = SN_IP;
-                     TmpDWValue = &Params.Local.IP;                     
+                     TmpDWValue = &Params.Local.IP;      
+                     LastState = S_NETWORK;
                      break;                
                 }
                 IPtoText(*TmpDWValue,(char*)TmpValue, 1);
@@ -349,12 +353,18 @@ void ProcessMenu( BYTE * KeyPressed )
                 for(int i = 0;i<strlen((const char*)TmpValue);i++){
                     if(TmpValue[i]=='.') TmpValue[i] = ' ';
                 }
-                BYTE UB=0;
-                BYTE MB=0;
-                BYTE HB=0;
-                BYTE LB=0;
+                int UB=0;
+                int MB=0;
+                int HB=0;
+                int LB=0;
                 sscanf((const char*)TmpValue,"%d %d %d %d",&UB,&MB,&HB,&LB);
+                TmpDWval.byte.UB = (BYTE)UB;
+                TmpDWval.byte.MB = (BYTE)MB;
+                TmpDWval.byte.HB = (BYTE)HB;
+                TmpDWval.byte.LB = (BYTE)LB;
                 (*TmpDWValue) = TmpDWval.Val;
+                State = LastState;
+                break;
             } else {
                 if(Selected == ESC) break;
             }             
