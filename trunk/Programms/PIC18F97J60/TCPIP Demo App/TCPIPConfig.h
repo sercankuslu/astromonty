@@ -55,7 +55,7 @@
 
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
-#define GENERATED_BY_TCPIPCONFIG "Version 1.0.3937.25080"
+#define GENERATED_BY_TCPIPCONFIG "Version 1.0.4168.28618"
 
 // =======================================================================
 //   Application Options
@@ -240,7 +240,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(671ul)
+	#define TCP_ETH_RAM_SIZE					(2446ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -299,7 +299,7 @@
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
+			{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 1000, 1000},
 		};
 		#define END_OF_TCP_CONFIGURATION
 	#endif
