@@ -3,10 +3,15 @@
 #ifndef __C30__
 #   include "..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
 #endif
+#ifdef USE_PROTOCOL_CLIENT
+#define MAX_CONNECTIONS 1
+#else
+#define MAX_CONNECTIONS 5
+#endif
 typedef struct ST_CONNECTION {
     BYTE Mode;
 }ST_CONNECTION;
-#define MAX_CONNECTIONS 5
+
 ST_CONNECTION Connection[MAX_CONNECTIONS];
 static BYTE connectreq = STC_REQEST_CONNECT;
 static BYTE authreq = STC_REQEST_AUTH;

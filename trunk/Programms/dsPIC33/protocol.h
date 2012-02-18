@@ -77,8 +77,8 @@
 #define STA_ALPHA_DIRECTION                 34   //
 #define STA_ALPHA_CONFIG                    35   //
 */
-#define MEM_BUFFER_LEN 64
-#define MAX_ATTRIBUTE 10
+#define MEM_BUFFER_LEN 32
+#define MAX_ATTRIBUTE 8
 
 typedef BYTE ST_ATTRIBUTE_TYPE;
 typedef struct ST_ATTRIBUTE {
