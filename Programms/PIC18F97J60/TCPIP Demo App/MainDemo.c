@@ -102,8 +102,8 @@
 #endif
 
 // Include functions specific to this stack application
-#define USE_OR_MASKS
-#include "p18cxxx.h"
+//#define USE_OR_MASKS
+//#include "p18cxxx.h"
 #include "timers.h"
 #include "pwm.h"
 #include "flash.h"
@@ -293,7 +293,7 @@ void InitTimerAndPWM()
     OpenTimer2(config2);                //API configures the tmer1 as per user defined parameters
 
     SetTmrCCPSrc(T12_SOURCE_CCP);
-    
+    PIE1bits.TMR2IE = 0;
     //----Configure pwm ----
     period = 0xFF;
     OpenPWM5( period);            //Configure PWM module and initialize PWM period
@@ -323,30 +323,22 @@ int main(void)
     static int sx1 = 2;
     static int sy1 = 2;
     static BYTE RBuffer[30];	
+    BYTE K = 0;
     ST_ATTRIBUTE ReceivePacket = {
 		0, 0, RBuffer
 	};
-	// Initialize application specific hardware
-    unsigned char Text[] = "Testing";
-    unsigned char Text1[] = "_______________________";
-    unsigned char Text2[] = " a: 06h 45m 08.9173s";
-    unsigned char Text3[] = " d:-16` 42' 58.017\"";
-    unsigned char Text4[] = " Соединение установлено";
-    
-    BYTE count;
+	    
+    BYTE count;    
 	UpdateKey();
 	
     memset(RBuffer, 0, sizeof(RBuffer));    
     pcfLCDInit(add1);
     DisplayInit();
-    InitializeBoard();
-//    OutTextXY(0,54,Text1,1); // ___    
-//    OutTextXY(0,10,Text1,1); // ___
-//    OutTextXY(0,38,Text2,1); // a
-//    OutTextXY(0,24,Text3,1); // d  	
-//	OutTextXY(0,12,Text4,0); // msg
-	   
+    ProcessMenu(&K);
     DisplayDraw(add1);
+    InitializeBoard();
+    
+    
 
 	
 	// Initialize stack-related hardware components that may be 
@@ -437,8 +429,10 @@ int main(void)
 	#endif
 	LED0_TRIS = 0;
 	InitTimerAndPWM();
-	INTCONbits.PEIE_GIEL = 1;
-	INTCONbits.GIE_GIEH  = 1;
+	INTCONbits.GIEL = 1;
+	INTCONbits.GIEH  = 1;
+	INTCONbits.INT0IE = 0;
+	INTCONbits.INT0IF = 0;
 	// Now that all items are initialized, begin the co-operative
 	// multitasking loop.  This infinite loop will continuously 
 	// execute all stack-related tasks, as well as your own
@@ -469,11 +463,10 @@ int main(void)
             }    
             
             PushAttr(ReceivePacket, OUT_BUFFER);            
-            DisplayDraw(add1);
+            //DisplayDraw(add1);
         }
-        if(TickGet() - t1 >= TICK_SECOND/10)
-        {
-            BYTE K = 0;
+        if(TickGet() - t1 >= TICK_SECOND/2)
+        {            
 	     	t1 = TickGet();   
 	        UpdateKey();
             //SetPixelDB(x, y, 0); 
@@ -485,7 +478,7 @@ int main(void)
             if (CKeys.enter) K |= 0x40;
             if (CKeys.menu) K |= 0x80;
             
-            ProcessMenu( K );
+            ProcessMenu( &K );
             DisplayDraw(add1);
 		
 	    } 

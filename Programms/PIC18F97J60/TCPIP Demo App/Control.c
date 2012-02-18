@@ -130,6 +130,9 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
         Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
         Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
+        Params.Alpha.Angle = 0.0;
+        Params.Delta.Angle = 0.0; 
+        Params.Gamma.Angle = 0.0;
         Init = true;
     }
     Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
@@ -558,12 +561,12 @@ void ProcessMenu( BYTE * KeyPressed )
                     Xg = (double)LB/100.0;
                     Xg += (double)HB;
                     Xg /= 60.0;
-                    Xg += (double)MB;
+                    Xg += (double)UB;
                     Xg /= 60.0;
-                    if(UB >= 0){
-                        Xg += (double)UB;
+                    if(MB >= 0){
+                        Xg += (double)MB;
                     } else {
-                        Xg = -Xg + (double)UB;
+                        Xg = -Xg + (double)MB;
                     }
                     if(TmpIsHours){
                         Xg *= 15.0;
