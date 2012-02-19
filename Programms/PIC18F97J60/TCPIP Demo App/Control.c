@@ -33,6 +33,37 @@
 #define ENTER 1
 #define ESC   2
 
+const char  TextA[] = "A:";
+const char  TextD[] =  "D:";
+const char  TextG [] = "G:";
+const char  TextStart[] =  "Старт";
+const char  MenuB[] =  "Меню"; //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+const char  ConnectFlag[] =  "Сеть";  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
+const char  AlphaFlag[] =    "Альфа"; //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+const char  DeltaFlag[] =    "Дельта"; //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+const char  GammaFlag[] =    "Гамма";  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
+
+const char  SettingsName[] =     "Настройки";
+const char  ObservName[] =       "Наблюдение";
+const char  O_GoTo[] =           "Навести";
+const char  O_Manual[] =         "Ручной режим";
+const char  O_Space[] =         "Режим спутников";
+const char  S_Observ[] =         "Наблюдение";
+const char  S_NetName[] =        "Сеть";
+const char  S_AlphaName[] =      "Альфа";
+const char  S_DeltaName[] =      "Дельта";
+const char  S_GammaName[] =      "Гамма";
+const char  S_MontyName[] =      "Монтировка";
+const char  S_Display[] = 	"Экран";
+const char  S_MontyTypeName[] = 	"Тип монтировки";
+const char  SN_Name[] = 		"Имя:";
+const char  SN_IP[] =           "IP:";
+const char  SN_Mask[] =         "Mask:";
+const char  SN_Gate[] =         "Gate:";
+const char  SN_DNS1[] =          "DNS1:";
+const char  SN_DNS2[] =         "DNS2:";
+const char  SN_NTP[] =          "NTP:";
+
 static ALL_PARAMS Params;
 
 
@@ -50,7 +81,7 @@ void ProcessMenu( BYTE * KeyPressed )
     static double Xd = -33.1 * PI / 180.0;
     static double Xg = 47.2 * PI / 180.0;
     static char TimeT[] = "23:56";    
-
+/*
 #define TextA "A:"
 #define TextD "D:"
 #define TextG "G:"
@@ -81,7 +112,8 @@ void ProcessMenu( BYTE * KeyPressed )
 #define SN_DNS1         "DNS1:"
 #define SN_DNS2         "DNS2:"
 #define SN_NTP          "NTP:"
-               		
+*/
+
 
     static MENU_ID State = MAIN_WINDOW;
     static MENU_ID LastState = MAIN_WINDOW;
