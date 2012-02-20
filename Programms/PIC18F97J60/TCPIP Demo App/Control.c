@@ -38,47 +38,45 @@
 #define ENTER 1
 #define ESC   2
 
-const char  TextA[] = "А:";
-const char  TextD[] =  "Д:";
-const char  TextG [] = "Г:";
-const char  TextStart[] =       "Старт";
-const char  MenuB[] =           "Меню"; //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-const char  ConnectFlag[] =     "Сеть";  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
-const char  AlphaFlag[] =       "Альфа"; //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
-const char  DeltaFlag[] =       "Дельта"; //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
-const char  GammaFlag[] =       "Гамма";  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
+#define C_ROM 
+C_ROM char  TextA[] = "А:";
+C_ROM char  TextD[] =  "Д:";
+C_ROM char  TextG [] = "Г:";
+C_ROM char  TextStart[] =       "Старт";
+C_ROM char  MenuB[] =           "Меню"; //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+C_ROM char  ConnectFlag[] =     "Сеть";  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
+C_ROM char  AlphaFlag[] =       "Альфа"; //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+C_ROM char  DeltaFlag[] =       "Дельта"; //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+C_ROM char  GammaFlag[] =       "Гамма";  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
 
-const char  SettingsName[] =    "Настройки";
-const char  ObservName[] =      "Наблюдение";
-const char  O_GoTo[] =          "Навести";
-const char  O_Manual[] =        "Ручной режим";
-const char  O_Space[] =         "Режим спутников";
-const char  S_Observ[] =        "Наблюдение";
-const char  S_NetName[] =       "Сеть";
-const char  S_AlphaName[] =     "Альфа";
-const char  S_DeltaName[] =     "Дельта";
-const char  S_GammaName[] =     "Гамма";
-const char  S_MontyName[] =     "Монтировка";
-const char  S_Display[] = 	"Экран";
-const char  S_MontyTypeName[] = "Тип монтировки";
-const char  SN_Name[] =         "Имя:";
-const char  SN_IP[] =           "IP:";
-const char  SN_Mask[] =         "Mask:";
-const char  SN_Gate[] =         "Gate:";
-const char  SN_DNS1[] =         "DNS1:";
-const char  SN_DNS2[] =         "DNS2:";
-const char  SN_NTP[] =          "NTP:";
+C_ROM char  SettingsName[] =    "Настройки";
+C_ROM char  ObservName[] =      "Наблюдение";
+C_ROM char  O_GoTo[] =          "Навести";
+C_ROM char  O_Manual[] =        "Ручной режим";
+C_ROM char  O_Space[] =         "Режим спутников";
+C_ROM char  S_Observ[] =        "Наблюдение";
+C_ROM char  S_NetName[] =       "Сеть";
+C_ROM char  S_AlphaName[] =     "Альфа";
+C_ROM char  S_DeltaName[] =     "Дельта";
+C_ROM char  S_GammaName[] =     "Гамма";
+C_ROM char  S_MontyName[] =     "Монтировка";
+C_ROM char  S_Display[] = 		"Экран";
+C_ROM char  S_MontyTypeName[] = "Тип монтировки";
+C_ROM char  SN_Name[] =         "Имя:";
+C_ROM char  SN_IP[] =           "IP:";
+C_ROM char  SN_Mask[] =         "Mask:";
+C_ROM char  SN_Gate[] =         "Gate:";
+C_ROM char  SN_DNS1[] =         "DNS1:";
+C_ROM char  SN_DNS2[] =         "DNS2:";
+C_ROM char  SN_NTP[] =          "NTP:";
 
-const char MsgContinue[] =      "Продолжить";
-const char MsgError[] =         "Ошибка";
 
-const char CoordNotReachable0[] = "Указанные координаты";
-const char CoordNotReachable1[] = "в данный момент вре-";
-const char CoordNotReachable2[] = "мени находятся вне";
-const char CoordNotReachable3[] = "зоны видимости";
 
+
+#ifndef _WINDOWS
+#pragma udata
+#endif
 ALL_PARAMS Params;
-
 
 void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
@@ -90,44 +88,16 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue);
 
 void ProcessMenu( BYTE * KeyPressed )
 {
-
     static double Xa = 0.0;//91.3 * PI / 180.0;
     static double Xd = -33.1 * PI / 180.0;
     static double Xg = 47.2 * PI / 180.0;
     static char TimeT[] = "23:56";    
-/*
-#define TextA "A:"
-#define TextD "D:"
-#define TextG "G:"
-#define TextStart "Старт"
-#define MenuB "Меню" //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-#define ConnectFlag "Сеть"  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
-#define AlphaFlag   "Альфа" //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
-#define DeltaFlag   "Дельта" //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
-#define GammaFlag   "Гамма"  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
-    
-#define SettingsName    "Настройки"
-#define ObservName      "Наблюдение"
-#define O_GoTo          "Навести"
-#define O_Manual        "Ручной режим"
-#define O_Space         "Режим спутников"
-#define S_Observ        "Наблюдение"
-#define S_NetName       "Сеть"
-#define S_AlphaName     "Альфа"
-#define S_DeltaName     "Дельта"
-#define S_GammaName     "Гамма"
-#define S_MontyName     "Монтировка"
-#define S_Display	"Экран"
-#define S_MontyTypeName	"Тип монтировки"
-#define SN_Name		"Имя:"
-#define SN_IP           "IP:"    
-#define SN_Mask         "Mask:"
-#define SN_Gate         "Gate:"
-#define SN_DNS1         "DNS1:"
-#define SN_DNS2         "DNS2:"
-#define SN_NTP          "NTP:"
-*/
-
+    C_ROM char CoordNotReachable0[] = "";//"Указанные координаты";
+    C_ROM char CoordNotReachable1[] = "";//в данный момент вре-";
+    C_ROM char CoordNotReachable2[] = "";//мени находятся вне";
+    C_ROM char CoordNotReachable3[] = "";//зоны видимости";
+	C_ROM char MsgContinue[] =      "Продолжить";
+	C_ROM char MsgError[] =         "Ошибка";
 
     static MENU_ID State = MAIN_WINDOW;
     static MENU_ID LastState = MAIN_WINDOW;
@@ -179,9 +149,13 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Alpha.Angle = 0.0;
         Params.Delta.Angle = 0.0; 
         Params.Gamma.Angle = 0.0;
-        Params.Alpha.StatusFlag |= AXIS_ENABLE;
-        Params.Delta.StatusFlag |= AXIS_ENABLE;
-        Params.Gamma.StatusFlag |= AXIS_ENABLE;
+        Params.Alpha.StatusFlag = AXIS_ENABLE;
+        Params.Delta.StatusFlag = AXIS_ENABLE;
+        Params.Gamma.StatusFlag = AXIS_ENABLE;
+        Params.Alpha.StatusFlag |= AXIS_RUN;
+        Params.Delta.StatusFlag |= AXIS_RUN;
+        Params.Gamma.StatusFlag |= AXIS_RUN;
+        memset(TmpValue,0,20);
         Init = true;
     }
     Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
@@ -550,20 +524,16 @@ void ProcessMenu( BYTE * KeyPressed )
                     if(TmpValue[i]=='.') TmpValue[i] = ' ';
                 }
                 {                
-                    int UB=0;
-                    int MB=0;
-                    int HB=0;
-                    int LB=0;
+                    int B=0;                    
                     int c = 0;                    
-                    c = SubStrToInt((const char*)TmpValue, 0, &LB);
-                    c = SubStrToInt((const char*)TmpValue, c, &HB);
-                    c = SubStrToInt((const char*)TmpValue, c, &UB);
-                    c = SubStrToInt((const char*)TmpValue, c, &MB);
-
-                    TmpDWval.byte.UB = (BYTE)UB;
-                    TmpDWval.byte.MB = (BYTE)MB;
-                    TmpDWval.byte.HB = (BYTE)HB;
-                    TmpDWval.byte.LB = (BYTE)LB;
+                    c = SubStrToInt((const char*)TmpValue, 0, &B);
+                    TmpDWval.byte.LB = (BYTE)B;
+                    c = SubStrToInt((const char*)TmpValue, c, &B);
+                    TmpDWval.byte.HB = (BYTE)B;
+                    c = SubStrToInt((const char*)TmpValue, c, &B);
+                    TmpDWval.byte.UB = (BYTE)B;
+                    c = SubStrToInt((const char*)TmpValue, c, &B);
+                    TmpDWval.byte.MB = (BYTE)B; 
                 }
                 (*TmpDWValue) = TmpDWval.Val;
                 TmpDWValue = NULL;
@@ -601,7 +571,6 @@ void ProcessMenu( BYTE * KeyPressed )
             break;
         }    
         case EDIT_ANGLE: {// ***************************************************************************************************************
-            int i;
             BYTE MaxX = 10;
             BYTE TmpPosX = PosX;
             TmpPosY = PosY;            
@@ -696,13 +665,11 @@ void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int
 {
     BYTE color =0;
     BYTE Line;
-    char * ptr = (char*)Value;
     EFFECT Effect;
     EFFECT Effect1;
     static int CPosY = 0;
     static int CPosX = 0;
     BYTE fsize = 0;
-    int i = 0;
     int ValueLength = 0;
     WORD StringXPos = 0;
     FONT F = ARIAL_B;
@@ -814,7 +781,7 @@ BYTE ProcessKeys(BYTE * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMa
 void XtoTimeString( char * Text, double X, BOOL hour )
 {    
     double Xg;
-    signed short Grad;
+    BYTE Grad;
     BYTE Min;
     BYTE Sec;
     BYTE mSec;
@@ -825,7 +792,7 @@ void XtoTimeString( char * Text, double X, BOOL hour )
         Xg /= 15.0;
     }
     if(Xg < 0.0) Xg = -Xg;
-    Grad = (signed short)Xg;    
+    Grad = (BYTE)Xg;    
     Xg -= (double)Grad;
     Xg *= 60;    
     Min = (BYTE)(Xg);
@@ -835,7 +802,15 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     Xg -= (double)Sec;
     Xg *= 100;
     mSec = (BYTE)(Xg);
-    sprintf (Text, "%0.1s%0.2d%0.1s%0.2d'%0.2d.%0.2d\"",Sign?"+":"-",Grad,hour?"h":"`",Min,Sec,mSec);
+    if(Sign){
+        if(hour){
+            sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+    } else {
+        if(hour){
+            sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+    }
 
 }
 
