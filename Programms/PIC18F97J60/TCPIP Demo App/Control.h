@@ -6,7 +6,15 @@
 #else
 #   include "GenericTypeDefs.h"
 #endif
+// флаги дл€ NeedToUpdate и NeedToCommit
+#define C_ANGLE 0x01
+#define C_STEPS 0x02
+#define T_ANGLE 0x04
+#define T_STEPS 0x08
+#define FLAG  0x80
 
+#define AXIS_ENABLE 0x80
+#define AXIS_RUN    0x01
 
 typedef struct AXIS_PARAM
 {
@@ -14,10 +22,21 @@ typedef struct AXIS_PARAM
     BYTE  NeedToCommit;     // необходимо отправить на сервер указанные параметры
 
     double Angle;           // текуща€ координата в радианах (угол относительно весеннего равноденстви€) то есть положение звезды    
-    DWORD AbsSteps;         // текущий номер шага    
+    DWORD  AbsSteps;         // текущий номер шага    
+    double TargetAngle;           // текуща€ координата в радианах (угол относительно весеннего равноденстви€) то есть положение звезды    
+    DWORD  TargetAbsSteps;         // текущий номер шага    
+    BYTE   StatusFlag;       // флаг состо€ни€ оси
 
 } AXIS_PARAM;
-
+// флаги дл€ NeedToUpdate и NeedToCommit
+#define IP_ADDR 0x01
+#define IP_MASK 0x02
+#define IP_GATE 0x04
+#define IP_DNS1 0x08
+#define IP_DNS2 0x10
+#define IP_NAME 0x20
+#define IP_NTP  0x40
+#define IP_FLAG 0x80
 typedef struct NETWORK_SETTINGS
 {
     BYTE  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
@@ -28,20 +47,25 @@ typedef struct NETWORK_SETTINGS
     DWORD DNS1;
     DWORD DNS2;    
     char  Name[16];    
+    DWORD NTP;
+    BYTE ConnectFlag;
 }NETWORK_SETTINGS;
+// флаги дл€ NeedToUpdate и NeedToCommit
+#define ALPHA           0x01
+#define DELTA           0x02
+#define GAMMA           0x04
+#define NET_LOCAL       0x08
+#define NET_REMOTE      0x10
 
 typedef struct All_PARAMS
 {
     // битовые карты -флаги 
     BYTE NeedToUpdate;   // необходимо запросить с сервера указанные параметры
-    BYTE NeedToCommit;   // необходимо отправить на сервер указанные параметры
-
+    BYTE NeedToCommit;   // необходимо отправить на сервер указанные параметры    
+    
     AXIS_PARAM Alpha;
     AXIS_PARAM Delta;
     AXIS_PARAM Gamma;
-    AXIS_PARAM TargetAlpha;
-    AXIS_PARAM TargetDelta;
-    AXIS_PARAM TargetGamma;
 
     NETWORK_SETTINGS Local;
     NETWORK_SETTINGS Remote;
@@ -49,13 +73,12 @@ typedef struct All_PARAMS
 } ALL_PARAMS;
 
 typedef enum MENU_ID {
-    MAIN_WINDOW, MENU, SETTINGS, OBSERV, O_GOTO, S_OBSERV, S_NETWORK, S_MONTY,S_DISPLAY, SM_TYPESELECT, SM_ALPHA, SM_DELTA, SM_GAMMA,EDIT_IP,EDIT_TIME,EDIT_ANGLE
+    MAIN_WINDOW, MENU, SETTINGS, OBSERV, O_GOTO, S_OBSERV, S_NETWORK, S_MONTY,S_DISPLAY, SM_TYPESELECT, SM_ALPHA, SM_DELTA, SM_GAMMA,EDIT_IP,EDIT_TIME,EDIT_ANGLE, ERROR_COORDINATE
 } MENU_ID;
-
-typedef enum SELECT_MODE {
-    NO_SELECT, SELECT_LINE, SELECT_COLUMN
-} SELECT_MODE;
-
+#define NO_SELECT 0x00
+#define SELECT_LINE 0x01
+#define SELECT_COLUMN 0x02
+#define FONT_TYPE_B     0x04
 
 void ProcessMenu( BYTE * KeyPressed);
 #endif

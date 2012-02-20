@@ -6,81 +6,82 @@
 #   include "TCPIP Stack/TCPIP.h"
 #endif
 // 
-#define STR_OK                              0
-#define STR_NEED_ANSWER                     1
-#define STR_NEED_DISCONNECT                 2
-#define STR_FUNCTION_FAILED                 6
-#define STR_BUFFER_TOO_SMALL                7
-#define STR_COMMAND_UNKNOWN                 8
-#define STR_DATA_CORRUPTED                  9
-// 
-#define STS_NO_CONNECT                      0
-#define STS_CONNECT_REQ                     1
-#define STS_AUTH_REQ                        2
-#define STS_CONNECTED                       3
 
-#define STA_COMMAND                         0x01
-#   define STC_REQEST_CONNECT               0x80
-#   define STC_REQEST_AUTH                  0x81
-#   define STC_REQEST_DATA                  0x40
-#   define STC_SEND_DATA                    0x41
-#define STA_FLAG                            0x02
-#   define STF_ACCEPTED                     0x81
-#   define STF_DECLINED                     0x82
-#   define STF_AUTH_NEEDED                  0x83
-#   define STF_AUTH_NOT_NEEDED              0x84
-#   define STF_TOO_MANY_DATA                0x40
-#   define STF_INCORRECT_COMMAND            0x41
-#   define STF_COMMAND_INCOMPLETE           0x42
-#   define STF_COMMAND_UNKNOWN              0x43
-#   define STF_DATA_TYPE_UNKNOWN            0x44
-#   define STF_DATA_ERROR                   0x45
-#   define STF_DATA_READY                   0x46
+typedef enum ST_RESULT {
+    STR_OK,
+    STR_NEED_ANSWER,
+    STR_NEED_DISCONNECT,
+    STR_FUNCTION_FAILED,
+    STR_BUFFER_TOO_SMALL,
+    STR_COMMAND_UNKNOWN,
+    STR_DATA_CORRUPTED
+} ST_RESULT;
 
-#define STA_LOGIN                           0x03
-#define STA_PASSWORD                        0x04
+typedef enum ST_STATUS {
+    STS_NO_CONNECT,
+    STS_CONNECT_REQ,
+    STS_AUTH_REQ,
+    STS_CONNECTED
+} ST_STATUS;
 
-#define STA_NETWORK_ADDRESS                 0x05   // 
-#define STA_NETWORK_MASK                    6   //
-#define STA_NETWORK_DNS1                    7   //
-#define STA_NETWORK_DNS2                    8   //
-#define STA_NETWORK_GATE                    9   //
-#define STA_NETWORK_MODE                    10   //
-#   define STM_MODE_AUTO                    1   // 
-#   define STM_MODE_DHCP                    2   // 
-#   define STM_MODE_STATIC                  3   // 
-#define STA_NETWORK_NAME                    11  //
-#define STA_NETWORK_MAC                     12  //
-#define STA_TIME_SNTP                       13   // 
-#define STA_TIME_RTC                        14   // 
-#define STA_TIME_SELECT                     15   // 
+typedef enum ST_COMMANDS {
+    STC_NO_COMMANDS,
+    STC_REQEST_CONNECT,
+    STC_REQEST_AUTH,
+    STC_REQEST_DATA,
+    STC_SEND_DATA,
+    STC_EXECUTE_COMMAND
+}ST_COMMANDS;
 
-#define STA_ALPHA_GRAD_CURRENT              16   //
-#define STA_ALPHA_GRAD_TARGET               17   //
-#define STA_ALPHA_GRAD_MIN                  18   //
-#define STA_ALPHA_GRAD_MAX                  19   //
-#define STA_ALPHA_STEP_CURRENT              20   //
-#define STA_ALPHA_STEP_TARGET               21   //
-#define STA_ALPHA_STEP_MIN                  22   //
-#define STA_ALPHA_STEP_MAX                  23   //
-#define STA_ALPHA_DIRECTION                 24   //
-#define STA_ALPHA_CONFIG                    25   //
-/*
-#define STA_ALPHA_GRAD_CURRENT              26   //
-#define STA_ALPHA_GRAD_TARGET               27   //
-#define STA_ALPHA_GRAD_MIN                  28   //
-#define STA_ALPHA_GRAD_MAX                  29   //
-#define STA_ALPHA_STEP_CURRENT              30   //
-#define STA_ALPHA_STEP_TARGET               31   //
-#define STA_ALPHA_STEP_MIN                  32   //
-#define STA_ALPHA_STEP_MAX                  33   //
-#define STA_ALPHA_DIRECTION                 34   //
-#define STA_ALPHA_CONFIG                    35   //
-*/
+typedef enum ST_FLAGS {
+    STF_OK,
+    STF_ACCEPTED,
+    STF_DECLINED,
+    STF_AUTH_NEEDED,
+    STF_AUTH_NOT_NEEDED,
+    STF_TOO_MANY_DATA,
+    STF_INCORRECT_COMMAND,
+    STF_COMMAND_INCOMPLETE,
+    STF_COMMAND_UNKNOWN,
+    STF_DATA_TYPE_UNKNOWN,
+    STF_DATA_ERROR,
+    STF_DATA_READY
+}ST_FLAGS;
+
+typedef enum ST_ATTRIBUTE_TYPE {
+    STA_NULL,
+    STA_COMMAND, 
+    STA_FLAG,
+    STA_LOGIN,
+    STA_PASSWORD,
+    STA_NETWORK_ADDRESS,
+    STA_NETWORK_MASK,
+    STA_NETWORK_GATE,
+    STA_NETWORK_DNS1,
+    STA_NETWORK_DNS2,
+    STA_NETWORK_MODE,
+    STA_NETWORK_NAME,
+    STA_NETWORK_MAC,
+    STA_TIME_SNTP,
+    STA_TIME_RTC,
+    STA_TIME_SELECT,
+    STA_ALPHA,
+    STA_ALPHA_TARGET,
+    STA_DELTA,
+    STA_DELTA_TARGET,
+    STA_GAMMA,
+    STA_GAMMA_TARGET,
+}ST_ATTRIBUTE_TYPE;
+
+typedef enum STN_MODE {
+    STM_MODE_AUTO,
+    STM_MODE_DHCP,
+    STM_MODE_STATIC
+} STN_MODE;
+
 #define MEM_BUFFER_LEN 32
 #define MAX_ATTRIBUTE 8
 
-typedef BYTE ST_ATTRIBUTE_TYPE;
 typedef struct ST_ATTRIBUTE {
     ST_ATTRIBUTE_TYPE   type;
     BYTE                ulValueLen;  /* in bytes */
@@ -103,12 +104,12 @@ typedef struct {
 
 //static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 64
-BYTE ProtocolInit();
-BYTE FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
-BYTE ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
+ST_RESULT ProtocolInit();
+ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
+ST_RESULT ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
 BYTE FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType);
-BYTE RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
-BYTE RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
-BYTE CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
+ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
+ST_RESULT RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
+ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
 
 #endif //__PROTOCOL_H_
