@@ -19,6 +19,14 @@
 #define IDC_BUTTON_ENTER                1003
 #define IDC_BUTTON_DOWN                 1004
 #define IDC_BUTTON_RIGHT                1005
+#define IDC_BUTTON_CON                  1006
+#define IDC_BUTTON_A                    1007
+#define IDC_BUTTON_D                    1008
+#define IDC_BUTTON_G                    1009
+#define IDC_BUTTON_CON2                 1010
+#define IDC_BUTTON_A2                   1011
+#define IDC_BUTTON_D2                   1012
+#define IDC_BUTTON_G2                   1013
 #define ID_32771                        32771
 #define ID_KEYS                         32772
 #define IDM_KEYS                        32773
@@ -31,7 +39,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

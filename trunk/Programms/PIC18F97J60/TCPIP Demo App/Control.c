@@ -28,51 +28,65 @@
 #define  Line1      25
 #define  Line2      38
 #define  Line3      51
+#define  Line_L0      12
+#define  Line_L1      22
+#define  Line_L2      32
+#define  Line_L3      42
+#define  Line_L4      52
 #define true 1
 #define false 0
 #define ENTER 1
 #define ESC   2
 
-const char  TextA[] = "A:";
-const char  TextD[] =  "D:";
-const char  TextG [] = "G:";
-const char  TextStart[] =  "Старт";
-const char  MenuB[] =  "Меню"; //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
-const char  ConnectFlag[] =  "Сеть";  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
-const char  AlphaFlag[] =    "Альфа"; //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
-const char  DeltaFlag[] =    "Дельта"; //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
-const char  GammaFlag[] =    "Гамма";  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
+const char  TextA[] = "А:";
+const char  TextD[] =  "Д:";
+const char  TextG [] = "Г:";
+const char  TextStart[] =       "Старт";
+const char  MenuB[] =           "Меню"; //{0xCC,0xE5,0xED,0xFE,0x00};//"Menu";
+const char  ConnectFlag[] =     "Сеть";  //{0xD1,0xE5,0xF2,0xFC,0x00};//{"Con"}; // Сеть   
+const char  AlphaFlag[] =       "Альфа"; //{0xC0,0xEB,0xFC,0xF4,0xE0,0x00};//{"Alph"};  // Алфа
+const char  DeltaFlag[] =       "Дельта"; //{0xC4,0xE5,0xEB,0xFC,0xF2,0xE0,0x00};//{"Delt"};  // Делт
+const char  GammaFlag[] =       "Гамма";  //{0xC3,0xE0,0xEC,0xEC,0xE0,0x00};//{"Gamm"};  // Гамма
 
-const char  SettingsName[] =     "Настройки";
-const char  ObservName[] =       "Наблюдение";
-const char  O_GoTo[] =           "Навести";
-const char  O_Manual[] =         "Ручной режим";
+const char  SettingsName[] =    "Настройки";
+const char  ObservName[] =      "Наблюдение";
+const char  O_GoTo[] =          "Навести";
+const char  O_Manual[] =        "Ручной режим";
 const char  O_Space[] =         "Режим спутников";
-const char  S_Observ[] =         "Наблюдение";
-const char  S_NetName[] =        "Сеть";
-const char  S_AlphaName[] =      "Альфа";
-const char  S_DeltaName[] =      "Дельта";
-const char  S_GammaName[] =      "Гамма";
-const char  S_MontyName[] =      "Монтировка";
+const char  S_Observ[] =        "Наблюдение";
+const char  S_NetName[] =       "Сеть";
+const char  S_AlphaName[] =     "Альфа";
+const char  S_DeltaName[] =     "Дельта";
+const char  S_GammaName[] =     "Гамма";
+const char  S_MontyName[] =     "Монтировка";
 const char  S_Display[] = 	"Экран";
-const char  S_MontyTypeName[] = 	"Тип монтировки";
-const char  SN_Name[] = 		"Имя:";
+const char  S_MontyTypeName[] = "Тип монтировки";
+const char  SN_Name[] =         "Имя:";
 const char  SN_IP[] =           "IP:";
 const char  SN_Mask[] =         "Mask:";
 const char  SN_Gate[] =         "Gate:";
-const char  SN_DNS1[] =          "DNS1:";
+const char  SN_DNS1[] =         "DNS1:";
 const char  SN_DNS2[] =         "DNS2:";
 const char  SN_NTP[] =          "NTP:";
 
-static ALL_PARAMS Params;
+const char MsgContinue[] =      "Продолжить";
+const char MsgError[] =         "Ошибка";
+
+const char CoordNotReachable0[] = "Указанные координаты";
+const char CoordNotReachable1[] = "в данный момент вре-";
+const char CoordNotReachable2[] = "мени находятся вне";
+const char CoordNotReachable3[] = "зоны видимости";
+
+ALL_PARAMS Params;
 
 
-void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY,int PosX , SELECT_MODE Mode );
+void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, double X, BOOL hour );
 BYTE ProcessKeys(BYTE * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 int SubStrToInt(const char* Text, int Beg, int * Val);
+void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue);
 
 void ProcessMenu( BYTE * KeyPressed )
 {
@@ -165,6 +179,9 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Alpha.Angle = 0.0;
         Params.Delta.Angle = 0.0; 
         Params.Gamma.Angle = 0.0;
+        Params.Alpha.StatusFlag |= AXIS_ENABLE;
+        Params.Delta.StatusFlag |= AXIS_ENABLE;
+        Params.Gamma.StatusFlag |= AXIS_ENABLE;
         Init = true;
     }
     Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
@@ -187,14 +204,48 @@ void ProcessMenu( BYTE * KeyPressed )
                 DisplayClear();
                 break;
             }                        
-
-            XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );
-            DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, 0, 0, NO_SELECT);
-            XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );
-            DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, 0, 0, NO_SELECT);
-            XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );
-            DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, 0, 0, NO_SELECT);
-
+            if(Params.Alpha.StatusFlag & AXIS_ENABLE){
+                XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );
+                DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                if(Params.Alpha.StatusFlag & AXIS_RUN){
+                    color = 0;
+                    Effect = NORMAL;
+                } else {
+                    color = 1;
+                    Effect = INVERT;
+                }
+                FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
+                OutTextXY(A_FlagX+3,2,(const char*)AlphaFlag,ARIAL_L,Effect);
+                Params.Alpha.NeedToUpdate |= C_ANGLE;
+            }
+            if(Params.Delta.StatusFlag & AXIS_ENABLE){
+                XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );
+                DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                if(Params.Delta.StatusFlag & AXIS_RUN){
+                    color = 0;
+                    Effect = NORMAL;
+                } else {
+                    color = 1;
+                    Effect = INVERT;
+                }
+                FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
+                OutTextXY(D_FlagX+3,2,(const char*)DeltaFlag,ARIAL_L,Effect);
+                Params.Delta.NeedToUpdate |= C_ANGLE;
+            }
+            if(Params.Gamma.StatusFlag & AXIS_ENABLE){
+                XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );
+                DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                if(Params.Gamma.StatusFlag & AXIS_RUN){
+                    color = 0;
+                    Effect = NORMAL;
+                } else {
+                    color = 1;
+                    Effect = INVERT;
+                }
+                FloodRectangle(G_FlagX+1,1,131,9,color);
+                OutTextXY(G_FlagX+3,2,(const char*)GammaFlag,ARIAL_L,Effect);
+                 Params.Gamma.NeedToUpdate |= C_ANGLE;
+            }
             OutTextXY(2,53,(const char*)MenuB,ARIAL_B,NORMAL);
             OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
             DrawRectangle(0,51,132,63,1);
@@ -202,7 +253,7 @@ void ProcessMenu( BYTE * KeyPressed )
             Line(36,52,36,63,1);
             Line(99,52,99,63,1);
 
-            if(Con){
+            if(Params.Local.ConnectFlag){
                 color = 0;
                 Effect = NORMAL;
             } else {
@@ -211,33 +262,7 @@ void ProcessMenu( BYTE * KeyPressed )
             }
             FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
             OutTextXY(Con_FlagX+3,2,(const char*)ConnectFlag,ARIAL_L,Effect);
-            if(A_Run){
-                color = 0;
-                Effect = NORMAL;
-            } else {
-                color = 1;
-                Effect = INVERT;
-            }
-            FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
-            OutTextXY(A_FlagX+3,2,(const char*)AlphaFlag,ARIAL_L,Effect);
-            if(D_Run){
-                color = 0;
-                Effect = NORMAL;
-            } else {
-                color = 1;
-                Effect = INVERT;
-            }
-            FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
-            OutTextXY(D_FlagX+3,2,(const char*)DeltaFlag,ARIAL_L,Effect);
-            if(G_Run){
-                color = 0;
-                Effect = NORMAL;
-            } else {
-                color = 1;
-                Effect = INVERT;
-            }
-            FloodRectangle(G_FlagX+1,1,131,9,color);
-            OutTextXY(G_FlagX+3,2,(const char*)GammaFlag,ARIAL_L,Effect);
+
             EndProcess = true;
             break;
         case MENU: // ***************************************************************************************************************
@@ -264,8 +289,8 @@ void ProcessMenu( BYTE * KeyPressed )
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,(const char*)MenuB,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 2);
-            DrawMenuLine(0, (const char*)ObservName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(1, (const char*)SettingsName, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(0, (const char*)ObservName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(1, (const char*)SettingsName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             EndProcess = true;
             break;
         case SETTINGS: // ***************************************************************************************************************
@@ -297,10 +322,10 @@ void ProcessMenu( BYTE * KeyPressed )
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,(const char*)SettingsName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
-            DrawMenuLine(0,(const char*)S_NetName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(1,(const char*)S_MontyName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(2,(const char*)S_Display, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(3,(const char*)S_Observ, NULL, PosX, 0, SELECT_LINE);
+            DrawMenuLine(0,(const char*)S_NetName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(1,(const char*)S_MontyName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(2,(const char*)S_Display, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(3,(const char*)S_Observ, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             
             EndProcess = true;
             break;
@@ -336,10 +361,10 @@ void ProcessMenu( BYTE * KeyPressed )
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,(const char*)S_MontyName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
-            DrawMenuLine(0,(const char*)S_MontyTypeName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(1,(const char*)S_AlphaName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(2,(const char*)S_DeltaName, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(3,(const char*)S_GammaName, NULL, PosX, 0, SELECT_LINE);            
+            DrawMenuLine(0,(const char*)S_MontyTypeName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(1,(const char*)S_AlphaName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(2,(const char*)S_DeltaName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(3,(const char*)S_GammaName, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
 
             EndProcess = true;
             break;
@@ -389,18 +414,19 @@ void ProcessMenu( BYTE * KeyPressed )
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,(const char*)S_NetName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 7);              
-            DrawMenuLine(0,(const char*)SN_Name, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE);
+            DrawMenuLine(0,(const char*)SN_Name, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.IP,   (char*)TmpValue, 0);
-            DrawMenuLine(1,(const char*)SN_IP, TmpValue, PosX, 0, SELECT_LINE);
+            DrawMenuLine(1,(const char*)SN_IP, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.Mask, (char*)TmpValue, 0);
-            DrawMenuLine(2,(const char*)SN_Mask, TmpValue, PosX, 0, SELECT_LINE);
+            DrawMenuLine(2,(const char*)SN_Mask, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.Gate, (char*)TmpValue, 0);
-            DrawMenuLine(3,(const char*)SN_Gate, TmpValue, PosX, 0, SELECT_LINE);
+            DrawMenuLine(3,(const char*)SN_Gate, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.DNS1, (char*)TmpValue, 0);
-            DrawMenuLine(4,(const char*)SN_DNS1, TmpValue, PosX, 0, SELECT_LINE);            
+            DrawMenuLine(4,(const char*)SN_DNS1, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
             IPtoText(Params.Local.DNS2, (char*)TmpValue, 0);
-            DrawMenuLine(5,(const char*)SN_DNS2, TmpValue, PosX, 0, SELECT_LINE);            
-            DrawMenuLine(6,(const char*)SN_NTP, NULL, PosX, 0, SELECT_LINE);            
+            DrawMenuLine(5,(const char*)SN_DNS2, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);   
+            IPtoText(Params.Local.NTP, (char*)TmpValue, 0);
+            DrawMenuLine(6,(const char*)SN_NTP, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
 
             EndProcess = true;
             break;
@@ -436,9 +462,9 @@ void ProcessMenu( BYTE * KeyPressed )
             OutTextXY(15,2,(const char*)ObservName,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 3);        
             //DrawMenuLine(0,O_GoTo, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(0,(const char*)O_GoTo, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(1,(const char*)O_Manual, NULL, PosX, 0, SELECT_LINE);
-            DrawMenuLine(2,(const char*)O_Space, NULL, PosX, 0, SELECT_LINE);                      
+            DrawMenuLine(0,(const char*)O_GoTo, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(1,(const char*)O_Manual, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(2,(const char*)O_Space, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);                      
             
             EndProcess = true;
             break;
@@ -448,25 +474,40 @@ void ProcessMenu( BYTE * KeyPressed )
                 switch(SelPosX){
                 case 0:
                     EditTxt = (char*)TextA;                    
-                    TmpDoValue = &Params.TargetAlpha.Angle;
+                    TmpDoValue = &Params.Alpha.TargetAngle;
                     TmpIsHours = true;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 1);
                     break;
                 case 1:
                     EditTxt = (char*)TextD;                    
-                    TmpDoValue = &Params.TargetDelta.Angle;
+                    TmpDoValue = &Params.Delta.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
                     break;
                 case 2:
                     EditTxt = (char*)TextG;                    
-                    TmpDoValue = &Params.TargetGamma.Angle;
+                    TmpDoValue = &Params.Gamma.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
                     break;
                 case 3:
                     State = MAIN_WINDOW;  
                     // TODO: отправка команды на перевод телескопа на координаты
+                    if(Params.Alpha.StatusFlag & AXIS_ENABLE) {
+                        Params.Alpha.NeedToCommit |= T_ANGLE;
+                        Params.NeedToCommit |= ALPHA;
+                    }
+                    if(Params.Delta.StatusFlag & AXIS_ENABLE) {
+                        Params.Delta.NeedToCommit |= T_ANGLE;
+                        Params.NeedToCommit |= DELTA;
+                    }
+                    if(Params.Gamma.StatusFlag & AXIS_ENABLE) {
+                        Params.Gamma.NeedToCommit |= T_ANGLE;
+                        Params.NeedToCommit |= GAMMA;                    
+                    }
+                    LastState = O_GOTO;
+                    TmpDoValue = NULL;
+                    // Как-то надо возвращать ошибку в виде окна на экране
                     break;
                 default:
                     TmpDoValue = NULL;
@@ -488,14 +529,14 @@ void ProcessMenu( BYTE * KeyPressed )
             }                
             DrawRectangle(0,0,132,10,1);
             OutTextXY(15,2,(const char*)O_GoTo,ARIAL_L,NORMAL);
-            DrawScrollBar(PosX, 3);        
-            XtoTimeString((char*)&TmpValue, Params.TargetAlpha.Angle, 1 );
-            DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, PosX, 0, SELECT_LINE);
-            XtoTimeString((char*)&TmpValue, Params.TargetDelta.Angle, 0 );
-            DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, PosX, 0, SELECT_LINE);
-            XtoTimeString((char*)&TmpValue, Params.TargetGamma.Angle, 0 );
-            DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, PosX, 0, SELECT_LINE);    
-            DrawMenuLine(3, (const char*)TextStart, NULL, PosX, 0, SELECT_LINE);  
+            DrawScrollBar(PosX, 4);        
+            XtoTimeString((char*)&TmpValue, Params.Alpha.TargetAngle, 1 );
+            DrawMenuLine(0, (const char*)TextA, (const char*)TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            XtoTimeString((char*)&TmpValue, Params.Delta.TargetAngle, 0 );
+            DrawMenuLine(1, (const char*)TextD, (const char*)TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            XtoTimeString((char*)&TmpValue, Params.Gamma.TargetAngle, 0 );
+            DrawMenuLine(2, (const char*)TextG, (const char*)TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);    
+            DrawMenuLine(3, (const char*)TextStart, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);  
             EndProcess = true;
             break;
         case EDIT_IP: {// ***************************************************************************************************************
@@ -555,7 +596,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 }
                 TmpValue[PosY] = '9' - PosX;
             }
-            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN);
+            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN|FONT_TYPE_B);
             EndProcess = true;
             break;
         }    
@@ -566,46 +607,8 @@ void ProcessMenu( BYTE * KeyPressed )
             TmpPosY = PosY;            
             if(PosY == 0) MaxX = 2;
             Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
-            if(Selected == ENTER) { //Enter   
-                //(*TmpDWValue)
-                for(i = 0;i<strlen((const char*)TmpValue);i++){
-                    switch(TmpValue[i]){
-                    case '`':
-                    case ':':
-                    case '.':
-                    case '\'':
-                    case '"':
-                        TmpValue[i] = ' ';
-                    }
-                }
-                {
-                    int UB=0;
-                    int MB=0;
-                    int HB=0;
-                    int LB=0;
-                    double Xg = 0.0;                    
-                    int c = 0;                    
-                    c = SubStrToInt((const char*)TmpValue, 0, &MB);
-                    c = SubStrToInt((const char*)TmpValue, c, &UB);
-                    c = SubStrToInt((const char*)TmpValue, c, &HB);
-                    c = SubStrToInt((const char*)TmpValue, c, &LB);
-
-                    Xg = (double)LB/100.0;
-                    Xg += (double)HB;
-                    Xg /= 60.0;
-                    Xg += (double)UB;
-                    Xg /= 60.0;
-                    if(MB >= 0){
-                        Xg += (double)MB;
-                    } else {
-                        Xg = -Xg + (double)MB;
-                    }
-                    if(TmpIsHours){
-                        Xg *= 15.0;
-                    }
-                    Xg = Xg * (PI)/180.0;
-                    (*TmpDoValue) = Xg;
-                }                
+            if(Selected == ENTER) { //Enter                   
+                TextToTimeD(TmpValue, TmpIsHours, TmpDoValue);
                 TmpDoValue = NULL;
                 State = LastState;
                 PosX = LastPosX;
@@ -646,10 +649,33 @@ void ProcessMenu( BYTE * KeyPressed )
                     TmpValue[PosY] = '9' - PosX;
                 }
             }
-            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN);
+            DrawMenuLine(0, NULL, TmpValue, 0, PosY, SELECT_COLUMN|FONT_TYPE_B);
             EndProcess = true;
             break;
+            }        
+        case ERROR_COORDINATE: // ***************************************************************************************************************
+            PosX = 4;
+            Selected = ProcessKeys(KeyPressed, &PosX, 5, &PosY, 0, LastState, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter 
+                State = LastState;
+                DisplayClear();
+                break;
+            } else {
+                if(Selected == ESC){ 
+                    DisplayClear();
+                    break;
+                }
             }
+            DrawRectangle(0,0,132,10,1);
+            OutTextXY(15,2,(const char*)MsgError,ARIAL_L,NORMAL);
+            DrawScrollBar(PosX, 5);
+            DrawMenuLine(0, CoordNotReachable0, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(1, CoordNotReachable1, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(2, CoordNotReachable2, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(3, CoordNotReachable3, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(4, MsgContinue, NULL, PosX, PosY, SELECT_LINE);
+            EndProcess = true;
+            break;
         default: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter  
@@ -666,7 +692,7 @@ void ProcessMenu( BYTE * KeyPressed )
     }
 }
 
-void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int PosX, SELECT_MODE Mode )
+void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int PosX, BYTE Mode )
 {
     BYTE color =0;
     BYTE Line;
@@ -675,18 +701,24 @@ void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int
     EFFECT Effect1;
     static int CPosY = 0;
     static int CPosX = 0;
+    BYTE fsize = 0;
     int i = 0;
     int ValueLength = 0;
     WORD StringXPos = 0;
+    FONT F = ARIAL_B;
     if(PosY < 0) return;
     if(PosY == 0) CPosY = 0;
-    while(PosY > CPosY + 3) CPosY++;
+    if(Mode & FONT_TYPE_B) {
+        while(PosY > CPosY + 3) CPosY++;
+    } else {
+        while(PosY > CPosY + 4) CPosY++;
+    }
     while(PosY < CPosY) CPosY--;
     if(PosX < 0) return;
     if(PosX == 0) CPosX = 0;
     while(PosX > CPosX) CPosX++;
     while(PosX < CPosX) CPosX--;
-    if(Mode!=NO_SELECT){
+    if((Mode & SELECT_COLUMN)||(Mode & SELECT_LINE)){
         if(PosY == ID){
             color = 1;
             Effect = INVERT;
@@ -701,33 +733,31 @@ void DrawMenuLine( BYTE ID, const char * Name, const char * Value, int PosY, int
         Effect = NORMAL;
         Effect1 = NORMAL;
     }
-    switch ((int)ID - CPosY){
-        case 0:
-            Line = Line0;
-            break;
-        case 1:
-            Line = Line1;
-            break;
-        case 2:
-            Line = Line2;
-            break;
-        case 3:
-            Line = Line3;
-            break;
-        default : return;
+    
+    if(Mode & FONT_TYPE_B) {
+        F = ARIAL_B;
+        fsize = 13;
+        Line = Line0 + fsize*((int)ID - CPosY);   
+        if(((int)ID - CPosY<0)||((int)ID - CPosY>3)) return;
+    } else {
+        F = ARIAL_L;
+        fsize = 10;
+        Line = Line0 + fsize*((int)ID - CPosY);
+        if(((int)ID - CPosY < 0) || ((int)ID - CPosY > 4)) return;
     }
-    FloodRectangle(1,Line,120,Line+13,color);
+
+    FloodRectangle(1,Line,120,Line+fsize,color);
     if(Name != NULL)
-        StringXPos = OutTextXY(5,Line + 2,Name,ARIAL_B,Effect); 
+        StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
     if(Value!= NULL){
         ValueLength = strlen((const char*)Value);
-        if(Mode == SELECT_COLUMN ){            
-            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,(const char*)Value, PosX, ARIAL_B,Effect);
-            StringXPos = OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX], 1, ARIAL_B, Effect1 );
+        if(Mode & SELECT_COLUMN ){            
+            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,(const char*)Value, PosX, F,Effect);
+            StringXPos = OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX], 1, F, Effect1 );
             if(PosX < ValueLength)
-                OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX + 1], ValueLength - PosX, ARIAL_B, Effect );
+                OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX + 1], ValueLength - PosX, F, Effect );
         } else {
-            OutTextXY(StringXPos + 5,Line + 2,(const char*)Value, ARIAL_B,Effect);
+            OutTextXY(StringXPos + 5,Line + 2,(const char*)Value, F,Effect);
         }
     }
 }
@@ -788,14 +818,16 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     BYTE Min;
     BYTE Sec;
     BYTE mSec;
+    BYTE Sign = 1;    
     Xg = X * 180/(PI); // в часах времени
+    if (Xg < 0) Sign = 0;
     if (hour) {
         Xg /= 15.0;
     }
+    if(Xg < 0.0) Xg = -Xg;
     Grad = (signed short)Xg;    
     Xg -= (double)Grad;
-    Xg *= 60;
-    if(Xg < 0.0) Xg = -Xg;
+    Xg *= 60;    
     Min = (BYTE)(Xg);
     Xg -= (double)Min;
     Xg *= 60;
@@ -803,7 +835,8 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     Xg -= (double)Sec;
     Xg *= 100;
     mSec = (BYTE)(Xg);
-    sprintf (Text, "%+0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+    sprintf (Text, "%0.1s%0.2d%0.1s%0.2d'%0.2d.%0.2d\"",Sign?"+":"-",Grad,hour?"h":"`",Min,Sec,mSec);
+
 }
 
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit)
@@ -835,4 +868,56 @@ int SubStrToInt(const char* Text, int Beg, int * Val)
     }
     (*Val) = Tmp*Sig;
     return i+1;
+}
+void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
+{
+    int i = 0;
+    int UB=0;
+    int MB=0;
+    int HB=0;
+    int LB=0;
+    double Xg = 0.0;                    
+    int c = 0;  
+
+    for(i = 0;i<strlen((const char*)TmpValue);i++){
+        switch(TmpValue[i]){
+            case '`':
+            case 'h':
+            case '.':
+            case '\'':
+            case '"':
+                TmpValue[i] = ' ';
+        }
+    }
+    {                          
+        c = SubStrToInt((const char*)TmpValue, 0, &MB);
+        c = SubStrToInt((const char*)TmpValue, c, &UB);
+        c = SubStrToInt((const char*)TmpValue, c, &HB);
+        c = SubStrToInt((const char*)TmpValue, c, &LB);
+
+        Xg = (double)LB/100.0;
+        Xg += (double)HB;
+        Xg /= 60.0;
+        Xg += (double)UB;
+        Xg /= 60.0;
+
+        if(MB >= 0){
+            Xg += (double)MB;
+        } else {
+            Xg = -Xg + (double)MB;
+        }
+        if((MB == 0)&&(TmpValue[0]=='-')){
+            Xg = -Xg;
+        }
+        if(TmpIsHours){
+            Xg *= 15.0;
+        }
+        Xg = Xg * (PI)/180.0;
+        (*TmpDoValue) = Xg;
+    } 
+}
+
+void ExecuteCommands()
+{
+
 }

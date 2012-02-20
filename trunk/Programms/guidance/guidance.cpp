@@ -16,12 +16,7 @@
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
-extern BYTE DisplayBuffer0[256];
-extern BYTE DisplayBuffer1[256];
-extern BYTE DisplayBuffer2[256];
-extern BYTE DisplayBuffer3[256];
-extern BYTE DisplayBuffer4[40];
-
+extern ALL_PARAMS Params;
 // Глобальные переменные:
 #define FIRST_TIMER 1
 #define FIRST_TIMER_INTERVAL 200 
@@ -279,22 +274,6 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     BYTE Key = 0;
     
-//     unsigned char Text[] = " !";
-//     unsigned char Text2[] = "!\"#$%&'()*+,-./";
-//     unsigned char Text3[] = "0123456789:;<=>?";
-//     unsigned char Text4[] = "@ABCDEFGHIJKLMNO";
-//     unsigned char Text5[] = "PQRSTUVWXYZ[\\]^_";
-//     unsigned char Text6[] = "`abcdefghijklmno";
-//     unsigned char Text7[] = "pqrstuvwxyz{|}~";
-//     unsigned char TextA[] = {0xA0,0xB0,0xC0,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9,0xCA,0xCB,0xCC,0xCD,0xCE,0xCF,0x00};//"ЁёАБВГДЕЖЗИЙКЛМНОП";
-//     unsigned char TextB[] = {0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xdA,0xdB,0xdC,0xdD,0xdE,0xdF,0x00}; //"РСТУФХЦЧШЩЪЫЬЭЮЯ";
-//     unsigned char TextC[] = {0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xE8,0xE9,0xEA,0xEB,0xEC,0xED,0xEE,0xEF,0x00};//"абвгдежзийклмноп";
-//     unsigned char TextD[] = {0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF,0x00};//"рстуфхцчшщъыьэюя";
-
-//      unsigned char TextA[] = "a: 06:45:08.9173";
-//      unsigned char TextD[] = "d:-16`:42':58.017\"";    
-//     unsigned char Text4[] = " Соединение установлено";
-
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
@@ -354,6 +333,30 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         case IDC_BUTTON_ENTER:
             Key = 0x40;
+            break;
+        case IDC_BUTTON_CON:
+            Params.Local.ConnectFlag ^= 1;
+            break;
+        case IDC_BUTTON_A:
+            Params.Alpha.StatusFlag ^= AXIS_RUN;
+            break;
+        case IDC_BUTTON_D:
+            Params.Delta.StatusFlag ^= AXIS_RUN;
+            break;
+        case IDC_BUTTON_G:
+            Params.Gamma.StatusFlag ^= AXIS_RUN;
+            break;
+        case IDC_BUTTON_CON2:
+            //Params.Local.ConnectFlag ^= 1;
+            break;
+        case IDC_BUTTON_A2:
+            Params.Alpha.StatusFlag ^= AXIS_ENABLE;
+            break;
+        case IDC_BUTTON_D2:
+            Params.Delta.StatusFlag ^= AXIS_ENABLE;
+            break;
+        case IDC_BUTTON_G2:
+            Params.Gamma.StatusFlag ^= AXIS_ENABLE;
             break;
         case IDOK: 
         case IDCANCEL:
