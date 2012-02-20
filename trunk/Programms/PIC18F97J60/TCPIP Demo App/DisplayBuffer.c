@@ -147,9 +147,7 @@ WORD OutTextXY( WORD X,WORD Y,const char * Text,FONT CFont, EFFECT Effect )
                 break;
             case INVERT:
                 for(i = 0;i<count;i++)
-                {
-                    Image[i] = Image[i]^FontMask;
-                }
+                    Image[i] = Image[i]^FontMask;                
                 Image[count] = FontMask;
                 count++;                
                 break;

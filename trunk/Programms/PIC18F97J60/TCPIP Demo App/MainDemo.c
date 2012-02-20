@@ -472,11 +472,11 @@ int main(void)
             //SetPixelDB(x, y, 0); 
             //DisplayClear();
             if(CKeys.up) K |= 0x01;
-            if(CKeys.right) K |= 0x02;
-            if(CKeys.down) K |= 0x04;
-            if (CKeys.left) K |= 0x08;
-            if (CKeys.enter) K |= 0x40;
-            if (CKeys.menu) K |= 0x80;
+            if(CKeys.right) K |= 0x08;
+            if(CKeys.down) K |= 0x02;
+            if (CKeys.left) K |= 0x04;
+            if (CKeys.enter) K |= 0x80;
+            if (CKeys.menu) K |= 0x40;
             
             ProcessMenu( &K );
             DisplayDraw(add1);

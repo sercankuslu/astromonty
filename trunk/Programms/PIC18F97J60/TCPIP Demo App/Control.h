@@ -26,17 +26,16 @@ typedef struct AXIS_PARAM
     double TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     DWORD  TargetAbsSteps;         // текущий номер шага    
     BYTE   StatusFlag;       // флаг состояния оси
-
 } AXIS_PARAM;
 // флаги для NeedToUpdate и NeedToCommit
-#define IP_ADDR 0x01
-#define IP_MASK 0x02
-#define IP_GATE 0x04
-#define IP_DNS1 0x08
-#define IP_DNS2 0x10
-#define IP_NAME 0x20
-#define IP_NTP  0x40
-#define IP_FLAG 0x80
+#define NS_IP_ADDR 0x01
+#define NS_IP_MASK 0x02
+#define NS_IP_GATE 0x04
+#define NS_IP_DNS1 0x08
+#define NS_IP_DNS2 0x10
+#define NS_IP_NAME 0x20
+#define NS_IP_NTP  0x40
+#define NS_IP_FLAG 0x80
 typedef struct NETWORK_SETTINGS
 {
     BYTE  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
