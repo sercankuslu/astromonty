@@ -328,9 +328,10 @@ int main(void)
 		0, 0, RBuffer
 	};
 	    
-    BYTE count;    
+    BYTE count;  
+    ProcessMenu(&K);  
 	UpdateKey();
-	
+	ProcessMenu(&K);
     memset(RBuffer, 0, sizeof(RBuffer));    
     pcfLCDInit(add1);
     DisplayInit();

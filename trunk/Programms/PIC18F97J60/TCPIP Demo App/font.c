@@ -356,7 +356,7 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
     c.Val = 0;
     memset(Image,0,(*ImageSize));
     switch(CFont){
-        case ARIAL_L:        
+        case ARIAL_L: 
             for(i = 0;i < Arial_Data_L_Size;){
                 c.Val = Arial_Data_L[i];
                 if(c.byte.HB == symbol) {
