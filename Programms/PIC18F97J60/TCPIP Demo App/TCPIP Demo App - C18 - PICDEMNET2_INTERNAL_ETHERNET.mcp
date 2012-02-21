@@ -5,10 +5,10 @@ device=PIC18F67J60
 [PATH_INFO]
 BuildDirPolicy=BuildDirIsProjectDir
 dir_src=
-dir_bin=F:\astromonty\Programms\PIC18F97J60\TCPIP Demo App\out
+dir_bin=.\out
 dir_tmp=
 dir_sin=
-dir_inc=F:\astromonty\Programms\PIC18F97J60\Microchip\Include
+dir_inc=E:\astromonty\Programms\PIC18F97J60\Microchip\Include;F:\astromonty\Programms\PIC18F97J60\Microchip\Include
 dir_lib=C:\Program Files (x86)\Microchip\mplabc18\v3.38\lib
 dir_lkr=
 [CAT_FILTERS]

@@ -255,7 +255,7 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
     WORD tmpSY = SY;        
     BYTE* Row0;
     BYTE* Row1;    
-    BYTE* Row2;
+    BYTE* Row2;    
     //вычисление маски на основе размеров картинки ( пока размеры картинки не более 16 по вертикали)
     if(tmpSY >= 16) {
         tmpMask.Val = 0xFFFF;
@@ -266,15 +266,16 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
 
     // определить строчку в буфере (работаем сразу с 3 строчками)
     // TODO: сделать работу с картинками больше,  чем 16 строк
-    for(i = 0; i < SX; i++){
-        Row0 = GetAddr(((Y >> 3) + 0) * SIZE_X + i + X);
-        Row1 = GetAddr(((Y >> 3) + 1) * SIZE_X + i + X);
-        Row2 = GetAddr(((Y >> 3) + 2) * SIZE_X + i + X);
+    i = (Y >> 3) * SIZE_X + X;
+    Row0 = GetAddr(i);
+    Row1 = GetAddr(i + SIZE_X);
+    Row2 = GetAddr(i + SIZE_X + SIZE_X); 
+    for(i = 0; i < SX; i++){                
         tmpImage.Val = Image[i];    
         tmpImage.Val = tmpImage.Val << (Y & 0x07);
-        if(Row0!=NULL)(*Row0) = ((*Row0) & tmpMask.v[0])|tmpImage.v[0];
-        if(Row1!=NULL)(*Row1) = ((*Row1) & tmpMask.v[1])|tmpImage.v[1];
-        if(Row2!=NULL)(*Row2) = ((*Row2) & tmpMask.v[2])|tmpImage.v[2];
+        if(Row0!=NULL)(*Row0) = ((*Row0++) & tmpMask.v[0])|tmpImage.v[0];
+        if(Row1!=NULL)(*Row1) = ((*Row1++) & tmpMask.v[1])|tmpImage.v[1];
+        if(Row2!=NULL)(*Row2) = ((*Row2++) & tmpMask.v[2])|tmpImage.v[2];        
     }
     
 }
