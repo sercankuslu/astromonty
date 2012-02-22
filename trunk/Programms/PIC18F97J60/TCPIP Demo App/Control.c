@@ -143,9 +143,9 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
         Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
         Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
-        Params.Alpha.Angle = 0.0;
-        Params.Delta.Angle = 0.0; 
-        Params.Gamma.Angle = 0.0;
+        Params.Alpha.Angle = 3.14;
+        Params.Delta.Angle = 3.14/2; 
+        Params.Gamma.Angle = 3.14/4;
         Params.Alpha.StatusFlag = AXIS_ENABLE;
         Params.Delta.StatusFlag = AXIS_ENABLE;
         Params.Gamma.StatusFlag = AXIS_ENABLE;
