@@ -16,6 +16,7 @@
 #include "..\..\dsPIC33\protocol.h"
 #include "DisplayBuffer.h"
 #include "Control.h"
+#include "roundbuffer.h"
 #include <stdio.h>
 
 #define PI 3.1415926535897932384626433832795
@@ -114,8 +115,8 @@ void ProcessMenu( BYTE * KeyPressed )
     static BYTE TmpPosY = 0;
     static BYTE SelPosX = 0;
     static BYTE SelPosY = 0;
-    static char TmpValue[20];
-    static char MsgValue[20];
+    static char TmpValue[25];
+    static char MsgValue[25];
     static DWORD * TmpDWValue = NULL;
     static double * TmpDoValue = NULL;
     static BOOL TmpIsHours = false;
@@ -143,7 +144,7 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
         Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
         Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
-        Params.Alpha.Angle = 3.14;
+        Params.Alpha.Angle = 0;
         Params.Delta.Angle = 3.14/2; 
         Params.Gamma.Angle = 3.14/4;
         Params.Alpha.StatusFlag = AXIS_ENABLE;
@@ -152,8 +153,10 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Alpha.StatusFlag |= AXIS_RUN;
         Params.Delta.StatusFlag |= AXIS_RUN;
         Params.Gamma.StatusFlag |= AXIS_RUN;
+        Params.NeedToUpdate = 0;
+        Params.Alpha.NeedToUpdate = 0;
         GetMsgFromROM(MSG_SNL_NAME, (char*)&Params.Local.Name);
-        memset(TmpValue,0,20);
+        memset(TmpValue,0,sizeof(TmpValue));
         Init = true;            
     }
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
@@ -177,7 +180,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 break;
             }                        
             if(Params.Alpha.StatusFlag & AXIS_ENABLE){
-                XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );                
+                XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
                 DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                 if(Params.Alpha.StatusFlag & AXIS_RUN){
                     color = 0;
@@ -219,7 +222,7 @@ void ProcessMenu( BYTE * KeyPressed )
                 FloodRectangle(G_FlagX+1,1,131,9,color);
                 GetMsgFromROM(MSG_C_GAMMA, (char*)&MsgValue);
                 OutTextXY(G_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
-                 Params.Gamma.NeedToUpdate |= C_ANGLE;
+                Params.Gamma.NeedToUpdate |= C_ANGLE;
             }
             GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
             OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);
@@ -239,7 +242,7 @@ void ProcessMenu( BYTE * KeyPressed )
             FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
             GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
             OutTextXY(Con_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
-
+            Params.NeedToUpdate |= ALPHA|DELTA|GAMMA;
             EndProcess = true;
             break;
         case MENU: // ***************************************************************************************************************
@@ -677,7 +680,7 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
 {
     static int CPosY = 0;
     static int CPosX = 0;
-    char Name[22] = "";
+    char Name[25] = "";
     WORD StringXPos = 0;
     int ValueLength = 0;
     BYTE color =0;
@@ -803,9 +806,7 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     BYTE Sign = 1;    
     Xg = X * 180/(PI); // в часах времени
     if (Xg < 0) Sign = 0;
-    if (hour) {
-        Xg /= 15.0;
-    }
+    
     if(Xg < 0.0) Xg = -Xg;
     Grad = (BYTE)Xg;    
     Xg -= (double)Grad;
@@ -819,10 +820,12 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     mSec = (BYTE)(Xg);
     if(Sign){
         if(hour){
+            Grad /= 15;
             sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
         } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
     } else {
         if(hour){
+            Grad /= 15;
             sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
         } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
     }
@@ -891,6 +894,9 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
         Xg += (double)UB;
         Xg /= 60.0;
 
+        if(TmpIsHours){
+            MB *= 15;
+        }
         if(MB >= 0){
             Xg += (double)MB;
         } else {
@@ -898,10 +904,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
         }
         if((MB == 0)&&(TmpValue[0]=='-')){
             Xg = -Xg;
-        }
-        if(TmpIsHours){
-            Xg *= 15.0;
-        }
+        }        
         Xg = Xg * (PI)/180.0;
         (*TmpDoValue) = Xg;
     } 
@@ -909,15 +912,76 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
 
 void ExecuteCommands()
 {
+    static BYTE datareq = STC_REQEST_DATA;
+    static ST_ATTRIBUTE RequestData[] = {
+        {STA_COMMAND,  sizeof(BYTE), &datareq},
+        {STA_NULL,  0, NULL},
+    };
+    static ST_ATTRIBUTE Data = {
+        STA_NULL,  0, NULL
+    };
+    RB_RV rv;
+    if(!IsClientConnected()){ 
+        Params.Local.ConnectFlag = 0;
+        return; 
+    }else {
+        Params.Local.ConnectFlag = 1;
+    }
 
+    while(IsDataInBuffer(IN_BUFFER)){
+        BYTE m[10];
+        Data.pValue = m;
+        rv = PopAttr(&Data,IN_BUFFER);
+        if(rv == RB_OK) {
+            switch(Data.type){
+                case STA_ALPHA:
+                    memcpy(&Params.Alpha.Angle,m, sizeof(double));                    
+                    break;
+                case STA_DELTA:
+                    memcpy(&Params.Delta.Angle,m, sizeof(double));
+                    break;
+                case STA_GAMMA:
+                    memcpy(&Params.Gamma.Angle,m, sizeof(double));
+                    break;
+            }
+        }
+    }
+    if(Params.NeedToUpdate>0){
+        if(Params.NeedToUpdate & ALPHA){
+            if(Params.Alpha.NeedToUpdate & C_ANGLE){
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_ALPHA;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Alpha.NeedToUpdate ^= C_ANGLE;
+            }
+        }
+        if(Params.NeedToUpdate & DELTA){
+            if(Params.Delta.NeedToUpdate & C_ANGLE){
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_DELTA;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Delta.NeedToUpdate ^= C_ANGLE;
+            }
+        }
+        if(Params.NeedToUpdate & GAMMA){
+            if(Params.Gamma.NeedToUpdate & C_ANGLE){
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_GAMMA;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Gamma.NeedToUpdate ^= C_ANGLE;
+            }
+        }
+    }
+    
+    if(Params.NeedToCommit>0){
+
+    }
 }
 void GetMsgFromROM(MSGS Msg_id, char* Msg)
-{
-    //memcpy((void*)Msg, (C_ROM char*)MsgsCommon[Msg_id],strlen(MsgsCommon[Msg_id])+1);
+{        
     int i = 0;        
     do{
         Msg[i] = MsgsCommon[Msg_id][i];        
-    }while(Msg[i++] != '\0');
-        
+    }while(Msg[i++] != '\0');        
     
 }

@@ -17,6 +17,8 @@ extern RR rr1;
 extern RR rr2;
 extern RR rr3;
 extern ALL_PARAMS Params;
+BYTE bfr[64];
+BYTE length;
 // Глобальные переменные:
 #define FIRST_TIMER 1
 #define FIRST_TIMER_INTERVAL 200 
@@ -273,7 +275,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static int Y = 2;
     static bool bb = false;
     BYTE Key = 0;
-    
+    ST_RESULT rv = STR_OK;    
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
@@ -283,7 +285,10 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         switch (wParam) 
         { 
         case FIRST_TIMER: 
-            ProcessMenu(&Key);                      
+            ProcessMenu(&Key);
+            ExecuteCommands();
+            rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
+            rv = RunServer(0, (BYTE*)bfr, &length);             
             InvalidateRect(hDlg, &rect, false);
             break;
         }
@@ -369,11 +374,11 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         default:
             break;
         }
-            {                         
-                ProcessMenu(&Key);
-                InvalidateRect(hDlg, &rect, false);
-                //RedrawWindow(hDlg,&rect,NULL,RDW_INTERNALPAINT);
-            }       
+        {                         
+            ProcessMenu(&Key);
+            InvalidateRect(hDlg, &rect, false);
+            //RedrawWindow(hDlg,&rect,NULL,RDW_INTERNALPAINT);
+        }       
         }        
     }
     return (INT_PTR)FALSE;
@@ -518,18 +523,18 @@ void Calc(HWND hWnd, HDC hdc)
 */
     OCInit();
     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0, 17.1 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 
     PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, -180.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr2, ST_RUN, 0.0, -45.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, -90.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_RUN, 0.0, -16.69 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 0.0, -22.1 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, -90.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr2, ST_RUN, 0.0, -16.69 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
 
     //Control(&rr1);    
     //Control(&rr2);

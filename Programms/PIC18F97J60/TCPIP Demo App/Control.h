@@ -80,4 +80,5 @@ typedef enum MENU_ID {
 #define FONT_TYPE_B     0x04
 
 void ProcessMenu( BYTE * KeyPressed);
+void ExecuteCommands( void );
 #endif

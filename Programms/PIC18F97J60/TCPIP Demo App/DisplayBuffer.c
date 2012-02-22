@@ -249,7 +249,9 @@ void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image)
 void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
 {
     WORD i;
-    //WORD j;
+    WORD r0;
+    WORD r1;
+    WORD r2;
     DWORD_VAL tmpImage;
     DWORD_VAL tmpMask;
     WORD tmpSY = SY;        
@@ -266,11 +268,13 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
 
     // определить строчку в буфере (работаем сразу с 3 строчками)
     // TODO: сделать работу с картинками больше,  чем 16 строк
-    i = (Y >> 3) * SIZE_X + X;
-    Row0 = GetAddr(i);
-    Row1 = GetAddr(i + SIZE_X);
-    Row2 = GetAddr(i + SIZE_X + SIZE_X); 
+    r0 = (Y >> 3) * SIZE_X + X;
+    r1 = r0 + SIZE_X;
+    r2 = r1 + SIZE_X;
     for(i = 0; i < SX; i++){                
+        Row0 = GetAddr(r0 + i);
+        Row1 = GetAddr(r1 + i);
+        Row2 = GetAddr(r2 + i); 
         tmpImage.Val = Image[i];    
         tmpImage.Val = tmpImage.Val << (Y & 0x07);
         if(Row0!=NULL)(*Row0) = ((*Row0++) & tmpMask.v[0])|tmpImage.v[0];

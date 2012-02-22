@@ -151,8 +151,8 @@ void BerkeleyTCPClientDemo(void)
         case BSD_OPERATION:            
             while(1)
             {
-				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
-				//send(bsdClientSocket, recvBuffer, BlobLen, 0); 
+	        i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
+	        //send(bsdClientSocket, recvBuffer, BlobLen, 0); 
                 
                 res = RunClient(recvBuffer, sizeof(recvBuffer), &i);
                 switch(res){
@@ -165,7 +165,7 @@ void BerkeleyTCPClientDemo(void)
 	            	BSDClientState = BSD_CLOSE;
 	            	break;
                 }     
-				break;
+		break;
             }
             break;
          
