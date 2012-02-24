@@ -128,6 +128,7 @@ void ProcessMenu( BYTE * KeyPressed )
     //     Con ^= 1;
     //     A_Run ^= 1;
     //     D_Run ^= 1;
+    ExecuteCommands();
     TimerCount+=2;
     if(TimerCount % 5 == 0){
         Time_Run ^= 1;
@@ -144,15 +145,16 @@ void ProcessMenu( BYTE * KeyPressed )
         Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
         Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
         Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
-        Params.Alpha.Angle = 0;
-        Params.Delta.Angle = 3.14/2; 
+        Params.Alpha.Angle = 3.14/2;
+        Params.Delta.Angle = 3.14/3; 
         Params.Gamma.Angle = 3.14/4;
         Params.Alpha.StatusFlag = AXIS_ENABLE;
         Params.Delta.StatusFlag = AXIS_ENABLE;
-        Params.Gamma.StatusFlag = AXIS_ENABLE;
-        Params.Alpha.StatusFlag |= AXIS_RUN;
-        Params.Delta.StatusFlag |= AXIS_RUN;
-        Params.Gamma.StatusFlag |= AXIS_RUN;
+        Params.Gamma.StatusFlag = 0;//AXIS_ENABLE;
+        //Params.Alpha.StatusFlag = 0;//|= AXIS_RUN;
+        //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
+        //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
+        //Params.Local.ConnectFlag = 0;
         Params.NeedToUpdate = 0;
         Params.Alpha.NeedToUpdate = 0;
         GetMsgFromROM(MSG_SNL_NAME, (char*)&Params.Local.Name);
@@ -673,7 +675,7 @@ void ProcessMenu( BYTE * KeyPressed )
             EndProcess = true;
             break;
         }
-    }
+    }    
 }
 
 void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX, BYTE Mode )

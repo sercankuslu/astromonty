@@ -165,7 +165,7 @@ void BerkeleyTCPClientDemo(void)
 	            	BSDClientState = BSD_CLOSE;
 	            	break;
                 }     
-		break;
+			break;
             }
             break;
          
