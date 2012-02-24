@@ -277,9 +277,9 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
         Row2 = GetAddr(r2 + i); 
         tmpImage.Val = Image[i];    
         tmpImage.Val = tmpImage.Val << (Y & 0x07);
-        if(Row0!=NULL)(*Row0) = ((*Row0++) & tmpMask.v[0])|tmpImage.v[0];
-        if(Row1!=NULL)(*Row1) = ((*Row1++) & tmpMask.v[1])|tmpImage.v[1];
-        if(Row2!=NULL)(*Row2) = ((*Row2++) & tmpMask.v[2])|tmpImage.v[2];        
+        if(Row0!=NULL)(*Row0) = ((*Row0) & tmpMask.v[0])|tmpImage.v[0];
+        if(Row1!=NULL)(*Row1) = ((*Row1) & tmpMask.v[1])|tmpImage.v[1];
+        if(Row2!=NULL)(*Row2) = ((*Row2) & tmpMask.v[2])|tmpImage.v[2];        
     }
     
 }

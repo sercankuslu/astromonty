@@ -328,20 +328,16 @@ int main(void)
 		0, 0, RBuffer
 	};
 	    
-    BYTE count;  
-    ProcessMenu(&K);  
-	UpdateKey();
-	ProcessMenu(&K);
-    memset(RBuffer, 0, sizeof(RBuffer));    
-    pcfLCDInit(add1);
-    DisplayInit();
+    BYTE count; 
+    
+    DisplayInit(); 
     ProcessMenu(&K);
-    DisplayDraw(add1);
+    pcfLCDInit(add1);
+    DisplayDraw(add1);  
+	UpdateKey();
+    memset(RBuffer, 0, sizeof(RBuffer));
     InitializeBoard();
     
-    
-
-	
 	// Initialize stack-related hardware components that may be 
 	// required by the UART configuration routines
     TickInit();
@@ -463,24 +459,22 @@ int main(void)
                 //AnnounceIP();
             }    
             
-            PushAttr(ReceivePacket, OUT_BUFFER);            
+            //PushAttr(ReceivePacket, OUT_BUFFER);            
             //DisplayDraw(add1);
         }
-        if(TickGet() - t1 >= TICK_SECOND/2)
+        UpdateKey();
+        if(CKeys.up) K |= 0x01;
+        if(CKeys.right) K |= 0x08;
+        if(CKeys.down) K |= 0x02;
+        if (CKeys.left) K |= 0x04;
+        if (CKeys.enter) K |= 0x80;
+        if (CKeys.menu) K |= 0x40;
+        
+        if((TickGet() - t1 >= TICK_SECOND)||(K>0))
         {            
 	     	t1 = TickGet();   
-	        UpdateKey();
-            //SetPixelDB(x, y, 0); 
-            //DisplayClear();
-            if(CKeys.up) K |= 0x01;
-            if(CKeys.right) K |= 0x08;
-            if(CKeys.down) K |= 0x02;
-            if (CKeys.left) K |= 0x04;
-            if (CKeys.enter) K |= 0x80;
-            if (CKeys.menu) K |= 0x40;
-            
-            ProcessMenu( &K );
-            DisplayDraw(add1);
+            //ProcessMenu( &K );
+            //DisplayDraw(add1);
 		
 	    } 
         // This task performs normal stack task including checking
@@ -548,14 +542,7 @@ int main(void)
 
 		ProcessIO();
 		
-		if(IsDataInBuffer(IN_BUFFER)){
-			if(PopAttr(&ReceivePacket, IN_BUFFER) == 0){
-				//OutTextXY(x,y,RBuffer,0);
-				DisplayDraw(add1);
-			}
-		}
-
-        // If the local IP address has changed (ex: due to DHCP lease change)
+		// If the local IP address has changed (ex: due to DHCP lease change)
         // write the new IP address to the LCD display, UART, and Announce 
         // service
 		if(dwLastIP != AppConfig.MyIPAddr.Val)

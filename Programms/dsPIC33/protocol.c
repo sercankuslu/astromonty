@@ -541,7 +541,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
                 //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
                 do{    
                     BYTE m[10];
-                    RequestData[1].pValue = &m;
+                    RequestData[1].pValue = (void*)&m;
                     if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){
                         res = FormBlob(&RequestData[1], 1, pbBlob, bBlobLen, &bBlockPos);
                     }
