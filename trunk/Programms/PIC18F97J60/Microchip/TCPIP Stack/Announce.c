@@ -175,7 +175,7 @@ void AnnounceIP(void)
  ********************************************************************/
 void DiscoveryTask(void)
 {
-        static enum {
+	static enum {
 		DISCOVERY_HOME = 0,
 		DISCOVERY_LISTEN,
 		DISCOVERY_REQUEST_RECEIVED,
@@ -183,13 +183,8 @@ void DiscoveryTask(void)
 	} DiscoverySM = DISCOVERY_HOME;
 
 	static UDP_SOCKET	MySocket;
-	static BYTE buf[32];
-	WORD wDataLen;	
-    BYTE i;
-    if(AppConfig.Flags.bNeedUpdateMontyIPAddr == 1){
-	    AppConfig.Flags.bNeedUpdateMontyIPAddr = 0;
-	    SendRequestIP();
-    }
+	BYTE 				i;
+	
 	switch(DiscoverySM)
 	{
 		case DISCOVERY_HOME:
@@ -207,25 +202,15 @@ void DiscoveryTask(void)
 
 		case DISCOVERY_LISTEN:
 			// Do nothing if no data is waiting
-			
 			if(!UDPIsGetReady(MySocket))
 				return;
 			
 			// See if this is a discovery query or reply
-			wDataLen = UDPGetArray(buf, sizeof(buf));
-            			
-			UDPDiscard();						
-			//i = memcmp((void*)&buf, (const void*)&AppConfig.MontyName, sizeof(AppConfig.MontyName));
-			if(buf[0] == 'A') {
-				AppConfig.Flags.bIsValidMontyIPAddr = 1;
-				memcpy((void*)&AppConfig.MontyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr));
-			}				
-				//else 
-			if(buf[0] != 'D'){
+			UDPGet(&i);
+			UDPDiscard();
+			if(i != 'D')
 				return;
-			}
-		    if(memcmp((void*)&AppConfig.MyIPAddr, (const void*)&remoteNode.IPAddr, sizeof(remoteNode.IPAddr)) == 0u) 
-		    	return;
+
 			// We received a discovery request, reply when we can
 			DiscoverySM++;
 
@@ -268,78 +253,13 @@ void DiscoveryTask(void)
 
 			// Listen for other discovery requests
 			DiscoverySM = DISCOVERY_LISTEN;
-			
 			break;
 
 		case DISCOVERY_DISABLED:
 			break;
-
-	}
-}
-
-/*********************************************************************
- * Function:        void AnnounceIP(void)
- *
- * Summary:         Transmits an Announce packet.
- *
- * PreCondition:    Stack is initialized()
- *
- * Input:           None
- *
- * Output:          None
- *
- * Side Effects:    None
- *
- * Overview:        AnnounceIP opens a UDP socket and transmits a 
- *					broadcast packet to port 30303.  If a computer is
- *					on the same subnet and a utility is looking for 
- *					packets on the UDP port, it will receive the 
- *					broadcast.  For this application, it is used to 
- *					announce the change of this board's IP address.
- *					The messages can be viewed with the MCHPDetect.exe
- *					program.
- *
- * Note:            A UDP socket must be available before this 
- *					function is called.  It is freed at the end of 
- *					the function.  MAX_UDP_SOCKETS may need to be 
- *					increased if other modules use UDP sockets.
- ********************************************************************/
-void SendRequestIP(void)
-{
-	UDP_SOCKET	MySocket1 = INVALID_UDP_SOCKET;
-	BYTE 		i;
-
-	// Open a UDP socket for outbound broadcast transmission
-	
-	MySocket1 = UDPOpen(30303, NULL, ANNOUNCE_PORT);
-		
-
-	// Abort operation if no UDP sockets are available
-	// If this ever happens, incrementing MAX_UDP_SOCKETS in 
-	// StackTsk.h may help (at the expense of more global memory 
-	// resources).
-	if(MySocket1 == INVALID_UDP_SOCKET){
-		Nop();
-		return;
 	}	
 
-	// Make certain the socket can be written to
-	while(!UDPIsPutReady(MySocket1));
-
-	// Begin sending our MAC address in human readable form.
-	// The MAC address theoretically could be obtained from the 
-	// packet header when the computer receives our UDP packet, 
-	// however, in practice, the OS will abstract away the useful
-	// information and it would be difficult to obtain.  It also 
-	// would be lost if this broadcast packet were forwarded by a
-	// router to a different portion of the network (note that 
-	// broadcasts are normally not forwarded by routers).
-        UDPPutROMString((ROM BYTE*)"Discovery: Who is out there?");
-        UDPPut('\r');
-        UDPPut('\n');	
-	// Send the packet
-	UDPFlush();
-
-	// Close the socket so it can be used by other modules
-	UDPClose(MySocket1);
 }
+
+
+#endif //#if defined(STACK_USE_ANNOUNCE)

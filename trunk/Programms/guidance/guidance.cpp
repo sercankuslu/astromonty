@@ -21,7 +21,7 @@ BYTE bfr[64];
 BYTE length;
 // Глобальные переменные:
 #define FIRST_TIMER 1
-#define FIRST_TIMER_INTERVAL 200 
+#define FIRST_TIMER_INTERVAL 1000 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -274,7 +274,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static int X = 5;
     static int Y = 2;
     static bool bb = false;
-    BYTE Key = 0;
+    static KEYS_STR Key;
     ST_RESULT rv = STR_OK;    
 
     //HWND hDisplay = NULL;
@@ -311,57 +311,67 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         case IDC_BUTTON_UP:
             {      
                 if(Y>0) Y--;
-                Key = 0x01;
+                Key.keys.up = 1;
                 
             }
             break;
         case IDC_BUTTON_DOWN:
             {      
                 if(Y<SIZE_Y) Y++;
-                Key = 0x02;
+                Key.keys.down = 1;
             }
             break;
         case IDC_BUTTON_LEFT:
             {      
                 if(X>0) X--;
-                Key = 0x04;
+                Key.keys.left = 1;
             }
             break;
         case IDC_BUTTON_RIGHT:
             {      
                 if(X<SIZE_Y) X++;
-                Key = 0x08;
+                Key.keys.right = 1;
             }
             break;
         case IDC_BUTTON_ESC:
-            Key = 0x80;
+            Key.keys.esc = 1;
             break;
         case IDC_BUTTON_ENTER:
-            Key = 0x40;
+            Key.keys.enter = 1;
             break;
         case IDC_BUTTON_CON:
             Params.Local.ConnectFlag ^= 1;
+            Params.Local.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_A:
-            Params.Alpha.StatusFlag ^= AXIS_RUN;
+            Params.Alpha.StatusFlag.bits.Run ^= 1;
+            Params.Alpha.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_D:
-            Params.Delta.StatusFlag ^= AXIS_RUN;
+            Params.Delta.StatusFlag.bits.Run ^= 1;
+            Params.Delta.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_G:
-            Params.Gamma.StatusFlag ^= AXIS_RUN;
+            Params.Gamma.StatusFlag.bits.Run ^= 1;
+            Params.Gamma.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_CON2:
             //Params.Local.ConnectFlag ^= 1;
             break;
         case IDC_BUTTON_A2:
-            Params.Alpha.StatusFlag ^= AXIS_ENABLE;
+            Params.Alpha.StatusFlag.bits.Enable ^= 1;
+            Params.Alpha.IsModified.bits.Flag = 1;
+            Params.Alpha.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_D2:
-            Params.Delta.StatusFlag ^= AXIS_ENABLE;
+            Params.Delta.StatusFlag.bits.Enable ^= 1;
+            Params.Delta.IsModified.bits.Flag = 1;
+            Params.Delta.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_G2:
-            Params.Gamma.StatusFlag ^= AXIS_ENABLE;
+            Params.Gamma.StatusFlag.bits.Enable ^= 1;
+            Params.Gamma.IsModified.bits.Flag = 1;
+            Params.Gamma.IsModified.bits.Angle = 1;
             break;
         case IDOK: 
         case IDCANCEL:

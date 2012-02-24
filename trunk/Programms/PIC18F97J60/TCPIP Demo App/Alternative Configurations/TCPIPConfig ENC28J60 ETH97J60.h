@@ -55,7 +55,7 @@
 
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
-#define GENERATED_BY_TCPIPCONFIG "Version 1.0.3383.23374"
+#define GENERATED_BY_TCPIPCONFIG "Version 1.0.4168.28618"
 
 // =======================================================================
 //   Application Options
@@ -65,34 +65,34 @@
  *   Uncomment or comment the following lines to enable or
  *   disabled the following high-level application modules.
  */
-#define STACK_USE_UART					// Application demo using UART for IP address display and stack configuration
-#define STACK_USE_UART2TCP_BRIDGE		// UART to TCP Bridge application example
+//#define STACK_USE_UART					// Application demo using UART for IP address display and stack configuration
+//#define STACK_USE_UART2TCP_BRIDGE		// UART to TCP Bridge application example
 //#define STACK_USE_IP_GLEANING
 #define STACK_USE_ICMP_SERVER			// Ping query and response capability
 #define STACK_USE_ICMP_CLIENT			// Ping transmission capability
 //#define STACK_USE_HTTP_SERVER			// Old HTTP server
-#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
+//#define STACK_USE_HTTP2_SERVER			// New HTTP server with POST, Cookies, Authentication, etc.
 //#define STACK_USE_SSL_SERVER			// SSL server socket support (Requires SW300052)
 //#define STACK_USE_SSL_CLIENT			// SSL client socket support (Requires SW300052)
 #define STACK_USE_AUTO_IP               // Dynamic link-layer IP address automatic configuration protocol
 #define STACK_USE_DHCP_CLIENT			// Dynamic Host Configuration Protocol client for obtaining IP address and other parameters
-#define STACK_USE_DHCP_SERVER			// Single host DHCP server
+//#define STACK_USE_DHCP_SERVER			// Single host DHCP server
 //#define STACK_USE_FTP_SERVER			// File Transfer Protocol (old)
-#define STACK_USE_SMTP_CLIENT			// Simple Mail Transfer Protocol for sending email
+//#define STACK_USE_SMTP_CLIENT			// Simple Mail Transfer Protocol for sending email
 //#define STACK_USE_SNMP_SERVER			// Simple Network Management Protocol v2C Community Agent
 //#define STACK_USE_SNMPV3_SERVER			// Simple Network Management Protocol v3 Agent
 //#define STACK_USE_TFTP_CLIENT			// Trivial File Transfer Protocol client
-#define STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE	// HTTP Client example in GenericTCPClient.c
-#define STACK_USE_GENERIC_TCP_SERVER_EXAMPLE	// ToUpper server example in GenericTCPServer.c
+//#define STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE	// HTTP Client example in GenericTCPClient.c
+//#define STACK_USE_GENERIC_TCP_SERVER_EXAMPLE	// ToUpper server example in GenericTCPServer.c
 #define STACK_USE_TELNET_SERVER			// Telnet server
 #define STACK_USE_ANNOUNCE				// Microchip Embedded Ethernet Device Discoverer server/client
 #define STACK_USE_DNS					// Domain Name Service Client for resolving hostname strings to IP addresses
 //#define STACK_USE_DNS_SERVER			// Domain Name Service Server for redirection to the local device
 #define STACK_USE_NBNS					// NetBIOS Name Service Server for repsonding to NBNS hostname broadcast queries
-#define STACK_USE_REBOOT_SERVER			// Module for resetting this PIC remotely.  Primarily useful for a Bootloader.
+//#define STACK_USE_REBOOT_SERVER			// Module for resetting this PIC remotely.  Primarily useful for a Bootloader.
 #define STACK_USE_SNTP_CLIENT			// Simple Network Time Protocol for obtaining current date/time from Internet
 //#define STACK_USE_UDP_PERFORMANCE_TEST	// Module for testing UDP TX performance characteristics.  NOTE: Enabling this will cause a huge amount of UDP broadcast packets to flood your network on the discard port.  Use care when enabling this on production networks, especially with VPNs (could tunnel broadcast traffic across a limited bandwidth connection).
-#define STACK_USE_TCP_PERFORMANCE_TEST	// Module for testing TCP TX performance characteristics
+//#define STACK_USE_TCP_PERFORMANCE_TEST	// Module for testing TCP TX performance characteristics
 //#define STACK_USE_DYNAMICDNS_CLIENT		// Dynamic DNS client updater module
 #define STACK_USE_BERKELEY_API			// Berekely Sockets APIs are available
 //#define STACK_USE_ZEROCONF_LINK_LOCAL	// Zeroconf IPv4 Link-Local Addressing
@@ -154,34 +154,34 @@
  *   To clear EEPROM, hold BUTTON0, reset the board, and continue
  *   holding until the LEDs flash.  Release, and reset again.
  */
-#define MY_DEFAULT_HOST_NAME			"MCHPBOARD"
+#define MY_DEFAULT_HOST_NAME			"AM-CONTROL"
 
 #define MY_DEFAULT_MAC_BYTE1            (0x00)	// Use the default of 00-04-A3-00-00-00
 #define MY_DEFAULT_MAC_BYTE2            (0x04)	// if using an ENCX24J600, MRF24WB0M, or
 #define MY_DEFAULT_MAC_BYTE3            (0xA3)	// PIC32MX6XX/7XX internal Ethernet 
 #define MY_DEFAULT_MAC_BYTE4            (0x00)	// controller and wish to use the 
 #define MY_DEFAULT_MAC_BYTE5            (0x00)	// internal factory programmed MAC
-#define MY_DEFAULT_MAC_BYTE6            (0x00)	// address instead.
+#define MY_DEFAULT_MAC_BYTE6            (0x66)	// address instead.
 
-#define MY_DEFAULT_IP_ADDR_BYTE1        (169ul)
-#define MY_DEFAULT_IP_ADDR_BYTE2        (254ul)
-#define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
-#define MY_DEFAULT_IP_ADDR_BYTE4        (1ul)
+#define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
+#define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
+#define MY_DEFAULT_IP_ADDR_BYTE3        (71ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (253ul)
 
 #define MY_DEFAULT_MASK_BYTE1           (255ul)
 #define MY_DEFAULT_MASK_BYTE2           (255ul)
-#define MY_DEFAULT_MASK_BYTE3           (0ul)
+#define MY_DEFAULT_MASK_BYTE3           (252ul)
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 
-#define MY_DEFAULT_GATE_BYTE1           (169ul)
-#define MY_DEFAULT_GATE_BYTE2           (254ul)
-#define MY_DEFAULT_GATE_BYTE3           (1ul)
-#define MY_DEFAULT_GATE_BYTE4           (1ul)
+#define MY_DEFAULT_GATE_BYTE1           (192ul)
+#define MY_DEFAULT_GATE_BYTE2           (168ul)
+#define MY_DEFAULT_GATE_BYTE3           (68ul)
+#define MY_DEFAULT_GATE_BYTE4           (11ul)
 
-#define MY_DEFAULT_PRIMARY_DNS_BYTE1	(169ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE2	(254ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(1ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(1ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE1	(192ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE2	(168ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(68ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(31ul)
 
 #define MY_DEFAULT_SECONDARY_DNS_BYTE1	(0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE2	(0ul)
@@ -239,7 +239,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(3900ul)
+	#define TCP_ETH_RAM_SIZE					(671ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -280,25 +280,25 @@
 			BYTE vMemoryMedium;
 			WORD wTXBufferSize;
 			WORD wRXBufferSize;
-		} TCPSocketInitializer[] =
+		} TCPSocketInitializer[] = 
 		{
-			{TCP_PURPOSE_GENERIC_TCP_CLIENT, TCP_ETH_RAM, 125, 100},
-			{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
+			//{TCP_PURPOSE_GENERIC_TCP_CLIENT, TCP_ETH_RAM, 125, 100},
+			//{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_FTP_COMMAND, TCP_ETH_RAM, 100, 40},
 			//{TCP_PURPOSE_FTP_DATA, TCP_ETH_RAM, 0, 128},
-			{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
+			//{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_RX, TCP_ETH_RAM, 40, 1500},
-			{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			//{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
+			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
+			{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
 		};
 		#define END_OF_TCP_CONFIGURATION
 	#endif
@@ -308,7 +308,7 @@
  *   or not to include a checksum on packets being transmitted.
  */
 #define MAX_UDP_SOCKETS     (10u)
-#define UDP_USE_TX_CHECKSUM		// This slows UDP TX performance by nearly 50%, except when using the ENCX24J600 or PIC32MX6XX/7XX, which have a super fast DMA and incurs virtually no speed pentalty.
+//#define UDP_USE_TX_CHECKSUM		// This slows UDP TX performance by nearly 50%, except when using the ENCX24J600 or PIC32MX6XX/7XX, which have a super fast DMA and incurs virtually no speed pentalty.
 
 
 /* Berkeley API Sockets Configuration
@@ -321,7 +321,7 @@
  *   Berkeley Sockets are disabled.  Set this value as low as your application
  *   requires to avoid waisting RAM.
  */
-#define BSD_SOCKET_COUNT (5u)
+#define BSD_SOCKET_COUNT (1u)
 
 
 // =======================================================================
@@ -407,11 +407,11 @@
 
 	// Default local listening port for the Telnet server.  Port 23 is the
 	// protocol default.
-	#define TELNET_PORT				23
+	#define TELNET_PORT				(23u)
 
 	// Default local listening port for the Telnet server when SSL secured.
 	// Port 992 is the telnets protocol default.
-	#define TELNETS_PORT			992
+	#define TELNETS_PORT			(992u)
 
 	// Force all connecting clients to be SSL secured and connected via
 	// TELNETS_PORT.  Connections on port TELNET_PORT will be ignored.  If
@@ -456,9 +456,13 @@
 	// ignored (but still wasting program memory).  Specifying fewer strings is
 	// legal, as long as at least one is present.  A string larger than
 	// SNMP_COMMUNITY_MAX_LEN bytes will be ignored.
-	#define SNMP_READ_COMMUNITIES		{"public", "read", ""}
-	#define END_OF_SNMP_READ_COMMUNITIES
-	#define SNMP_WRITE_COMMUNITIES     	{"private", "write", "public"}
-	#define END_OF_SNMP_WRITE_COMMUNITIES
+	#define SNMP_READ_COMMUNITIES        {"public", "read", ""}
+    #define END_OF_SNMP_READ_COMMUNITIES
+	#define SNMP_WRITE_COMMUNITIES        {"private", "write", "public"}
+    #define END_OF_SNMP_WRITE_COMMUNITIES
 #endif
 
+
+//#define MPFS_USE_FAT		
+
+#define MDD_ROOT_DIR_PATH		"\\"

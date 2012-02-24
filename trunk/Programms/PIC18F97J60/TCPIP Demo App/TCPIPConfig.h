@@ -120,7 +120,7 @@
  *
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
-#define MPFS_USE_EEPROM
+//#define MPFS_USE_EEPROM
 //#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection
@@ -136,13 +136,13 @@
  *   For MPFS Classic, this setting must match the Reserved setting
  *	 on the Advanced Settings page of the MPFS2 Utility.
  */
-#define MPFS_RESERVE_BLOCK				(137ul)
+//#define MPFS_RESERVE_BLOCK				(137ul)
 
 /* MPFS File Handles
  *   Maximum number of simultaneously open MPFS2 files.
  *   For MPFS Classic, this has no effect.
  */
-#define MAX_MPFS_HANDLES				(7ul)
+//#define MAX_MPFS_HANDLES				(7ul)
 
 
 // =======================================================================
@@ -166,23 +166,23 @@
 
 #define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
 #define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
-#define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
-#define MY_DEFAULT_IP_ADDR_BYTE4        (5ul)
+#define MY_DEFAULT_IP_ADDR_BYTE3        (71ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (253ul)
 
 #define MY_DEFAULT_MASK_BYTE1           (255ul)
 #define MY_DEFAULT_MASK_BYTE2           (255ul)
-#define MY_DEFAULT_MASK_BYTE3           (255ul)
+#define MY_DEFAULT_MASK_BYTE3           (252ul)
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 
 #define MY_DEFAULT_GATE_BYTE1           (192ul)
 #define MY_DEFAULT_GATE_BYTE2           (168ul)
-#define MY_DEFAULT_GATE_BYTE3           (1ul)
-#define MY_DEFAULT_GATE_BYTE4           (1ul)
+#define MY_DEFAULT_GATE_BYTE3           (68ul)
+#define MY_DEFAULT_GATE_BYTE4           (11ul)
 
 #define MY_DEFAULT_PRIMARY_DNS_BYTE1	(192ul)
 #define MY_DEFAULT_PRIMARY_DNS_BYTE2	(168ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(1ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(1ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(68ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(31ul)
 
 #define MY_DEFAULT_SECONDARY_DNS_BYTE1	(0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE2	(0ul)
@@ -223,8 +223,8 @@
  *   based on module selections above.  If your custom module
  *   requires them otherwise, enable them here.
  */
-//#define STACK_USE_TCP
-//#define STACK_USE_UDP
+#define STACK_USE_TCP
+#define STACK_USE_UDP
 
 /* Client Mode Configuration
  *   Uncomment following line if this stack will be used in CLIENT
@@ -286,18 +286,13 @@
 			//{TCP_PURPOSE_GENERIC_TCP_CLIENT, TCP_ETH_RAM, 125, 100},
 			//{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_FTP_COMMAND, TCP_ETH_RAM, 100, 40},
 			//{TCP_PURPOSE_FTP_DATA, TCP_ETH_RAM, 0, 128},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_RX, TCP_ETH_RAM, 40, 1500},
 			//{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
 			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
-			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 200, 200},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 25, 20},
 			{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 200, 200},
 		};
