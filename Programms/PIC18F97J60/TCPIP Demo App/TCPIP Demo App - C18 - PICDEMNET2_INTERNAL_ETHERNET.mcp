@@ -497,7 +497,7 @@ file_115=Control.h
 file_116=..\Microchip\TCPIP Stack\TCPIP Stack Version.txt
 [SUITE_INFO]
 suite_guid={5B7D72DD-9861-47BD-9F60-2BE967BF8416}
-suite_state=extended-mode stack-analysis
+suite_state=extended-mode
 [TOOL_SETTINGS]
 TS{DD2213A8-6310-47B1-8376-9430CDFC013F}=/dPICDEMNET2_INTERNAL_ETHERNET
 TS{BFD27FBA-4A02-4C0E-A5E5-B812F3E7707C}=/m"$(BINDIR_)$(TARGETBASE).map" /w /o"$(BINDIR_)$(TARGETBASE).cof"

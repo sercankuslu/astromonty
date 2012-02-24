@@ -27,7 +27,8 @@
 #define OCT_IS_USE                  0x80 // Этот таймер используется
 
 
-
+#ifndef DATE_TIME_STRUCT
+#define DATE_TIME_STRUCT
 typedef struct DateTimeStruct {
     WORD Year;
     BYTE Month;
@@ -38,7 +39,7 @@ typedef struct DateTimeStruct {
     BYTE Sec;
     double uSec;
 } DateTime;
-
+#endif
 #define PI 3.1415926535897932384626433832795
 #define FREQ_STEP 20
 #define BUF_SIZE 256

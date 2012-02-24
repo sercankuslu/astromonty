@@ -46,6 +46,16 @@
 #define C_ROM const
 #endif
 
+typedef enum MENU_ID {
+    MAIN_WINDOW, 
+    MENU, SETTINGS, 
+    OBSERV, O_GOTO, 
+    S_OBSERV, S_NETWORK, S_MONTY,S_DISPLAY, 
+    SM_TYPESELECT, SM_ALPHA, SM_DELTA, SM_GAMMA,
+    EDIT_IP,EDIT_TIME,EDIT_ANGLE, 
+    ERROR_COORDINATE,ERROR_NO_CONNECTION
+} MENU_ID;
+
 typedef enum MSGS {
     MSG_NOMSG,
     MSG_MW_ALPHA, MSG_MW_DELTA, MSG_MW_GAMMA, MSG_MW_MENU, MSG_C_NET, 
@@ -58,6 +68,7 @@ typedef enum MSGS {
     MSG_SNL_NAME, MSG_SN_NAME, MSG_SN_IP, MSG_SN_MASK, MSG_SN_GATE, MSG_SN_DNS1, MSG_SN_DNS2, MSG_SN_NTP,
     MSG_C_ERROR,
     MSG_ERR_NOTREACHABLE0,MSG_ERR_NOTREACHABLE1, MSG_ERR_NOTREACHABLE2, MSG_ERR_NOTREACHABLE3,
+    MSG_ERR_NOCONNECTION0,MSG_ERR_NOCONNECTION1,MSG_ERR_NOCONNECTION2,MSG_ERR_NOCONNECTION3
 }MSGS;
 static C_ROM char * const MsgsCommon[]=
 {    
@@ -69,9 +80,10 @@ static C_ROM char * const MsgsCommon[]=
     "Старт", "Продолжить", 
     "Монтировка", "Экран", 
     "Тип монтировки",
-    "AS-CONTROL", "Имя:", "IP:", "Mask:", "Gate:", "DNS1:", "DNS2:", "NTP:"
-    "Ошибка"
+    "AS-CONTROL", "Имя:", "IP:", "Mask:", "Gate:", "DNS1:", "DNS2:", "NTP:",
+    "Ошибка",
     "Указанные координаты", "в данный момент вре-", "мени находятся вне", "зоны видимости",
+    "Нет подключения к",    "серверу. Действие не", "доступно" , ""
 };
 
 #ifndef _WINDOWS
@@ -82,13 +94,13 @@ ALL_PARAMS Params;
 void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, double X, BOOL hour );
-BYTE ProcessKeys(BYTE * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
+BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 int SubStrToInt(const char* Text, int Beg, int * Val);
 void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue);
 void GetMsgFromROM(MSGS Msg_id, char* Msg);
 
-void ProcessMenu( BYTE * KeyPressed )
+void ProcessMenu( KEYS_STR * KeyPressed )
 {
     static double Xa = 0.0;//91.3 * PI / 180.0;
     static double Xd = -33.1 * PI / 180.0;
@@ -125,125 +137,166 @@ void ProcessMenu( BYTE * KeyPressed )
     DWORD_VAL TmpDWval;
     static BOOL Init = false;
     static int TimerCount = 0;
+    static BOOL NeedToRedrawMenus = false;
+    static BOOL NeedToRedrawTime = false;
     //     Con ^= 1;
     //     A_Run ^= 1;
     //     D_Run ^= 1;
     ExecuteCommands();
-    TimerCount+=2;
-    if(TimerCount % 5 == 0){
+    if(KeyPressed->Val == 0){
+        //TimerCount += 2;
+        //if(TimerCount % 1 == 0){
         Time_Run ^= 1;
-    }
-
-    if(Time_Run){
-        TimeT[2] = ':';
-    } else {
-        TimeT[2] = ' ';
+        NeedToRedrawTime = true;
+        //}
+        if(Time_Run){
+            TimeT[2] = ':';
+        } else {
+            TimeT[2] = ' ';
+        }
     }
     if(!Init){
-        Params.Local.IP = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | MY_DEFAULT_IP_ADDR_BYTE4<<24ul;
-        Params.Local.Mask = MY_DEFAULT_MASK_BYTE1 | MY_DEFAULT_MASK_BYTE2<<8ul | MY_DEFAULT_MASK_BYTE3<<16ul | MY_DEFAULT_MASK_BYTE4<<24ul;
-        Params.Local.Gate = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x01 <<24ul;
-        Params.Local.DNS1 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x02 <<24ul;
-        Params.Local.DNS2 = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | 0x03 <<24ul;
+        Params.Local.IP = AppConfig.MyIPAddr.Val;
+        Params.Local.Mask = AppConfig.MyMask.Val;
+        Params.Local.Gate = AppConfig.MyGateway.Val;
+        Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
+        Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
         Params.Alpha.Angle = 3.14/2;
         Params.Delta.Angle = 3.14/3; 
         Params.Gamma.Angle = 3.14/4;
-        Params.Alpha.StatusFlag = AXIS_ENABLE;
-        Params.Delta.StatusFlag = AXIS_ENABLE;
-        Params.Gamma.StatusFlag = 0;//AXIS_ENABLE;
+        Params.Alpha.StatusFlag.bits.Enable = 1;
+        Params.Delta.StatusFlag.bits.Enable = 1;
+        Params.Gamma.StatusFlag.bits.Enable = 0;
         //Params.Alpha.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
         //Params.Local.ConnectFlag = 0;
         Params.NeedToUpdate = 0;
-        Params.Alpha.NeedToUpdate = 0;
+        Params.Alpha.NeedToUpdate.Val = 0;
         GetMsgFromROM(MSG_SNL_NAME, (char*)&Params.Local.Name);
+        Params.Alpha.IsModified.Val = 0xFF;
+        Params.Delta.IsModified.Val = 0xFF;
+        Params.Gamma.IsModified.Val = 0xFF;
         memset(TmpValue,0,sizeof(TmpValue));
+        NeedToRedrawMenus = true;
         Init = true;            
     }
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
     while(!EndProcess){
         switch (State) {
         case MAIN_WINDOW:   // ***************************************************************************************************************
-            if((*KeyPressed) & 0x80) {
+            if(KeyPressed->keys.esc) {
                 State = MENU;
-                (*KeyPressed) ^= 0x80;
+                KeyPressed->keys.esc ^= 1;
                 PosX = 0;
                 PosY = 0;
                 DisplayClear();
+                NeedToRedrawMenus = true;
                 break;
             }
-            if((*KeyPressed) & 0x40) { //Enter                
-                State = OBSERV;                    
+            if(KeyPressed->keys.enter) { //Enter    
+                if(Params.Local.ConnectFlag){
+                    State = OBSERV;
+                } else {    
+                    State = ERROR_NO_CONNECTION;
+                    LastState = MAIN_WINDOW;
+                }
                 PosX = 0;
                 PosY = 0;
-                (*KeyPressed) ^= 0x40;
+                KeyPressed->keys.enter ^= 1;
                 DisplayClear();
+                NeedToRedrawMenus = true;
                 break;
             }                        
-            if(Params.Alpha.StatusFlag & AXIS_ENABLE){
-                XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
-                DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
-                if(Params.Alpha.StatusFlag & AXIS_RUN){
+            if(Params.Alpha.StatusFlag.bits.Enable){
+                if(Params.Alpha.IsModified.bits.Angle||NeedToRedrawMenus){
+                    XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
+                    DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                    Params.Alpha.IsModified.bits.Angle = 0;
+                }
+                if(Params.Alpha.IsModified.bits.Flag||NeedToRedrawMenus){
+                    if(Params.Alpha.StatusFlag.bits.Run){
+                        color = 0;
+                        Effect = NORMAL;
+                    } else {
+                        color = 1;
+                        Effect = INVERT;
+                    }
+                    FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
+                    GetMsgFromROM(MSG_C_ALPHA, (char*)&MsgValue);
+                    OutTextXY(A_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    Params.Alpha.IsModified.bits.Flag = 0;
+                }
+                Params.Alpha.NeedToUpdate.bits.Angle = 1;
+            }
+            if(Params.Delta.StatusFlag.bits.Enable){
+                if(Params.Delta.IsModified.bits.Angle||NeedToRedrawMenus){
+                    XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );                
+                    DrawMenuLine(1, MSG_MW_DELTA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                    Params.Delta.IsModified.bits.Angle = 0;
+                }
+                if(Params.Delta.IsModified.bits.Flag||NeedToRedrawMenus){
+                    if(Params.Delta.StatusFlag.bits.Run){
+                        color = 0;
+                        Effect = NORMAL;
+                    } else {
+                        color = 1;
+                        Effect = INVERT;
+                    }
+                    FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
+                    GetMsgFromROM(MSG_C_DELTA, (char*)&MsgValue);
+                    OutTextXY(D_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    Params.Delta.IsModified.bits.Flag = 0;
+                }
+                Params.Delta.NeedToUpdate.bits.Angle = 1;
+            }
+            if(Params.Gamma.StatusFlag.bits.Enable){
+                if(Params.Gamma.IsModified.bits.Angle||NeedToRedrawMenus){
+                    XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );                
+                    DrawMenuLine(2, MSG_MW_GAMMA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
+                    Params.Delta.IsModified.bits.Angle = 0;
+                }
+                if(Params.Gamma.IsModified.bits.Flag||NeedToRedrawMenus){
+                    if(Params.Gamma.StatusFlag.bits.Run){
+                        color = 0;
+                        Effect = NORMAL;
+                    } else {
+                        color = 1;
+                        Effect = INVERT;
+                    }
+                    FloodRectangle(G_FlagX+1,1,131,9,color);
+                    GetMsgFromROM(MSG_C_GAMMA, (char*)&MsgValue);
+                    OutTextXY(G_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    Params.Gamma.IsModified.bits.Flag = 0;
+                }
+                Params.Gamma.NeedToUpdate.bits.Angle = 1;
+            }
+            if(NeedToRedrawTime||NeedToRedrawMenus){
+                OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
+                NeedToRedrawTime = 0;
+            }
+           
+            if(Params.Local.IsModified.bits.Flag||NeedToRedrawMenus){
+                if(Params.Local.ConnectFlag){
                     color = 0;
                     Effect = NORMAL;
                 } else {
                     color = 1;
                     Effect = INVERT;
                 }
-                FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
-                GetMsgFromROM(MSG_C_ALPHA, (char*)&MsgValue);
-                OutTextXY(A_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
-                Params.Alpha.NeedToUpdate |= C_ANGLE;
+                FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
+                GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
+                OutTextXY(Con_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
             }
-            if(Params.Delta.StatusFlag & AXIS_ENABLE){
-                XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );                
-                DrawMenuLine(1, MSG_MW_DELTA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
-                if(Params.Delta.StatusFlag & AXIS_RUN){
-                    color = 0;
-                    Effect = NORMAL;
-                } else {
-                    color = 1;
-                    Effect = INVERT;
-                }
-                FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
-                GetMsgFromROM(MSG_C_DELTA, (char*)&MsgValue);
-                OutTextXY(D_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
-                Params.Delta.NeedToUpdate |= C_ANGLE;
+            if(NeedToRedrawMenus){
+                GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
+                OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);                
+                DrawRectangle(0,51,132,63,1);
+                DrawRectangle(0,0,132,10,1);   
+                Line(36,52,36,63,1);
+                Line(99,52,99,63,1);
+                NeedToRedrawMenus = 0;
             }
-            if(Params.Gamma.StatusFlag & AXIS_ENABLE){
-                XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );                
-                DrawMenuLine(2, MSG_MW_GAMMA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
-                if(Params.Gamma.StatusFlag & AXIS_RUN){
-                    color = 0;
-                    Effect = NORMAL;
-                } else {
-                    color = 1;
-                    Effect = INVERT;
-                }
-                FloodRectangle(G_FlagX+1,1,131,9,color);
-                GetMsgFromROM(MSG_C_GAMMA, (char*)&MsgValue);
-                OutTextXY(G_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
-                Params.Gamma.NeedToUpdate |= C_ANGLE;
-            }
-            GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
-            OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);
-            OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
-            DrawRectangle(0,51,132,63,1);
-            DrawRectangle(0,0,132,10,1);   
-            Line(36,52,36,63,1);
-            Line(99,52,99,63,1);
-
-            if(Params.Local.ConnectFlag){
-                color = 0;
-                Effect = NORMAL;
-            } else {
-                color = 1;
-                Effect = INVERT;
-            }
-            FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
-            GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
-            OutTextXY(Con_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
             Params.NeedToUpdate |= ALPHA|DELTA|GAMMA;
             EndProcess = true;
             break;
@@ -252,7 +305,12 @@ void ProcessMenu( BYTE * KeyPressed )
             if(Selected == ENTER) { 
                 switch(SelPosX){
                 case 0:
-                     State = OBSERV;
+                    if(Params.Local.ConnectFlag){
+                        State = OBSERV;
+                    } else {    
+                        State = ERROR_NO_CONNECTION;
+                        LastState = MENU;
+                    }
                     break;
                 case 1:
                     State = SETTINGS;
@@ -354,6 +412,11 @@ void ProcessMenu( BYTE * KeyPressed )
             EndProcess = true;
             break;
         case S_NETWORK: // ***************************************************************************************************************
+            Params.Local.IP = AppConfig.MyIPAddr.Val;
+            Params.Local.Mask = AppConfig.MyMask.Val;
+            Params.Local.Gate = AppConfig.MyGateway.Val;
+            Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
+            Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
             Selected = ProcessKeys(KeyPressed, &PosX, 7, &PosY, 0, SETTINGS, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
@@ -400,7 +463,7 @@ void ProcessMenu( BYTE * KeyPressed )
             GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 7);              
-            DrawMenuLine(0,MSG_SNL_NAME, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            DrawMenuLine(0,MSG_SN_NAME, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.IP,   (char*)TmpValue, 0);
             DrawMenuLine(1,MSG_SN_IP, TmpValue, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             IPtoText(Params.Local.Mask, (char*)TmpValue, 0);
@@ -480,16 +543,16 @@ void ProcessMenu( BYTE * KeyPressed )
                 case 3:
                     State = MAIN_WINDOW;  
                     // TODO: отправка команды на перевод телескопа на координаты
-                    if(Params.Alpha.StatusFlag & AXIS_ENABLE) {
-                        Params.Alpha.NeedToCommit |= T_ANGLE;
+                    if(Params.Alpha.StatusFlag.bits.Enable) {
+                        Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit |= ALPHA;
                     }
-                    if(Params.Delta.StatusFlag & AXIS_ENABLE) {
-                        Params.Delta.NeedToCommit |= T_ANGLE;
+                    if(Params.Delta.StatusFlag.bits.Enable) {
+                        Params.Delta.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit |= DELTA;
                     }
-                    if(Params.Gamma.StatusFlag & AXIS_ENABLE) {
-                        Params.Gamma.NeedToCommit |= T_ANGLE;
+                    if(Params.Gamma.StatusFlag.bits.Enable) {
+                        Params.Gamma.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit |= GAMMA;                    
                     }
                     LastState = O_GOTO;
@@ -662,6 +725,30 @@ void ProcessMenu( BYTE * KeyPressed )
             DrawMenuLine(4, MSG_C_CONTINUE, NULL, PosX, PosY, SELECT_LINE);
             EndProcess = true;
             break;
+         case ERROR_NO_CONNECTION: // ***************************************************************************************************************
+            PosX = 4;
+            Selected = ProcessKeys(KeyPressed, &PosX, 5, &PosY, 0, LastState, &State, &SelPosX, &SelPosY);            
+            if(Selected == ENTER) { //Enter 
+                State = LastState;
+                DisplayClear();
+                break;
+            } else {
+                if(Selected == ESC){ 
+                    DisplayClear();
+                    break;
+                }
+            }
+            DrawRectangle(0,0,132,10,1);
+            GetMsgFromROM(MSG_C_ERROR, (char*)&MsgValue);
+            OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
+            DrawScrollBar(PosX, 5);
+            DrawMenuLine(0, MSG_ERR_NOCONNECTION0, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(1, MSG_ERR_NOCONNECTION1, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(2, MSG_ERR_NOCONNECTION2, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(3, MSG_ERR_NOCONNECTION3, NULL, PosX, PosY, NO_SELECT);
+            DrawMenuLine(4, MSG_C_CONTINUE, NULL, PosX, PosY, SELECT_LINE);
+            EndProcess = true;
+            break;
         default: // ***************************************************************************************************************
             Selected = ProcessKeys(KeyPressed, &PosX, 3, &PosY, 0, MENU, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter  
@@ -675,7 +762,8 @@ void ProcessMenu( BYTE * KeyPressed )
             EndProcess = true;
             break;
         }
-    }    
+    } 
+    KeyPressed->Val = 0;
 }
 
 void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX, BYTE Mode )
@@ -758,42 +846,42 @@ void DrawScrollBar(int Pos, int Max)
 
 }
 
-BYTE ProcessKeys(BYTE * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMax, MENU_ID LastState, MENU_ID * State, BYTE * YSelPos, BYTE * XSelPos)
+BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMax, MENU_ID LastState, MENU_ID * State, BYTE * YSelPos, BYTE * XSelPos)
 {
-    if((*KeyPressed) & 0x80) { //ESC
+    if(KeyPressed->keys.esc) { //ESC
         (*State) = LastState;
         (*YSelPos) = 0;
         (*XSelPos) = 0;
         (*YPos) = 0;
         (*XPos) = 0;
-        (*KeyPressed) ^= 0x80;
+        KeyPressed->keys.esc = 0;
         return ESC;
     }
-    if((*KeyPressed) & 0x40) { //Enter         
+    if(KeyPressed->keys.enter) { //Enter         
         (*YSelPos) = (*YPos);
         (*XSelPos) = (*XPos);
         (*YPos) = 0;
         (*XPos) = 0;
-        (*KeyPressed) ^= 0x40;
+        KeyPressed->keys.enter = 0;
         return ENTER;
     }
-    if((*KeyPressed) & 0x01) { //UP
+    if(KeyPressed->keys.up) { //UP
         if((*YPos) > 0) (*YPos)--;
-        (*KeyPressed) ^= 0x01;       
+        KeyPressed->keys.up = 0;      
     }
-    if((*KeyPressed) & 0x02) { //DOWN
+    if(KeyPressed->keys.down) { //DOWN
         if(YMax > 0)
             if((*YPos) < YMax - 1) (*YPos)++;
-        (*KeyPressed) ^= 0x02;       
+        KeyPressed->keys.down = 0;       
     }
-    if((*KeyPressed) & 0x04) { //LEFT
+    if(KeyPressed->keys.left) { //LEFT
         if((*XPos) > 0) (*XPos)--;
-        (*KeyPressed) ^= 0x04;        
+        KeyPressed->keys.left = 0;        
     }
-    if((*KeyPressed) & 0x08) { //RIGHT
+    if(KeyPressed->keys.right) { //RIGHT
         if(XMax > 0)
             if((*XPos) < XMax-1) (*XPos)++;
-        (*KeyPressed) ^= 0x08;        
+        KeyPressed->keys.right = 0;        
     }
     return 0;
 }
@@ -924,9 +1012,13 @@ void ExecuteCommands()
     };
     RB_RV rv;
     if(!IsClientConnected()){ 
+        if(Params.Local.ConnectFlag)
+            Params.Local.IsModified.bits.Flag = 1;
         Params.Local.ConnectFlag = 0;
         return; 
     }else {
+        if(!Params.Local.ConnectFlag)
+            Params.Local.IsModified.bits.Flag = 1;
         Params.Local.ConnectFlag = 1;
     }
 
@@ -937,40 +1029,43 @@ void ExecuteCommands()
         if(rv == RB_OK) {
             switch(Data.type){
                 case STA_ALPHA:
-                    memcpy(&Params.Alpha.Angle,m, sizeof(double));                    
+                    memcpy(&Params.Alpha.Angle,m, sizeof(double));   
+                    Params.Alpha.IsModified.bits.Angle = 1;
                     break;
                 case STA_DELTA:
                     memcpy(&Params.Delta.Angle,m, sizeof(double));
+                    Params.Delta.IsModified.bits.Angle = 1;
                     break;
                 case STA_GAMMA:
                     memcpy(&Params.Gamma.Angle,m, sizeof(double));
+                    Params.Gamma.IsModified.bits.Angle = 1;
                     break;
             }
         }
     }
     if(Params.NeedToUpdate>0){
         if(Params.NeedToUpdate & ALPHA){
-            if(Params.Alpha.NeedToUpdate & C_ANGLE){
+            if(Params.Alpha.NeedToUpdate.bits.Angle = 1){
                 rv = PushAttr(RequestData[0], OUT_BUFFER);
                 RequestData[1].type = STA_ALPHA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
-                Params.Alpha.NeedToUpdate ^= C_ANGLE;
+                Params.Alpha.NeedToUpdate.bits.Angle = 0;
             }
         }
         if(Params.NeedToUpdate & DELTA){
-            if(Params.Delta.NeedToUpdate & C_ANGLE){
+            if(Params.Delta.NeedToUpdate.bits.Angle){
                 rv = PushAttr(RequestData[0], OUT_BUFFER);
                 RequestData[1].type = STA_DELTA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
-                Params.Delta.NeedToUpdate ^= C_ANGLE;
+                Params.Delta.NeedToUpdate.bits.Angle = 0;
             }
         }
         if(Params.NeedToUpdate & GAMMA){
-            if(Params.Gamma.NeedToUpdate & C_ANGLE){
+            if(Params.Gamma.NeedToUpdate.bits.Angle){
                 rv = PushAttr(RequestData[0], OUT_BUFFER);
                 RequestData[1].type = STA_GAMMA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
-                Params.Gamma.NeedToUpdate ^= C_ANGLE;
+                Params.Gamma.NeedToUpdate.bits.Angle = 0;
             }
         }
     }
@@ -986,4 +1081,77 @@ void GetMsgFromROM(MSGS Msg_id, char* Msg)
         Msg[i] = MsgsCommon[Msg_id][i];        
     }while(Msg[i++] != '\0');        
     
+}
+void SecondsToTime(DWORD Seconds, DateTime * Date)
+{
+    BYTE Y = 70;
+    DWORD DY;
+    BYTE M = 1;
+    BYTE D = 1;
+    BYTE d = 1;//день недели
+    BYTE h = 0;
+    BYTE m = 0;
+    BYTE s = 0;
+    DWORD DM = 31;     
+    double s1; 
+    DWORD dd;
+    DWORD Days;      
+    Days = Seconds/86400;
+    Seconds -= (DWORD)Days*86400;
+    s1 = Days/7;
+    dd = s1;
+    d = (Days - dd*7) + 5;
+    while(d>=7){d-=7;}
+
+    dd  = Days/1461;
+    Days -= (dd * 1461); //
+    Y = dd*4 + 70;
+    DY = 365; //1970
+    while(Days >= DY){
+        if((Y & 0x03) == 0){
+            DY = 366; //366 дней           
+        } else {
+            DY = 365; //365 дней
+        }        
+        Y++;
+        Days -= DY;           
+    }   
+    M = 1;
+    while(Days>=DM){        
+        switch (M){        
+            case 4:case 6: case 9: case 11: 
+                DM = 30;
+                break;
+            case 2:
+                DM = 28;
+                if((Y & 0x03) == 0){
+                    DM = 29;                    
+                }
+                break;
+            default:
+                DM = 31;        
+        }
+        Days -= DM;       
+        M++;
+    }   
+    D = Days + 1;
+
+    s1 = Seconds / 3600;
+    h = s1;
+    Seconds -= (DWORD)h * 3600;
+
+    s1 = Seconds / 60;
+    m = s1;
+    Seconds -= (DWORD)m * 60;
+
+    s = Seconds;
+
+    Date->Sec = s;
+    Date->Min = m;
+    Date->Hour = h;
+    Date->DayOfWeak = d;
+    Date->Day = D;
+    Date->Month = M;
+    Date->Year = Y;
+ 
 }

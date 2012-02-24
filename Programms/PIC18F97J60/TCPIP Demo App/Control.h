@@ -7,39 +7,69 @@
 #   include "GenericTypeDefs.h"
 #endif
 // флаги дл€ NeedToUpdate и NeedToCommit
-#define C_ANGLE 0x01
-#define C_STEPS 0x02
-#define T_ANGLE 0x04
-#define T_STEPS 0x08
-#define FLAG  0x80
 
-#define AXIS_ENABLE 0x80
-#define AXIS_RUN    0x01
 
+typedef union {
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE Angle:1;
+        BYTE AbsStep:1;
+        BYTE TargetAngle:1;
+        BYTE TargetAbsStep:1;
+        BYTE Flag:1;
+        BYTE b5:1;
+        BYTE b6:1;
+        BYTE b7:1;
+    } bits;
+} AXIS_FLAG_STRUCT; 
+typedef union {
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE Enable:1;
+        BYTE Run:1;
+        BYTE b2:1;
+        BYTE b3:1;
+        BYTE b4:1;
+        BYTE b5:1;
+        BYTE b6:1;
+        BYTE b7:1;
+    } bits;
+} AXIS_STATUS_FLAG_STRUCT; 
 typedef struct AXIS_PARAM
 {
-    BYTE  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    BYTE  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    AXIS_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
+    AXIS_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    AXIS_FLAG_STRUCT  IsModified;
 
     double Angle;           // текуща€ координата в радианах (угол относительно весеннего равноденстви€) то есть положение звезды    
     DWORD  AbsSteps;         // текущий номер шага    
     double TargetAngle;           // текуща€ координата в радианах (угол относительно весеннего равноденстви€) то есть положение звезды    
     DWORD  TargetAbsSteps;         // текущий номер шага    
-    BYTE   StatusFlag;       // флаг состо€ни€ оси
+    AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // флаг состо€ни€ оси
 } AXIS_PARAM;
 // флаги дл€ NeedToUpdate и NeedToCommit
-#define NS_IP_ADDR 0x01
-#define NS_IP_MASK 0x02
-#define NS_IP_GATE 0x04
-#define NS_IP_DNS1 0x08
-#define NS_IP_DNS2 0x10
-#define NS_IP_NAME 0x20
-#define NS_IP_NTP  0x40
-#define NS_IP_FLAG 0x80
+
+typedef union {
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE IP:1;
+        BYTE Mask:1;
+        BYTE Gate:1;
+        BYTE DNS1:1;
+        BYTE DNS2:1;
+        BYTE Name:1;
+        BYTE NTP:1;
+        BYTE Flag:1;
+    } bits;
+} NET_FLAG_STRUCT;
 typedef struct NETWORK_SETTINGS
 {
-    BYTE  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    BYTE  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    NET_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
+    NET_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    NET_FLAG_STRUCT  IsModified;
     DWORD IP;
     DWORD Mask;
     DWORD Gate;
@@ -71,14 +101,41 @@ typedef struct All_PARAMS
 
 } ALL_PARAMS;
 
-typedef enum MENU_ID {
-    MAIN_WINDOW, MENU, SETTINGS, OBSERV, O_GOTO, S_OBSERV, S_NETWORK, S_MONTY,S_DISPLAY, SM_TYPESELECT, SM_ALPHA, SM_DELTA, SM_GAMMA,EDIT_IP,EDIT_TIME,EDIT_ANGLE, ERROR_COORDINATE
-} MENU_ID;
 #define NO_SELECT 0x00
 #define SELECT_LINE 0x01
 #define SELECT_COLUMN 0x02
 #define FONT_TYPE_B     0x04
 
-void ProcessMenu( BYTE * KeyPressed);
+typedef union {
+    BYTE Val;
+    struct __PACKED
+        {        
+            BYTE up:1;
+            BYTE down:1;
+            BYTE left:1;
+            BYTE right:1;
+            BYTE esc:1;
+            BYTE enter:1;
+            BYTE b6:1;
+            BYTE b7:1;
+    } keys;
+} KEYS_STR; 
+
+#ifndef DATE_TIME_STRUCT
+#define DATE_TIME_STRUCT
+typedef struct DateTimeStruct {
+    WORD Year;
+    BYTE Month;
+    BYTE Day;
+    BYTE DayOfWeak;
+    BYTE Hour;
+    BYTE Min;
+    BYTE Sec;
+    double uSec;
+} DateTime;
+#endif
+    
+void ProcessMenu( KEYS_STR * KeyPressed);
 void ExecuteCommands( void );
+void SecondsToTime(DWORD Seconds, DateTime * Date);
 #endif

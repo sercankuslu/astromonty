@@ -120,13 +120,19 @@
 APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
-static struct SCKeys {
-	BYTE up;
-	BYTE down;
-	BYTE left;
-	BYTE right;
-	BYTE menu;
-	BYTE enter;
+
+
+static struct SCKeys {    
+    KEYS_STR Scan;
+    KEYS_STR Pressed;
+
+	DWORD TIMEOUT_up;
+	DWORD TIMEOUT_down;
+	DWORD TIMEOUT_left;
+	DWORD TIMEOUT_right;
+	DWORD TIMEOUT_esc;
+	DWORD TIMEOUT_enter;
+	
 } CKeys;
 //static BYTE CKeys=0;
 static BYTE add1 = PCF8535_BUS_ADDRESS;
@@ -145,7 +151,7 @@ static int DisplaydB = 0;      // changing the value DisplayBright of every seco
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
-static void UpdateKey();
+static void UpdateKey(KEYS_STR * K);
 static void InitTimerAndPWM();
 
 #if defined(WF_CS_TRIS)
@@ -160,13 +166,29 @@ void LCDUpdate(void){
 }
 
 
-void UpdateKey()
+void UpdateKey(KEYS_STR * K)
 {
     BYTE i;
     BYTE j;		
     static BYTE a = 0;
     static BYTE b = 0;
     static BYTE k = 0;
+    static const DWORD TIME_PERIOD = TICK_SECOND/10;
+    static BOOL Init = 0;
+    DWORD CurrTime;
+    CurrTime = TickGet();
+    if(!Init){
+        CKeys.TIMEOUT_up    = 0;
+        CKeys.TIMEOUT_down  = 0;
+        CKeys.TIMEOUT_left  = 0;
+        CKeys.TIMEOUT_right = 0;
+        CKeys.TIMEOUT_esc   = 0;
+        CKeys.TIMEOUT_enter = 0;
+        CKeys.Scan.Val = 0;
+        CKeys.Pressed.Val = 0;
+        Init = 1;
+    }
+    
     TRISBbits.TRISB1 = 1;
     TRISBbits.TRISB2 = 1;
     TRISBbits.TRISB3 = 1;
@@ -184,19 +206,139 @@ void UpdateKey()
 	
 	LATDbits.LATD0 = 1; // первая строка (menu и enter)
 	Nop();Nop();
-	CKeys.enter = PORTBbits.RB1^0x01;
-	CKeys.menu = PORTBbits.RB3^0x01;	
+	CKeys.Scan.keys.esc = PORTBbits.RB1^0x01;
+	CKeys.Scan.keys.enter = PORTBbits.RB3^0x01;	
 	LATDbits.LATD0 = 0; // первая строка (menu и enter)	
 	Nop();
 	LATDbits.LATD1 = 1; // первая строка (menu и enter)
 	Nop();Nop();
-	CKeys.left = PORTBbits.RB1;
-	CKeys.right = PORTBbits.RB2;	
-	CKeys.up = PORTBbits.RB3;
-	CKeys.down = PORTBbits.RB4;	
+	CKeys.Scan.keys.left = PORTBbits.RB1;
+	CKeys.Scan.keys.right = PORTBbits.RB2;	
+	CKeys.Scan.keys.up = PORTBbits.RB3;
+	CKeys.Scan.keys.down = PORTBbits.RB4;	
 	LATDbits.LATD1 = 0; // первая строка (menu и enter)	
 	Nop();
-		
+	// нажали-обьявили-таймаут-ждем отпускания-отпустили-таймаут-ждем нажатия
+	if(CurrTime > CKeys.TIMEOUT_up){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.up){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.up){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.up = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_up = CurrTime + TIME_PERIOD;
+        	    K->keys.up = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.up){
+            	// если она была нажата
+            	CKeys.Pressed.keys.up = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_up = CurrTime + TIME_PERIOD;
+            	K->keys.up = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_down){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.down){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.down){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.down = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_down = CurrTime + TIME_PERIOD;
+        	    K->keys.down = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.down){
+            	// если она была нажата
+            	CKeys.Pressed.keys.down = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_down = CurrTime + TIME_PERIOD;
+            	K->keys.down = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_left){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.left){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.left){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.left = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_left = CurrTime + TIME_PERIOD;
+        	    K->keys.left = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.left){
+            	// если она была нажата
+            	CKeys.Pressed.keys.left = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_left = CurrTime + TIME_PERIOD;
+            	K->keys.left = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_right){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.right){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.right){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.right = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_right = CurrTime + TIME_PERIOD;
+        	    K->keys.right = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.right){
+            	// если она была нажата
+            	CKeys.Pressed.keys.right = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_right = CurrTime + TIME_PERIOD;
+            	K->keys.right = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_esc){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.esc){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.esc){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.esc = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_esc = CurrTime + TIME_PERIOD;
+        	    K->keys.esc = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.esc){
+            	// если она была нажата
+            	CKeys.Pressed.keys.esc = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_esc = CurrTime + TIME_PERIOD;
+            	K->keys.esc = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_enter){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.enter){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.enter){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.enter = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_enter = CurrTime + TIME_PERIOD;
+        	    K->keys.enter = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.enter){
+            	// если она была нажата
+            	CKeys.Pressed.keys.enter = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_enter = CurrTime + TIME_PERIOD;
+            	K->keys.enter = 0;
+        	} 
+    	}
+	}
 }
 
 //
@@ -323,18 +465,18 @@ int main(void)
     static int sx1 = 2;
     static int sy1 = 2;
     static BYTE RBuffer[30];	
-    BYTE K = 0;
+    KEYS_STR K;
     ST_ATTRIBUTE ReceivePacket = {
 		0, 0, RBuffer
 	};
 	    
     BYTE count; 
-    
+    UpdateKey(&K);    
     DisplayInit(); 
     ProcessMenu(&K);
     pcfLCDInit(add1);
     DisplayDraw(add1);  
-	UpdateKey();
+	
     memset(RBuffer, 0, sizeof(RBuffer));
     InitializeBoard();
     
@@ -454,27 +596,20 @@ int main(void)
             t = TickGet();
             LED0_IO ^= 1;
             if(AppConfig.Flags.bIsValidMontyIPAddr == 0){
-            	AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;
-            	//SendRequestIP();                	
-                //AnnounceIP();
+            	AppConfig.Flags.bNeedUpdateMontyIPAddr = 1;            	
             }    
             
             //PushAttr(ReceivePacket, OUT_BUFFER);            
             //DisplayDraw(add1);
         }
-        UpdateKey();
-        if(CKeys.up) K |= 0x01;
-        if(CKeys.right) K |= 0x08;
-        if(CKeys.down) K |= 0x02;
-        if (CKeys.left) K |= 0x04;
-        if (CKeys.enter) K |= 0x80;
-        if (CKeys.menu) K |= 0x40;
+        UpdateKey(&K);
         
-        if((TickGet() - t1 >= TICK_SECOND)||(K>0))
+        
+        if((TickGet() - t1 >= TICK_SECOND)||(K.Val>0))
         {            
 	     	t1 = TickGet();   
-            //ProcessMenu( &K );
-            //DisplayDraw(add1);
+            ProcessMenu( &K );
+            DisplayDraw(add1);
 		
 	    } 
         // This task performs normal stack task including checking
