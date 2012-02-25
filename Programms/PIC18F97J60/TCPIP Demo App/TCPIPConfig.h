@@ -166,23 +166,23 @@
 
 #define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
 #define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
-#define MY_DEFAULT_IP_ADDR_BYTE3        (71ul)
-#define MY_DEFAULT_IP_ADDR_BYTE4        (253ul)
+#define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (55ul)
 
 #define MY_DEFAULT_MASK_BYTE1           (255ul)
 #define MY_DEFAULT_MASK_BYTE2           (255ul)
-#define MY_DEFAULT_MASK_BYTE3           (252ul)
+#define MY_DEFAULT_MASK_BYTE3           (255ul)
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 
 #define MY_DEFAULT_GATE_BYTE1           (192ul)
 #define MY_DEFAULT_GATE_BYTE2           (168ul)
-#define MY_DEFAULT_GATE_BYTE3           (68ul)
-#define MY_DEFAULT_GATE_BYTE4           (11ul)
+#define MY_DEFAULT_GATE_BYTE3           (1ul)
+#define MY_DEFAULT_GATE_BYTE4           (1ul)
 
 #define MY_DEFAULT_PRIMARY_DNS_BYTE1	(192ul)
 #define MY_DEFAULT_PRIMARY_DNS_BYTE2	(168ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(68ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(31ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(1ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(1ul)
 
 #define MY_DEFAULT_SECONDARY_DNS_BYTE1	(0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE2	(0ul)

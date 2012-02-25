@@ -11,6 +11,7 @@ typedef enum RB_RV {
 #if !defined(__C30__)
 RB_RV PushAttr(ST_ATTRIBUTE Data, BYTE BufNumber);
 RB_RV PopAttr(ST_ATTRIBUTE *Data, BYTE BufNumber);
+RB_RV GetNextAttrType(BYTE BufNumber, ST_ATTRIBUTE_TYPE * Type);
 BOOL IsDataInBuffer(BYTE BufNumber);
 RB_RV RoundBufferInit(void);
 #endif

@@ -158,6 +158,16 @@ RB_RV MoveDataFromBuffer(BYTE* D, WORD Count, MEMORY_BUFFER* MemBuf)
     MemBuf->MemFree+=Count;
     return RB_OK;
 }
+RB_RV GetNextAttrType(BYTE BufNumber, ST_ATTRIBUTE_TYPE * Type)
+{
+    ATTR_BUFFER* Attr_buf = &RoundBuffers[BufNumber];
+    RB_RV rv = RB_OK;
+    if (Attr_buf->AttrFree == Attr_buf->AttrSize) return RB_NO_DATA; // no data
+
+    *Type = Attr_buf->AttrBuffer[Attr_buf->AttrBegin].type;
+        
+    return RB_OK;
+}
 
 
 // запрос данных

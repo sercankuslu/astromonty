@@ -58,7 +58,7 @@
 #include "MainDemo.h"
 
 
-#define HOST_TO_PING	"ww1.microchip.com"	// Address that ICMP client will ping.  If the DNS client module is not available in the stack, then this hostname is ignored and the local gateway IP address will be pinged instead.
+#define HOST_TO_PING	"192.168.1.30"	// Address that ICMP client will ping.  If the DNS client module is not available in the stack, then this hostname is ignored and the local gateway IP address will be pinged instead.
 
 /*****************************************************************************
   Function:
@@ -100,7 +100,7 @@ void PingDemo(void)
 	{
 		case SM_HOME:
 			// Send a ping request out if the user pushes BUTTON0 (right-most one)
-			if(BUTTON0_IO == 0u)
+			//if(BUTTON0_IO == 0u)
 			{
 				// Don't ping flood: wait at least 1 second between ping requests
 				if(TickGet() - Timer > 1ul*TICK_SECOND)

@@ -15,6 +15,7 @@ typedef enum ST_RESULT {
     STR_BUFFER_TOO_SMALL,
     STR_COMMAND_UNKNOWN,
     STR_DATA_CORRUPTED,
+    STR_TOO_MANY_ATTRIBUTES,
     STR_ATTR_NOT_FOUND
 } ST_RESULT;
 
@@ -96,6 +97,11 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 
 #ifdef _WINDOWS
 typedef struct {
+    DWORD_VAL MyIPAddr;
+    DWORD_VAL MyMask;
+    DWORD_VAL MyGateway;
+    DWORD_VAL PrimaryDNSServer;
+    DWORD_VAL SecondaryDNSServer;
     char NetBIOSName[16];
     DWORD Time;
 } AppConfigType;
@@ -106,11 +112,11 @@ typedef struct {
 //static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 64
 ST_RESULT ProtocolInit();
-ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos);
-ST_RESULT ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
+ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, int bBlockLen ,int* pbBlockPos);
+ST_RESULT ParseBlob(BYTE* pbBlock, int bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
 ST_RESULT FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType, BYTE * Index);
-ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen);
-ST_RESULT RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength);
+ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlobLen);
+ST_RESULT RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength);
 ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
 BOOL IsClientConnected();
 #endif //__PROTOCOL_H_
