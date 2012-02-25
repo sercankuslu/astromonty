@@ -221,12 +221,14 @@ int main(void)
 	
 	    
     static DWORD t = 0;
-   // static DWORD d = 0;
+   	static DWORD d = 0;
     static DWORD dwLastIP = 0;
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
+    
+    TRISBbits.TRISB4 = 0;
         
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
@@ -400,8 +402,10 @@ int main(void)
         //   	LATDbits.LATD0 ^= 1; // выход STEP
             
         //}
-		
-		
+		if(TickGet() - d >= TICK_SECOND/16){
+			d = TickGet();
+			LATBbits.LATB4 ^=1;
+		}
 		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
