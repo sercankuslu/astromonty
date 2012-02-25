@@ -184,7 +184,7 @@ int OCInit(void)
 //         rr3.TmrId = 2;
 #ifdef __C30__
         IFS1bits.U2RXIF = 1;
-        //IFS1bits.U2TXIF = 1;
+        IFS1bits.U2TXIF = 1;
         //IFS0bits.U1RXIF = 1;
         
         // инициализация OC1
@@ -213,7 +213,7 @@ int OCInit(void)
         }
         
         IFS0bits.OC1IF = 1;
-        //IFS0bits.OC2IF = 1;
+        IFS0bits.OC2IF = 1;
         //IFS1bits.OC3IF = 1;
         Timer2Big.Val = 0;
         TMR2 = 0;
@@ -301,8 +301,8 @@ int InitRR(RR * rr)
     rr->NextExecuteCmd = 0;
     rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-//     PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-//     PushCmdToQueue(rr, ST_RUN, 0.0, 45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_ACCELERATE, 1.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_RUN, 0.0, 1000.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
 //      PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);

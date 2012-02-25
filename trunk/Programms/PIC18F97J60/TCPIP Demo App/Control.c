@@ -44,6 +44,7 @@
 #define C_ROM const rom
 #else 
 #define C_ROM const
+extern AppConfigType AppConfig;
 #endif
 
 typedef enum MENU_ID {
@@ -161,9 +162,9 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Local.Gate = AppConfig.MyGateway.Val;
         Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
         Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
-        Params.Alpha.Angle = 3.14/2;
-        Params.Delta.Angle = 3.14/3; 
-        Params.Gamma.Angle = 3.14/4;
+        Params.Alpha.Angle = 3.14f/2.0f;
+        Params.Delta.Angle = 3.14f/3.0f; 
+        Params.Gamma.Angle = 3.14f/4.0f;
         Params.Alpha.StatusFlag.bits.Enable = 1;
         Params.Delta.StatusFlag.bits.Enable = 1;
         Params.Gamma.StatusFlag.bits.Enable = 0;
@@ -210,7 +211,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             }                        
             if(Params.Alpha.StatusFlag.bits.Enable){
                 if(Params.Alpha.IsModified.bits.Angle||NeedToRedrawMenus){
-                    XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
+                    XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );                
                     DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                     Params.Alpha.IsModified.bits.Angle = 0;
                 }
@@ -896,7 +897,7 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     BYTE Sign = 1;    
     Xg = X * 180/(PI); // в часах времени
     if (Xg < 0) Sign = 0;
-    
+    if(hour) Xg /= 15.0;
     if(Xg < 0.0) Xg = -Xg;
     Grad = (BYTE)Xg;    
     Xg -= (double)Grad;
@@ -910,12 +911,12 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     mSec = (BYTE)(Xg);
     if(Sign){
         if(hour){
-            Grad /= 15;
+            /*Grad /= 15;*/
             sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
         } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
     } else {
         if(hour){
-            Grad /= 15;
+            /*Grad /= 15;*/
             sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
         } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
     }
@@ -985,7 +986,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
         Xg /= 60.0;
 
         if(TmpIsHours){
-            MB *= 15;
+            //MB *= 15;
         }
         if(MB >= 0){
             Xg += (double)MB;
@@ -994,7 +995,11 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
         }
         if((MB == 0)&&(TmpValue[0]=='-')){
             Xg = -Xg;
-        }        
+        }      
+        if(TmpIsHours){
+            Xg *= 15.0;
+            //MB *= 15;
+        }
         Xg = Xg * (PI)/180.0;
         (*TmpDoValue) = Xg;
     } 
@@ -1029,24 +1034,24 @@ void ExecuteCommands()
         if(rv == RB_OK) {
             switch(Data.type){
                 case STA_ALPHA:
-                    memcpy(&Params.Alpha.Angle,m, sizeof(double));   
+                    memcpy(&Params.Alpha.Angle,m, Data.ulValueLen);   
                     Params.Alpha.IsModified.bits.Angle = 1;
                     break;
                 case STA_DELTA:
-                    memcpy(&Params.Delta.Angle,m, sizeof(double));
+                    memcpy(&Params.Delta.Angle,m, Data.ulValueLen);
                     Params.Delta.IsModified.bits.Angle = 1;
                     break;
                 case STA_GAMMA:
-                    memcpy(&Params.Gamma.Angle,m, sizeof(double));
+                    memcpy(&Params.Gamma.Angle,m, Data.ulValueLen);
                     Params.Gamma.IsModified.bits.Angle = 1;
                     break;
             }
         }
     }
     if(Params.NeedToUpdate>0){
+        rv = PushAttr(RequestData[0], OUT_BUFFER);
         if(Params.NeedToUpdate & ALPHA){
-            if(Params.Alpha.NeedToUpdate.bits.Angle = 1){
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
+            if(Params.Alpha.NeedToUpdate.bits.Angle){                
                 RequestData[1].type = STA_ALPHA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Alpha.NeedToUpdate.bits.Angle = 0;
@@ -1054,7 +1059,6 @@ void ExecuteCommands()
         }
         if(Params.NeedToUpdate & DELTA){
             if(Params.Delta.NeedToUpdate.bits.Angle){
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
                 RequestData[1].type = STA_DELTA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Delta.NeedToUpdate.bits.Angle = 0;
@@ -1062,12 +1066,14 @@ void ExecuteCommands()
         }
         if(Params.NeedToUpdate & GAMMA){
             if(Params.Gamma.NeedToUpdate.bits.Angle){
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
                 RequestData[1].type = STA_GAMMA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Gamma.NeedToUpdate.bits.Angle = 0;
             }
         }
+        Params.NeedToUpdate ^= ALPHA;
+        Params.NeedToUpdate ^= DELTA;
+        Params.NeedToUpdate ^= GAMMA;
     }
     
     if(Params.NeedToCommit>0){
@@ -1084,7 +1090,7 @@ void GetMsgFromROM(MSGS Msg_id, char* Msg)
 }
 void SecondsToTime(DWORD Seconds, DateTime * Date)
 {
-    BYTE Y = 70;
+    DWORD Y = 70;
     DWORD DY;
     BYTE M = 1;
     BYTE D = 1;
@@ -1099,13 +1105,13 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
     Days = Seconds/86400;
     Seconds -= (DWORD)Days*86400;
     s1 = Days/7;
-    dd = s1;
-    d = (Days - dd*7) + 5;
+    dd = (DWORD)s1;
+    d = (BYTE)((Days - dd*7) + 5);
     while(d>=7){d-=7;}
 
     dd  = Days/1461;
     Days -= (dd * 1461); //
-    Y = dd*4 + 70;
+    Y = (LONG)(dd*4 + 70);
     DY = 365; //1970
     while(Days >= DY){
         if((Y & 0x03) == 0){

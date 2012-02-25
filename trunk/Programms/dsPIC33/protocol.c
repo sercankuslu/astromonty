@@ -2,7 +2,6 @@
 #include "protocol.h"
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 #ifndef __C30__
-
 #   include "..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
 #endif
 #ifdef USE_PROTOCOL_CLIENT
@@ -19,10 +18,11 @@ typedef struct ST_CONNECTION {
     ST_STATUS Mode;
 }ST_CONNECTION;
 
-ST_CONNECTION Connections[MAX_CONNECTIONS];
+#ifndef __C30__
 static ST_COMMANDS  connectreq = STC_REQEST_CONNECT;
 static ST_COMMANDS  authreq = STC_REQEST_AUTH;
 static ST_COMMANDS  datareq = STC_REQEST_DATA;
+
 static ST_ATTRIBUTE RequestConnect[] = {
     {STA_COMMAND, sizeof(BYTE), &connectreq},
 };
@@ -37,6 +37,10 @@ static ST_ATTRIBUTE RequestData[] = {
     {STA_COMMAND,  sizeof(BYTE), &datareq},
     {STA_TIME_SNTP,  0, NULL},
 };
+#endif
+#ifndef __18CXX
+ST_CONNECTION Connections[MAX_CONNECTIONS];
+#endif
 #ifndef _WINDOWS
 extern DWORD_VAL CPUSPEED;
 #   define ULtoA(x,y) ultoa(x, y)
@@ -48,7 +52,7 @@ extern DWORD_VAL CPUSPEED;
 
 #endif
    static BOOL ClientConnected = FALSE;
-   static BOOL ServerConnected = FALSE;
+   //static BOOL ServerConnected = FALSE;
 /******************************************************************************
 *
 *
@@ -57,10 +61,10 @@ extern DWORD_VAL CPUSPEED;
 *
 *
 ******************************************************************************/
-ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, BYTE bBlockLen ,BYTE* pbBlockPos)
+ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, int bBlockLen ,int* pbBlockPos)
 {
     BYTE i = 0;  
-    BYTE j = (*pbBlockPos);
+    int j = (*pbBlockPos);
     for(i = 0; i < bAttributeLen; i++){
         pbBlock[j++] = (BYTE)pAttribute[i].type;
         pbBlock[j++] = pAttribute[i].ulValueLen;
@@ -82,7 +86,7 @@ ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBloc
 *
 *
 ******************************************************************************/
-ST_RESULT ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos)
+ST_RESULT ParseBlob(BYTE* pbBlock, int bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos)
 {
     BYTE i = 0;    
     //(*pbAttribute) = 0;
@@ -105,6 +109,8 @@ ST_RESULT ParseBlob(BYTE* pbBlock, BYTE bBlockLen, ST_ATTRIBUTE_PTR pAttribute, 
         } 
         else pAttribute[j].pValue = NULL;
         *pbAttributeLen = ++j;
+        if( j >= MAX_ATTRIBUTE) 
+        	return STR_TOO_MANY_ATTRIBUTES;
     }   
     return STR_OK;
 }
@@ -153,7 +159,7 @@ ST_RESULT FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType,
 *
 ******************************************************************************/
 #ifdef USE_PROTOCOL_SERVER
-ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
+ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlobLen)
 {
     ST_RESULT res = STR_OK;
     BYTE i = 0;
@@ -167,7 +173,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     BYTE pbMem[MEM_BUFFER_LEN];
     ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
     BYTE bMemPos = 0;
-    BYTE bBlobPos = 0;
+    int bBlobPos = 0;
 
     ST_ATTRIBUTE Answer[] = {
         {STA_FLAG,  sizeof(BYTE),&Answers }
@@ -176,7 +182,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         {STA_NULL, 0, 0 }
     };
     if(*pbBlobLen == 0) return STR_OK;
-    if(*pbBlobLen < 0) {
+    if((*pbBlobLen < 0)||(*pbBlobLen >= pbBlobSize)) {
         Connections[bConnectionID].Mode = STS_NO_CONNECT;
         return STR_NEED_DISCONNECT;
     }
@@ -184,7 +190,10 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
     memset(Data,0,sizeof(Data));
     
     res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
-    if(res!=STR_OK) return res;  
+    if(res != STR_OK) {
+        Connections[bConnectionID].Mode = STS_NO_CONNECT;
+        return res;  
+    }
     
     res = FindParam(Data, bAttributeLen, STA_COMMAND, &i); 
     if(res == STR_ATTR_NOT_FOUND) return STR_COMMAND_UNKNOWN;
@@ -236,7 +245,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
         NeedAnswer = TRUE;
         break;   
     case STS_CONNECTED:
-        //LED1_IO = 1;        
+        LED1_IO = 1;        
         switch(Command){
             case STC_REQEST_DATA:
                 for(j = 0; j < bAttributeLen; j++){
@@ -387,7 +396,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, BYTE* pbBlobLen)
 *	STR_NEED_DISCONNECT	if need disconnect socket
 ******************************************************************************/
 #ifdef USE_PROTOCOL_CLIENT
-ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
+ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
 {
     static  enum ST_STATE{
         ST_REQUEST_CONNECT = 0,
@@ -400,17 +409,20 @@ ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
     BYTE bAttributeLen = 0;
     BYTE pbMem[MEM_BUFFER_LEN];
     BYTE bMemPos = 0;	
-    BYTE bBlockPos = 0;    
+    int bBlockPos = 0;    
     ST_RESULT  res = STR_OK;
     BYTE AttrLen;
     BYTE j;
     BYTE* Answer; 
     BOOL DoWork = TRUE;
-    if(*pbDataLength<0) {
-            ST_STATE = ST_REQUEST_CONNECT;
-            return STR_NEED_DISCONNECT;
-    }      
+    if(*pbDataLength < 0){
+        ST_STATE = ST_REQUEST_CONNECT;
+        ClientConnected = FALSE;
+        return STR_NEED_DISCONNECT;
+    }
+      
     while(DoWork){
+        DoWork = FALSE;
         switch(ST_STATE){
         case ST_REQUEST_CONNECT:
             RoundBufferInit();
@@ -439,6 +451,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
                 switch(*Answer){
                 case STF_AUTH_NEEDED:
                     ST_STATE = ST_REQUEST_AUTH;
+                    DoWork = TRUE;
                     break;
                 case STF_AUTH_NOT_NEEDED:
                 case STF_ACCEPTED:
@@ -539,10 +552,21 @@ ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
             if(IsDataInBuffer(OUT_BUFFER)){
                 // если в очереди много запросов, формируем большой пакет из них
                 //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
+                BOOL CommandExist = FALSE;
                 do{    
                     BYTE m[10];
+                    ST_ATTRIBUTE_TYPE Type;                    
                     RequestData[1].pValue = (void*)&m;
-                    if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){
+                    if(GetNextAttrType(OUT_BUFFER, &Type) != RB_OK) {
+                        break;
+                    }                    
+                    if(Type == STA_COMMAND){
+                        if(CommandExist) {
+                            break;
+                        }
+                        CommandExist = TRUE;
+                    }                    
+                    if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){                        
                         res = FormBlob(&RequestData[1], 1, pbBlob, bBlobLen, &bBlockPos);
                     }
                     if(res!=STR_OK) {
@@ -556,10 +580,12 @@ ST_RESULT  RunClient(BYTE* pbBlob, BYTE bBlobLen, BYTE *pbDataLength)
             break;
         default: 
             ST_STATE = ST_REQUEST_CONNECT;
-        };
-        break;
+        };        
     }
-    ClientConnected = (ST_STATE == ST_CONNECTED);
+    if(ST_STATE == ST_CONNECTED){        
+        ClientConnected = 1;
+    } else ClientConnected = 0;
+
     if(res == STR_NEED_ANSWER){
         *pbDataLength = bBlockPos;
     } else {

@@ -157,7 +157,7 @@ void BerkeleyTCPServerDemo(void)
             length = recv( ClientSock[i], bfr, sizeof(bfr), 0);
             
             res = STR_OK;
-            res = RunServer(i, bfr, &length);
+            res = RunServer(i, (BYTE*)bfr, sizeof(bfr), &length);
             if(res==STR_NEED_ANSWER){
                 send(ClientSock[i], bfr, length, 0);  
                 res = STR_OK;

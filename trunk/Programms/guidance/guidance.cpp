@@ -4,12 +4,17 @@
 #include "stdafx.h"
 #include "guidance.h"
 #include <math.h>
+#include <winsock2.h>
 #include <stdio.h>
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 #include "..\dsPIC33\protocol.h"
 #include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
 #include "..\PIC18F97J60\TCPIP Demo App\Control.h"
 
+#pragma comment(lib, "Ws2_32.lib")
+
+#define DEFAULT_BUFLEN 200
+#define DEFAULT_PORT "9764"
 
 #define MAX_LOADSTRING 100
 
@@ -21,7 +26,9 @@ BYTE bfr[64];
 BYTE length;
 // Глобальные переменные:
 #define FIRST_TIMER 1
-#define FIRST_TIMER_INTERVAL 1000 
+#define SECOND_TIMER 2
+#define FIRST_TIMER_INTERVAL 200 
+#define SECOND_TIMER_INTERVAL 100 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -43,6 +50,7 @@ void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
 void Calc(HWND hWnd, HDC hdc);
 void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
+int BerkleyClient();
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -76,6 +84,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
         ShowWindow(hwndDialog, SW_SHOW);
         SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
+        //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
     }
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -192,6 +201,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, (DLGPROC)KeyDialog);                         
                         ShowWindow(hwndDialog, SW_SHOW);
                         SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
+                        //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
                     }
                     break;
                 case IDM_EXIT:
@@ -279,7 +289,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
-    GetItemRect(hDlg,&rect,IDC_STATIC);
+    
     switch (message) {
     case WM_TIMER: 
         switch (wParam) 
@@ -287,9 +297,14 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         case FIRST_TIMER: 
             ProcessMenu(&Key);
             ExecuteCommands();
-            rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
-            rv = RunServer(0, (BYTE*)bfr, &length);             
+            GetItemRect(hDlg,&rect,IDC_STATIC);
+            BerkleyClient();
+            //rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
+            //rv = RunServer(0, (BYTE*)bfr, &length);            
             InvalidateRect(hDlg, &rect, false);
+            break;
+        case SECOND_TIMER:
+            
             break;
         }
         break;
@@ -298,6 +313,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         return (INT_PTR)TRUE;
     case WM_PAINT:
         //GetItemRect(hDlg,&rect,IDC_STATIC);        
+        GetItemRect(hDlg,&rect,IDC_STATIC);
         hdc = BeginPaint(hDlg, &ps);         
         DrawIface(&ps, &rect);
         EndPaint(hDlg, &ps);
@@ -357,6 +373,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         case IDC_BUTTON_CON2:
             //Params.Local.ConnectFlag ^= 1;
+            BerkleyClient();
             break;
         case IDC_BUTTON_A2:
             Params.Alpha.StatusFlag.bits.Enable ^= 1;
@@ -381,16 +398,20 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
                 return (INT_PTR)TRUE;
             }            
             break;
-        default:
+        default:            
             break;
         }
+
         {                         
-            ProcessMenu(&Key);
+            //ProcessMenu(&Key);
+            GetItemRect(hDlg,&rect,IDC_STATIC);
             InvalidateRect(hDlg, &rect, false);
             //RedrawWindow(hDlg,&rect,NULL,RDW_INTERNALPAINT);
         }       
-        }        
-    }
+        }   
+    default:;
+        
+    }    
     return (INT_PTR)FALSE;
 }
 
@@ -531,16 +552,16 @@ void Calc(HWND hWnd, HDC hdc)
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    OCInit();
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
+//     OCInit();
+//     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+//     PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //     PushCmdToQueue(&rr1, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
 //     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, -180.0 * Grad_to_Rad, -1);
-    PushCmdToQueue(&rr2, ST_RUN, 0.0, -22.1 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, -180.0 * Grad_to_Rad, -1);
+//     PushCmdToQueue(&rr2, ST_RUN, 0.0, -22.1 * Grad_to_Rad, -1);
 //     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, -90.0 * Grad_to_Rad, -1);
 //     PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr2, ST_RUN, 0.0, -16.69 * Grad_to_Rad, 1);
@@ -685,4 +706,124 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
     DeleteDC(hMemDC);
     DeleteObject(hbmScreen);
 
+}
+
+int BerkleyClient()
+{
+    //----------------------
+    // Declare and initialize variables.
+    WSADATA wsaData;
+    int iResult;
+
+    static SOCKET ConnectSocket;
+    static struct sockaddr_in clientService; 
+    volatile int err;
+
+    char *sendbuf = "this is a test";
+    char recvbuf[DEFAULT_BUFLEN] = "";
+    int recvbuflen = DEFAULT_BUFLEN;
+    static bool f = true;
+    int i = 0; 
+    static enum
+    {
+        BSD_INIT = 0,
+        BSD_START,
+        BSD_CONNECT,        
+        BSD_RECEIVE,
+        BSD_OPERATION,
+        BSD_SEND,
+        BSD_CLOSE
+    } BSDClientState = BSD_INIT;
+    switch(BSDClientState)
+    {
+    case BSD_INIT:
+        {
+            //----------------------
+            // Initialize Winsock
+            iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+            if (iResult != NO_ERROR) {
+                BSDClientState = BSD_CLOSE; 
+                break;
+            }
+            BSDClientState = BSD_START;
+            // no break
+        }
+    case BSD_START:
+        {
+            //----------------------
+            // Create a SOCKET for connecting to server
+            ConnectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (ConnectSocket == INVALID_SOCKET) {
+                BSDClientState = BSD_CLOSE; 
+                break;
+            }
+            BSDClientState = BSD_CONNECT;
+            // no break
+        }
+    case BSD_CONNECT:
+        {
+            //----------------------
+            // The sockaddr_in structure specifies the address family,
+            // IP address, and port of the server to be connected to.
+            clientService.sin_family = AF_INET;
+            clientService.sin_addr.s_addr = inet_addr( "192.168.1.26" );
+            clientService.sin_port = htons( 9764 );
+
+            //----------------------
+            // Connect to server.
+            iResult = connect( ConnectSocket, (SOCKADDR*) &clientService, sizeof(clientService) );
+            if ( iResult == SOCKET_ERROR) {
+                BSDClientState = BSD_CLOSE; 
+                break;
+            }            
+            BSDClientState = BSD_OPERATION;
+            break;
+        }
+    case BSD_RECEIVE:
+        {   
+            struct timeval timeout = {1, 0};
+            fd_set Set;            
+            Set.fd_count = 1;
+            Set.fd_array[0] = ConnectSocket;
+            if(select(0,&Set, NULL, NULL, &timeout)) {                
+                i = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+                if(i<0){
+                    err = WSAGetLastError();
+                }
+            }
+            BSDClientState = BSD_OPERATION; 
+        }
+    case BSD_OPERATION:
+        {
+            ST_RESULT res = RunClient((BYTE*)recvbuf, recvbuflen, &i);
+            switch(res){
+            case STR_NEED_ANSWER:  
+                i = send(ConnectSocket, recvbuf, i, 0);       
+                if(i<0){
+                    err = WSAGetLastError();
+                }
+
+            case STR_OK:
+                BSDClientState = BSD_RECEIVE;
+                break;
+            case STR_NEED_DISCONNECT:	            	
+            default:
+                BSDClientState = BSD_CLOSE;            
+            }            
+        }  
+        break;
+    case BSD_CLOSE:
+        {
+            iResult = shutdown(ConnectSocket, SD_SEND);
+            if (iResult == SOCKET_ERROR) {
+                printf("shutdown failed: %d\n", WSAGetLastError());                
+            }
+            // cleanup
+            closesocket(ConnectSocket);
+            WSACleanup();
+            BSDClientState = BSD_INIT; 
+        }
+        break;
+    }
+    return 0;
 }
