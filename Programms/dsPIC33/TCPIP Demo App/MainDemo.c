@@ -132,10 +132,44 @@ DWORD_VAL CPUSPEED;
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
+void FanControl();
 
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
+
+void FanControl()
+{
+	static BOOL Up = 0;
+	static DWORD FanPeriod = 0;	
+	static DWORD FanActive = 0;
+	static DWORD FanPassive = 0;
+	static DWORD Current = 0;		
+	DWORD Time = TickGet();
+	static BOOL Init = FALSE;
+	if(!Init){
+		TRISBbits.TRISB4 = 0;
+		Init = TRUE;
+		FanPeriod = TICK_SECOND/20;
+		FanActive = FanPeriod * 2 / 3;
+		FanPassive = FanPeriod - FanActive;
+	}
+	
+	if(Up){
+		if(Time >= Current){
+			Current += FanPassive;
+			LATBbits.LATB4 = 0;
+			Up = 0;  
+		}
+	} else {
+		if(Time >= Current){
+			Current += FanActive;
+			LATBbits.LATB4 = 1;
+			Up = 1;  
+		}	
+	}
+	
+}
 
 //
 // PIC18 Interrupt Service Routines
@@ -223,12 +257,13 @@ int main(void)
     static DWORD t = 0;
    	static DWORD d = 0;
     static DWORD dwLastIP = 0;
+    
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
     TRISFbits.TRISF4 = 0;	
     
-    TRISBbits.TRISB4 = 0;
+    
         
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
@@ -402,11 +437,7 @@ int main(void)
         //   	LATDbits.LATD0 ^= 1; // выход STEP
             
         //}
-		if(TickGet() - d >= TICK_SECOND/16){
-			d = TickGet();
-			LATBbits.LATB4 ^=1;
-		}
-		
+        FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
 	            LED0_IO ^= 1;

@@ -174,6 +174,9 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
     ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
     BYTE bMemPos = 0;
     int bBlobPos = 0;
+    float d1;
+    float d2;
+    float d3;
 
     ST_ATTRIBUTE Answer[] = {
         {STA_FLAG,  sizeof(BYTE),&Answers }
@@ -290,12 +293,11 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         }
                         break;
                     case STA_ALPHA:
-                        {                            
-                            double d;
-                            d = ((double)rr1.XPosition * rr1.dx);
+                        {   
+                            d1 = ((float)rr1.XPosition * rr1.dx);
                             SendData[0].type = STA_ALPHA;
-                            SendData[0].ulValueLen = sizeof(double);
-                            SendData[0].pValue = &d;
+                            SendData[0].ulValueLen = sizeof(float);
+                            SendData[0].pValue = &d1;
                             res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
                             if(res!=STR_OK){
                                 Answers = STF_DATA_ERROR;
@@ -309,12 +311,11 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         }
                         break;
                     case STA_DELTA:
-                        {                            
-                            double d;
-                            d = ((double)rr2.XPosition * rr2.dx);
+                        {   
+                            d2 = ((float)rr2.XPosition * rr2.dx);
                             SendData[0].type = STA_DELTA;
-                            SendData[0].ulValueLen = sizeof(double);
-                            SendData[0].pValue = &d;
+                            SendData[0].ulValueLen = sizeof(float);
+                            SendData[0].pValue = &d2;
                             res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
                             if(res!=STR_OK){
                                 Answers = STF_DATA_ERROR;
@@ -328,12 +329,11 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         }
                         break;
                     case STA_GAMMA:
-                        {                            
-                            double d;
-                            d = ((double)rr3.XPosition * rr3.dx);
+                        {   
+                            d3 = ((float)rr3.XPosition * rr3.dx);
                             SendData[0].type = STA_GAMMA;
-                            SendData[0].ulValueLen = sizeof(double);
-                            SendData[0].pValue = &d;
+                            SendData[0].ulValueLen = sizeof(float);
+                            SendData[0].pValue = &d3;
                             res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
                             if(res!=STR_OK){
                                 Answers = STF_DATA_ERROR;

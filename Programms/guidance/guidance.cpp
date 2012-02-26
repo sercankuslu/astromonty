@@ -552,7 +552,7 @@ void Calc(HWND hWnd, HDC hdc)
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-//     OCInit();
+     OCInit();
 //     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);

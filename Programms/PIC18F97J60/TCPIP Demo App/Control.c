@@ -1035,10 +1035,12 @@ void ExecuteCommands()
             switch(Data.type){
                 case STA_ALPHA:
                     memcpy(&Params.Alpha.Angle,m, Data.ulValueLen);   
+                    //Params.Alpha.Angle = 20.0* 0.017453292519943295;
                     Params.Alpha.IsModified.bits.Angle = 1;
                     break;
                 case STA_DELTA:
                     memcpy(&Params.Delta.Angle,m, Data.ulValueLen);
+                    //Params.Delta.Angle = 20.0* 0.017453292519943295;
                     Params.Delta.IsModified.bits.Angle = 1;
                     break;
                 case STA_GAMMA:
