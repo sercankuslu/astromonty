@@ -301,8 +301,8 @@ int InitRR(RR * rr)
     rr->NextExecuteCmd = 0;
     rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-    PushCmdToQueue(rr, ST_ACCELERATE, 3.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(rr, ST_RUN, 0.0, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(rr, ST_RUN, 0.0, 20.0 * Grad_to_Rad, 1);
 	PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 400.0 * Grad_to_Rad, 1);
 //      PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
