@@ -18,12 +18,12 @@
 
 #define MAX_LOADSTRING 100
 
+
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
 extern ALL_PARAMS Params;
-BYTE bfr[64];
-BYTE length;
+
 // Глобальные переменные:
 #define FIRST_TIMER 1
 #define SECOND_TIMER 2
@@ -285,7 +285,10 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static int Y = 2;
     static bool bb = false;
     static KEYS_STR Key;
-    ST_RESULT rv = STR_OK;    
+    ST_RESULT rv = STR_OK;  
+    static bool OnLine = FALSE;
+    static BYTE bfr[64] = "";
+    static int length = 0;
 
     //HWND hDisplay = NULL;
     UNREFERENCED_PARAMETER(lParam);
@@ -298,9 +301,13 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             ProcessMenu(&Key);
             ExecuteCommands();
             GetItemRect(hDlg,&rect,IDC_STATIC);
-            BerkleyClient();
-            //rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
-            //rv = RunServer(0, (BYTE*)bfr, &length);            
+            if(OnLine){
+                if(BerkleyClient() < 0) OnLine = FALSE;
+                CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
+            } else {
+                rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
+                rv = RunServer(0, (BYTE*)bfr, sizeof(bfr), &length);            
+            }
             InvalidateRect(hDlg, &rect, false);
             break;
         case SECOND_TIMER:
@@ -373,7 +380,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         case IDC_BUTTON_CON2:
             //Params.Local.ConnectFlag ^= 1;
-            BerkleyClient();
+            //BerkleyClient();            
             break;
         case IDC_BUTTON_A2:
             Params.Alpha.StatusFlag.bits.Enable ^= 1;
@@ -389,6 +396,9 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             Params.Gamma.StatusFlag.bits.Enable ^= 1;
             Params.Gamma.IsModified.bits.Flag = 1;
             Params.Gamma.IsModified.bits.Angle = 1;
+            break;
+        case IDC_CHECK1:
+            OnLine = IsDlgButtonChecked(hDlg, IDC_CHECK1);            
             break;
         case IDOK: 
         case IDCANCEL:
@@ -680,24 +690,31 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
 {    
     LONG iWidth = rect->right - rect->left;
     LONG iHeight = rect->bottom - rect->top;
+    int R = 2;
+    LONG BegX = (iWidth - 133 * R) / 2;
+    LONG BegY = (iHeight - 64 * R) / 2;
     HDC hMemDC; 
     HBITMAP hbmScreen = NULL;
     BOOL b = FALSE;
-    int R = 2;
+    
     hMemDC = CreateCompatibleDC(ps->hdc);
 
     BitBlt(hMemDC, 0, 0, iWidth, iHeight, ps->hdc, rect->left, rect->top, WHITENESS);
 
     hbmScreen = CreateCompatibleBitmap(ps->hdc, iWidth, iHeight);
-    SelectObject(hMemDC, hbmScreen);   
-    for(LONG i = 0; i < iHeight; i++)
-        for(LONG j = 0; j < iWidth; j++){
-            if((j % R == 0)||(i % R == 0))
-                b = GetPixelDB((WORD)j/R, (WORD)i/R);
+    SelectObject(hMemDC, hbmScreen);  
+    FloodFill(hMemDC,1,1,RGB(255,255,255));
+    for(LONG i = 0; i < 64; i++)
+        for(LONG j = 0; j < 133; j++){
+            b = GetPixelDB((WORD)j, (WORD)i);
             if(!b){
-                SetPixel(hMemDC, j, i, RGB(255,255,255));
+                for(LONG k = 0; k < R; k++)
+                    for(LONG l = 0; l < R; l++)
+                        SetPixel(hMemDC, BegX + j * R + k, BegY + i * R + l, RGB(255,255,255));
             } else {
-                SetPixel(hMemDC, j, i, RGB(0,0,0));
+                for(LONG k = 0; k < R; k++)
+                    for(LONG l = 0; l < R; l++)
+                        SetPixel(hMemDC, BegX + j * R + k, BegY + i * R + l, RGB(0,0,0));
             }
         }    
     // быстро копируем результат отрисовки
@@ -745,6 +762,7 @@ int BerkleyClient()
                 BSDClientState = BSD_CLOSE; 
                 break;
             }
+            SetClientDisconnect();
             BSDClientState = BSD_START;
             // no break
         }
@@ -821,7 +839,9 @@ int BerkleyClient()
             // cleanup
             closesocket(ConnectSocket);
             WSACleanup();
+            SetClientDisconnect();
             BSDClientState = BSD_INIT; 
+            return -1;
         }
         break;
     }

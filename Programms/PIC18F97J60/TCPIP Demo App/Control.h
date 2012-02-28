@@ -45,7 +45,7 @@ typedef struct AXIS_PARAM
 
     float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     DWORD  AbsSteps;         // текущий номер шага    
-    double TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
+    float TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     DWORD  TargetAbsSteps;         // текущий номер шага    
     AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // флаг состояния оси
 } AXIS_PARAM;
@@ -80,24 +80,76 @@ typedef struct NETWORK_SETTINGS
     BYTE ConnectFlag;
 }NETWORK_SETTINGS;
 // флаги для NeedToUpdate и NeedToCommit
-#define ALPHA           0x01
-#define DELTA           0x02
-#define GAMMA           0x04
-#define NET_LOCAL       0x08
-#define NET_REMOTE      0x10
 
+typedef union SYSTEM_FLAG_STRUCT {
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE Alpha:1;
+        BYTE Delta:1;
+        BYTE Gamma:1;
+        BYTE Local:1;
+        BYTE Remote:1;
+        BYTE Common:1;
+        BYTE b6:1;
+        BYTE b7:1;
+    } bits;
+} SYSTEM_FLAG_STRUCT;
+
+typedef union COMMON_FLAG_STRUCT {
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE Flags:1;
+        BYTE Speed:1;
+        BYTE b2:1;
+        BYTE b3:1;
+        BYTE b4:1;
+        BYTE b5:1;
+        BYTE b6:1;
+        BYTE b7:1;
+    } bits;
+} COMMON_FLAG_STRUCT ;
+
+typedef union COMMON_SETTINGS_FLAG_STRUCT{
+    BYTE Val;
+    struct __PACKED
+    {        
+        BYTE Man_Auto:1;        // ручное = 1/ автоматическое = 0 наведение
+        BYTE b1:1;
+        BYTE b2:1;
+        BYTE b3:1;
+        BYTE b4:1;
+        BYTE b5:1;
+        BYTE b6:1;
+        BYTE b7:1;
+    } bits;
+} COMMON_SETTINGS_FLAG_STRUCT;
+typedef struct COMMON_SETTINGS
+{
+    COMMON_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
+    COMMON_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    COMMON_FLAG_STRUCT  IsModified;
+
+    COMMON_SETTINGS_FLAG_STRUCT Flags;
+    double MaxGuidanceSpeed;              // максимальная скорость наведения в ручном/автоматическом режимах
+    
+} COMMON_SETTINGS;
 typedef struct All_PARAMS
 {
     // битовые карты -флаги 
-    BYTE NeedToUpdate;   // необходимо запросить с сервера указанные параметры
-    BYTE NeedToCommit;   // необходимо отправить на сервер указанные параметры    
-    
+    SYSTEM_FLAG_STRUCT NeedToUpdate;   // необходимо запросить с сервера указанные параметры
+    SYSTEM_FLAG_STRUCT NeedToCommit;   // необходимо отправить на сервер указанные параметры    
+    SYSTEM_FLAG_STRUCT IsModified;
+
     AXIS_PARAM Alpha;
     AXIS_PARAM Delta;
     AXIS_PARAM Gamma;
 
     NETWORK_SETTINGS Local;
     NETWORK_SETTINGS Remote;
+
+    COMMON_SETTINGS Common;
 
 } ALL_PARAMS;
 
@@ -106,7 +158,7 @@ typedef struct All_PARAMS
 #define SELECT_COLUMN 0x02
 #define FONT_TYPE_B     0x04
 
-typedef union {
+typedef union KEYS_STR{
     BYTE Val;
     struct __PACKED
         {        
