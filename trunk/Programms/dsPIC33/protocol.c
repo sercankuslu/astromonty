@@ -164,6 +164,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
     ST_RESULT res = STR_OK;
     BYTE i = 0;
     BYTE j = 0;
+    BYTE k = 0;
     static ST_COMMANDS Command = STC_NO_COMMANDS;
     BOOL NeedAnswer = FALSE;
     ST_FLAGS Answers = STF_OK;
@@ -252,12 +253,8 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
         switch(Command){
             case STC_REQEST_DATA:
                 for(j = 0; j < bAttributeLen; j++){
-                    switch (Data[j].type){
-                    case STA_COMMAND:
-                    case STA_FLAG:
-                    case STA_LOGIN:
-                    case STA_PASSWORD:
-                        break;
+                    Answers = STF_NO_DATA;
+                    switch (Data[j].type){                    
                     case STA_NETWORK_NAME:  
                         SendData[0].type = STA_NETWORK_NAME;
                         SendData[0].ulValueLen = sizeof(AppConfig.NetBIOSName);
@@ -347,10 +344,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         }
                         break;
                     default:
-                        Answers = STF_DATA_TYPE_UNKNOWN;
-                        i = bAttributeLen; // interrupt process
-                        *pbBlobLen = 0;
-                        bBlobPos = 0;
+                        break;                        
                     };
                 }
                 NeedAnswer = TRUE;
@@ -359,7 +353,32 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
             case STC_SEND_DATA:
                 res = STR_OK;
                 break;
-            case STC_EXECUTE_COMMAND:
+            case STC_EXECUTE_COMMAND: // *************************************************************************
+                {
+                    for(j = 0; j < bAttributeLen; j++){
+                        switch (Data[j].type){
+                        case STA_ALPHA_START:
+                            {
+                                float t = 0.0;
+                                BYTE l = 0;
+                                res = FindParam(Data, bAttributeLen, STA_ALPHA_TARGET, &k);
+                                if(res != STR_OK) {
+                                    break;
+                                }
+                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+                                PushCmdToQueue(&rr1, ST_ACCELERATE, 10 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+                                PushCmdToQueue(&rr1, ST_RUN, 0.0, t, 1);
+                                PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+                                
+                            }
+                            break;
+                        default:;
+
+                        };
+                    }
+                         
+                }
+                NeedAnswer = TRUE;
                 res = STR_OK;
                 break;
             default :
@@ -611,4 +630,9 @@ ST_RESULT  CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, 
 BOOL IsClientConnected()
 {
     return ClientConnected;
+}
+
+void SetClientDisconnect()
+{
+    ClientConnected = FALSE;
 }

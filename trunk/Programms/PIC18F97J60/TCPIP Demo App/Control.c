@@ -59,7 +59,7 @@ typedef enum MENU_ID {
 
 typedef enum MSGS {
     MSG_NOMSG,
-    MSG_MW_ALPHA, MSG_MW_DELTA, MSG_MW_GAMMA, MSG_MW_MENU, MSG_C_NET, 
+    MSG_MW_ALPHA, MSG_MW_DELTA, MSG_MW_GAMMA, MSG_MW_MENU, MSG_C_NET, MSG_MW_MODE_AUTO, MSG_MW_MODE_MANUAL, 
     MSG_C_ALPHA, MSG_C_DELTA, MSG_C_GAMMA, 
     MSG_M_SETTINGS, MSG_M_S_OBSERV, 
     MSG_MO_GOTO, MSG_MO_MANUAL, MSG_MO_SPACECRAFT,
@@ -74,7 +74,7 @@ typedef enum MSGS {
 static C_ROM char * const MsgsCommon[]=
 {    
     "",
-    "А:", "Д:", "Г:", "Меню", "Сеть",
+    "А:", "Д:", "Г:", "Меню", "Сеть", "Авто наведение", "Ручное наведение", 
     "Альфа", "Дельта", "Гамма",       
     "Настройки",  "Наблюдение", 
     "Навести", "Ручной режим", "Режим спутников",
@@ -94,18 +94,18 @@ ALL_PARAMS Params;
 
 void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
-void XtoTimeString( char * Text, double X, BOOL hour );
+void XtoTimeString( char * Text, float X, BOOL hour );
 BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 int SubStrToInt(const char* Text, int Beg, int * Val);
-void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue);
+void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue);
 void GetMsgFromROM(MSGS Msg_id, char* Msg);
 
 void ProcessMenu( KEYS_STR * KeyPressed )
 {
-    static double Xa = 0.0;//91.3 * PI / 180.0;
-    static double Xd = -33.1 * PI / 180.0;
-    static double Xg = 47.2 * PI / 180.0;
+    static float Xa = 0.0;//91.3 * PI / 180.0;
+    static float Xd = -33.1 * PI / 180.0;
+    static float Xg = 47.2 * PI / 180.0;
     static char TimeT[] = "23:56";    
     
 
@@ -131,7 +131,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static char TmpValue[25];
     static char MsgValue[25];
     static DWORD * TmpDWValue = NULL;
-    static double * TmpDoValue = NULL;
+    static float * TmpDoValue = NULL;
     static BOOL TmpIsHours = false;
     BYTE Selected = 0;
     static MSGS EditTxt = MSG_NOMSG; 
@@ -172,7 +172,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
         //Params.Local.ConnectFlag = 0;
-        Params.NeedToUpdate = 0;
+        Params.NeedToUpdate.Val = 0;
         Params.Alpha.NeedToUpdate.Val = 0;
         GetMsgFromROM(MSG_SNL_NAME, (char*)&Params.Local.Name);
         Params.Alpha.IsModified.Val = 0xFF;
@@ -229,6 +229,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     Params.Alpha.IsModified.bits.Flag = 0;
                 }
                 Params.Alpha.NeedToUpdate.bits.Angle = 1;
+                Params.NeedToUpdate.bits.Alpha = 1;
             }
             if(Params.Delta.StatusFlag.bits.Enable){
                 if(Params.Delta.IsModified.bits.Angle||NeedToRedrawMenus){
@@ -250,6 +251,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     Params.Delta.IsModified.bits.Flag = 0;
                 }
                 Params.Delta.NeedToUpdate.bits.Angle = 1;
+                Params.NeedToUpdate.bits.Delta = 1;
             }
             if(Params.Gamma.StatusFlag.bits.Enable){
                 if(Params.Gamma.IsModified.bits.Angle||NeedToRedrawMenus){
@@ -271,6 +273,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     Params.Gamma.IsModified.bits.Flag = 0;
                 }
                 Params.Gamma.NeedToUpdate.bits.Angle = 1;
+                Params.NeedToUpdate.bits.Gamma = 1;
             }
             if(NeedToRedrawTime||NeedToRedrawMenus){
                 OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
@@ -290,15 +293,26 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 OutTextXY(Con_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
             }
             if(NeedToRedrawMenus){
-                GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
-                OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);                
+                //GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
+                //OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);                
                 DrawRectangle(0,51,132,63,1);
-                DrawRectangle(0,0,132,10,1);   
-                Line(36,52,36,63,1);
+                DrawRectangle(0,0,132,10,1);  
+                if(1){
+                    color = 0;
+                    Effect = NORMAL;
+                } else {
+                    color = 1;
+                    Effect = INVERT;
+                }
+                if(Params.Common.Flags.bits.Man_Auto)
+                    GetMsgFromROM(MSG_MW_MODE_MANUAL, (char*)&MsgValue);
+                else
+                    GetMsgFromROM(MSG_MW_MODE_AUTO,   (char*)&MsgValue);
+                OutTextXY(2,54,(const char*)MsgValue,ARIAL_L, Effect);                
+                //Line(36,52,36,63,1);
                 Line(99,52,99,63,1);
                 NeedToRedrawMenus = 0;
             }
-            Params.NeedToUpdate |= ALPHA|DELTA|GAMMA;
             EndProcess = true;
             break;
         case MENU: // ***************************************************************************************************************
@@ -546,15 +560,15 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     // TODO: отправка команды на перевод телескопа на координаты
                     if(Params.Alpha.StatusFlag.bits.Enable) {
                         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
-                        Params.NeedToCommit |= ALPHA;
+                        Params.NeedToCommit.bits.Alpha = 1;
                     }
                     if(Params.Delta.StatusFlag.bits.Enable) {
                         Params.Delta.NeedToCommit.bits.TargetAngle = 1;
-                        Params.NeedToCommit |= DELTA;
+                        Params.NeedToCommit.bits.Delta = 1;
                     }
                     if(Params.Gamma.StatusFlag.bits.Enable) {
                         Params.Gamma.NeedToCommit.bits.TargetAngle = 1;
-                        Params.NeedToCommit |= GAMMA;                    
+                        Params.NeedToCommit.bits.Gamma = 1;                    
                     }
                     LastState = O_GOTO;
                     TmpDoValue = NULL;
@@ -650,11 +664,15 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             break;
         }    
         case EDIT_ANGLE: {// ***************************************************************************************************************
-            BYTE MaxX = 10;
+            BYTE MaxX = 12;
+            BYTE MaxY = strlen((const char*)TmpValue)+1;
             BYTE TmpPosX = PosX;
-            TmpPosY = PosY;            
-            if(PosY == 0) MaxX = 2;
-            Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
+            TmpPosY = PosY; 
+            if(PosY==0) PosY = 1;
+            if(PosY == 1) {
+                MaxX = 4; // для знака                
+            }
+            Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, LastState, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter                   
                 TextToTimeD(TmpValue, TmpIsHours, TmpDoValue);
                 TmpDoValue = NULL;
@@ -676,29 +694,41 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             GetMsgFromROM(EditTxt, (char*)&MsgValue);
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);   
-            if(PosY>=0){                
-                if((TmpValue[PosY] == '.')||(TmpValue[PosY] == '`')||(TmpValue[PosY] == '\'')||(TmpValue[PosY] == '"')){
+            if(PosY>0){                
+                if((TmpValue[PosY-1] == '.')||(TmpValue[PosY-1] == '`')||(TmpValue[PosY-1] == '\'')||(TmpValue[PosY-1] == '"')||(TmpValue[PosY-1] == 'h')){
                     if(TmpPosY < PosY) {
-                        PosY++;         
-                    }else PosY--;
-                }
-                if(PosY ==0){
-                    if(TmpPosX != PosX){
-                        if(TmpValue[PosY]=='+'){
-                            TmpValue[PosY]='-';
-                        } else {
-                            TmpValue[PosY]='+';
-                        }
-                        PosX = TmpValue[PosY];
-                    }   
-                } else {
-                    if(TmpPosY != PosY){
-                        PosX = '9' - TmpValue[PosY];
+                        PosY++;
+                        if(PosY >= MaxY) PosY = 1;
+                    }else {
+                        if(PosY == 0) PosY = MaxY - 1;
+                        else PosY--;
                     }
-                    TmpValue[PosY] = '9' - PosX;
                 }
             }
-            DrawMenuLine(0, MSG_NOMSG, TmpValue, 0, PosY, SELECT_COLUMN|FONT_TYPE_B);
+                if(PosY == 0) PosY = MaxY - 2;
+                if(PosY >= MaxY) PosY = 1;                
+                if(PosY == 1){ 
+                    if(PosX == 0) PosX = 2;
+                    if(PosX >= 3) PosX = 1;
+                    if(TmpPosY != PosY){
+                        PosX =  (TmpValue[PosY-1] == '-')?1:2;
+                    }
+                    if(TmpPosX != PosX){
+                        if(PosX == 1)
+                            TmpValue[PosY-1]='-';
+                        else
+                            TmpValue[PosY-1]='+';                        
+                    }   
+                } else {
+                    if(PosX == 0) PosX = 10;
+                    if(PosX >= 11) PosX = 1;
+                    if(TmpPosY != PosY){
+                        PosX = '9' - TmpValue[PosY-1] + 1;
+                    }                    
+                    TmpValue[PosY-1] = '9' - PosX + 1;
+                }
+            
+            DrawMenuLine(0, MSG_NOMSG, TmpValue, 0, PosY-1, SELECT_COLUMN|FONT_TYPE_B);
             EndProcess = true;
             break;
             }        
@@ -847,6 +877,11 @@ void DrawScrollBar(int Pos, int Max)
 
 }
 
+void DrawMessageLine(MSGS Msg_id, int Step, BOOL Blink)
+{
+
+}
+
 BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMax, MENU_ID LastState, MENU_ID * State, BYTE * YSelPos, BYTE * XSelPos)
 {
     if(KeyPressed->keys.esc) { //ESC
@@ -887,7 +922,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE
     return 0;
 }
 
-void XtoTimeString( char * Text, double X, BOOL hour )
+void XtoTimeString( char * Text, float X, BOOL hour )
 {    
     double Xg;
     BYTE Grad;
@@ -912,13 +947,13 @@ void XtoTimeString( char * Text, double X, BOOL hour )
     if(Sign){
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
-        } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+            sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     } else {
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
-        } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"", Grad,Min,Sec,mSec);
+            sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     }
 
 }
@@ -953,7 +988,7 @@ int SubStrToInt(const char* Text, int Beg, int * Val)
     (*Val) = Tmp*Sig;
     return i+1;
 }
-void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
+void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
 {
     int i = 0;
     int UB=0;
@@ -1008,6 +1043,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, double * TmpDoValue)
 void ExecuteCommands()
 {
     static BYTE datareq = STC_REQEST_DATA;
+    static BYTE execreq = STC_EXECUTE_COMMAND;
     static ST_ATTRIBUTE RequestData[] = {
         {STA_COMMAND,  sizeof(BYTE), &datareq},
         {STA_NULL,  0, NULL},
@@ -1050,36 +1086,53 @@ void ExecuteCommands()
             }
         }
     }
-    if(Params.NeedToUpdate>0){
+    if(Params.NeedToUpdate.Val > 0){
+        RequestData[0].pValue = &datareq;
         rv = PushAttr(RequestData[0], OUT_BUFFER);
-        if(Params.NeedToUpdate & ALPHA){
+        RequestData[0].type = STA_ALPHA_START;
+        if(Params.NeedToUpdate.bits.Alpha){
             if(Params.Alpha.NeedToUpdate.bits.Angle){                
                 RequestData[1].type = STA_ALPHA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Alpha.NeedToUpdate.bits.Angle = 0;
             }
         }
-        if(Params.NeedToUpdate & DELTA){
+        if(Params.NeedToUpdate.bits.Delta){
             if(Params.Delta.NeedToUpdate.bits.Angle){
                 RequestData[1].type = STA_DELTA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Delta.NeedToUpdate.bits.Angle = 0;
             }
         }
-        if(Params.NeedToUpdate & GAMMA){
+        if(Params.NeedToUpdate.bits.Gamma){
             if(Params.Gamma.NeedToUpdate.bits.Angle){
                 RequestData[1].type = STA_GAMMA;
                 rv = PushAttr(RequestData[1], OUT_BUFFER);
                 Params.Gamma.NeedToUpdate.bits.Angle = 0;
             }
         }
-        Params.NeedToUpdate ^= ALPHA;
-        Params.NeedToUpdate ^= DELTA;
-        Params.NeedToUpdate ^= GAMMA;
+        Params.NeedToUpdate.bits.Alpha = 0;
+        Params.NeedToUpdate.bits.Delta = 0;
+        Params.NeedToUpdate.bits.Gamma = 0;
     }
     
-    if(Params.NeedToCommit>0){
-
+    if(Params.NeedToCommit.Val > 0){
+        if(Params.NeedToCommit.bits.Alpha){
+            if(Params.Alpha.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_ALPHA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                RequestData[1].type = STA_ALPHA_TARGET;
+                RequestData[1].pValue = &Params.Alpha.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
+        Params.NeedToCommit.bits.Alpha = 0;
     }
 }
 void GetMsgFromROM(MSGS Msg_id, char* Msg)

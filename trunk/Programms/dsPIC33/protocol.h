@@ -47,7 +47,8 @@ typedef enum ST_FLAGS {
     STF_COMMAND_UNKNOWN,
     STF_DATA_TYPE_UNKNOWN,
     STF_DATA_ERROR,
-    STF_DATA_READY
+    STF_DATA_READY,
+    STF_NO_DATA
 }ST_FLAGS;
 
 typedef enum ST_ATTRIBUTE_TYPE {
@@ -73,6 +74,14 @@ typedef enum ST_ATTRIBUTE_TYPE {
     STA_DELTA_TARGET,
     STA_GAMMA,
     STA_GAMMA_TARGET,
+    // комманды
+    STA_ALPHA_START,            // начинается движение по установленным координтатам; требует наличе STA_ALPHA_TARGET
+    STA_ALPHA_STOP,
+    STA_DELTA_START,
+    STA_DELTA_STOP,
+    STA_GAMMA_START,
+    STA_GAMMA_STOP,
+    STA_EMERGENCY_STOP,
 }ST_ATTRIBUTE_TYPE;
 
 typedef enum STN_MODE {
@@ -119,4 +128,5 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
 ST_RESULT RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength);
 ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
 BOOL IsClientConnected();
+void SetClientDisconnect();
 #endif //__PROTOCOL_H_
