@@ -366,10 +366,11 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                                     break;
                                 }
                                 memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+                                rr1.XPosition = 0.0;                                 
                                 PushCmdToQueue(&rr1, ST_ACCELERATE, 10 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
                                 PushCmdToQueue(&rr1, ST_RUN, 0.0, t, 1);
-                                PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-                                
+                                PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);                                
+                                Answers = STF_OK;
                             }
                             break;
                         default:;

@@ -162,7 +162,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Local.Gate = AppConfig.MyGateway.Val;
         Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
         Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
-        Params.Alpha.Angle = 3.14f/2.0f;
+        Params.Alpha.Angle = 3.14f/2.0f;        
         Params.Delta.Angle = 3.14f/3.0f; 
         Params.Gamma.Angle = 3.14f/4.0f;
         Params.Alpha.StatusFlag.bits.Enable = 1;
@@ -178,9 +178,13 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Alpha.IsModified.Val = 0xFF;
         Params.Delta.IsModified.Val = 0xFF;
         Params.Gamma.IsModified.Val = 0xFF;
+        Params.NeedToCommit.Val = 0x00;
         memset(TmpValue,0,sizeof(TmpValue));
         NeedToRedrawMenus = true;
         Init = true;            
+        Params.Alpha.TargetAngle = 0.24f;
+        Params.NeedToCommit.bits.Alpha = 1;
+        Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
     }
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
     while(!EndProcess){
@@ -668,9 +672,12 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             BYTE MaxY = strlen((const char*)TmpValue)+1;
             BYTE TmpPosX = PosX;
             TmpPosY = PosY; 
-            if(PosY==0) PosY = 1;
-            if(PosY == 1) {
-                MaxX = 4; // для знака                
+            switch (PosY) {  // +00h00'00"
+            case 0: 
+                PosY = 1; 
+            case 1:
+                MaxX = 4;
+                break;            
             }
             Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, LastState, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter                   
@@ -705,28 +712,26 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     }
                 }
             }
-                if(PosY == 0) PosY = MaxY - 2;
-                if(PosY >= MaxY) PosY = 1;                
-                if(PosY == 1){ 
-                    if(PosX == 0) PosX = 2;
-                    if(PosX >= 3) PosX = 1;
-                    if(TmpPosY != PosY){
-                        PosX =  (TmpValue[PosY-1] == '-')?1:2;
-                    }
-                    if(TmpPosX != PosX){
-                        if(PosX == 1)
-                            TmpValue[PosY-1]='-';
-                        else
-                            TmpValue[PosY-1]='+';                        
-                    }   
-                } else {
-                    if(PosX == 0) PosX = 10;
-                    if(PosX >= 11) PosX = 1;
-                    if(TmpPosY != PosY){
-                        PosX = '9' - TmpValue[PosY-1] + 1;
-                    }                    
-                    TmpValue[PosY-1] = '9' - PosX + 1;
+            if(PosY == 0) PosY = MaxY - 2;
+            if(PosY >= MaxY) PosY = 1; 
+            if(PosX == 0) PosX = MaxX - 2;
+            if(PosX >= MaxX - 1) PosX = 1;
+            if(PosY == 1){                     
+                if(TmpPosY != PosY){
+                    PosX =  (TmpValue[PosY-1] == '-')?1:2;
                 }
+                if(TmpPosX != PosX){
+                    if(PosX == 1)
+                        TmpValue[PosY-1]='-';
+                    else
+                        TmpValue[PosY-1]='+';                        
+                }   
+            } else {
+                if(TmpPosY != PosY){
+                    PosX = '9' - TmpValue[PosY-1] + 1;
+                }                    
+                TmpValue[PosY-1] = '9' - PosX + 1;
+            }
             
             DrawMenuLine(0, MSG_NOMSG, TmpValue, 0, PosY-1, SELECT_COLUMN|FONT_TYPE_B);
             EndProcess = true;
@@ -1088,8 +1093,7 @@ void ExecuteCommands()
     }
     if(Params.NeedToUpdate.Val > 0){
         RequestData[0].pValue = &datareq;
-        rv = PushAttr(RequestData[0], OUT_BUFFER);
-        RequestData[0].type = STA_ALPHA_START;
+        rv = PushAttr(RequestData[0], OUT_BUFFER);       
         if(Params.NeedToUpdate.bits.Alpha){
             if(Params.Alpha.NeedToUpdate.bits.Angle){                
                 RequestData[1].type = STA_ALPHA;
