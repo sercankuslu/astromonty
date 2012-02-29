@@ -182,9 +182,9 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         memset(TmpValue,0,sizeof(TmpValue));
         NeedToRedrawMenus = true;
         Init = true;            
-        Params.Alpha.TargetAngle = 0.24f;
-        Params.NeedToCommit.bits.Alpha = 1;
-        Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
+//         Params.Alpha.TargetAngle = 0.24f;
+//         Params.NeedToCommit.bits.Alpha = 1;
+//         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
     }
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
     while(!EndProcess){
