@@ -286,7 +286,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     static KEYS_STR Key;
     ST_RESULT rv = STR_OK;  
-    static bool OnLine = TRUE;
+    static bool OnLine = FALSE;
     static BYTE bfr[64] = "";
     static int length = 0;
 
@@ -476,7 +476,7 @@ void Calc(HWND hWnd, HDC hdc)
     MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
     LineTo(hdc, rect.left+9, rect.top);        
     
-    DWORD Px = rect.left + 10;
+    DWORD Px = rect.left + 10 + 100;
     DWORD Py = rect.bottom - 10 - 30 * SizeY ;//- (rect.bottom/4);
 
     
@@ -564,8 +564,11 @@ void Calc(HWND hWnd, HDC hdc)
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-     OCInit();
-//     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+     OCInit();     
+     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+     //PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+     //PushCmdToQueue(&rr1, ST_DECELERATE,  0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
@@ -588,11 +591,12 @@ void Calc(HWND hWnd, HDC hdc)
 //         {
             Control(&rr1);
             ProcessOC(&rr1);
-            Control(&rr2);
-            ProcessOC(&rr2);
+//             Control(&rr2);
+//             ProcessOC(&rr2);
+            //Control(&rr3);
             //ProcessOC(&rr3);
             DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL, &K1);
-            DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L, &K2);
+            //DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L, &K2);
     } while ((rr1.RunState != ST_STOP)||(rr1.CacheState != ST_STOP));
     //Restore original object.
     SelectObject(hdc,original);

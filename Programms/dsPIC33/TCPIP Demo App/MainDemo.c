@@ -285,10 +285,10 @@ int main(void)
 	//	res = ProcessClients(0, bfr, &length);			
 	//}
 
-    
-	//while(1){
-	//	Nop();
-	//}
+    OCInit(); 
+	while(1){
+		Nop();
+	}
     
     InitializeBoard();
     // calculate CPU speed  
@@ -308,12 +308,8 @@ int main(void)
 	    T6CONbits.TON = 1;
 	    T8CONbits.TON = 1;	
     }
-     
-    /*	
-	while(1){
-		Nop();
-	}
-    */
+    
+    
 	
 #if defined(USE_LCD)
     // Initialize and display the stack version on the LCD

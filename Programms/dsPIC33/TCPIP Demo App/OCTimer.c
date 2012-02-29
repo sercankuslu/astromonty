@@ -75,7 +75,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
 {
-        Timer3Big.word.HW++;
+    Timer3Big.word.HW++;
     ProcessTimer(3, &rr1);
     ProcessTimer(3, &rr2);
     ProcessTimer(3, &rr3);
@@ -176,16 +176,16 @@ int OCInit(void)
         InitRR(&rr1);  
         rr1.Index = 1;
         rr1.TmrId = 2;
-         InitRR(&rr2);
-         rr2.Index = 2;
-         rr2.TmrId = 2;
-//         InitRR(&rr3);
-//         rr3.Index = 3;
-//         rr3.TmrId = 2;
+        InitRR(&rr2);
+        rr2.Index = 2;
+        rr2.TmrId = 2;
+        InitRR(&rr3);
+        rr3.Index = 3;
+        rr3.TmrId = 2;
 #ifdef __C30__
         IFS1bits.U2RXIF = 1;
         IFS1bits.U2TXIF = 1;
-        //IFS0bits.U1RXIF = 1;
+        IFS0bits.U1RXIF = 1;
         
         // инициализация OC1
         {
@@ -214,7 +214,7 @@ int OCInit(void)
         
         IFS0bits.OC1IF = 1;
         IFS0bits.OC2IF = 1;
-        //IFS1bits.OC3IF = 1;
+        IFS1bits.OC3IF = 1;
         Timer2Big.Val = 0;
         TMR2 = 0;
         T2CONbits.TON = 1; 		// Start Timer        
@@ -287,7 +287,7 @@ int InitRR(RR * rr)
     rr->XCachePos = 0;
     rr->CacheCmdCounter = 0;
     Timer2Big.word.LW = TMR2;
-    rr->TimeBeg = /* Timer2Big.Val */ + (ARR_TYPE)(0.0000 * BUF_SIZE /rr->TimerStep);
+    rr->TimeBeg = Timer2Big.Val;
     rr->CacheState = ST_STOP;    
     rr->RunState = ST_STOP;
     rr->T.Val = 0;
@@ -301,9 +301,14 @@ int InitRR(RR * rr)
     rr->NextExecuteCmd = 0;
     rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
+    rr->dXacc_dcc_pos = 0.0; 
+    rr->d = rr->K/(2.0 * rr->B * rr->TimerStep);    
+    rr->a = 4.0 * rr->B/(rr->K * rr->K);
+    rr->T1 = 0;
+    //PushCmdToQueue(rr, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_RUN, 0.0, 1.0 * Grad_to_Rad, 1);
-	//PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 400.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
 //      PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
@@ -331,13 +336,13 @@ int Run(RR * rr)
     WORD m = 32;
     WORD i;
     WORD j;
-    WORD FreeData = BUF_SIZE - rr->DataCount;  
+    WORD FreeData;  
     double X = 0.0;    
     LONG Xb = rr->XCachePos;
     ARR_TYPE T = 0;
     ARR_TYPE T1 = 0;// = 0;
     ARR_TYPE T2 = 0;    
-        
+    FreeData = (BUF_SIZE - rr->DataCount > 32)?32:(BUF_SIZE - rr->DataCount);    
     for( i = 0; i < FreeData; i++) {
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;
@@ -375,13 +380,11 @@ int Run(RR * rr)
             T = T2;
             k = 0;
         } 
-        rr->IntervalArray[j] = rr->TimeBeg + T;
+        rr->IntervalArray[j] = T;
         rr->DataCount++;           
         T1 = T;            
     }
 
-    rr->TimeBeg += T1;
-    //rr->DataCount += FreeData;
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     rr->XCachePos = Xb;
@@ -392,68 +395,63 @@ int Acceleration(RR * rr)
 {
     WORD j;        
     WORD FreeData;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE T2 = 0;    
-    double X;       // временная переменная 
+    ARR_TYPE T = 0;    
+    ARR_TYPE T2 = 0;        
     ARR_TYPE Tb = 0;  
     double D;
-    LONG Xb = rr->XCachePos;
-    double a;    
-    double d;
     WORD i = 0;
     WORD k = 0;
     WORD m = 1;
-   
 
-    X = rr->XaccBeg * rr->dx; 
-    d = rr->K/(2.0 * rr->B * rr->TimerStep);    
-    a = 4.0 * rr->B/(rr->K * rr->K);   
-
-    if(rr->XaccBeg > 0){
-        D = X *(X + a);
+    if(0){
+    if((rr->XaccBeg > 0) && (rr->T1 == 0)){
+        D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
         if(D >= 0.0){
-            T1 = (ARR_TYPE)((-X - sqrt(D))*d);
+            rr->T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
         }  
-    } else T1 = 0;
-    Tb = rr->TimeBeg - T1;
-    T = T1;
-    
+    };    
+    }
+    T = rr->T1;
+
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
-    // 4.86uSec  при m = 32
-    FreeData = BUF_SIZE - rr->DataCount;
+    // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
+    if(BUF_SIZE - rr->DataCount >= 32){
+        FreeData = 32;
+    } else {
+        FreeData = (BUF_SIZE - rr->DataCount);
+    }
+    
     for( i = 0; i < FreeData; i++) {
         j = rr->NextWriteTo + i;
         if(j >= BUF_SIZE) j -= BUF_SIZE;
         if(k == 0) {
-            if(rr->Interval < rr->e){
-                //if(m < 32) m++;
+            if(rr->Interval < rr->e)
+            {                
                 m = 32;
-                X += rr->dx*m;
-            } else {
-                //if( m > 1) m--;
+                rr->dXacc_dcc_pos += rr->dx*m;
+            } else {                
                 m = 1;
-                X += rr->dx;
+                rr->dXacc_dcc_pos += rr->dx;
             } 
-            D = X *(X + a);
+            D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
             if(D >= 0.0){
-                T2 = (ARR_TYPE)((-X - sqrt(D))*d);
+                T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
             }
             if(m > 1){
-                rr->Interval = (T2 - T1) / m;
+                rr->Interval = (T2 - rr->T1) / m;
             } else {
-                rr->Interval = (T2 - T1);
-            }
+                rr->Interval = (T2 - rr->T1);
+            }            
         }
         T += rr->Interval;
         if(rr->CalcDir >= 0){
-            Xb++;
+            rr->XCachePos++;
         } else {
-            Xb--;            
+            rr->XCachePos--;            
         }
         rr->CacheCmdCounter--;
         if(rr->CacheCmdCounter <= 0){
-            FreeData = i;
+            FreeData = i;            
             CacheNextCmd(rr);
             break;
         }
@@ -462,19 +460,17 @@ int Acceleration(RR * rr)
             T = T2;
             k = 0;
         } 
-        rr->IntervalArray[j] = Tb + T;
+        rr->IntervalArray[j] = T;
+        rr->T1 = T;
         rr->DataCount++;
-        T1 = T;        
     }
     if(rr->RunState == ST_STOP){            
         SetRunState(rr);
         ProcessOC(rr);
-    }
-    rr->TimeBeg = Tb + T1;
+    }   
     rr->XaccBeg += FreeData; 
     rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->XCachePos = Xb;
+    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;    
     return 0;
 }
 
@@ -482,37 +478,27 @@ int Acceleration(RR * rr)
 int Deceleration(RR * rr)
 {    
     WORD j;        
-    WORD FreeData = BUF_SIZE - rr->DataCount;
-    ARR_TYPE T = 0;
-    ARR_TYPE T1 = 0;
-    ARR_TYPE T2 = 0;    
-    double X;       // временная переменная 
-    ARR_TYPE Tb = 0;  
-    double D;      
-    LONG Xb = rr->XCachePos; //(LONG)(rr->Xbeg/rr->dx);
-    double dx;
-    double a;
-    double c;
-    double d;    
+    WORD FreeData;
+    ARR_TYPE T = 0;    
+    ARR_TYPE T2 = 0; 
+    ARR_TYPE Tb = rr->T1; 
+    double D;    
     WORD i = 0;    
     WORD k = 0;
-    WORD m = 1;    
-    dx = rr->dx;
-    X = rr->XaccBeg * rr->dx; 
-    d = rr->K / (2.0 * rr->B * rr->TimerStep);
-    c = rr->K*d;
-    a = 4.0 * rr->B / (rr->K * rr->K);    
-
-    X = rr->XaccBeg * rr->dx; 
-    if(rr->XaccBeg > 0){        
-        D = X *(X + a);
+    WORD m = 1; 
+    if(0)
+    if((rr->XaccBeg > 0)/*&&(rr->T1 == 0)*/){        
+        D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
         if(D >= 0.0){
-            T1 = (ARR_TYPE)((-X - sqrt(D)) * d);
+            rr->T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
         } 
+    }    
+    T = rr->T1;
+    if(BUF_SIZE - rr->DataCount >= 32){
+        FreeData = 32;
+    } else {
+        FreeData = (BUF_SIZE - rr->DataCount);
     }
-    Tb = rr->TimeBeg + T1;
-    T = T1; 
-    
     for( i = 0; i < FreeData; i++) {
         // "грубые" вычисления
         j = rr->NextWriteTo + i;
@@ -520,33 +506,31 @@ int Deceleration(RR * rr)
         if(k == 0) {
             if(rr->Interval < rr->e){
                 m = 32;
-                X -= dx * m;
+                rr->dXacc_dcc_pos -= rr->dx * m;
             } else {
-                //if( m > 1 ) m -= 8;
                 m = 1;
-                X -= dx;
+                rr->dXacc_dcc_pos -= rr->dx;
             }             
-            if(X<=0.0){
-                //X=0.0;
+            if(rr->dXacc_dcc_pos<=0.0){
                  FreeData = i;
                  CacheNextCmd(rr);
                  break;
             }
-            D = X *(X + a);
+            D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
             if(D >= 0.0){
-                T2 = (ARR_TYPE)((-X - sqrt(D)) * d);
+                T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
             }
             if(m > 1){
-                rr->Interval = (T1 - T2) / m;
+                rr->Interval = (rr->T1 - T2) / m;
             } else {
-                rr->Interval = (T1 - T2);
+                rr->Interval = (rr->T1 - T2);
             }
         }
         T -= rr->Interval;
         if(rr->CalcDir >= 0){
-            Xb++;
+            rr->XCachePos++;
         } else {
-            Xb--;            
+            rr->XCachePos--;            
         }
         rr->CacheCmdCounter--;
         if(rr->CacheCmdCounter <= 0){
@@ -559,21 +543,21 @@ int Deceleration(RR * rr)
             T = T2;
             k = 0;
         } 
-        rr->IntervalArray[j] = Tb - T;
+        rr->IntervalArray[j] = Tb * 2 - T;
         rr->DataCount++;
-        T1 = T;
-    }   
-    rr->TimeBeg = Tb - T1;
+        rr->T1 = T;
+    } 
     rr->XaccBeg -= FreeData; 
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    rr->XCachePos = Xb;    
     return 0;
 }
 
 int Control(RR * rr)
 {
-    while((rr->DataCount <= BUF_SIZE_2)&&(rr->CacheState != ST_STOP)){
+    //while(
+    if((rr->DataCount <= BUF_SIZE_2)&&(rr->CacheState != ST_STOP))
+    {
         switch(rr->CacheState){
         case ST_ACCELERATE:
             Acceleration(rr);
