@@ -286,7 +286,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     static KEYS_STR Key;
     ST_RESULT rv = STR_OK;  
-    static bool OnLine = FALSE;
+    static bool OnLine = TRUE;
     static BYTE bfr[64] = "";
     static int length = 0;
 
@@ -302,8 +302,10 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             ExecuteCommands();
             GetItemRect(hDlg,&rect,IDC_STATIC);
             if(OnLine){
-                if(BerkleyClient() < 0) OnLine = FALSE;
-                CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
+                if(BerkleyClient() < 0) {
+                    //OnLine = FALSE;
+                    //CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
+                } //else CheckDlgButton(hDlg, IDC_CHECK1, BST_INDETERMINATE);
             } else {
                 rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
                 rv = RunServer(0, (BYTE*)bfr, sizeof(bfr), &length);            

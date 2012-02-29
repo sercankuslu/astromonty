@@ -301,9 +301,9 @@ int InitRR(RR * rr)
     rr->NextExecuteCmd = 0;
     rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-    PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(rr, ST_RUN, 0.0, 1.0 * Grad_to_Rad, 1);
-	PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 400.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(rr, ST_RUN, 0.0, 1.0 * Grad_to_Rad, 1);
+	//PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 400.0 * Grad_to_Rad, 1);
 //      PushCmdToQueue(rr, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_RUN, 0.0, 16.69 * Grad_to_Rad, -1);
 //      PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, -1);
@@ -592,7 +592,15 @@ int Control(RR * rr)
 }
 
 int CacheNextCmd(RR * rr)
-{    
+{
+    if(rr->CacheState == ST_STOP){
+        rr->TimeBeg = GetBigTmrValue(rr->TmrId) + (ARR_TYPE)(0.001 * BUF_SIZE /rr->TimerStep);
+#ifndef _WINDOWS
+        IFS1bits.U2RXIF = 1;
+#else
+        Control(rr);
+#endif
+    }
     if(rr->CmdCount > 0){
         rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
         rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
