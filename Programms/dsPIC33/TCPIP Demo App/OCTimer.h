@@ -134,7 +134,6 @@ typedef struct RR{
     double                  dXacc_dcc_pos;                 // текущее положение в просчете в радианах
     double                  d;
     double                  a;
-    ARR_TYPE                T1;
     // константы
     ARR_TYPE e; // если интервал меньше этого значения, переходим на быстрые вычисления
     double K;

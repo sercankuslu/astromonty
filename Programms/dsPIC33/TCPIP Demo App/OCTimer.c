@@ -23,6 +23,7 @@ RR rr3;
 
 int InitRR(RR * rr);
 int SetRunState(RR * rr);
+ARR_TYPE GetLastInterval(RR * rr, WORD Index);
 
 #ifdef __C30__
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
@@ -304,7 +305,7 @@ int InitRR(RR * rr)
     rr->dXacc_dcc_pos = 0.0; 
     rr->d = rr->K/(2.0 * rr->B * rr->TimerStep);    
     rr->a = 4.0 * rr->B/(rr->K * rr->K);
-    rr->T1 = 0;
+    
     //PushCmdToQueue(rr, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_RUN, 0.0, 1.0 * Grad_to_Rad, 1);
@@ -395,7 +396,8 @@ int Acceleration(RR * rr)
 {
     WORD j;        
     WORD FreeData;
-    ARR_TYPE T = 0;    
+    ARR_TYPE T = 0;   
+    ARR_TYPE T1 = 0; 
     ARR_TYPE T2 = 0;        
     ARR_TYPE Tb = 0;  
     double D;
@@ -404,14 +406,15 @@ int Acceleration(RR * rr)
     WORD m = 1;
 
     if(0){
-    if((rr->XaccBeg > 0) && (rr->T1 == 0)){
+    if((rr->XaccBeg > 0) && (T1 == 0)){
         D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
         if(D >= 0.0){
-            rr->T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
+            T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
         }  
     };    
     }
-    T = rr->T1;
+    T = GetLastInterval(rr, rr->NextWriteTo);
+    T1 = T;
 
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
     // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
@@ -438,9 +441,9 @@ int Acceleration(RR * rr)
                 T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
             }
             if(m > 1){
-                rr->Interval = (T2 - rr->T1) / m;
+                rr->Interval = (T2 - T1) / m;
             } else {
-                rr->Interval = (T2 - rr->T1);
+                rr->Interval = (T2 - T1);
             }            
         }
         T += rr->Interval;
@@ -461,7 +464,7 @@ int Acceleration(RR * rr)
             k = 0;
         } 
         rr->IntervalArray[j] = T;
-        rr->T1 = T;
+        T1 = T;
         rr->DataCount++;
     }
     if(rr->RunState == ST_STOP){            
@@ -479,9 +482,10 @@ int Deceleration(RR * rr)
 {    
     WORD j;        
     WORD FreeData;
-    ARR_TYPE T = 0;    
+    ARR_TYPE T = 0;  
+    ARR_TYPE T1 = 0;
     ARR_TYPE T2 = 0; 
-    ARR_TYPE Tb = rr->T1; 
+    ARR_TYPE Tb;
     double D;    
     WORD i = 0;    
     WORD k = 0;
@@ -490,10 +494,12 @@ int Deceleration(RR * rr)
     if((rr->XaccBeg > 0)/*&&(rr->T1 == 0)*/){        
         D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
         if(D >= 0.0){
-            rr->T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
+            T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
         } 
     }    
-    T = rr->T1;
+    T = GetLastInterval(rr,rr->NextWriteTo);
+    T1 = T;
+    Tb = T;
     if(BUF_SIZE - rr->DataCount >= 32){
         FreeData = 32;
     } else {
@@ -521,9 +527,9 @@ int Deceleration(RR * rr)
                 T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
             }
             if(m > 1){
-                rr->Interval = (rr->T1 - T2) / m;
+                rr->Interval = (T1 - T2) / m;
             } else {
-                rr->Interval = (rr->T1 - T2);
+                rr->Interval = (T1 - T2);
             }
         }
         T -= rr->Interval;
@@ -543,14 +549,24 @@ int Deceleration(RR * rr)
             T = T2;
             k = 0;
         } 
-        rr->IntervalArray[j] = Tb * 2 - T;
+        rr->IntervalArray[j] = T;
         rr->DataCount++;
-        rr->T1 = T;
+        T1 = T;
     } 
     rr->XaccBeg -= FreeData; 
     rr->NextWriteTo += FreeData;
     if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     return 0;
+}
+
+ARR_TYPE GetLastInterval(RR * rr, WORD Index)
+{
+    if(rr->DataCount == 0) 
+        return 0;
+    if(Index == 0)
+        return rr->IntervalArray[BUF_SIZE - 1];
+    else 
+        return rr->IntervalArray[Index - 1];
 }
 
 int Control(RR * rr)

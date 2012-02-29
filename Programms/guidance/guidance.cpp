@@ -624,11 +624,11 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
     }
 //     X0 = XX + V0*T;
     K3 = (int)(T * SizeX);
-    if( K3 != (*K))
+    //if( K3 != (*K))
     {
         //Change the DC pen color
         //SetDCPenColor(hdc,RGB(0,L,255));
-        MoveToEx(hdc, TX->x, TX->y, NULL);
+        //MoveToEx(hdc, TX->x, TX->y, NULL);
         TX->x = Px + (int)(T * SizeX);
         TX->y = Py - (int)(X * Rad_to_Grad * SizeY);
         if(rr1.RunState == ST_STOP){
@@ -643,10 +643,11 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
         if(rr1.RunState == ST_ACCELERATE){
             SetDCPenColor(hdc,RGB(0,255,255));
         }
-        LineTo(hdc, TX->x, TX->y);  
+        SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
+        //LineTo(hdc, TX->x, TX->y);  
 
 
-        MoveToEx(hdc, TV->x, TV->y, NULL);
+        //MoveToEx(hdc, TV->x, TV->y, NULL);
         TV->x = Px + (int)(T*SizeX);
         TV->y = Py - (int)(V*Rad_to_Grad * SizeY);
         if(rr->RunState == ST_STOP){
@@ -661,7 +662,8 @@ void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD Siz
         if(rr->RunState == ST_ACCELERATE){
             SetDCPenColor(hdc,RGB(0,255,0));
         }
-        LineTo(hdc, TV->x, TV->y);  
+        //LineTo(hdc, TV->x, TV->y);  
+        SetPixel(hdc, TV->x, TV->y,RGB(0,150,0));
 
 //         SetDCPenColor(hdc,RGB(200,200,0));
 //         MoveToEx(hdc, X0T.x, X0T.y, NULL);
