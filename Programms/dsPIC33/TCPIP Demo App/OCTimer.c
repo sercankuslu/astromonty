@@ -302,7 +302,7 @@ int InitRR(RR * rr)
     rr->NextExecuteCmd = 0;
     rr->RunCmdCounter = 0;
     rr->e = (ARR_TYPE)(0.000120 / rr->TimerStep); //70us
-    rr->dXacc_dcc_pos = 0.0; 
+    rr->dX_acc_dec_pos = 0.0; 
     rr->d = rr->K/(2.0 * rr->B * rr->TimerStep);    
     rr->a = 4.0 * rr->B/(rr->K * rr->K);
     
@@ -407,9 +407,9 @@ int Acceleration(RR * rr)
 
     if(0){
     if((rr->XaccBeg > 0) && (T1 == 0)){
-        D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
+        D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
         if(D >= 0.0){
-            T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
+            T1 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D))*rr->d);
         }  
     };    
     }
@@ -431,14 +431,14 @@ int Acceleration(RR * rr)
             if(rr->Interval < rr->e)
             {                
                 m = 32;
-                rr->dXacc_dcc_pos += rr->dx*m;
+                rr->dX_acc_dec_pos += rr->dx*m;
             } else {                
                 m = 1;
-                rr->dXacc_dcc_pos += rr->dx;
+                rr->dX_acc_dec_pos += rr->dx;
             } 
-            D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
+            D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
             if(D >= 0.0){
-                T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D))*rr->d);
+                T2 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D))*rr->d);
             }
             if(m > 1){
                 rr->Interval = (T2 - T1) / m;
@@ -490,16 +490,16 @@ int Deceleration(RR * rr)
     WORD i = 0;    
     WORD k = 0;
     WORD m = 1; 
-    if(0)
-    if((rr->XaccBeg > 0)/*&&(rr->T1 == 0)*/){        
-        D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
+   
+    if((rr->XaccBeg > 0)/*&&(rr->T1 == 0)*/){ 
+        rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
+        D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
         if(D >= 0.0){
-            T1 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
+            T1 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D)) * rr->d);
         } 
-    }    
-    T = GetLastInterval(rr,rr->NextWriteTo);
-    T1 = T;
-    Tb = T;
+    }
+    T = T1;
+    Tb = T1;
     if(BUF_SIZE - rr->DataCount >= 32){
         FreeData = 32;
     } else {
@@ -512,19 +512,19 @@ int Deceleration(RR * rr)
         if(k == 0) {
             if(rr->Interval < rr->e){
                 m = 32;
-                rr->dXacc_dcc_pos -= rr->dx * m;
+                rr->dX_acc_dec_pos -= rr->dx * m;
             } else {
                 m = 1;
-                rr->dXacc_dcc_pos -= rr->dx;
+                rr->dX_acc_dec_pos -= rr->dx;
             }             
-            if(rr->dXacc_dcc_pos<=0.0){
+            if(rr->dX_acc_dec_pos<=0.0){
                  FreeData = i;
                  CacheNextCmd(rr);
                  break;
             }
-            D = rr->dXacc_dcc_pos *(rr->dXacc_dcc_pos + rr->a);
+            D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
             if(D >= 0.0){
-                T2 = (ARR_TYPE)((-rr->dXacc_dcc_pos - sqrt(D)) * rr->d);
+                T2 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D)) * rr->d);
             }
             if(m > 1){
                 rr->Interval = (T1 - T2) / m;

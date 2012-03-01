@@ -52,7 +52,7 @@ typedef struct DateTimeStruct {
 #define Grad_to_Rad 0.017453292519943295
 #define Rad_to_Grad 57.295779513082323
 
-typedef DWORD ARR_TYPE;
+typedef LONG32 ARR_TYPE;
 
 typedef enum Cmd{ // команды
     CM_STOP,            // Остановиться (снижаем скорость до остановки)
@@ -131,7 +131,7 @@ typedef struct RR{
 
 
     // служебные (оптимизация)
-    double                  dXacc_dcc_pos;                 // текущее положение в просчете в радианах
+    double                  dX_acc_dec_pos;                 // текущее положение в просчете в радианах
     double                  d;
     double                  a;
     // константы
