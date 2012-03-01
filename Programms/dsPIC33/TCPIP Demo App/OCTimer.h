@@ -52,7 +52,14 @@ typedef struct DateTimeStruct {
 #define Grad_to_Rad 0.017453292519943295
 #define Rad_to_Grad 57.295779513082323
 
-typedef LONG32 ARR_TYPE;
+// параметры 
+
+typedef struct ARR_TYPE {
+    DWORD FixedPoint;   // опорная точка
+    DWORD Interval;     // Интервал от предыдущей точки
+    WORD  Count;        // Количество интервалов
+    WORD  Correction;   // остаток от деления полного интервала на 32
+} ARR_TYPE;
 
 typedef enum Cmd{ // команды
     CM_STOP,            // Остановиться (снижаем скорость до остановки)
@@ -93,8 +100,9 @@ typedef struct RR{
     // | | |
     // v v v
     // -------========--------
-    //
-    ARR_TYPE                Interval;                   // текущий интервал при расчетах. нужен для переключения на более "грубый" режим
+    //                    
+    //  
+    DWORD                   Interval;
     ARR_TYPE                IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
     WORD                    NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
     WORD                    NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
@@ -122,7 +130,7 @@ typedef struct RR{
     int                     CalcDir;                    // направление вращения при просчете
     LONG                    CacheCmdCounter;
     // исхoдные параметры:
-    ARR_TYPE                TimeBeg;
+    DWORD                   TimeBeg;
     LONG                    XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
 
     // параметры указывающие на момент окончания
@@ -135,7 +143,7 @@ typedef struct RR{
     double                  d;
     double                  a;
     // константы
-    ARR_TYPE e; // если интервал меньше этого значения, переходим на быстрые вычисления
+    DWORD  e; // если интервал меньше этого значения, переходим на быстрые вычисления
     double K;
     double B;
     double TimerStep;
