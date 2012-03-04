@@ -42,9 +42,9 @@ typedef struct DateTimeStruct {
 #endif
 #define PI 3.1415926535897932384626433832795
 #define FREQ_STEP 20
-#define BUF_SIZE 256
+#define BUF_SIZE 64
 // половина BUF_SIZE
-#define BUF_SIZE_2 128
+#define BUF_SIZE_2 32
 // очередь команд
 #define CQ_SIZE 10
 
@@ -140,8 +140,8 @@ typedef struct RR{
 
     // служебные (оптимизация)
     double                  dX_acc_dec_pos;                 // текущее положение в просчете в радианах
-    double                  d;
-    double                  a;
+    DWORD                  d;
+    DWORD                  a;
     // константы
     DWORD  e; // если интервал меньше этого значения, переходим на быстрые вычисления
     double K;

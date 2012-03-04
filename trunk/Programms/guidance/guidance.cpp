@@ -39,6 +39,8 @@ TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса �
 
 char Text[256] = "Test";
 
+DWORD DrawTBuffer[576000];
+DWORD DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                    MyRegisterClass(HINSTANCE hInstance);
 BOOL                    InitInstance(HINSTANCE, int);
@@ -48,7 +50,7 @@ INT_PTR CALLBACK        KeyDialog(HWND, UINT, WPARAM, LPARAM);
 void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc(HWND hWnd, HDC hdc);
-void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K);
+void DrawRRGraph(HDC hdc, DWORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 int BerkleyClient();
 
@@ -456,8 +458,8 @@ void Calc(HWND hWnd, HDC hdc)
     RECT rect;
     
 
-    static DWORD SizeX = 100;
-    static DWORD SizeY = 10;
+    static DWORD SizeX = 30000;
+    static DWORD SizeY = 300;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -479,7 +481,7 @@ void Calc(HWND hWnd, HDC hdc)
     DWORD Px = rect.left + 10 + 100;
     DWORD Py = rect.bottom - 10 - 00 * SizeY ;//- (rect.bottom/4);
 
-    
+    /*
     for (DWORD i = 0; i < rect.bottom/SizeY ; i++) {
         if(i % 10 == 0){
             SetDCPenColor(hdc,RGB(0,0,0));
@@ -505,7 +507,7 @@ void Calc(HWND hWnd, HDC hdc)
                 LineTo(  hdc, rect.left + 10 + (int)(i*SizeX/10), rect.top); 
             }
         }        
-    }
+    }*/
 //     WORD Year;
 //     BYTE Month;
 //     BYTE Day;
@@ -583,97 +585,51 @@ void Calc(HWND hWnd, HDC hdc)
 //     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
 
     //Control(&rr1);    
-    //Control(&rr2);
-    do {        
-        static int K1 = 0;
-        static int K2 = 0;
-//         for( i = 0; i < rr1.DataCount; i++) 
-//         {
-            Control(&rr1);
-            ProcessOC(&rr1);
-//             Control(&rr2);
-//             ProcessOC(&rr2);
-            //Control(&rr3);
-            //ProcessOC(&rr3);
-            DrawRRGraph(hdc, &rr1, &TX, &TV, SizeX, SizeY, Px, Py, &TL, &K1);
-            //DrawRRGraph(hdc, &rr2, &TX2, &TV2, SizeX, SizeY, Px, Py, &T2L, &K2);
-    } while ((rr1.RunState != ST_STOP)||(rr1.CacheState != ST_STOP));
+    //Control(&rr2);    
+    DWORD BufSize = sizeof(DrawTBuffer)/sizeof(DWORD);
+    for(DWORD i = 0; i < BufSize;i++){         
+        Control(&rr1);
+        ProcessOC(&rr1);
+        DrawTBuffer[i] = rr1.T.Val;
+        if(rr1.RunState == ST_STOP) {
+            BufSize = i;
+            break;
+        }
+    }
+    for(DWORD i = 0; i < BufSize - 1; i++ ){
+        double d = 1.0/(double)(DrawTBuffer[i+1] -  DrawTBuffer[i]);
+        DrawVBuffer[i] = d * 10000.0;
+    }
+    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py);
+    DrawRRGraph(hdc, DrawVBuffer, BufSize, SizeX, SizeY, &TV, Px, Py);           
+    
     //Restore original object.
     SelectObject(hdc,original);
 
 }
-void DrawRRGraph(HDC hdc, RR * rr,POINT * TX, POINT * TV, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py, double * TL, int * K)
+void DrawRRGraph(HDC hdc, DWORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py)
 {
-    double T = 0.0;
-    //double TL = 0.0;
-    double X = 0.0;
-    double V = 0.0;    
-    static int K3 = 0;
     
-    T = (double)(rr->T.Val * rr->TimerStep);
-    X = rr->XPosition * rr->dx;
-    //V = 1.0*Grad_to_Rad;
-    if(T - (*TL) != 0.0){
-        if(rr->RunDir >=0 ){
-            V = rr->dx/(T - (*TL));
-        } else {
-            V = -rr->dx/(T - (*TL));
-        }
-    } else {
-        V = 0.0;
-    }
-//     X0 = XX + V0*T;
-    K3 = (int)(T * SizeX);
-    //if( K3 != (*K))
+    for(DWORD i = 0; i < BufSize; i++)
     {
-        //Change the DC pen color
-        //SetDCPenColor(hdc,RGB(0,L,255));
         MoveToEx(hdc, TX->x, TX->y, NULL);
-        TX->x = Px + (int)(T * SizeX);
-        TX->y = Py - (int)(X * Rad_to_Grad * SizeY);
-        if(rr1.RunState == ST_STOP){
-            SetDCPenColor(hdc,RGB(0,100,100));
-        }
-        if(rr1.RunState == ST_RUN){
-            SetDCPenColor(hdc,RGB(0,200,200));
-        }
-        if(rr1.RunState == ST_DECELERATE){
-            SetDCPenColor(hdc,RGB(0,150,150));
-        }
-        if(rr1.RunState == ST_ACCELERATE){
+        TX->x = Px + (int)(Buf[i] / SizeX);
+        TX->y = Py - (int)(i / SizeY);
+//         if(rr1.RunState == ST_STOP){
+//             SetDCPenColor(hdc,RGB(0,100,100));
+//         }
+//         if(rr1.RunState == ST_RUN){
+//             SetDCPenColor(hdc,RGB(0,200,200));
+//         }
+//         if(rr1.RunState == ST_DECELERATE){
+//             SetDCPenColor(hdc,RGB(0,150,150));
+//         }
+//         if(rr1.RunState == ST_ACCELERATE){
             SetDCPenColor(hdc,RGB(0,255,255));
-        }
+//        }
         //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
-       LineTo(hdc, TX->x, TX->y);  
-
-
-         MoveToEx(hdc, TV->x, TV->y, NULL);
-         TV->x = Px + (int)(T*SizeX);
-         TV->y = Py - (int)(V*Rad_to_Grad * SizeY);
-         if(rr->RunState == ST_STOP){
-             SetDCPenColor(hdc,RGB(0,100,0));
-         }
-         if(rr->RunState == ST_RUN){
-             SetDCPenColor(hdc,RGB(0,200,0));
-         }
-         if(rr->RunState == ST_DECELERATE){
-             SetDCPenColor(hdc,RGB(0,150,0));
-         }
-         if(rr->RunState == ST_ACCELERATE){
-             SetDCPenColor(hdc,RGB(0,255,0));
-         }
-         LineTo(hdc, TV->x, TV->y);  
-         //SetPixel(hdc, TV->x, TV->y,RGB(0,150,0));
-
-//         SetDCPenColor(hdc,RGB(200,200,0));
-//         MoveToEx(hdc, X0T.x, X0T.y, NULL);
-//         X0T.x = Px + (int)(T*SizeX);
-//         X0T.y = Py - (int)(X0*Rad_to_Grad*SizeY);
-//         LineTo(hdc, X0T.x, X0T.y);
-
-        (*K) = K3;
-    }
-    (*TL) = T;
+       LineTo(hdc, TX->x, TX->y);
+    }   
 }
 void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
 {
