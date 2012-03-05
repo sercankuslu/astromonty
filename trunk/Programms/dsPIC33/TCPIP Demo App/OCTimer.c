@@ -13,7 +13,7 @@
 
 #include "OCTimer.h"
 
-
+#define abs(x) (x<0? -x : x)
 
 static DWORD_VAL Timer2Big;
 static DWORD_VAL Timer3Big;
@@ -291,7 +291,9 @@ int InitRR(RR * rr)
     rr->TimeBeg = Timer2Big.Val;
     rr->CacheState = ST_STOP;    
     rr->RunState = ST_STOP;
-    rr->T.Val = 0;    
+    rr->T.Val = 0; 
+    rr->Tb = 0;
+    rr->T1 = 0;
     rr->CmdCount = 0;
     rr->CalcDir = 1;
     rr->RunDir = 1;
@@ -303,8 +305,8 @@ int InitRR(RR * rr)
     rr->Interval = 0xFFFFFFFF;
     rr->e = 100;//(DWORD)(0.000120 / rr->TimerStep); //70us
     rr->dX_acc_dec_pos = 0.0; 
-    rr->d = (DWORD)(-(rr->K * rr->dx)/(2.0 * rr->B * rr->TimerStep));    
-    rr->a = (DWORD)(4.0 * rr->B/(rr->K * rr->K * rr->dx));
+    rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));    
+    rr->a = (4.0 * rr->B/(rr->K * rr->K));
     
     PushCmdToQueue(rr, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
@@ -396,28 +398,14 @@ int Run(RR * rr)
 // разгон с текущей скорости до требуемой
 int Acceleration(RR * rr)
 {
-    WORD j;        
-    WORD FreeData;
-    DWORD T = 0;   
-    DWORD T1 = 0; 
-    DWORD T2 = 0;        
-    DWORD dT = 0;     
-    DWORD D;
+   LONG FreeData;
+   DWORD T2 = 0;        
+    LONG dT = 0;     
+    double D;
     WORD i = 0;
-    WORD k = 0;
-    DWORD m = 1;
+   LONG m = 1;
 
-//     if(0){
-     if((rr->XaccBeg > 0)){
-         //rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx; 
-         D = rr->XaccBeg *(rr->XaccBeg + rr->a);
-         if(D >= 0.0){
-             T1 = (DWORD)((rr->XaccBeg + sqrt((double)D))*rr->d);
-         }  
-     };    
-//     }
-    
-    //T = T1;
+
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
     // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
      if(BUF_SIZE - rr->DataCount >= 32){
@@ -425,8 +413,7 @@ int Acceleration(RR * rr)
      } else {
          FreeData = (BUF_SIZE - rr->DataCount);
      } 
-    
-    if(rr->Interval >= rr->e) 
+    if(abs(rr->Interval)>= rr->e) 
     {
         m = 1;           
         if(rr->CacheCmdCounter < FreeData){
@@ -435,58 +422,54 @@ int Acceleration(RR * rr)
         } else {
             rr->CacheCmdCounter -= FreeData;
         }
-        for( i = 0; i < FreeData; i++) {                     
+        for( i = 0; i < FreeData; i++) {  
             rr->XaccBeg++;
-            D = rr->XaccBeg *(rr->XaccBeg + rr->a);
+            rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
+            D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
             if(D >= 0.0){
-                T2 = (DWORD)((rr->XaccBeg + sqrt((double)D))*rr->d);
+                T2 = (DWORD)((rr->dX_acc_dec_pos + sqrt(D))*rr->d);
             }
-            dT = T2 - T1;            
+            dT = T2 - rr->T1;  
+            rr->T1 = T2;
             rr->Interval = dT;
             rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = 0;
             rr->IntervalArray[rr->NextWriteTo].Count = 1;
-            T1 = T2;
             rr->DataCount++;
             rr->NextWriteTo++;
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE; 
-        }        
-        //rr->XaccBeg += FreeData;
+        } 
     }else {
-       
-        m = 32;    
-        // TODO::
-        for( i = 0; (i < FreeData) && (rr->CacheCmdCounter > 0); i++) {
-            rr->XaccBeg += m;
-            D = rr->XaccBeg *(rr->XaccBeg + rr->a);
-            if(D >= 0.0){
-                T2 = (DWORD)((rr->XaccBeg + sqrt((double)D))*rr->d);
+        m = 32;            
+        {
+            if(rr->CacheCmdCounter >= m) {
+                rr->CacheCmdCounter -= m;                
+            } else {
+                m = rr->CacheCmdCounter;
+                rr->CacheCmdCounter = 0;                
             }
-            dT = T2 - T1;            
+            rr->XaccBeg += m;
+            rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
+            D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
+            if(D >= 0.0){
+                T2 = (DWORD)((rr->dX_acc_dec_pos + sqrt(D))*rr->d);
+            }
+            dT = T2 - rr->T1;
+            rr->T1 = T2;
             rr->Interval = dT / m;
             rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
-            rr->IntervalArray[rr->NextWriteTo].Correction = dT % m;
-            if(rr->CacheCmdCounter >= m) {
-                rr->CacheCmdCounter -= m;
-                rr->IntervalArray[rr->NextWriteTo].Count = m;
-            } else {
-                rr->IntervalArray[rr->NextWriteTo].Count = rr->CacheCmdCounter;
-                rr->CacheCmdCounter = 0;                
-            }            
-            T1 = T2;
-            rr->DataCount++;  
-            //rr->XaccBeg += rr->IntervalArray[rr->NextWriteTo].Count;
+            rr->IntervalArray[rr->NextWriteTo].Correction = (WORD)(dT % m);
+            rr->IntervalArray[rr->NextWriteTo].Count = (WORD)m;
+            rr->DataCount++;              
             rr->NextWriteTo++;            
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-        }       
-        
-    }  
-    //rr->XaccBeg = rr->dX_acc_dec_pos / rr->dx;
-
+        }
+    }
     if(rr->RunState == ST_STOP){            
         SetRunState(rr);
+        rr->TimeBeg = GetBigTmrValue(rr->TmrId);
         ProcessOC(rr);
     }   
     if(rr->CacheCmdCounter <= 0){
@@ -498,85 +481,75 @@ int Acceleration(RR * rr)
 
 // торможение с текущей скорости до требуемой
 int Deceleration(RR * rr)
-{    
-    /*
-    WORD j;        
-    WORD FreeData;
-    ARR_TYPE T = 0;  
-    ARR_TYPE T1 = 0;
-    ARR_TYPE T2 = 0; 
-    ARR_TYPE Tb;
-    double D;    
-    WORD i = 0;    
-    WORD k = 0;
-    WORD m = 1; 
-   
-    if((rr->XaccBeg > 0)/ *&&(rr->T1 == 0)* /){ 
-        rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
-        D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
-        if(D >= 0.0){
-            T1 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D)) * rr->d);
-        } 
-    }
-    T = T1;
-    Tb = T1;
+{
+    LONG FreeData;
+    DWORD T2 = 0;        
+    LONG dT = 0;     
+    double D;
+    WORD i = 0;
+    LONG m = 1;
+
+
+    // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
+    // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
     if(BUF_SIZE - rr->DataCount >= 32){
         FreeData = 32;
     } else {
         FreeData = (BUF_SIZE - rr->DataCount);
-    }
-    for( i = 0; i < FreeData; i++) {
-        // "грубые" вычисления
-        j = rr->NextWriteTo + i;
-        if(j >= BUF_SIZE) j -= BUF_SIZE;
-        if(k == 0) {
-            if(rr->Interval < rr->e){
-                m = 32;
-                rr->dX_acc_dec_pos -= rr->dx * m;
-            } else {
-                m = 1;
-                rr->dX_acc_dec_pos -= rr->dx;
-            }             
-            if(rr->dX_acc_dec_pos<=0.0){
-                 FreeData = i;
-                 CacheNextCmd(rr);
-                 break;
-            }
+    } 
+
+    if(abs(rr->Interval)>= rr->e) 
+    {
+        m = 1;           
+        if(rr->CacheCmdCounter < FreeData){
+            FreeData = rr->CacheCmdCounter;
+            rr->CacheCmdCounter = 0;
+        } else {
+            rr->CacheCmdCounter -= FreeData;
+        }
+        for( i = 0; i < FreeData; i++) {  
+            rr->XaccBeg--;
+            rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
             D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
             if(D >= 0.0){
-                T2 = (ARR_TYPE)((-rr->dX_acc_dec_pos - sqrt(D)) * rr->d);
+                T2 = (DWORD)((rr->dX_acc_dec_pos + sqrt(D))*rr->d);
             }
-            if(m > 1){
-                rr->Interval = (T1 - T2) / m;
-            } else {
-                rr->Interval = (T1 - T2);
-            }
-        }
-        T -= rr->Interval;
-        if(rr->CalcDir >= 0){
-            rr->XCachePos++;
-        } else {
-            rr->XCachePos--;            
-        }
-        rr->CacheCmdCounter--;
-        if(rr->CacheCmdCounter <= 0){
-            FreeData = i;
-            CacheNextCmd(rr);
-            break;
-        }
-        k++;
-        if(k >= m){
-            T = T2;
-            k = 0;
+            dT = rr->T1 - T2;
+            rr->T1 = T2;
+            rr->Interval = dT;
+            rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // будущая точка
+            rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
+            rr->IntervalArray[rr->NextWriteTo].Correction = 0;
+            rr->IntervalArray[rr->NextWriteTo].Count = 1;            
+            rr->DataCount++;
+            rr->NextWriteTo++;
+            if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE; 
         } 
-        rr->IntervalArray[j] = T;
-        rr->DataCount++;
-        T1 = T;
+    }else {
+        m = 32;
+        if(rr->CacheCmdCounter >= m) {
+            rr->CacheCmdCounter -= m;                
+        } else {
+            m = rr->CacheCmdCounter;
+            rr->CacheCmdCounter = 0;                
+        }
+        rr->XaccBeg -= m;
+        rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx;
+        D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
+        if(D >= 0.0){
+            T2 = (DWORD)((rr->dX_acc_dec_pos + sqrt(D))*rr->d);
+        }
+        dT = rr->T1 - T2;
+        rr->T1 = T2;
+        rr->Interval = dT / m;
+        rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // будущая точка
+        rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
+        rr->IntervalArray[rr->NextWriteTo].Correction = (WORD)dT % m; 
+        rr->IntervalArray[rr->NextWriteTo].Count = (WORD)m;
+        rr->DataCount++;              
+        rr->NextWriteTo++;            
+        if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
     } 
-    rr->XaccBeg -= FreeData; 
-    rr->NextWriteTo += FreeData;
-    if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
-    */
     return 0;
 }
 
@@ -613,11 +586,20 @@ int CacheNextCmd(RR * rr)
 #endif
     }
     if(rr->CmdCount > 0){
+        double D;
         rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
         rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
         rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend; 
         rr->CalcDir = rr->CmdQueue[rr->NextCacheCmd].Direction;        
         rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
+        if((rr->XaccBeg > 0)){
+            rr->dX_acc_dec_pos = rr->XaccBeg * rr->dx; 
+            D = rr->dX_acc_dec_pos *(rr->dX_acc_dec_pos + rr->a);
+            if(D >= 0.0){
+                rr->T1 = (DWORD)((rr->dX_acc_dec_pos + sqrt(D))*rr->d);
+            }  
+            rr->Tb = rr->T1;
+        };        
         rr->NextCacheCmd++;
         if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;        
     } else {
@@ -719,7 +701,7 @@ int ProcessOC(RR * rr)
     } else 
     {
         // по 1 шагу
-        rr->T.Val = rr->IntervalArray[rr->NextReadFrom].FixedPoint;
+        rr->T.Val = rr->TimeBeg + rr->IntervalArray[rr->NextReadFrom].FixedPoint;
         //rr->T.Val += rr->IntervalArray[rr->NextReadFrom].Interval;
         rr->NextReadFrom++;
         if(rr->NextReadFrom >= BUF_SIZE) rr->NextReadFrom -= BUF_SIZE;
@@ -740,6 +722,7 @@ int ProcessOC(RR * rr)
     if(rr->RunCmdCounter <= 0 ){
         rr->NextExecuteCmd++;
         if(rr->NextExecuteCmd >= CQ_SIZE) rr->NextExecuteCmd -= CQ_SIZE;
+        rr->TimeBeg = rr->T.Val;
         SetRunState(rr);
     }
     

@@ -104,8 +104,8 @@ void GetMsgFromROM(MSGS Msg_id, char* Msg);
 void ProcessMenu( KEYS_STR * KeyPressed )
 {
     static float Xa = 0.0;//91.3 * PI / 180.0;
-    static float Xd = -33.1 * PI / 180.0;
-    static float Xg = 47.2 * PI / 180.0;
+    static float Xd = (float)(-33.1 * PI / 180.0);
+    static float Xg = (float)(47.2 * PI / 180.0);
     static char TimeT[] = "23:56";    
     
 
@@ -610,10 +610,10 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             EndProcess = true;
             break;
         case EDIT_IP: {// ***************************************************************************************************************
-            int i;
+            BYTE i;
             TmpPosY = PosY;   
             PosX = '9' - TmpValue[PosY];
-            Selected = ProcessKeys(KeyPressed, &PosX, 10, &PosY, strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
+            Selected = ProcessKeys(KeyPressed, &PosX, 10, &PosY, (BYTE)strlen((const char*)TmpValue) + 1, LastState, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { //Enter   
                 //(*TmpDWValue)
                 for(i = 0;i < strlen((const char*)TmpValue);i++){
@@ -669,7 +669,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         }    
         case EDIT_ANGLE: {// ***************************************************************************************************************
             BYTE MaxX = 12;
-            BYTE MaxY = strlen((const char*)TmpValue)+1;
+            BYTE MaxY = (BYTE)strlen((const char*)TmpValue)+1;
             BYTE TmpPosX = PosX;
             TmpPosY = PosY; 
             switch (PosY) {  // +00h00'00"
@@ -846,12 +846,12 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
     if(Mode & FONT_TYPE_B) {
         F = ARIAL_B;
         fsize = 13;
-        Line = Line0 + fsize*((int)ID - CPosY);   
+        Line = (BYTE)(Line0 + fsize*((int)ID - CPosY));
         if(((int)ID - CPosY<0)||((int)ID - CPosY>3)) return;
     } else {
         F = ARIAL_L;
         fsize = 10;
-        Line = Line0 + fsize*((int)ID - CPosY);
+        Line = (BYTE)(Line0 + fsize*((int)ID - CPosY));
         if(((int)ID - CPosY < 0) || ((int)ID - CPosY > 4)) return;
     }
 
@@ -863,10 +863,10 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
     if(Value!= NULL){
         ValueLength = strlen((const char*)Value);
         if(Mode & SELECT_COLUMN ){            
-            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,(const char*)Value, PosX, F,Effect);
+            StringXPos = OutTextXYx(StringXPos + 5,Line + 2,(const char*)Value, (BYTE)PosX, F,Effect);
             StringXPos = OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX], 1, F, Effect1 );
             if(PosX < ValueLength)
-                OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX + 1], ValueLength - PosX, F, Effect );
+                OutTextXYx(StringXPos,Line + 2,(const char*)&Value[PosX + 1], (BYTE)(ValueLength - PosX), F, Effect );
         } else {
             OutTextXY(StringXPos + 5,Line + 2,(const char*)Value, F,Effect);
         }
@@ -874,8 +874,8 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
 }
 void DrawScrollBar(int Pos, int Max)
 {
-    int Size = 53 / Max;
-    int Y = Pos * Size;
+    WORD Size = 53 / Max;
+    WORD Y = Pos * Size;
     FloodRectangle(122,10,132,63,0);
     DrawRectangle(122,10,132,63,1);
     FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
@@ -1003,7 +1003,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
     double Xg = 0.0;                    
     int c = 0;  
 
-    for(i = 0;i<strlen((const char*)TmpValue);i++){
+    for(i = 0;i < (int)strlen((const char*)TmpValue);i++){
         switch(TmpValue[i]){
             case '`':
             case 'h':
@@ -1041,7 +1041,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
             //MB *= 15;
         }
         Xg = Xg * (PI)/180.0;
-        (*TmpDoValue) = Xg;
+        (*TmpDoValue) = (float)Xg;
     } 
 }
 
@@ -1158,7 +1158,7 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
     BYTE m = 0;
     BYTE s = 0;
     DWORD DM = 31;     
-    double s1; 
+    DWORD s1; 
     DWORD dd;
     DWORD Days;      
     Days = Seconds/86400;
@@ -1199,17 +1199,17 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
         Days -= DM;       
         M++;
     }   
-    D = Days + 1;
+    D = (BYTE)(Days + 1);
 
     s1 = Seconds / 3600;
-    h = s1;
+    h = (BYTE)s1;
     Seconds -= (DWORD)h * 3600;
 
     s1 = Seconds / 60;
-    m = s1;
+    m = (BYTE)s1;
     Seconds -= (DWORD)m * 60;
 
-    s = Seconds;
+    s = (BYTE)Seconds;
 
     Date->Sec = s;
     Date->Min = m;

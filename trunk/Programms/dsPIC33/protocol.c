@@ -291,7 +291,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         break;
                     case STA_ALPHA:
                         {   
-                            d1 = ((float)rr1.XPosition * rr1.dx);
+                            d1 = (float)(rr1.XPosition * rr1.dx);
                             SendData[0].type = STA_ALPHA;
                             SendData[0].ulValueLen = sizeof(float);
                             SendData[0].pValue = &d1;
@@ -309,7 +309,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         break;
                     case STA_DELTA:
                         {   
-                            d2 = ((float)rr2.XPosition * rr2.dx);
+                            d2 = (float)(rr2.XPosition * rr2.dx);
                             SendData[0].type = STA_DELTA;
                             SendData[0].ulValueLen = sizeof(float);
                             SendData[0].pValue = &d2;
@@ -327,7 +327,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         break;
                     case STA_GAMMA:
                         {   
-                            d3 = ((float)rr3.XPosition * rr3.dx);
+                            d3 = (float)(rr3.XPosition * rr3.dx);
                             SendData[0].type = STA_GAMMA;
                             SendData[0].ulValueLen = sizeof(float);
                             SendData[0].pValue = &d3;
@@ -360,13 +360,13 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         case STA_ALPHA_START:
                             {
                                 float t = 0.0;
-                                BYTE l = 0;
+                                //BYTE l = 0;
                                 res = FindParam(Data, bAttributeLen, STA_ALPHA_TARGET, &k);
                                 if(res != STR_OK) {
                                     break;
                                 }
                                 memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
-                                rr1.XPosition = 0.0;                                 
+                                rr1.XPosition = 0;                                 
                                 PushCmdToQueue(&rr1, ST_ACCELERATE, 10 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
                                 PushCmdToQueue(&rr1, ST_RUN, 0.0, t, 1);
                                 PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);                                
