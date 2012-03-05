@@ -56,7 +56,7 @@ typedef struct DateTimeStruct {
 
 typedef struct ARR_TYPE {
     DWORD FixedPoint;   // опорная точка
-    DWORD Interval;     // Интервал от предыдущей точки
+    LONG Interval;     // Интервал от предыдущей точки
     WORD  Count;        // Количество интервалов
     WORD  Correction;   // остаток от деления полного интервала на 32
 } ARR_TYPE;
@@ -102,13 +102,10 @@ typedef struct RR{
     // -------========--------
     //                    
     //  
-    DWORD                   Interval;
     ARR_TYPE                IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
     WORD                    NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
     WORD                    NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
     WORD                    DataCount;                  // количество данных в массиве.
-    DWORD_VAL               T;
-
 
     // команды
     GD_CMD                  Cmd;
@@ -125,37 +122,41 @@ typedef struct RR{
     LONG                    XPosition;
     int                     RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )
     LONG                    RunCmdCounter;
+    DWORD_VAL               T;
+    DWORD                   TimeBeg;
+
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
     int                     CalcDir;                    // направление вращения при просчете
-    LONG                    CacheCmdCounter;
-    // исхoдные параметры:
-    DWORD                   TimeBeg;
-    LONG                    XaccBeg;                    //параметры функции ускорения (желательно целое число шагов)
+    LONG                    CacheCmdCounter;            // количество шагов до окончания команды
+    LONG                    Interval;                   // текущее значение интервала(число со знаком)
+    LONG                    XaccBeg;                    // параметры функции ускорения
+    double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
+    double                  d;                          // константы для минимизации вычислений
+    double                  a;  
+    DWORD                   T1;                         // значение времени, полученное в предыдущем вызове Accelerate/Deccelerate
+    DWORD                   Tb;                         // время начала для кэша decelerate
 
     // параметры указывающие на момент окончания
-    double                  Vend;                       //(надо знать скорость, на которой завершится ускорение)
-    double                  Xend;
-
+    double                  Vend;                       // скорость завершения команды
+    double                  Xend;                       // координата завершения команды
 
     // служебные (оптимизация)
-    double                  dX_acc_dec_pos;                 // текущее положение в просчете в радианах
-    DWORD                  d;
-    DWORD                  a;
+    
     // константы
-    DWORD  e; // если интервал меньше этого значения, переходим на быстрые вычисления
-    double K;
-    double B;
-    double TimerStep;
-    double dx;
-    double Mass;
-    double Radius;
-    double Length;
-    double Reduction;
-    WORD StepPerTurn;
-    WORD uStepPerStep;
-    BYTE Index;
-    BYTE TmrId;
+    DWORD  e;                                           // если интервал меньше этого значения, переходим на быстрые вычисления
+    double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощьности двигателя от скорости вращения
+    double B;                                           // B - константа, мощьность двигателя в Hm скорость в радианах в сек 
+    double TimerStep;                                   // шаг таймера в секундах (200ns)
+    double dx;                                          // шаг угла в радианах
+    double Mass;                                        // масса монтировки
+    double Radius;                                      // радиус оси/трубы телескопа
+    double Length;                                      // длинна оси (эквивалентная)
+    double Reduction;                                   // коэффициент редукции червячной пары (1/360)
+    WORD StepPerTurn;                                   // количество шагов двигателя на оборот (200 - ДШИ-200)
+    WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
+    BYTE Index;                                         // номер канала
+    BYTE TmrId;                                         // номер таймера
 }RR;
 
 #ifdef __C30__

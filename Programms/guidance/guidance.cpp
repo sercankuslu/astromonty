@@ -40,7 +40,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса �
 char Text[256] = "Test";
 
 DWORD DrawTBuffer[576000];
-DWORD DrawVBuffer[576000];
+double DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                    MyRegisterClass(HINSTANCE hInstance);
 BOOL                    InitInstance(HINSTANCE, int);
@@ -458,8 +458,8 @@ void Calc(HWND hWnd, HDC hdc)
     RECT rect;
     
 
-    static DWORD SizeX = 30000;
-    static DWORD SizeY = 300;
+    static DWORD SizeX = 15000;
+    static DWORD SizeY = 150;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -567,8 +567,8 @@ void Calc(HWND hWnd, HDC hdc)
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
      OCInit();     
-     PushCmdToQueue(&rr1, ST_ACCELERATE, 30.0 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
-     //PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
      //PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
      //PushCmdToQueue(&rr1, ST_DECELERATE,  0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
@@ -586,22 +586,30 @@ void Calc(HWND hWnd, HDC hdc)
 
     //Control(&rr1);    
     //Control(&rr2);    
+    DrawVBuffer[0] = 0;
     DWORD BufSize = sizeof(DrawTBuffer)/sizeof(DWORD);
     for(DWORD i = 0; i < BufSize;i++){         
         Control(&rr1);
         ProcessOC(&rr1);
         DrawTBuffer[i] = rr1.T.Val;
+        if(i>0){
+            //DrawVBuffer[i] = 1/(DrawTBuffer[i-1]-DrawTBuffer[i]);
+        }
+        
         if(rr1.RunState == ST_STOP) {
             BufSize = i;
             break;
         }
     }
-    for(DWORD i = 0; i < BufSize - 1; i++ ){
-        double d = 1.0/(double)(DrawTBuffer[i+1] -  DrawTBuffer[i]);
-        DrawVBuffer[i] = d * 10000.0;
-    }
-    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py);
-    DrawRRGraph(hdc, DrawVBuffer, BufSize, SizeX, SizeY, &TV, Px, Py);           
+    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py);    
+//     for(DWORD i = 0; i < BufSize; i++)
+//     {
+//         MoveToEx(hdc, TV.x, TV.y, NULL);
+//         TV.x = Px + (int)(DrawTBuffer[i] / SizeX);
+//         TV.y = Py - (int)(DrawVBuffer[i]*100000000);        
+//         SetDCPenColor(hdc,RGB(0,255,255));
+//         LineTo(hdc, TV.x, TV.y);
+//     }   
     
     //Restore original object.
     SelectObject(hdc,original);
