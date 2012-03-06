@@ -215,7 +215,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             }                        
             if(Params.Alpha.StatusFlag.bits.Enable){
                 if(Params.Alpha.IsModified.bits.Angle||NeedToRedrawMenus){
-                    XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 1 );                
+                    XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
                     DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                     Params.Alpha.IsModified.bits.Angle = 0;
                 }

@@ -117,8 +117,9 @@ static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM default
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
 
-
-
+extern RR rr1;
+extern RR rr2;
+extern RR rr3;
 
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
@@ -286,6 +287,15 @@ int main(void)
 	//}
 
     OCInit(); 
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 5 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0,  10 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 0.0,  15 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
+    PushCmdToQueue(&rr3, ST_ACCELERATE, 7 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_RUN, 0.0,   7 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
 	while(1){
 		Nop();
 	}
