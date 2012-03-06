@@ -38,8 +38,12 @@ TCHAR szTitle[MAX_LOADSTRING];                          // Текст строк
 TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса главного окна
 
 char Text[256] = "Test";
+typedef struct DRAW_BUF {
+    DWORD Value;
+    GD_STATE State;
+} DRAW_BUF;
+DRAW_BUF DrawTBuffer[576000];
 
-DWORD DrawTBuffer[576000];
 double DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                    MyRegisterClass(HINSTANCE hInstance);
@@ -50,7 +54,7 @@ INT_PTR CALLBACK        KeyDialog(HWND, UINT, WPARAM, LPARAM);
 void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc(HWND hWnd, HDC hdc);
-void DrawRRGraph(HDC hdc, DWORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py);
+void DrawRRGraph(HDC hdc, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 int BerkleyClient();
 
@@ -458,8 +462,8 @@ void Calc(HWND hWnd, HDC hdc)
     RECT rect;
     
 
-    static DWORD SizeX = 15000;
-    static DWORD SizeY = 150;
+    static DWORD SizeX = 20000;
+    static DWORD SizeY = 200;
     static double Pi = PI;
     static double TT[64];
     static DWORD TTLen = 64;
@@ -566,9 +570,15 @@ void Calc(HWND hWnd, HDC hdc)
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-     OCInit();     
-     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+     OCInit(); 
+
+     PushCmdToQueue(&rr1, ST_ACCELERATE, 10 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr1, ST_RUN, 0.0,  30 * Grad_to_Rad, 1);
      PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr2, ST_ACCELERATE, 18 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr2, ST_RUN, 0.0,  30 * Grad_to_Rad, 1);
+     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+     //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
      //PushCmdToQueue(&rr1, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
      //PushCmdToQueue(&rr1, ST_DECELERATE,  0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 //     PushCmdToQueue(&rr1, ST_RUN, 0.0, 67.1 * Grad_to_Rad, 1);
@@ -587,21 +597,34 @@ void Calc(HWND hWnd, HDC hdc)
     //Control(&rr1);    
     //Control(&rr2);    
     DrawVBuffer[0] = 0;
-    DWORD BufSize = sizeof(DrawTBuffer)/sizeof(DWORD);
+    DWORD BufSize = sizeof(DrawTBuffer)/sizeof(DrawTBuffer[0]);
     for(DWORD i = 0; i < BufSize;i++){         
         Control(&rr1);
         ProcessOC(&rr1);
-        DrawTBuffer[i] = rr1.T.Val;
-        if(i>0){
-            //DrawVBuffer[i] = 1/(DrawTBuffer[i-1]-DrawTBuffer[i]);
-        }
-        
+        DrawTBuffer[i].Value = rr1.T.Val;
+        DrawTBuffer[i].State = rr1.RunState;
+                
         if(rr1.RunState == ST_STOP) {
             BufSize = i;
             break;
         }
     }
-    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py);    
+    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py);  
+
+    BufSize = sizeof(DrawTBuffer)/sizeof(DrawTBuffer[0]);
+    for(DWORD i = 0; i < BufSize;i++){         
+        Control(&rr2);
+        ProcessOC(&rr2);
+        DrawTBuffer[i].Value = rr2.T.Val;
+        DrawTBuffer[i].State = rr2.RunState;
+
+        if(rr2.RunState == ST_STOP) {
+            BufSize = i;
+            break;
+        }
+    }
+    DrawRRGraph(hdc, DrawTBuffer, BufSize, SizeX, SizeY, &TX, Px, Py); 
+
 //     for(DWORD i = 0; i < BufSize; i++)
 //     {
 //         MoveToEx(hdc, TV.x, TV.y, NULL);
@@ -615,28 +638,35 @@ void Calc(HWND hWnd, HDC hdc)
     SelectObject(hdc,original);
 
 }
-void DrawRRGraph(HDC hdc, DWORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py)
+void DrawRRGraph(HDC hdc, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py)
 {
     
     for(DWORD i = 0; i < BufSize; i++)
     {
         MoveToEx(hdc, TX->x, TX->y, NULL);
-        TX->x = Px + (int)(Buf[i] / SizeX);
+        TX->x = Px + (int)(Buf[i].Value / SizeX);
         TX->y = Py - (int)(i / SizeY);
-//         if(rr1.RunState == ST_STOP){
-//             SetDCPenColor(hdc,RGB(0,100,100));
-//         }
-//         if(rr1.RunState == ST_RUN){
-//             SetDCPenColor(hdc,RGB(0,200,200));
-//         }
-//         if(rr1.RunState == ST_DECELERATE){
-//             SetDCPenColor(hdc,RGB(0,150,150));
-//         }
-//         if(rr1.RunState == ST_ACCELERATE){
-            SetDCPenColor(hdc,RGB(0,255,255));
-//        }
+        switch(Buf[i].State){
+            case ST_STOP :{
+                SetDCPenColor(hdc,RGB(0,100,100));
+                break;
+            }
+            case ST_RUN :{
+                SetDCPenColor(hdc,RGB(0,200,200));
+                break;
+            }
+            case ST_DECELERATE:{
+                SetDCPenColor(hdc,RGB(0,150,150));
+                break;
+            }
+            case ST_ACCELERATE:{
+               SetDCPenColor(hdc,RGB(0,255,255));
+               break;
+            }
+            default:;
+        }
         //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
-       LineTo(hdc, TX->x, TX->y);
+        LineTo(hdc, TX->x, TX->y);
     }   
 }
 void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)

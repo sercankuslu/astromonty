@@ -54,25 +54,12 @@ typedef struct DateTimeStruct {
 
 // параметры 
 
-typedef struct ARR_TYPE {
-    DWORD FixedPoint;   // опорная точка
-    LONG Interval;     // Интервал от предыдущей точки
-    WORD  Count;        // Количество интервалов
-    WORD  Correction;   // остаток от деления полного интервала на 32
-} ARR_TYPE;
-
-typedef enum Cmd{ // команды
-    CM_STOP,            // Остановиться (снижаем скорость до остановки)
-    CM_RUN_WITH_SPEED,  // Двигаться с заданной скоростью до окончания
-    CM_RUN_TO_POINT,    // Двигаться до указанного угла
-}GD_CMD;
-
-typedef enum State{     // состояния
+typedef enum GD_STATE {     // состояния
     ST_STOP,            // остановлен
     ST_ACCELERATE,      // разгоняется
     ST_RUN,             // движется с постоянной скоростью
     ST_DECELERATE,      // тормозит
-    ST_BUFFER_FREE      // сигнализирует об нехватке буфера ( проскок )
+    //ST_BUFFER_FREE      // сигнализирует об нехватке буфера ( проскок )
 }GD_STATE;
 
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
@@ -83,6 +70,15 @@ typedef struct CMD_QUEUE{
     INT Direction;
     LONG RunStep; //  количество шагов на выполнение команды
 }Cmd_Queue;
+
+typedef struct ARR_TYPE {
+    DWORD FixedPoint;   // опорная точка
+    LONG  Interval;     // Интервал от предыдущей опорной точки
+    BYTE  Count;        // Количество интервалов
+    BYTE  Correction;   // остаток от деления полного интервала на Count
+    GD_STATE State;     
+    CHAR Dir;
+} ARR_TYPE;
 
 typedef struct RR{
 
@@ -103,35 +99,31 @@ typedef struct RR{
     //                    
     //  
     ARR_TYPE                IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
-    WORD                    NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
-    WORD                    NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
-    WORD                    DataCount;                  // количество данных в массиве.
+    BYTE                    NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
+    BYTE                    NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
+    BYTE                    DataCount;                  // количество данных в массиве.
 
-    // команды
-    GD_CMD                  Cmd;
-    GD_STATE                CacheState;
-    GD_STATE                RunState;
-
+    // команды        
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
-    WORD                    NextCacheCmd;
-    WORD                    NextWriteCmd;
-    WORD                    NextExecuteCmd;
-    WORD                    CmdCount;
+    BYTE                    NextCacheCmd;
+    BYTE                    NextWriteCmd;    
+    BYTE                    CmdCount;
 
     // параметры исполнения
+    GD_STATE                RunState;
     LONG                    XPosition;
-    int                     RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )
-    LONG                    RunCmdCounter;
+    CHAR                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
     DWORD_VAL               T;
     DWORD                   TimeBeg;
 
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
-    int                     CalcDir;                    // направление вращения при просчете
+    GD_STATE                CacheState;
+    CHAR                    CacheDir;                    // направление вращения при просчете
     LONG                    CacheCmdCounter;            // количество шагов до окончания команды
     LONG                    Interval;                   // текущее значение интервала(число со знаком)
     LONG                    XaccBeg;                    // параметры функции ускорения
-    double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
+    //double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
     double                  d;                          // константы для минимизации вычислений
     double                  a;  
     DWORD                   T1;                         // значение времени, полученное в предыдущем вызове Accelerate/Deccelerate
