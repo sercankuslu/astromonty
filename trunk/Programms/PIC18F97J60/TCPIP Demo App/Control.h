@@ -116,8 +116,8 @@ typedef union COMMON_SETTINGS_FLAG_STRUCT{
     struct __PACKED
     {        
         BYTE Man_Auto:1;        // ручное = 1/ автоматическое = 0 наведение
-        BYTE b1:1;
-        BYTE b2:1;
+        BYTE NeedToRedrawMenus:1;
+        BYTE NeedToRedrawTime:1;
         BYTE b3:1;
         BYTE b4:1;
         BYTE b5:1;
