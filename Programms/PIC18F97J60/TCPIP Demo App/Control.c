@@ -25,15 +25,15 @@
 #define  A_FlagX    26
 #define  D_FlagX    57
 #define  G_FlagX    98
-#define  Line0      12
-#define  Line1      25
-#define  Line2      38
-#define  Line3      51
-#define  Line_L0      12
-#define  Line_L1      22
-#define  Line_L2      32
-#define  Line_L3      42
-#define  Line_L4      52
+#define  Line0      11
+#define  Line1      24
+#define  Line2      37
+#define  Line3      50
+#define  Line_L0      11
+#define  Line_L1      21
+#define  Line_L2      31
+#define  Line_L3      41
+#define  Line_L4      51
 #define true 1
 #define false 0
 #define ENTER 1
@@ -138,8 +138,8 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     DWORD_VAL TmpDWval;
     static BOOL Init = false;
     static int TimerCount = 0;
-    static BOOL NeedToRedrawMenus = false;
-    static BOOL NeedToRedrawTime = false;
+    
+    Params.Common.Flags.bits.NeedToRedrawTime = false;
     //     Con ^= 1;
     //     A_Run ^= 1;
     //     D_Run ^= 1;
@@ -148,7 +148,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         //TimerCount += 2;
         //if(TimerCount % 1 == 0){
         Time_Run ^= 1;
-        NeedToRedrawTime = true;
+        Params.Common.Flags.bits.NeedToRedrawTime = true;
         //}
         if(Time_Run){
             TimeT[2] = ':';
@@ -180,7 +180,8 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Gamma.IsModified.Val = 0xFF;
         Params.NeedToCommit.Val = 0x00;
         memset(TmpValue,0,sizeof(TmpValue));
-        NeedToRedrawMenus = true;
+        Params.Common.Flags.bits.NeedToRedrawMenus = true;
+
         Init = true;            
 //         Params.Alpha.TargetAngle = 0.24f;
 //         Params.NeedToCommit.bits.Alpha = 1;
@@ -196,7 +197,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 PosX = 0;
                 PosY = 0;
                 DisplayClear();
-                NeedToRedrawMenus = true;
+                Params.Common.Flags.bits.NeedToRedrawMenus = true;
                 break;
             }
             if(KeyPressed->keys.enter) { //Enter    
@@ -210,16 +211,16 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 PosY = 0;
                 KeyPressed->keys.enter ^= 1;
                 DisplayClear();
-                NeedToRedrawMenus = true;
+                Params.Common.Flags.bits.NeedToRedrawMenus = true;
                 break;
             }                        
             if(Params.Alpha.StatusFlag.bits.Enable){
-                if(Params.Alpha.IsModified.bits.Angle||NeedToRedrawMenus){
+                if(Params.Alpha.IsModified.bits.Angle||Params.Common.Flags.bits.NeedToRedrawMenus){
                     XtoTimeString((char*)&TmpValue, Params.Alpha.Angle, 0 );                
                     DrawMenuLine(0, MSG_MW_ALPHA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                     Params.Alpha.IsModified.bits.Angle = 0;
                 }
-                if(Params.Alpha.IsModified.bits.Flag||NeedToRedrawMenus){
+                if(Params.Alpha.IsModified.bits.Flag||Params.Common.Flags.bits.NeedToRedrawMenus){
                     if(Params.Alpha.StatusFlag.bits.Run){
                         color = 0;
                         Effect = NORMAL;
@@ -227,21 +228,21 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         color = 1;
                         Effect = INVERT;
                     }
-                    FloodRectangle(A_FlagX+1,1,D_FlagX,9,color);
+                    FloodRectangle(A_FlagX,0,D_FlagX,8,color);
                     GetMsgFromROM(MSG_C_ALPHA, (char*)&MsgValue);
-                    OutTextXY(A_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    OutTextXY(A_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Alpha.IsModified.bits.Flag = 0;
                 }
                 Params.Alpha.NeedToUpdate.bits.Angle = 1;
                 Params.NeedToUpdate.bits.Alpha = 1;
             }
             if(Params.Delta.StatusFlag.bits.Enable){
-                if(Params.Delta.IsModified.bits.Angle||NeedToRedrawMenus){
+                if(Params.Delta.IsModified.bits.Angle||Params.Common.Flags.bits.NeedToRedrawMenus){
                     XtoTimeString((char*)&TmpValue, Params.Delta.Angle, 0 );                
                     DrawMenuLine(1, MSG_MW_DELTA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                     Params.Delta.IsModified.bits.Angle = 0;
                 }
-                if(Params.Delta.IsModified.bits.Flag||NeedToRedrawMenus){
+                if(Params.Delta.IsModified.bits.Flag||Params.Common.Flags.bits.NeedToRedrawMenus){
                     if(Params.Delta.StatusFlag.bits.Run){
                         color = 0;
                         Effect = NORMAL;
@@ -249,21 +250,21 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         color = 1;
                         Effect = INVERT;
                     }
-                    FloodRectangle(D_FlagX+1,1,G_FlagX,9,color);
+                    FloodRectangle(D_FlagX,0,G_FlagX,8,color);
                     GetMsgFromROM(MSG_C_DELTA, (char*)&MsgValue);
-                    OutTextXY(D_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    OutTextXY(D_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Delta.IsModified.bits.Flag = 0;
                 }
                 Params.Delta.NeedToUpdate.bits.Angle = 1;
                 Params.NeedToUpdate.bits.Delta = 1;
             }
             if(Params.Gamma.StatusFlag.bits.Enable){
-                if(Params.Gamma.IsModified.bits.Angle||NeedToRedrawMenus){
+                if(Params.Gamma.IsModified.bits.Angle||Params.Common.Flags.bits.NeedToRedrawMenus){
                     XtoTimeString((char*)&TmpValue, Params.Gamma.Angle, 0 );                
                     DrawMenuLine(2, MSG_MW_GAMMA, (const char*)TmpValue, 0, 0, NO_SELECT|FONT_TYPE_B);
                     Params.Delta.IsModified.bits.Angle = 0;
                 }
-                if(Params.Gamma.IsModified.bits.Flag||NeedToRedrawMenus){
+                if(Params.Gamma.IsModified.bits.Flag||Params.Common.Flags.bits.NeedToRedrawMenus){
                     if(Params.Gamma.StatusFlag.bits.Run){
                         color = 0;
                         Effect = NORMAL;
@@ -271,20 +272,20 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         color = 1;
                         Effect = INVERT;
                     }
-                    FloodRectangle(G_FlagX+1,1,131,9,color);
+                    FloodRectangle(G_FlagX,0,131,8,color);
                     GetMsgFromROM(MSG_C_GAMMA, (char*)&MsgValue);
-                    OutTextXY(G_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                    OutTextXY(G_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Gamma.IsModified.bits.Flag = 0;
                 }
                 Params.Gamma.NeedToUpdate.bits.Angle = 1;
                 Params.NeedToUpdate.bits.Gamma = 1;
             }
-            if(NeedToRedrawTime||NeedToRedrawMenus){
-                OutTextXY(101,53,(const char*)TimeT,ARIAL_B,NORMAL);
-                NeedToRedrawTime = 0;
+            if(Params.Common.Flags.bits.NeedToRedrawTime||Params.Common.Flags.bits.NeedToRedrawMenus){
+                OutTextXY(101,54,(const char*)TimeT,ARIAL_B,NORMAL);
+                Params.Common.Flags.bits.NeedToRedrawTime = 0;
             }
            
-            if(Params.Local.IsModified.bits.Flag||NeedToRedrawMenus){
+            if(Params.Local.IsModified.bits.Flag||Params.Common.Flags.bits.NeedToRedrawMenus){
                 if(Params.Local.ConnectFlag){
                     color = 0;
                     Effect = NORMAL;
@@ -292,15 +293,17 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     color = 1;
                     Effect = INVERT;
                 }
-                FloodRectangle(Con_FlagX+1,1,A_FlagX ,9,color);
+                FloodRectangle(Con_FlagX,0,A_FlagX ,8,color);
                 GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
-                OutTextXY(Con_FlagX+3,2,(const char*)MsgValue,ARIAL_L,Effect);
+                OutTextXY(Con_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
             }
-            if(NeedToRedrawMenus){
+            if(Params.Common.Flags.bits.NeedToRedrawMenus){
                 //GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
-                //OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);                
-                DrawRectangle(0,51,132,63,1);
-                DrawRectangle(0,0,132,10,1);  
+                //OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);
+                Line(0,52,132,52,1);
+                Line(0,9,132,9,1);
+                //DrawRectangle(0,51,132,63,1);
+                //DrawRectangle(0,0,132,10,1);  
                 if(1){
                     color = 0;
                     Effect = NORMAL;
@@ -315,7 +318,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 OutTextXY(2,54,(const char*)MsgValue,ARIAL_L, Effect);                
                 //Line(36,52,36,63,1);
                 Line(99,52,99,63,1);
-                NeedToRedrawMenus = 0;
+                Params.Common.Flags.bits.NeedToRedrawMenus = 0;
             }
             EndProcess = true;
             break;
