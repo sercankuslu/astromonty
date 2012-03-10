@@ -285,21 +285,25 @@ int main(void)
 	//	res = RunClient(bfr, sizeof(bfr), &length);		
 	//	res = ProcessClients(0, bfr, &length);			
 	//}
-
-    OCInit(); 
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 5 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 0.0,  10 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_RUN, 0.0,  15 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
-    PushCmdToQueue(&rr3, ST_ACCELERATE, 7 * Grad_to_Rad, 40 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr3, ST_RUN, 0.0,   7 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);    
-	while(1){
-		Nop();
-	}
-    
+	if(0){
+		OCInit();
+	    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr1, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+		Control(&rr1);
+	    PushCmdToQueue(&rr2, ST_ACCELERATE, 17.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr2, ST_RUN, 17.0,  45.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+		Control(&rr2);
+		/*
+	    PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
+	    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+		Control(&rr3);*/
+		while(1){
+			TimerMonitor();
+		}
+ 	}   
     InitializeBoard();
     // calculate CPU speed  
     {
@@ -421,7 +425,22 @@ int main(void)
 	
  	
 	OCInit();
-
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+	Control(&rr1);//*
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+	Control(&rr2);
+	// *
+    PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+	Control(&rr3); /* /
+	while(1){
+		Nop();
+	}*/
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
     // execute all stack-related tasks, as well as your own
@@ -443,6 +462,7 @@ int main(void)
         //   	LATDbits.LATD0 ^= 1; // выход STEP
             
         //}
+        TimerMonitor();
         FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;

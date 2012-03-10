@@ -12,7 +12,8 @@
 #endif
 
 #include "OCTimer.h"
-
+#define ACC_MULTIPLIER 64
+#define RUN_MULTIPLIER 256
 #define abs(x) (x<0? -x : x)
 
 static DWORD_VAL Timer2Big;
@@ -22,6 +23,21 @@ RR rr2;
 RR rr3;
 
 int InitRR(RR * rr);
+int Run(RR * rr);
+int Acceleration(RR * rr);
+int Deceleration(RR * rr);
+int TmrInit(BYTE Num);
+//int Control(RR * rr);
+int CacheNextCmd(RR * rr);
+int ProcessTimer(BYTE id, RR * rr);
+DWORD GetBigTmrValue(BYTE id);
+int DisableOC(BYTE oc);
+int EnableOC(BYTE oc);
+BOOL IsDisableOC(BYTE oc);
+int SetOC(BYTE oc, WORD LW);
+
+int SetDirection(BYTE oc, BYTE Dir);
+int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
 
 #ifdef __C30__
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
@@ -82,17 +98,20 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
 {
-    Control(&rr1);    
+    Control(&rr1); 
+    //TimerMonitor();   
     IFS1bits.U2RXIF = 0;
 } 
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2TXInterrupt( void )
 {    
-    Control(&rr2); 
+    Control(&rr2);
+    //TimerMonitor(); 
     IFS1bits.U2TXIF = 0;
 } 
 void __attribute__((__interrupt__,__no_auto_psv__)) _U1RXInterrupt( void )
 {    
     Control(&rr3);
+    //TimerMonitor();
     IFS0bits.U1RXIF = 0;
 }
 #else
@@ -266,6 +285,7 @@ int TmrInit(BYTE Num)
 int InitRR(RR * rr)
 {
     double I;
+    int i;
     rr->Mass = 500.0f;
     rr->Radius = 0.50f;
     rr->Length = 3.0f;
@@ -303,8 +323,15 @@ int InitRR(RR * rr)
     //rr->dX_acc_dec_pos = 0.0; 
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));    
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
-    
-    
+    rr->c = rr->dx /(rr->Vend * rr->TimerStep);
+    rr->Enable = 1;
+    for(i = 0; i < CQ_SIZE; i++){
+        rr->CmdQueue[i].State = ST_STOP;
+        rr->CmdQueue[i].Direction = 1;
+        rr->CmdQueue[i].RunStep = 0;
+        rr->CmdQueue[i].Vend = 0.0;
+        rr->CmdQueue[i].Xend = 0.0;
+    }
     //PushCmdToQueue(rr, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_ACCELERATE, 0.004166667 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(rr, ST_RUN, 0.0, 1.0 * Grad_to_Rad, 1);
@@ -336,8 +363,8 @@ int Run(RR * rr)
     DWORD T2 = 0;        
     LONG dT = 0;
     WORD i = 0;
-    LONG m = 1;
-    double X = 0.0;
+    LONG m = 1;    
+    
 
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
     // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
@@ -345,8 +372,8 @@ int Run(RR * rr)
         FreeData = 32;
     } else {
         FreeData = (BUF_SIZE - rr->DataCount);
-    } 
-    if(abs(rr->Interval)>= rr->e) 
+    }     
+    if(1 || abs(rr->Interval)>= rr->e) 
     {
         m = 1;           
         if(rr->CacheCmdCounter < FreeData){
@@ -356,9 +383,8 @@ int Run(RR * rr)
             rr->CacheCmdCounter -= FreeData;
         }
         for( i = 0; i < FreeData; i++) {  
-            rr->XCachePos++;
-            X = rr->XCachePos * rr->dx;
-            T2 = (DWORD)(X / (rr->Vend * rr->TimerStep));            
+            rr->XCachePos++;            
+            T2 = (DWORD)((double)rr->XCachePos * rr->c);            
             dT = T2 - rr->T1;  
             rr->T1 = T2;
             rr->Interval = dT;
@@ -373,7 +399,7 @@ int Run(RR * rr)
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE; 
         } 
     }else {
-        m = 32;            
+        m = RUN_MULTIPLIER;            
         {
             if(rr->CacheCmdCounter >= m) {
                 rr->CacheCmdCounter -= m;                
@@ -383,8 +409,7 @@ int Run(RR * rr)
             }
             if( m > 0 ) {
                 rr->XCachePos += m;
-                X = rr->XCachePos * rr->dx;
-                T2 = (DWORD)(X / (rr->Vend * rr->TimerStep));
+                T2 = (DWORD)((double)rr->XCachePos * rr->c);
                 dT = T2 - rr->T1;
                 rr->T1 = T2;
                 rr->Interval = dT / m;
@@ -399,9 +424,6 @@ int Run(RR * rr)
                 if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
             }
         }
-    }      
-    if(rr->CacheCmdCounter <= 0){
-        CacheNextCmd(rr);
     }
     return 0;
 }
@@ -423,8 +445,7 @@ int Acceleration(RR * rr)
      } else {
          FreeData = (BUF_SIZE - rr->DataCount);
      } 
-    if(abs(rr->Interval)>= rr->e) 
-    {
+    if(abs(rr->Interval)>= rr->e) {
         m = 1;           
         if(rr->CacheCmdCounter < FreeData){
             FreeData = rr->CacheCmdCounter;
@@ -434,7 +455,7 @@ int Acceleration(RR * rr)
         }
         for( i = 0; i < FreeData; i++) {  
             rr->XaccBeg++;
-            X = rr->XaccBeg * rr->dx;
+            X = (double)rr->XaccBeg * rr->dx;
             D = X *(X + rr->a);
             if(D >= 0.0){
                 T2 = (DWORD)((X + sqrt(D))*rr->d);
@@ -453,7 +474,7 @@ int Acceleration(RR * rr)
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE; 
         } 
     }else {
-        m = 32;            
+        m = ACC_MULTIPLIER;            
         {
             if(rr->CacheCmdCounter >= m) {
                 rr->CacheCmdCounter -= m;                
@@ -463,7 +484,7 @@ int Acceleration(RR * rr)
             }
             if( m > 0 ) {
                 rr->XaccBeg += m;
-                X = rr->XaccBeg * rr->dx;
+                X = (double)rr->XaccBeg * rr->dx;
                 D = X *(X + rr->a);
                 if(D >= 0.0){
                     T2 = (DWORD)((X + sqrt(D))*rr->d);
@@ -482,11 +503,7 @@ int Acceleration(RR * rr)
                 if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
             }
         }
-    }    
-    if(rr->CacheCmdCounter <= 0){
-        CacheNextCmd(rr);
-    }
-            
+    }       
     return 0;
 }
 
@@ -510,18 +527,20 @@ int Deceleration(RR * rr)
         FreeData = (BUF_SIZE - rr->DataCount);
     } 
 
-    if(abs(rr->Interval)>= rr->e) 
+    if(1 || abs(rr->Interval)>= rr->e) 
     {
         m = 1;           
+        if(FreeData < 32) return 0; // Избегаем ненужных вычислений
         if(rr->CacheCmdCounter < FreeData){
             FreeData = rr->CacheCmdCounter;
             rr->CacheCmdCounter = 0;
         } else {
             rr->CacheCmdCounter -= FreeData;
         }
+        
         for( i = 0; i < FreeData; i++) {  
             rr->XaccBeg--;
-            X = rr->XaccBeg * rr->dx;
+            X = (double)rr->XaccBeg * rr->dx;
             D = X *(X + rr->a);
             if(D >= 0.0){
                 T2 = (DWORD)((X + sqrt(D))*rr->d);
@@ -540,7 +559,7 @@ int Deceleration(RR * rr)
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE; 
         } 
     }else {
-        m = 32;
+        m = ACC_MULTIPLIER;
         if(rr->CacheCmdCounter >= m) {
             rr->CacheCmdCounter -= m;                
         } else {
@@ -549,7 +568,7 @@ int Deceleration(RR * rr)
         }
         if(m > 0) {
             rr->XaccBeg -= m;
-            X = rr->XaccBeg * rr->dx;
+            X = (double)rr->XaccBeg * rr->dx;
             D = X *(X + rr->a);
             if(D >= 0.0){
                 T2 = (DWORD)((X + sqrt(D))*rr->d);
@@ -567,9 +586,6 @@ int Deceleration(RR * rr)
             rr->NextWriteTo++;            
             if(rr->NextWriteTo >= BUF_SIZE) rr->NextWriteTo -= BUF_SIZE;
         }
-    } 
-    if(rr->CacheCmdCounter <= 0){
-        CacheNextCmd(rr);
     }
     return 0;
 }
@@ -577,7 +593,7 @@ int Deceleration(RR * rr)
 int Control(RR * rr)
 {   
     do{
-        if((rr->DataCount < BUF_SIZE - 1)&&(rr->CacheState != ST_STOP))
+        if((rr->DataCount <= BUF_SIZE_2 ) && (rr->CacheState != ST_STOP))
         {
             switch(rr->CacheState){
             case ST_ACCELERATE:
@@ -592,7 +608,10 @@ int Control(RR * rr)
             case ST_STOP:
             break;
             }
-        }    
+        }   
+        if(rr->CacheCmdCounter <= 0){
+            CacheNextCmd(rr);
+        }
     } while ((rr->DataCount <= 1)&&(rr->CacheState != ST_STOP));
     // запуск
     if((rr->RunState == ST_STOP)&&(rr->DataCount > 1)){
@@ -601,7 +620,21 @@ int Control(RR * rr)
     }  
     return 0;
 }
-
+int TimerMonitor()
+{
+    {
+        if(rr1.Enable && (rr1.DataCount < BUF_SIZE - 32)){
+            Control(&rr1);
+        }
+        if(rr2.Enable && (rr2.DataCount < BUF_SIZE - 32)){
+            Control(&rr2);
+        }
+        if(rr3.Enable && (rr3.DataCount < BUF_SIZE - 32)){
+            Control(&rr3);
+        }
+    }
+    return 0;
+}
 
 
 int ProcessOC(RR * rr)
@@ -621,9 +654,6 @@ int ProcessOC(RR * rr)
                 IFS0bits.U1RXIF = 1;    //  1 = вызов просчета буфера   	
                 break;
             }
-#else
-            if(rr->DataCount == 0)
-                Control(rr);
 #endif
         }
     } else {
@@ -652,8 +682,7 @@ int ProcessOC(RR * rr)
         rr->IntervalArray[rr->NextReadFrom].Count--;                
     } else 
     {
-        // по 1 шагу
-        
+        // по 1 шагу        
         rr->T.Val = rr->TimeBeg + rr->IntervalArray[rr->NextReadFrom].FixedPoint;
         //rr->T.Val += rr->IntervalArray[rr->NextReadFrom].Interval;
         rr->NextReadFrom++;
@@ -993,10 +1022,10 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             }            
             break; 
         case ST_RUN: 
-//             if(rr->CmdCount == 0) {
-//                 return -1;  // это ошибка: перед командой ST_RUN должна быть еще команда
-//                 // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
-//             } else 
+//              if(rr->CmdCount == 0) {
+//                  return -1;  // это ошибка: перед командой ST_RUN должна быть еще команда
+//                  // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
+//              } else 
             {
                 if(Direction >=0 ){   
                     // количество шагов на которое сдвинулись                
