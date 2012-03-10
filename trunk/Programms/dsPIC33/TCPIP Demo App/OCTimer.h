@@ -42,9 +42,9 @@ typedef struct DateTimeStruct {
 #endif
 #define PI 3.1415926535897932384626433832795
 #define FREQ_STEP 20
-#define BUF_SIZE 64
+#define BUF_SIZE 80
 // половина BUF_SIZE
-#define BUF_SIZE_2 32
+#define BUF_SIZE_2 40
 // очередь команд
 #define CQ_SIZE 10
 
@@ -126,6 +126,7 @@ typedef struct RR{
     //double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
     double                  d;                          // константы для минимизации вычислений
     double                  a;  
+    double                  c;
     DWORD                   T1;                         // значение времени, полученное в предыдущем вызове Accelerate/Deccelerate
     DWORD                   Tb;                         // время начала для кэша decelerate
 
@@ -149,6 +150,7 @@ typedef struct RR{
     WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
     BYTE Index;                                         // номер канала
     BYTE TmrId;                                         // номер таймера
+    BYTE Enable;                                        // признак включенности
 }RR;
 
 #ifdef __C30__
@@ -277,26 +279,10 @@ typedef struct RR{
 #endif
 
 int OCInit(void);
-int TmrInit(BYTE Num);
-//int OCTimerInit(BYTE num, DWORD Steps, DWORD * Periods, DWORD * Pulses, BYTE TmrNum,WORD ocm);
-int Run(RR * rr);
-int Acceleration(RR * rr);
-int Deceleration(RR * rr);
-int Control(RR * rr);
-
-int CacheNextCmd(RR * rr);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
-int ProcessTimer(BYTE id, RR * rr);
-DWORD GetBigTmrValue(BYTE id);
-int DisableOC(BYTE oc);
-int EnableOC(BYTE oc);
-BOOL IsDisableOC(BYTE oc);
-int SetOC(BYTE oc, WORD LW);
 int ProcessOC(RR * rr);
-int SetDirection(BYTE oc, BYTE Dir);
-
-int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
-
+int Control(RR * rr);
+int TimerMonitor();
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 #endif //__OC_TIMER_H_
