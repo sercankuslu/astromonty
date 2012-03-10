@@ -237,8 +237,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
          case WM_PAINT:{
                 hdc = BeginPaint(hWnd, &ps);
-                static DWORD SizeX = 20000;
-                static DWORD SizeY = 200;
+                static DWORD SizeX = 30000;
+                static DWORD SizeY = 300;
                 DWORD Px;
                 DWORD Py;
                 HGDIOBJ original = NULL;
@@ -444,8 +444,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
 void Calc()
 {
-    static DWORD SizeX = 20000;
-    static DWORD SizeY = 200;
+    
     DisplayInit();
 
 // //    double XX = 5.0 * Grad_to_Rad;
@@ -463,15 +462,15 @@ void Calc()
 */
     OCInit(); 
 
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 20 * Grad_to_Rad, 20 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 20.0 * Grad_to_Rad,  20 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    /*PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_RUN, 10.0 * Grad_to_Rad,  20 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_ACCELERATE, 5 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  10 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);*/
    
     
     Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
@@ -485,7 +484,7 @@ void Calc()
             Buf1Size = i;
             break;
         }
-    }
+    }/*
     Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
     for(DWORD i = 0; i < Buf2Size;i++){         
         Control(&rr2);
@@ -509,7 +508,7 @@ void Calc()
             Buf3Size = i;
             break;
         }
-    }
+    }*/
 }
 void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
@@ -551,7 +550,7 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
             MoveToEx(hdc, TX.x, TX.y, NULL);
         }
         
-        if(i>1){
+        if(0&&i>1){
             double V;
             double dT = (Buf[i].Value - Buf[i-1].Value) * rr->TimerStep;
             if(dT > 0.0)
