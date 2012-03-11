@@ -116,7 +116,10 @@ int OCInit(void)
         //BYTE i;		
 #ifdef __C30__
         // MS1 = 1; MS2 = 1; 1/16
-        MS1         = 1;    // выход MS1  
+        // MS1 = 0; MS2 = 1; 1/4
+        // MS1 = 1; MS2 = 0; 1/2
+        // MS1 = 0; MS2 = 0; 1/1
+        MS1         = 0;    // выход MS1  
         MS2         = 1; 	// выход MS2  
         SLEEP       = 1; 	// выход SLEEP
         RESET       = 1; 	// выход RESET
