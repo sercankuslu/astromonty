@@ -465,12 +465,12 @@ void Calc()
     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    /*PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_RUN, 10.0 * Grad_to_Rad,  20 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_ACCELERATE, 5 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  10 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);*/
+    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
    
     
     Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
@@ -484,7 +484,7 @@ void Calc()
             Buf1Size = i;
             break;
         }
-    }/*
+    }
     Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
     for(DWORD i = 0; i < Buf2Size;i++){         
         Control(&rr2);
@@ -508,12 +508,14 @@ void Calc()
             Buf3Size = i;
             break;
         }
-    }*/
+    }
 }
 void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
     POINT TX = {Px,Py};
     POINT TV = {Px,Py};
+    POINT TX1 = {Px,Py};
+    POINT TV1 = {Px,Py};
     DWORD KX = 0;
     DWORD LX = 0;    
     DWORD KV = 0;
@@ -524,7 +526,8 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
         TX.x = Px + (int)(Buf[i].Value / SizeX);
         TX.y = Py - (int)(i / SizeY);
         KX = TX.x;
-        if(KX!=LX){
+        //if(KX!=LX)
+        {
             LX = KX;            
             switch(Buf[i].State){
                     case ST_STOP :{
@@ -546,11 +549,12 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
                     default:;
             }
             //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
+            MoveToEx(hdc, TX1.x, TX1.y, NULL);
             LineTo(hdc, TX.x, TX.y);
-            MoveToEx(hdc, TX.x, TX.y, NULL);
+            TX1 = TX;
         }
         
-        if(0&&i>1){
+        if(i>1){
             double V;
             double dT = (Buf[i].Value - Buf[i-1].Value) * rr->TimerStep;
             if(dT > 0.0)
@@ -558,7 +562,9 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
             else V = 0;            
             TV.x = Px + (int)(Buf[i].Value / SizeX);
             TV.y = Py - (int)(V * 360.0*10/PI);
-            if(KV!=LV){
+            KV = TV.x;
+            //if(KV!=LV)
+            {
                 LV = KV;
                 switch(Buf[i].State){
                         case ST_STOP :{
@@ -580,8 +586,9 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
                         default:;
                 }
                 //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
+                MoveToEx(hdc, TV1.x, TV1.y, NULL);
                 LineTo(hdc, TV.x, TV.y);
-                MoveToEx(hdc, TV.x, TV.y, NULL);
+                TV1 = TV;
             }
         }
     }   

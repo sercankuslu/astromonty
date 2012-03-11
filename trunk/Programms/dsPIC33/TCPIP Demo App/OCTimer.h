@@ -42,9 +42,9 @@ typedef struct DateTimeStruct {
 #endif
 #define PI 3.1415926535897932384626433832795
 #define FREQ_STEP 20
-#define BUF_SIZE 80
+#define BUF_SIZE 128
 // половина BUF_SIZE
-#define BUF_SIZE_2 40
+#define BUF_SIZE_2 64
 // очередь команд
 #define CQ_SIZE 10
 
@@ -64,20 +64,20 @@ typedef enum GD_STATE {     // состояния
 
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
 typedef struct CMD_QUEUE{
-    GD_STATE State;
-    double Vend;
-    double Xend;
-    INT Direction;
-    LONG RunStep; //  количество шагов на выполнение команды
+    GD_STATE    State;
+    BYTE        Direction;
+    double      Vend;
+    double      Xend;    
+    DWORD       RunStep; //  количество шагов на выполнение команды
 }Cmd_Queue;
 
 typedef struct ARR_TYPE {
-    DWORD FixedPoint;   // опорная точка
-    LONG  Interval;     // Интервал от предыдущей опорной точки
-    BYTE  Count;        // Количество интервалов
-    BYTE  Correction;   // остаток от деления полного интервала на Count
-    GD_STATE State;     
-    CHAR Dir;
+    //DWORD FixedPoint;   // опорная точка
+    DWORD       Interval;     // Интервал от предыдущей опорной точки
+    DWORD       Count;        // Количество интервалов
+    DWORD       Correction;   // остаток от деления полного интервала на Count
+    GD_STATE    State;     
+    BYTE        Dir;           // 1 в сторону увеличения, 0 - в сторону уменьшения
 } ARR_TYPE;
 
 typedef struct RR{
@@ -112,15 +112,16 @@ typedef struct RR{
     // параметры исполнения
     GD_STATE                RunState;
     LONG                    XPosition;
-    CHAR                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
+    BYTE                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
     DWORD_VAL               T;
     DWORD                   TimeBeg;
+    DWORD                   CorrectionRate;
 
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
     GD_STATE                CacheState;
-    CHAR                    CacheDir;                    // направление вращения при просчете
-    LONG                    CacheCmdCounter;            // количество шагов до окончания команды
+    BYTE                    CacheDir;                    // направление вращения при просчете
+    DWORD                   CacheCmdCounter;            // количество шагов до окончания команды
     LONG                    Interval;                   // текущее значение интервала(число со знаком)
     LONG                    XaccBeg;                    // параметры функции ускорения
     //double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
