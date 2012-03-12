@@ -290,20 +290,23 @@ int main(void)
 	    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr1, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-		Control(&rr1);
+		//Control(&rr1);
 	    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr2, ST_RUN, 18.0,  45.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
-		Control(&rr2);
+		//Control(&rr2);
 		
 		
 	    PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
 	    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-		Control(&rr3);
+		//Control(&rr3);
 		while(1){
 			//TimerMonitor();
-			Nop();
+			//Nop();
+			Control(&rr1);
+			Control(&rr2);
+			Control(&rr3);
 		}
  	}   
     InitializeBoard();
@@ -430,19 +433,20 @@ int main(void)
     PushCmdToQueue(&rr1, ST_ACCELERATE, 25.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 25.0,  90.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-    Control(&rr1);
-	/*
+    //Control(&rr1);
+	
     PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_RUN, 18.0,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
     
 	//Control(&rr2);
 	
-	/ *
+	
     PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-	Control(&rr3); / *
+	//Control(&rr3); 
+	/*
 	while(1){
 		Nop();
 	}*/
@@ -459,6 +463,9 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
+        //Control(&rr1);
+	    //Control(&rr2);
+		//Control(&rr3);
         // Blink LED0 (right most one) every second.
         
         //if(TickGet() - d >= TICK_SECOND/16000ul)
@@ -467,7 +474,7 @@ int main(void)
         //   	LATDbits.LATD0 ^= 1; // выход STEP
             
         //}
-        //TimerMonitor();
+        TimerMonitor();
         FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;

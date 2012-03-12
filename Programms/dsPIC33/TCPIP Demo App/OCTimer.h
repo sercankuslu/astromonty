@@ -26,7 +26,38 @@
 #define OCT_USE_STEPS_LEFT          0x08 // 1 - используем StepsLeft(). 0 - Продолжающееся движение до достижения максимального значения
 #define OCT_IS_USE                  0x80 // Этот таймер используется
 
-
+typedef union MOTOR_POSITION{
+    BYTE Val;
+    struct __16
+    {        
+        BYTE Step:4;
+        BYTE b8:4;
+    } b16;
+    struct __8
+    {        
+        BYTE b0:1;
+        BYTE Step:3;
+        BYTE b8:4;
+    } b8;
+    struct __4
+    {        
+        BYTE b0:2;
+        BYTE Step:2;
+        BYTE b8:4;
+    } b4;
+    struct __2
+    {        
+        BYTE b0:3;
+        BYTE Step:1;
+        BYTE b8:4;
+    } b2;
+    struct __1
+    {        
+        BYTE b0:4;
+        BYTE Step:1;
+        BYTE b8:3;
+    } b1;
+} MOTOR_POSITION; 
 #ifndef DATE_TIME_STRUCT
 #define DATE_TIME_STRUCT
 typedef struct DateTimeStruct {
@@ -70,14 +101,19 @@ typedef struct CMD_QUEUE{
     double      Xend;    
     DWORD       RunStep; //  количество шагов на выполнение команды
 }Cmd_Queue;
+typedef struct  ARR_FLAGS
+{
+    BYTE uSteps : 7;
+    BYTE Dir : 1;
+}ARR_FLAGS;
 
 typedef struct ARR_TYPE {
     //DWORD FixedPoint;   // опорная точка
     DWORD       Interval;     // Интервал от предыдущей опорной точки
     DWORD       Count;        // Количество интервалов
     DWORD       Correction;   // остаток от деления полного интервала на Count
-    GD_STATE    State;     
-    BYTE        Dir;           // 1 в сторону увеличения, 0 - в сторону уменьшения
+    GD_STATE    State;  
+    ARR_FLAGS   Flags;
 } ARR_TYPE;
 
 typedef struct RR{
