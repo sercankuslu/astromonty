@@ -102,6 +102,57 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
         //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
     }
+
+    typedef union {
+        BYTE Val:5;
+        struct __16
+        {        
+            BYTE Step:4;
+            BYTE b8:4;
+        } b16;
+        struct __8
+        {        
+            BYTE b0:1;
+            BYTE Step:3;
+            BYTE b8:4;
+        } b8;
+        struct __4
+        {        
+            BYTE b0:2;
+            BYTE Step:2;
+            BYTE b8:4;
+        } b4;
+        struct __2
+        {        
+            BYTE b0:3;
+            BYTE Step:1;
+            BYTE b8:4;
+        } b2;
+        struct __1
+        {        
+            BYTE b0:4;
+            BYTE Step:1;
+            BYTE b8:3;
+        } b1;
+    } TEST_STRUCT; 
+    volatile TEST_STRUCT B;
+    B.Val = 0;
+    BYTE B16 = 0;
+    BYTE B4 = 0;
+    BYTE B2 = 0;
+    BYTE B1 = 0;
+    for(int i = 0; i<64;i++){
+        if((B16 == 5)&&(B4 == 5)&&(B2 == 5)&&(B1 == 5)){
+            break;
+        }        
+        B.Val--;
+        B16 = B.b16.Step;
+        B4 = B.b4.Step;
+        B2 = B.b2.Step;
+        B1 = B.b1.Step;
+    }
+
+
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -524,7 +575,7 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
     for(DWORD i = 0; i < BufSize; i++)
     {        
         TX.x = Px + (int)(Buf[i].Value / SizeX);
-        TX.y = Py - (int)(i / SizeY);
+        TX.y = Py - (int)(i * rr->dx * 200000 / SizeY);
         KX = TX.x;
         //if(KX!=LX)
         {
