@@ -122,6 +122,7 @@ ST_RESULT ParseBlob(BYTE* pbBlock, int bBlockLen, ST_ATTRIBUTE_PTR pAttribute, B
 *
 *
 ******************************************************************************/
+#ifndef __18CXX
 ST_RESULT ProtocolInit()
 {
     BYTE i;
@@ -130,6 +131,7 @@ ST_RESULT ProtocolInit()
     }    
     return STR_OK;
 }
+#endif
 /******************************************************************************
 *
 *
@@ -448,7 +450,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             RoundBufferInit();
             AttrLen = 1;
             res = FormBlob(RequestConnect, AttrLen, pbBlob, bBlobLen, &bBlockPos);
-            // TODO: обработка ошибок
+            // TODO: РѕР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє
             res = STR_NEED_ANSWER;
             ST_STATE = ST_WAIT_CONNECT;
             break;
@@ -504,7 +506,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             }                
-            // TODO: обработка ошибок
+            // TODO: РѕР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє
             res = STR_NEED_ANSWER; 
             ST_STATE = ST_WAIT_AUTH;
             break;
@@ -535,7 +537,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             }
             break;
         case ST_CONNECTED:
-            // получение данных
+            // РїРѕР»СѓС‡РµРЅРёРµ РґР°РЅРЅС‹С…
             if(*pbDataLength > 0){
                 res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
                 if(res != STR_OK){
@@ -550,7 +552,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                         case STA_FLAG:
                             Answer = (BYTE*)Data[j].pValue;
                             if(*Answer != STF_DATA_READY){
-                                // это ошибка - выходим
+                                // СЌС‚Рѕ РѕС€РёР±РєР° - РІС‹С…РѕРґРёРј
                                 j = bAttributeLen;
                             }
                             break;
@@ -560,7 +562,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                         case STA_GAMMA:
                         default:
                             if(PushAttr(Data[j],IN_BUFFER) != RB_OK){
-                                // переполнение буфера. отключаемся
+                                // РїРµСЂРµРїРѕР»РЅРµРЅРёРµ Р±СѓС„РµСЂР°. РѕС‚РєР»СЋС‡Р°РµРјСЃСЏ
                                 ST_STATE = ST_REQUEST_CONNECT;
                                 return STR_NEED_DISCONNECT;
                             }                        
@@ -568,9 +570,9 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                     }
                 }
             }
-            // отправка данных
+            // РѕС‚РїСЂР°РІРєР° РґР°РЅРЅС‹С…
             if(IsDataInBuffer(OUT_BUFFER)){
-                // если в очереди много запросов, формируем большой пакет из них
+                // РµСЃР»Рё РІ РѕС‡РµСЂРµРґРё РјРЅРѕРіРѕ Р·Р°РїСЂРѕСЃРѕРІ, С„РѕСЂРјРёСЂСѓРµРј Р±РѕР»СЊС€РѕР№ РїР°РєРµС‚ РёР· РЅРёС…
                 //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
                 BOOL CommandExist = FALSE;
                 do{    

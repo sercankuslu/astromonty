@@ -74,8 +74,8 @@ typedef enum ST_ATTRIBUTE_TYPE {
     STA_DELTA_TARGET,
     STA_GAMMA,
     STA_GAMMA_TARGET,
-    // комманды
-    STA_ALPHA_START,            // начинается движение по установленным координтатам; требует наличе STA_ALPHA_TARGET
+    // РєРѕРјРјР°РЅРґС‹
+    STA_ALPHA_START,            // РЅР°С‡РёРЅР°РµС‚СЃСЏ РґРІРёР¶РµРЅРёРµ РїРѕ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рј РєРѕРѕСЂРґРёРЅС‚Р°С‚Р°Рј; С‚СЂРµР±СѓРµС‚ РЅР°Р»РёС‡Рµ STA_ALPHA_TARGET
     STA_ALPHA_STOP,
     STA_DELTA_START,
     STA_DELTA_STOP,

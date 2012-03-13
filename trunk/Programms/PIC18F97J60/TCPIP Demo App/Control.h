@@ -6,7 +6,7 @@
 #else
 #   include "GenericTypeDefs.h"
 #endif
-// флаги для NeedToUpdate и NeedToCommit
+// С„Р»Р°РіРё РґР»СЏ NeedToUpdate Рё NeedToCommit
 
 
 typedef union {
@@ -39,17 +39,17 @@ typedef union {
 } AXIS_STATUS_FLAG_STRUCT; 
 typedef struct AXIS_PARAM
 {
-    AXIS_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    AXIS_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    AXIS_FLAG_STRUCT  NeedToUpdate;     // РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РїСЂРѕСЃРёС‚СЊ СЃ СЃРµСЂРІРµСЂР° СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
+    AXIS_FLAG_STRUCT  NeedToCommit;     // РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅР° СЃРµСЂРІРµСЂ СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
     AXIS_FLAG_STRUCT  IsModified;
 
-    float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
-    DWORD  AbsSteps;         // текущий номер шага    
-    float TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
-    DWORD  TargetAbsSteps;         // текущий номер шага    
-    AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // флаг состояния оси
+    float Angle;           // С‚РµРєСѓС‰Р°СЏ РєРѕРѕСЂРґРёРЅР°С‚Р° РІ СЂР°РґРёР°РЅР°С… (СѓРіРѕР» РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РІРµСЃРµРЅРЅРµРіРѕ СЂР°РІРЅРѕРґРµРЅСЃС‚РІРёСЏ) С‚Рѕ РµСЃС‚СЊ РїРѕР»РѕР¶РµРЅРёРµ Р·РІРµР·РґС‹    
+    DWORD  AbsSteps;         // С‚РµРєСѓС‰РёР№ РЅРѕРјРµСЂ С€Р°РіР°    
+    float TargetAngle;           // С‚РµРєСѓС‰Р°СЏ РєРѕРѕСЂРґРёРЅР°С‚Р° РІ СЂР°РґРёР°РЅР°С… (СѓРіРѕР» РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РІРµСЃРµРЅРЅРµРіРѕ СЂР°РІРЅРѕРґРµРЅСЃС‚РІРёСЏ) С‚Рѕ РµСЃС‚СЊ РїРѕР»РѕР¶РµРЅРёРµ Р·РІРµР·РґС‹    
+    DWORD  TargetAbsSteps;         // С‚РµРєСѓС‰РёР№ РЅРѕРјРµСЂ С€Р°РіР°    
+    AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // С„Р»Р°Рі СЃРѕСЃС‚РѕСЏРЅРёСЏ РѕСЃРё
 } AXIS_PARAM;
-// флаги для NeedToUpdate и NeedToCommit
+// С„Р»Р°РіРё РґР»СЏ NeedToUpdate Рё NeedToCommit
 
 typedef union {
     BYTE Val;
@@ -67,8 +67,8 @@ typedef union {
 } NET_FLAG_STRUCT;
 typedef struct NETWORK_SETTINGS
 {
-    NET_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    NET_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    NET_FLAG_STRUCT  NeedToUpdate;     // РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РїСЂРѕСЃРёС‚СЊ СЃ СЃРµСЂРІРµСЂР° СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
+    NET_FLAG_STRUCT  NeedToCommit;     // РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅР° СЃРµСЂРІРµСЂ СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
     NET_FLAG_STRUCT  IsModified;
     DWORD IP;
     DWORD Mask;
@@ -79,7 +79,7 @@ typedef struct NETWORK_SETTINGS
     DWORD NTP;
     BYTE ConnectFlag;
 }NETWORK_SETTINGS;
-// флаги для NeedToUpdate и NeedToCommit
+// С„Р»Р°РіРё РґР»СЏ NeedToUpdate Рё NeedToCommit
 
 typedef union SYSTEM_FLAG_STRUCT {
     BYTE Val;
@@ -115,7 +115,7 @@ typedef union COMMON_SETTINGS_FLAG_STRUCT{
     BYTE Val;
     struct __PACKED
     {        
-        BYTE Man_Auto:1;        // ручное = 1/ автоматическое = 0 наведение
+        BYTE Man_Auto:1;        // СЂСѓС‡РЅРѕРµ = 1/ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ = 0 РЅР°РІРµРґРµРЅРёРµ
         BYTE NeedToRedrawMenus:1;
         BYTE NeedToRedrawTime:1;
         BYTE b3:1;
@@ -127,19 +127,19 @@ typedef union COMMON_SETTINGS_FLAG_STRUCT{
 } COMMON_SETTINGS_FLAG_STRUCT;
 typedef struct COMMON_SETTINGS
 {
-    COMMON_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    COMMON_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
+    COMMON_FLAG_STRUCT  NeedToUpdate;     // РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РїСЂРѕСЃРёС‚СЊ СЃ СЃРµСЂРІРµСЂР° СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
+    COMMON_FLAG_STRUCT  NeedToCommit;     // РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅР° СЃРµСЂРІРµСЂ СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
     COMMON_FLAG_STRUCT  IsModified;
 
     COMMON_SETTINGS_FLAG_STRUCT Flags;
-    double MaxGuidanceSpeed;              // максимальная скорость наведения в ручном/автоматическом режимах
+    double MaxGuidanceSpeed;              // РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ РЅР°РІРµРґРµРЅРёСЏ РІ СЂСѓС‡РЅРѕРј/Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРј СЂРµР¶РёРјР°С…
     
 } COMMON_SETTINGS;
 typedef struct All_PARAMS
 {
-    // битовые карты -флаги 
-    SYSTEM_FLAG_STRUCT NeedToUpdate;   // необходимо запросить с сервера указанные параметры
-    SYSTEM_FLAG_STRUCT NeedToCommit;   // необходимо отправить на сервер указанные параметры    
+    // Р±РёС‚РѕРІС‹Рµ РєР°СЂС‚С‹ -С„Р»Р°РіРё 
+    SYSTEM_FLAG_STRUCT NeedToUpdate;   // РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РїСЂРѕСЃРёС‚СЊ СЃ СЃРµСЂРІРµСЂР° СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹
+    SYSTEM_FLAG_STRUCT NeedToCommit;   // РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅР° СЃРµСЂРІРµСЂ СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹    
     SYSTEM_FLAG_STRUCT IsModified;
 
     AXIS_PARAM Alpha;

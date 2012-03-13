@@ -1,4 +1,4 @@
-﻿// #ifndef __OCTIMER_C
+// #ifndef __OCTIMER_C
 // #define __OCTIMER_C
 // #endif
 
