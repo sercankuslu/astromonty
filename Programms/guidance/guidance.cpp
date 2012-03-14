@@ -42,6 +42,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса �
 char Text[256] = "Test";
 typedef struct DRAW_BUF {
     DWORD Value;
+    LONG Pos;
     GD_STATE State;
 } DRAW_BUF;
 
@@ -152,7 +153,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         B1 = B.b1.Step;
     }
 
-
+    OCInit();
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -511,17 +512,32 @@ void Calc()
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    OCInit(); 
+    //OCInit(); 
+
+    rr1.XPosition = 0;
+    rr2.XPosition = 0;
+    rr3.XPosition = 0;
 
     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  0.0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
+
     PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_RUN, 10.0 * Grad_to_Rad,  20 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 10 * Grad_to_Rad, 0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_RUN, 10.0 * Grad_to_Rad,  0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
+
     PushCmdToQueue(&rr3, ST_ACCELERATE, 5 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  10 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr3, ST_ACCELERATE, 5 * Grad_to_Rad, 0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  0 * Grad_to_Rad, -1);
+    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
    
     
     Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
@@ -529,6 +545,7 @@ void Calc()
         Control(&rr1);
         ProcessOC(&rr1);
         DrawT1Buffer[i].Value = rr1.T.Val;
+        DrawT1Buffer[i].Pos = rr1.XPosition;
         DrawT1Buffer[i].State = rr1.RunState;
                 
         if(rr1.RunState == ST_STOP) {
@@ -542,7 +559,7 @@ void Calc()
         ProcessOC(&rr2);
         DrawT2Buffer[i].Value = rr2.T.Val;
         DrawT2Buffer[i].State = rr2.RunState;
-
+        DrawT2Buffer[i].Pos = rr2.XPosition;
         if(rr2.RunState == ST_STOP) {
             Buf2Size = i;
             break;
@@ -554,7 +571,7 @@ void Calc()
         ProcessOC(&rr3);
         DrawT3Buffer[i].Value = rr3.T.Val;
         DrawT3Buffer[i].State = rr3.RunState;
-
+        DrawT3Buffer[i].Pos = rr3.XPosition;
         if(rr3.RunState == ST_STOP) {
             Buf3Size = i;
             break;
@@ -575,7 +592,7 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
     for(DWORD i = 0; i < BufSize; i++)
     {        
         TX.x = Px + (int)(Buf[i].Value / SizeX);
-        TX.y = Py - (int)(i * rr->dx * 200000 / SizeY);
+        TX.y = Py - (int)(Buf[i].Pos * rr->dx * 200000 / SizeY);
         KX = TX.x;
         //if(KX!=LX)
         {

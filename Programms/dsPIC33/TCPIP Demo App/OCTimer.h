@@ -144,6 +144,8 @@ typedef struct RR{
     BYTE                    NextCacheCmd;
     BYTE                    NextWriteCmd;    
     BYTE                    CmdCount;
+    double                  LastCmdV;
+    double                  LastCmdX;  
 
     // параметры исполнения
     GD_STATE                RunState;
