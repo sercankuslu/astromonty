@@ -308,6 +308,8 @@ int InitRR(RR * rr)
     rr->NextCacheCmd = 0;
     rr->NextWriteCmd = 0;
     rr->Interval = 32768;
+    rr->LastCmdV = 0.0;
+    rr->LastCmdX = 0.0;
     CalculateParams(rr);
     
     return 0;    
@@ -642,7 +644,8 @@ int ProcessOC(RR * rr)
     }
     // устанавливаем направление вращения
     if(rr->RunDir != rr->IntervalArray[rr->NextReadFrom].Flags.Dir){       
-        SetDirection(rr->Index,rr->RunDir);        
+        SetDirection(rr->Index,rr->RunDir);  
+        rr->RunDir = rr->IntervalArray[rr->NextReadFrom].Flags.Dir;
     }
     // прибавляем интервалы и корректируем
     // TODO: Сделать равномерное распределение коррекции
@@ -864,7 +867,7 @@ int CacheNextCmd(RR * rr)
         rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
         rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend; 
         rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;        
-        rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
+        rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;        
         switch(rr->CacheState){
             case ST_ACCELERATE:
             case ST_DECELERATE:
@@ -884,7 +887,12 @@ int CacheNextCmd(RR * rr)
                 break;
             default:;
         }       
-        //rr->CmdCount--;
+        rr->CmdCount--;
+        rr->CmdQueue[rr->NextCacheCmd].State = ST_STOP;
+        rr->CmdQueue[rr->NextCacheCmd].Vend = 0.0;
+        rr->CmdQueue[rr->NextCacheCmd].Xend = 0.0;
+        rr->CmdQueue[rr->NextCacheCmd].Direction = 1;
+        rr->CmdQueue[rr->NextCacheCmd].RunStep = 0;
         rr->NextCacheCmd++;
         if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;        
     } else {
@@ -897,8 +905,6 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
 {
     LONG Xbreak;
     WORD LastCmd;
-    double Vbeg = 0.0;
-    double Xbeg = 0.0;
     if(rr->CmdCount < CQ_SIZE){
         rr->CmdQueue[rr->NextWriteCmd].State = State;
         rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
@@ -907,23 +913,14 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
             rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
         else
             rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
-
-        //CalculateBreakParam(rr, &Xbreak);
-
-        if(rr->CmdCount > 0){
-            if(rr->NextWriteCmd > 0){
-                LastCmd = rr->NextWriteCmd - 1;
-            } else {
-                LastCmd = CQ_SIZE - 1;
-            }
-            Vbeg = rr->CmdQueue[LastCmd].Vend;
-            Xbeg = rr->CmdQueue[LastCmd].Xend;
-        }    
-        CalculateBreakParam(rr, State, Direction, Vbeg, Xbeg, 
+        
+        CalculateBreakParam(rr, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV, rr->LastCmdX, 
             &rr->CmdQueue[rr->NextWriteCmd].Vend, 
             &rr->CmdQueue[rr->NextWriteCmd].Xend, &Xbreak);
         rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
-
+        rr->LastCmdV = rr->CmdQueue[rr->NextWriteCmd].Vend;
+        rr->LastCmdX = rr->CmdQueue[rr->NextWriteCmd].Xend;
+        
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;       
         rr->CmdCount++;
@@ -972,7 +969,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             } else {
                 dX = Xb - Xe;
             }
-            if(Direction >=0 ){   
+            if(Direction >0 ){   
                 // количество шагов на которое сдвинулись                
                 XmX = (*Xend) - Xbeg;                
             } else {                                
@@ -996,7 +993,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
                 (*Vend) = (rr->B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // вычислить скорость  V = BT/(1-KT)  T = 
             } else {
                 // если координата перемещения больше, чем координата при заданной скорости  
-                if(Direction >=0 ){
+                if(Direction >0 ){
                     (*Xbreak) = dX;                    
                     (*Xend) = Xbeg + dX * rr->dx;
                 } else {
@@ -1011,7 +1008,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
 //                 // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
 //             } else 
             {
-                if(Direction >=0 ){   
+                if(Direction >0 ){   
                     // количество шагов на которое сдвинулись                
                     XmX = (*Xend) - Xbeg;                
                 } else {                                
@@ -1077,20 +1074,6 @@ int GoToCmd(RR * rr, double VTarget, double XTarget)
 {
     if((rr == NULL) || (VTarget == 0.0) || (XTarget == 0.0)) 
         return -1;
-    if((rr->RunState != ST_STOP)||(rr->CacheState != ST_STOP)){
-        // прервать выполнение текущей команды и остановить движение
-        //BreakCurrentCmd(rr);
-        if(rr->CacheDir > 0){
-            PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, rr->CacheDir);
-        } else {
-            PushCmdToQueue(rr, ST_DECELERATE, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, rr->CacheDir);
-        }
-        // тут мы уже знаем какая координата будет
-        // как-то нужно дождаться выполнения команды Deceleration
-    }
-    // V == 0;
-    //X == rr->XPosition;
-    // теперь два варианта : количество шагов до нужного положения     
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
     //    => вычисляем сумму разгон+ торможение + движение по линейному закону
     // 2. меньше
