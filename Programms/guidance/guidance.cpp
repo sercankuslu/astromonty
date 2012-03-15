@@ -77,8 +77,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: разместите код здесь.
-
     MSG msg;
     HACCEL hAccelTable;
 

@@ -564,7 +564,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     break;
                 case 3:
                     State = MAIN_WINDOW;  
-                    // TODO: отправка команды на перевод телескопа на координаты
+                    // отправка команды на перевод телескопа на координаты
                     if(Params.Alpha.StatusFlag.bits.Enable) {
                         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit.bits.Alpha = 1;

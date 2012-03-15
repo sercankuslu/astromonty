@@ -1069,14 +1069,23 @@ int JDToGDate(double JD, DateTime * GDate )
     GDate->Sec = (BYTE)(((s * 24 + 12 - GDate->Hour) * 60 - GDate->Min) * 60);
     return 0;
 }
-
-int GoToCmd(RR * rr, double VTarget, double XTarget)
+ 
+int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
+    BYTE Direction = 1;
+    double Vend = 0.0;
+    double Xend = 0.0;
+    LONG Xbreak;
     if((rr == NULL) || (VTarget == 0.0) || (XTarget == 0.0)) 
         return -1;
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
-    //    => вычисляем сумму разгон+ торможение + движение по линейному закону
+    //    => вычисляем сумму разгон+ торможение + движение по линейному закону    
     // 2. меньше
     //    => вычисляем максимальную скорость до которой успеем разогнаться
+    //    
+    // TODO: если двигаемся, нужно остановиться
+    // TODO: выяснить направление движения
+    // TODO: определить модель привода ( догоняем цель или ждем )
+    CalculateBreakParam(rr, ST_ACCELERATE, Direction , rr->LastCmdV, rr->LastCmdX, &Vend, &Xend, &Xbreak);
     return 0;
 }
