@@ -429,7 +429,7 @@ int main(void)
 
 	
  	
-	OCInit();
+	OCInit();/*
     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 20.0,  90.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
@@ -440,7 +440,7 @@ int main(void)
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
     
 	//Control(&rr2);
-	
+	*/
 	
     //PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
@@ -463,9 +463,9 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        //Control(&rr1);
-	    //Control(&rr2);
-		//Control(&rr3);
+        Control(&rr1);
+	    Control(&rr2);
+		Control(&rr3);
         // Blink LED0 (right most one) every second.
         
         //if(TickGet() - d >= TICK_SECOND/16000ul)
