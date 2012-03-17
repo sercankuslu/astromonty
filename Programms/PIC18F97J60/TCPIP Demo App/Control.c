@@ -568,6 +568,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     if(Params.Alpha.StatusFlag.bits.Enable) {
                         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit.bits.Alpha = 1;
+                        
                     }
                     if(Params.Delta.StatusFlag.bits.Enable) {
                         Params.Delta.NeedToCommit.bits.TargetAngle = 1;
@@ -1139,7 +1140,39 @@ void ExecuteCommands()
                 Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
             }
         }
+        if(Params.NeedToCommit.bits.Delta){
+            if(Params.Delta.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_DELTA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                RequestData[1].type = STA_DELTA_TARGET;
+                RequestData[1].pValue = &Params.Delta.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Delta.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
+        if(Params.NeedToCommit.bits.Gamma){
+            if(Params.Gamma.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                RequestData[1].type = STA_GAMMA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                RequestData[1].type = STA_GAMMA_TARGET;
+                RequestData[1].pValue = &Params.Gamma.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
         Params.NeedToCommit.bits.Alpha = 0;
+        Params.NeedToCommit.bits.Delta = 0;
+        Params.NeedToCommit.bits.Gamma = 0;
     }
 }
 void GetMsgFromROM(MSGS Msg_id, char* Msg)

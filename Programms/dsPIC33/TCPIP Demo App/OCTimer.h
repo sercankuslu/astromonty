@@ -95,11 +95,11 @@ typedef enum GD_STATE {     // состояния
 
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
 typedef struct CMD_QUEUE{
-    GD_STATE    State;
-    BYTE        Direction;
-    double      Vend;
-    double      Xend;    
-    DWORD       RunStep; //  количество шагов на выполнение команды
+    GD_STATE    State;      // команда
+    BYTE        Direction;  // направление движения в команде
+    double      Vend;       // скорость, которая будет достигнута
+    double      Xend;       // расстояние, которое будет пройдено после выполнения команды
+    DWORD       RunStep;    //  количество шагов на выполнение команды
 }Cmd_Queue;
 typedef struct  ARR_FLAGS
 {
@@ -141,15 +141,16 @@ typedef struct RR{
 
     // команды        
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
-    BYTE                    NextCacheCmd;
-    BYTE                    NextWriteCmd;    
-    BYTE                    CmdCount;
-    double                  LastCmdV;
-    double                  LastCmdX;  
+    BYTE                    NextCacheCmd;               // указатель на начало очереди
+    BYTE                    NextWriteCmd;               // указатель на конец очереди
+    BYTE                    CmdCount;                   // количество команд в очереди
+    double                  LastCmdV;                   // скорость после последней команды в очереди
+    double                  LastCmdX;                   // положение после последней команды в очереди
+    double                  VMax;                       // максимальная скорость
 
     // параметры исполнения
-    GD_STATE                RunState;
-    LONG                    XPosition;
+    GD_STATE                RunState;                   // тип команды, выполняемой в данное время
+    LONG                    XPosition;                  // текущий номер шага TODO: поддержать переключение скоростей
     BYTE                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
     DWORD_VAL               T;
     DWORD                   TimeBeg;
@@ -157,8 +158,8 @@ typedef struct RR{
 
     // параметры предпросчета
     LONG                    XCachePos;                  // текущее положение в просчете
-    GD_STATE                CacheState;
-    BYTE                    CacheDir;                    // направление вращения при просчете
+    GD_STATE                CacheState;                 // тип команды, кешируемой в данное время
+    BYTE                    CacheDir;                   // направление вращения при просчете
     DWORD                   CacheCmdCounter;            // количество шагов до окончания команды
     LONG                    Interval;                   // текущее значение интервала(число со знаком)
     LONG                    XaccBeg;                    // параметры функции ускорения
@@ -324,5 +325,6 @@ int Control(RR * rr);
 int TimerMonitor();
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
+int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 #endif //__OC_TIMER_H_
 

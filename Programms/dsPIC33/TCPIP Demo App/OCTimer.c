@@ -28,6 +28,10 @@ __attribute__((far)) RR rr3;
 RR rr1;
 RR rr2;
 RR rr3;
+DWORD TickGet()
+{
+    return 0;
+}
 #endif
 int InitRR(RR * rr);
 int TmrInit(BYTE Num);
@@ -41,6 +45,7 @@ BOOL IsDisableOC(BYTE oc);
 int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
 int ProcessTimer(BYTE id, RR * rr);
 void CalculateParams(RR * rr);
+int GetXTfromV(RR * rr, double Vbeg, double Vend, double * dT, double * dX);
 #ifdef __C30__
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {   
@@ -310,6 +315,7 @@ int InitRR(RR * rr)
     rr->Interval = 32768;
     rr->LastCmdV = 0.0;
     rr->LastCmdX = 0.0;
+    rr1.VMax = 10.0 * Grad_to_Rad;
     CalculateParams(rr);
     
     return 0;    
@@ -904,7 +910,6 @@ int CacheNextCmd(RR * rr)
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction )
 {
     LONG Xbreak;
-    WORD LastCmd;
     if(rr->CmdCount < CQ_SIZE){
         rr->CmdQueue[rr->NextWriteCmd].State = State;
         rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
@@ -942,11 +947,14 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
     LONG dX2;
     double XX;
     double D;   
-    double d = rr->K/(2.0 * rr->B);    
+    double d = -rr->K/(2.0 * rr->B);    
     double a = 4.0 * rr->B/(rr->K * rr->K);   
     double T2 = 0.0;
     double OmKT;
     double XmX;
+    double ddT = 0.0;
+    double ddX = 0.0;
+    //rr->d
 
     switch (State) {
         case ST_ACCELERATE:
@@ -954,14 +962,13 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             if(Vbeg!=0.0){
                 VKpB = Vbeg * rr->K + rr->B;
                 D = rr->B * VKpB;
-                dTb = ((-VKpB + sqrt(D))/(-rr->K * VKpB));
+                dTb = ((VKpB - sqrt(D))/(rr->K * VKpB));
                 Xb = (LONG)((rr->B * dTb * dTb) / ((1 - rr->K * dTb)*rr->dx));
             } else Xb = 0;
-
-            if((*Vend) != 0.0){
+            if(*Vend != 0.0){
                 VKpB = (*Vend) * rr->K + rr->B;
                 D = rr->B * VKpB;
-                dTe = ((-VKpB + sqrt(D))/(-rr->K * VKpB));
+                dTe = ((VKpB - sqrt(D))/(rr->K * VKpB));
                 Xe = (LONG)((rr->B * dTe * dTe) / ((1 - rr->K * dTe)*rr->dx));
             } else Xe = 0;
             if(State != ST_DECELERATE){
@@ -987,7 +994,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
                 }
                 D = XX *(XX + a);
                 if(D >= 0.0){
-                    T2 = ((-XX - sqrt(D))*d);
+                    T2 = ((XX + sqrt(D))*d);
                 }
                 OmKT = (1 - rr->K * T2);
                 (*Vend) = (rr->B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // вычислить скорость  V = BT/(1-KT)  T = 
@@ -1003,10 +1010,6 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             }            
             break; 
         case ST_RUN: 
-//             if(rr->CmdCount == 0) {
-//                 return -1;  // это ошибка: перед командой ST_RUN должна быть еще команда
-//                 // т.к. увеличение счетчика после, то мы таким образом не исполняем команду
-//             } else 
             {
                 if(Direction >0 ){   
                     // количество шагов на которое сдвинулись                
@@ -1073,11 +1076,14 @@ int JDToGDate(double JD, DateTime * GDate )
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
     BYTE Direction = 1;
-    double Vend = 0.0;
-    double Xend = 0.0;
     LONG Xbreak;
-    if((rr == NULL) || (VTarget == 0.0) || (XTarget == 0.0)) 
-        return -1;
+    double Xa = 0.0;
+    double Ta = 0.0;
+    double Td = 0.0;
+    double Xd = 0.0;
+    double T0 = 0.0;
+    double Trun = 0.0;
+
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
     //    => вычисляем сумму разгон+ торможение + движение по линейному закону    
     // 2. меньше
@@ -1085,7 +1091,52 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     //    
     // TODO: если двигаемся, нужно остановиться
     // TODO: выяснить направление движения
-    // TODO: определить модель привода ( догоняем цель или ждем )
-    CalculateBreakParam(rr, ST_ACCELERATE, Direction , rr->LastCmdV, rr->LastCmdX, &Vend, &Xend, &Xbreak);
+    // TODO: определить модель привода ( догоняем цель или ждем )  
+    if(rr->LastCmdX < XTarget){
+        // Accelerate:
+        GetXTfromV(rr, rr->LastCmdV, rr->VMax, &Ta, &Xa);
+        // Decelerate:    
+        GetXTfromV(rr, VTarget, rr->VMax, &Td, &Xd);
+        T0 = ((double)(Tick - TickGet()))* 0.00000025;
+        Trun = -(XTarget - rr->LastCmdX - Xa - Xd + VTarget * (T0 + Ta + Td) ) /(VTarget - rr->VMax);
+        if(Trun<=0){
+            // значит, что до цели ближе, чем расстояние разгона до полной скорости           
+            
+        } else {
+            double Xrun = rr->VMax * Trun + Xa + rr->LastCmdX; // ??    
+            PushCmdToQueue(rr, ST_ACCELERATE, rr->VMax, 180.0 * Grad_to_Rad, Direction);
+            PushCmdToQueue(rr, ST_RUN, rr->VMax,  Xrun, Direction);
+            PushCmdToQueue(rr, ST_DECELERATE, VTarget, 180.0 * Grad_to_Rad, Direction);
+            if(VTarget != 0.0){
+                PushCmdToQueue(rr, ST_RUN, VTarget,  180.0 * Grad_to_Rad, Direction);
+            } 
+        }
+    }
+    return 0;
+}
+
+int GetXTfromV(RR * rr, double Vbeg, double Vend, double * dT, double * dX)
+{
+    double VKpB = 0.0;
+    double D = 0.0;
+    double dTb = 0.0;
+    double dTe = 0.0;
+    double Xe = 0.0;
+    double Xb = 0.0;
+    if(Vbeg!=0.0){
+        VKpB = Vbeg * rr->K + rr->B;
+        D = rr->B * VKpB;
+        dTb = ((VKpB - sqrt(D))/(rr->K * VKpB));
+        Xb = ((rr->B * dTb * dTb) / ((1 - rr->K * dTb)));
+    } else Xb = 0;
+
+    if(Vend != 0.0){
+        VKpB = Vend * rr->K + rr->B;
+        D = rr->B * VKpB;
+        dTe = ((VKpB - sqrt(D))/(rr->K * VKpB));
+        Xe = ((rr->B * dTe * dTe) / ((1 - rr->K * dTe)));
+    } else Xe = 0;
+    (*dX) = Xe - Xb;
+    (*dT) = dTe - dTb;
     return 0;
 }

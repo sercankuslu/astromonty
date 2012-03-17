@@ -292,8 +292,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DWORD Px;
                 DWORD Py;
                 HGDIOBJ original = NULL;
-                RECT rect;
-
+                RECT rect;               
                 original = SelectObject(hdc,GetStockObject(DC_PEN)); 
                 GetClientRect(hWnd, &rect);    
                 MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
@@ -304,7 +303,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Py = rect.bottom - 10 - 00 * SizeY ;//- (rect.bottom/4);
                 DrawRRGraph(hdc, &rr1, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
                 DrawRRGraph(hdc, &rr2, DrawT2Buffer, Buf2Size, SizeX, SizeY, Px, Py); 
-                DrawRRGraph(hdc, &rr3, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py); 
+                DrawRRGraph(hdc, &rr3, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py);                 
                 SelectObject(hdc,original);
                 EndPaint(hWnd, &ps);
                 break;
@@ -511,11 +510,28 @@ void Calc()
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
     //OCInit(); 
-
+    /*
     rr1.XPosition = 0;
     rr2.XPosition = 0;
     rr3.XPosition = 0;
-
+    rr1.VMax = 10.0 * Grad_to_Rad;
+    rr1.LastCmdV = 0.0;
+    rr1.LastCmdX = 0.0;
+    rr1.T.Val = 0;
+    rr1.TimeBeg = 0;
+    rr3.VMax = 10.0 * Grad_to_Rad;
+    rr3.LastCmdV = 0.0;
+    rr3.LastCmdX = 0.0;
+    rr3.T.Val = 0;
+    rr3.TimeBeg = 0;
+    GoToCmd(&rr1, 0.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0); 
+    GoToCmd(&rr3, 1.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
+    rr2.LastCmdV = 1.0 * Grad_to_Rad;
+    rr2.LastCmdX = 10.0 * Grad_to_Rad;
+    rr2.XPosition = rr2.LastCmdX/rr2.dx;
+    PushCmdToQueue(&rr2, ST_RUN, 1.0 * Grad_to_Rad,  180 * Grad_to_Rad, 1);
+    */
+/*
     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
@@ -536,43 +552,49 @@ void Calc()
     PushCmdToQueue(&rr3, ST_ACCELERATE, 5 * Grad_to_Rad, 0 * Grad_to_Rad, -1);
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  0 * Grad_to_Rad, -1);
     PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
-   
+   */
     
-    Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
-    for(DWORD i = 0; i < Buf1Size;i++){         
-        Control(&rr1);
-        ProcessOC(&rr1);
-        DrawT1Buffer[i].Value = rr1.T.Val;
-        DrawT1Buffer[i].Pos = rr1.XPosition;
-        DrawT1Buffer[i].State = rr1.RunState;
-                
-        if(rr1.RunState == ST_STOP) {
-            Buf1Size = i;
-            break;
+    if(rr1.CmdCount>0){
+        Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
+        for(DWORD i = 0; i < Buf1Size;i++){         
+            Control(&rr1);
+            ProcessOC(&rr1);
+            DrawT1Buffer[i].Value = rr1.T.Val;
+            DrawT1Buffer[i].Pos = rr1.XPosition;
+            DrawT1Buffer[i].State = rr1.RunState;
+
+            if(rr1.RunState == ST_STOP) {
+                Buf1Size = i;
+                break;
+            }
         }
     }
-    Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
-    for(DWORD i = 0; i < Buf2Size;i++){         
-        Control(&rr2);
-        ProcessOC(&rr2);
-        DrawT2Buffer[i].Value = rr2.T.Val;
-        DrawT2Buffer[i].State = rr2.RunState;
-        DrawT2Buffer[i].Pos = rr2.XPosition;
-        if(rr2.RunState == ST_STOP) {
-            Buf2Size = i;
-            break;
+    if(rr2.CmdCount>0){
+        Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
+        for(DWORD i = 0; i < Buf2Size;i++){         
+            Control(&rr2);
+            ProcessOC(&rr2);
+            DrawT2Buffer[i].Value = rr2.T.Val;
+            DrawT2Buffer[i].State = rr2.RunState;
+            DrawT2Buffer[i].Pos = rr2.XPosition;
+            if(rr2.RunState == ST_STOP) {
+                Buf2Size = i;
+                break;
+            }
         }
     }
-    Buf3Size = sizeof(DrawT3Buffer)/sizeof(DrawT3Buffer[0]);
-    for(DWORD i = 0; i < Buf3Size;i++){         
-        Control(&rr3);
-        ProcessOC(&rr3);
-        DrawT3Buffer[i].Value = rr3.T.Val;
-        DrawT3Buffer[i].State = rr3.RunState;
-        DrawT3Buffer[i].Pos = rr3.XPosition;
-        if(rr3.RunState == ST_STOP) {
-            Buf3Size = i;
-            break;
+    if(rr3.CmdCount>0){
+        Buf3Size = sizeof(DrawT3Buffer)/sizeof(DrawT3Buffer[0]);
+        for(DWORD i = 0; i < Buf3Size;i++){         
+            Control(&rr3);
+            ProcessOC(&rr3);
+            DrawT3Buffer[i].Value = rr3.T.Val;
+            DrawT3Buffer[i].State = rr3.RunState;
+            DrawT3Buffer[i].Pos = rr3.XPosition;
+            if(rr3.RunState == ST_STOP) {
+                Buf3Size = i;
+                break;
+            }
         }
     }
 }
@@ -776,7 +798,7 @@ int BerkleyClient()
             // The sockaddr_in structure specifies the address family,
             // IP address, and port of the server to be connected to.
             clientService.sin_family = AF_INET;
-            clientService.sin_addr.s_addr = inet_addr( "192.168.1.26" );
+            clientService.sin_addr.s_addr = inet_addr( "192.168.1.33" );
             clientService.sin_port = htons( 9764 );
 
             //----------------------

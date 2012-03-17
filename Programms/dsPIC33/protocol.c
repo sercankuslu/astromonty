@@ -368,10 +368,35 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                                     break;
                                 }
                                 memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
-                                rr1.XPosition = 0;                                 
-                                PushCmdToQueue(&rr1, ST_ACCELERATE, 10 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-                                PushCmdToQueue(&rr1, ST_RUN, 0.0, t, 1);
-                                PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);                                
+                                // TODO: искать скорость наведения в атрибутах
+                                GoToCmd(&rr1, 0.004166667 * Grad_to_Rad, t, 0);                                                               
+                                Answers = STF_OK;
+                            }
+                            break;
+                        case STA_DELTA_START:
+                            {
+                                float t = 0.0;
+                                //BYTE l = 0;
+                                res = FindParam(Data, bAttributeLen, STA_DELTA_TARGET, &k);
+                                if(res != STR_OK) {
+                                    break;
+                                }
+                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+
+                                GoToCmd(&rr2, 0.0 * Grad_to_Rad, t, 0);                                                               
+                                Answers = STF_OK;
+                            }
+                            break;
+                        case STA_GAMMA_START:
+                            {
+                                float t = 0.0;
+                                //BYTE l = 0;
+                                res = FindParam(Data, bAttributeLen, STA_GAMMA_TARGET, &k);
+                                if(res != STR_OK) {
+                                    break;
+                                }
+                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+                                GoToCmd(&rr3, 0.0 * Grad_to_Rad, t, 0);                                                               
                                 Answers = STF_OK;
                             }
                             break;
