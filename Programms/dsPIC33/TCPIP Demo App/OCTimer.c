@@ -42,10 +42,10 @@ int SetDirection(BYTE oc, BYTE Dir);
 int SetOC(BYTE oc, WORD LW);
 int EnableOC(BYTE oc);
 BOOL IsDisableOC(BYTE oc);
-int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak);
+int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak);
 int ProcessTimer(BYTE id, RR * rr);
 void CalculateParams(RR * rr);
-int GetXTfromV(RR * rr, double Vbeg, double Vend, double * dT, double * dX);
+
 #ifdef __C30__
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {   
@@ -119,7 +119,7 @@ int OCInit(void)
         // MS1 = 0; MS2 = 1; 1/4
         // MS1 = 1; MS2 = 0; 1/2
         // MS1 = 0; MS2 = 0; 1/1
-        MS1         = 0;    // выход MS1  
+        MS1         = 1;    // выход MS1  
         MS2         = 1; 	// выход MS2  
         SLEEP       = 1; 	// выход SLEEP
         RESET       = 1; 	// выход RESET
@@ -289,10 +289,10 @@ int InitRR(RR * rr)
     rr->Length = 3.0f;
     rr->Reduction = 360.0f;
     rr->StepPerTurn = 200;
-    rr->uStepPerStep = 4; //16    
+    rr->uStepPerStep = 16; //16    
     rr->TimerStep = 0.0000002; // шаг таймера
     rr->Vend = 0.0;
-    rr->Xend = 0.0;
+    rr->deltaX = 0.0;
     rr->DataCount = 0;
     rr->NextWriteTo = 0;
     rr->NextReadFrom = 0;    
@@ -649,9 +649,9 @@ int ProcessOC(RR * rr)
         rr->TimeBeg = rr->T.Val;
     }
     // устанавливаем направление вращения
-    if(rr->RunDir != rr->IntervalArray[rr->NextReadFrom].Flags.Dir){       
-        SetDirection(rr->Index,rr->RunDir);  
+    if(rr->RunDir != rr->IntervalArray[rr->NextReadFrom].Flags.Dir){
         rr->RunDir = rr->IntervalArray[rr->NextReadFrom].Flags.Dir;
+        SetDirection(rr->Index,rr->RunDir);  
     }
     // прибавляем интервалы и корректируем
     // TODO: Сделать равномерное распределение коррекции
@@ -871,7 +871,7 @@ int CacheNextCmd(RR * rr)
         double X;
         rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
         rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
-        rr->Xend  = rr->CmdQueue[rr->NextCacheCmd].Xend; 
+        rr->deltaX  = rr->CmdQueue[rr->NextCacheCmd].deltaX; 
         rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;        
         rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;        
         switch(rr->CacheState){
@@ -896,7 +896,7 @@ int CacheNextCmd(RR * rr)
         rr->CmdCount--;
         rr->CmdQueue[rr->NextCacheCmd].State = ST_STOP;
         rr->CmdQueue[rr->NextCacheCmd].Vend = 0.0;
-        rr->CmdQueue[rr->NextCacheCmd].Xend = 0.0;
+        rr->CmdQueue[rr->NextCacheCmd].deltaX = 0.0;
         rr->CmdQueue[rr->NextCacheCmd].Direction = 1;
         rr->CmdQueue[rr->NextCacheCmd].RunStep = 0;
         rr->NextCacheCmd++;
@@ -907,24 +907,27 @@ int CacheNextCmd(RR * rr)
     return 0;
 }
 
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction )
+int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double deltaX, int Direction )
 {
     LONG Xbreak;
     if(rr->CmdCount < CQ_SIZE){
         rr->CmdQueue[rr->NextWriteCmd].State = State;
         rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-        rr->CmdQueue[rr->NextWriteCmd].Xend = Xend;
+        rr->CmdQueue[rr->NextWriteCmd].deltaX = deltaX;
         if(Direction > 0)
             rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
         else
             rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
         
-        CalculateBreakParam(rr, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV, rr->LastCmdX, 
+        CalculateBreakParam(rr, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV,
             &rr->CmdQueue[rr->NextWriteCmd].Vend, 
-            &rr->CmdQueue[rr->NextWriteCmd].Xend, &Xbreak);
+            &rr->CmdQueue[rr->NextWriteCmd].deltaX,NULL, &Xbreak);
         rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
         rr->LastCmdV = rr->CmdQueue[rr->NextWriteCmd].Vend;
-        rr->LastCmdX = rr->CmdQueue[rr->NextWriteCmd].Xend;
+        if(Direction > 0)
+            rr->LastCmdX += rr->CmdQueue[rr->NextWriteCmd].deltaX;
+        else
+            rr->LastCmdX -= rr->CmdQueue[rr->NextWriteCmd].deltaX;
         
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;       
@@ -936,24 +939,24 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direct
     return 0;
 }
 
-int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double Xbeg, double * Vend, double * Xend, LONG * Xbreak)
+int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, 
+                        double Vbeg, double * Vend, 
+                        double * deltaX, double * deltaT, LONG * Xbreak)
 {
-    double VKpB;
-    double dTb;
-    double dTe;
+    double VKpB = 0.0;
+    double dTb = 0.0;
+    double dTe = 0.0;
     LONG Xe;
     LONG Xb;
     LONG dX;
     LONG dX2;
-    double XX;
-    double D;   
+    double XX = 0.0;
+    double D = 0.0;
     double d = -rr->K/(2.0 * rr->B);    
     double a = 4.0 * rr->B/(rr->K * rr->K);   
     double T2 = 0.0;
-    double OmKT;
-    double XmX;
-    double ddT = 0.0;
-    double ddX = 0.0;
+    double OmKT = 0.0;
+    double XmX = 0.0;
     //rr->d
 
     switch (State) {
@@ -977,10 +980,10 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
                 dX = Xb - Xe;
             }
             if(Direction >0 ){   
-                // количество шагов на которое сдвинулись                
-                XmX = (*Xend) - Xbeg;                
+                // количество радиан на которое сдвинулись                
+                XmX = (*deltaX);                
             } else {                                
-                XmX = Xbeg - (*Xend);
+                XmX = (*deltaX);
             }            
             dX2 = (LONG)(XmX/rr->dx);                
 
@@ -998,14 +1001,26 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
                 }
                 OmKT = (1 - rr->K * T2);
                 (*Vend) = (rr->B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // вычислить скорость  V = BT/(1-KT)  T = 
+                if (deltaT != NULL) {
+                    if(T2 >= dTb)
+                        *deltaT = (T2 - dTb);
+                    else
+                        *deltaT = (dTb - T2);
+                }
             } else {
                 // если координата перемещения больше, чем координата при заданной скорости  
                 if(Direction >0 ){
                     (*Xbreak) = dX;                    
-                    (*Xend) = Xbeg + dX * rr->dx;
+                    (*deltaX) = dX * rr->dx;
                 } else {
                     (*Xbreak) = dX;
-                    (*Xend) = Xbeg - dX * rr->dx;
+                    (*deltaX) = dX * rr->dx;
+                }
+                if (deltaT != NULL) {
+                    if(dTe >= dTb)
+                        *deltaT = dTe - dTb;
+                    else
+                        *deltaT = dTb - dTe;
                 }
             }            
             break; 
@@ -1013,19 +1028,25 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, dou
             {
                 if(Direction >0 ){   
                     // количество шагов на которое сдвинулись                
-                    XmX = (*Xend) - Xbeg;                
+                    XmX = (*deltaX);                
                 } else {                                
-                    XmX = Xbeg - (*Xend);
+                    XmX = (*deltaX);
                 }  
                 (*Xbreak) = (LONG)(XmX /rr->dx);               
-                (*Vend) = Vbeg;                
+                (*Vend) = Vbeg;  
+                if (deltaT != NULL) {
+                    *deltaT = XmX/Vbeg;
+                }
             }
             break;
 
         case ST_STOP:
             (*Xbreak) = 0;
             (*Vend) = 0;
-            (*Vend) = Xbeg;
+            (*Vend) = Vbeg;
+            if (deltaT != NULL) {
+                *deltaT = 0.0;
+            }
         default:
             break;
     }
@@ -1077,12 +1098,14 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
     BYTE Direction = 1;
     LONG Xbreak;
-    double Xa = 0.0;
+    double Xa = 180.0 * Grad_to_Rad;
     double Ta = 0.0;
     double Td = 0.0;
-    double Xd = 0.0;
+    double Xd = 180.0 * Grad_to_Rad;
     double T0 = 0.0;
     double Trun = 0.0;
+    double VendA = 0.0;
+    double VendD = 0.0;
 
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
     //    => вычисляем сумму разгон+ торможение + движение по линейному закону    
@@ -1092,51 +1115,41 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     // TODO: если двигаемся, нужно остановиться
     // TODO: выяснить направление движения
     // TODO: определить модель привода ( догоняем цель или ждем )  
-    if(rr->LastCmdX < XTarget){
-        // Accelerate:
-        GetXTfromV(rr, rr->LastCmdV, rr->VMax, &Ta, &Xa);
-        // Decelerate:    
-        GetXTfromV(rr, VTarget, rr->VMax, &Td, &Xd);
+    
+    if(rr->LastCmdX == XTarget) return 0;
+    if(rr->LastCmdX < XTarget) {
+        Direction = 1;
+        Xa = (XTarget - rr->LastCmdX)/2.0;
+    } else {
+        Direction = 0;
+        Xa = (rr->LastCmdX - XTarget)/2.0;
+    }
+    //if(rr->LastCmdX < XTarget)
+    {
+        
+        Xd = Xa;
+        VendA = rr->VMax;
+        CalculateBreakParam(rr, ST_ACCELERATE, Direction, rr->LastCmdV, &VendA, &Xa, &Ta, &Xbreak);
+        VendD = VTarget;
+        CalculateBreakParam(rr, ST_DECELERATE, Direction, VendA, &VendD, &Xd, &Td, &Xbreak);
         T0 = ((double)(Tick - TickGet()))* 0.00000025;
-        Trun = -(XTarget - rr->LastCmdX - Xa - Xd + VTarget * (T0 + Ta + Td) ) /(VTarget - rr->VMax);
-        if(Trun<=0){
-            // значит, что до цели ближе, чем расстояние разгона до полной скорости           
-            
+        if(Direction){
+            Trun = -(XTarget - rr->LastCmdX - Xa - Xd + VTarget * (T0 + Ta + Td) ) /(VTarget - rr->VMax);
         } else {
-            double Xrun = rr->VMax * Trun + Xa + rr->LastCmdX; // ??    
-            PushCmdToQueue(rr, ST_ACCELERATE, rr->VMax, 180.0 * Grad_to_Rad, Direction);
-            PushCmdToQueue(rr, ST_RUN, rr->VMax,  Xrun, Direction);
-            PushCmdToQueue(rr, ST_DECELERATE, VTarget, 180.0 * Grad_to_Rad, Direction);
+            Trun = -(XTarget - rr->LastCmdX + Xa + Xd + VTarget * (T0 + Ta + Td) ) /(VTarget + rr->VMax);
+        }
+        //if(Trun < 0.0) Trun = -Trun;
+        {
+            double Xrun = rr->VMax * Trun; 
+            PushCmdToQueue(rr, ST_ACCELERATE, VendA, 180.0 * Grad_to_Rad, Direction);
+            PushCmdToQueue(rr, ST_RUN, VendA,  Xrun, Direction);
+            PushCmdToQueue(rr, ST_DECELERATE, VendD, 180.0 * Grad_to_Rad, Direction);
             if(VTarget != 0.0){
                 PushCmdToQueue(rr, ST_RUN, VTarget,  180.0 * Grad_to_Rad, Direction);
             } 
+            PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
     }
     return 0;
 }
 
-int GetXTfromV(RR * rr, double Vbeg, double Vend, double * dT, double * dX)
-{
-    double VKpB = 0.0;
-    double D = 0.0;
-    double dTb = 0.0;
-    double dTe = 0.0;
-    double Xe = 0.0;
-    double Xb = 0.0;
-    if(Vbeg!=0.0){
-        VKpB = Vbeg * rr->K + rr->B;
-        D = rr->B * VKpB;
-        dTb = ((VKpB - sqrt(D))/(rr->K * VKpB));
-        Xb = ((rr->B * dTb * dTb) / ((1 - rr->K * dTb)));
-    } else Xb = 0;
-
-    if(Vend != 0.0){
-        VKpB = Vend * rr->K + rr->B;
-        D = rr->B * VKpB;
-        dTe = ((VKpB - sqrt(D))/(rr->K * VKpB));
-        Xe = ((rr->B * dTe * dTe) / ((1 - rr->K * dTe)));
-    } else Xe = 0;
-    (*dX) = Xe - Xb;
-    (*dT) = dTe - dTb;
-    return 0;
-}
