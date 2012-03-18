@@ -120,7 +120,7 @@
  *
  *   Supported serial flash parts include the SST25VFxxxB series.
  */
-#define MPFS_USE_EEPROM
+//#define MPFS_USE_EEPROM
 //#define MPFS_USE_SPI_FLASH
 
 /* EEPROM Addressing Selection
@@ -155,33 +155,34 @@
  *   holding until the LEDs flash.  Release, and reset again.
  */
 #define MY_DEFAULT_HOST_NAME			"AM-CONTROL"
+#define MY_DEFAULT_MONTY_NAME			"ASTROMONTY"
 
 #define MY_DEFAULT_MAC_BYTE1            (0x00)	// Use the default of 00-04-A3-00-00-00
 #define MY_DEFAULT_MAC_BYTE2            (0x04)	// if using an ENCX24J600, MRF24WB0M, or
 #define MY_DEFAULT_MAC_BYTE3            (0xA3)	// PIC32MX6XX/7XX internal Ethernet 
 #define MY_DEFAULT_MAC_BYTE4            (0x00)	// controller and wish to use the 
-#define MY_DEFAULT_MAC_BYTE5            (0x00)	// internal factory programmed MAC
-#define MY_DEFAULT_MAC_BYTE6            (0x66)	// address instead.
+#define MY_DEFAULT_MAC_BYTE5            (0x33)	// internal factory programmed MAC
+#define MY_DEFAULT_MAC_BYTE6            (0x44)	// address instead.
 
 #define MY_DEFAULT_IP_ADDR_BYTE1        (192ul)
 #define MY_DEFAULT_IP_ADDR_BYTE2        (168ul)
-#define MY_DEFAULT_IP_ADDR_BYTE3        (71ul)
-#define MY_DEFAULT_IP_ADDR_BYTE4        (253ul)
+#define MY_DEFAULT_IP_ADDR_BYTE3        (1ul)
+#define MY_DEFAULT_IP_ADDR_BYTE4        (55ul)
 
 #define MY_DEFAULT_MASK_BYTE1           (255ul)
 #define MY_DEFAULT_MASK_BYTE2           (255ul)
-#define MY_DEFAULT_MASK_BYTE3           (252ul)
+#define MY_DEFAULT_MASK_BYTE3           (255ul)
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 
 #define MY_DEFAULT_GATE_BYTE1           (192ul)
 #define MY_DEFAULT_GATE_BYTE2           (168ul)
-#define MY_DEFAULT_GATE_BYTE3           (68ul)
-#define MY_DEFAULT_GATE_BYTE4           (11ul)
+#define MY_DEFAULT_GATE_BYTE3           (1ul)
+#define MY_DEFAULT_GATE_BYTE4           (1ul)
 
 #define MY_DEFAULT_PRIMARY_DNS_BYTE1	(192ul)
 #define MY_DEFAULT_PRIMARY_DNS_BYTE2	(168ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(68ul)
-#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(31ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE3	(1ul)
+#define MY_DEFAULT_PRIMARY_DNS_BYTE4	(1ul)
 
 #define MY_DEFAULT_SECONDARY_DNS_BYTE1	(0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE2	(0ul)
