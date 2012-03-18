@@ -361,42 +361,36 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         switch (Data[j].type){
                         case STA_ALPHA_START:
                             {
-                                float t = 0.0;
-                                //BYTE l = 0;
                                 res = FindParam(Data, bAttributeLen, STA_ALPHA_TARGET, &k);
                                 if(res != STR_OK) {
                                     break;
                                 }
-                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+                                memcpy(&d1, Data[k].pValue, Data[k].ulValueLen);
                                 // TODO: искать скорость наведения в атрибутах
-                                GoToCmd(&rr1, 0.004166667 * Grad_to_Rad, t, 0);                                                               
+                                GoToCmd(&rr1, 1.0 * Grad_to_Rad, d1, 0);                                                               
                                 Answers = STF_OK;
                             }
                             break;
                         case STA_DELTA_START:
                             {
-                                float t = 0.0;
-                                //BYTE l = 0;
                                 res = FindParam(Data, bAttributeLen, STA_DELTA_TARGET, &k);
                                 if(res != STR_OK) {
                                     break;
                                 }
-                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
+                                memcpy(&d2, Data[k].pValue, Data[k].ulValueLen);
 
-                                GoToCmd(&rr2, 0.0 * Grad_to_Rad, t, 0);                                                               
+                                GoToCmd(&rr2, 1.0 * Grad_to_Rad, d2, 0);                                                               
                                 Answers = STF_OK;
                             }
                             break;
                         case STA_GAMMA_START:
                             {
-                                float t = 0.0;
-                                //BYTE l = 0;
                                 res = FindParam(Data, bAttributeLen, STA_GAMMA_TARGET, &k);
                                 if(res != STR_OK) {
                                     break;
                                 }
-                                memcpy(&t, Data[k].pValue, Data[k].ulValueLen);
-                                GoToCmd(&rr3, 0.0 * Grad_to_Rad, t, 0);                                                               
+                                memcpy(&d3, Data[k].pValue, Data[k].ulValueLen);
+                                GoToCmd(&rr3, 1.0 * Grad_to_Rad, d3, 0);                                                               
                                 Answers = STF_OK;
                             }
                             break;
