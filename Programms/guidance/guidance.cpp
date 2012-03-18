@@ -509,14 +509,15 @@ void Calc()
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    //OCInit(); 
     /*
-    rr1.XPosition = 0;
+    OCInit(); 
+    
+    rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
     rr2.XPosition = 0;
     rr3.XPosition = 0;
     rr1.VMax = 10.0 * Grad_to_Rad;
     rr1.LastCmdV = 0.0;
-    rr1.LastCmdX = 0.0;
+    rr1.LastCmdX = 20.0 * Grad_to_Rad;
     rr1.T.Val = 0;
     rr1.TimeBeg = 0;
     rr3.VMax = 10.0 * Grad_to_Rad;
@@ -524,8 +525,9 @@ void Calc()
     rr3.LastCmdX = 0.0;
     rr3.T.Val = 0;
     rr3.TimeBeg = 0;
-    GoToCmd(&rr1, 0.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0); 
-    GoToCmd(&rr3, 1.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
+    //GoToCmd(&rr1, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0); 
+    GoToCmd(&rr1, 1.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
+    GoToCmd(&rr3, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
     rr2.LastCmdV = 1.0 * Grad_to_Rad;
     rr2.LastCmdX = 10.0 * Grad_to_Rad;
     rr2.XPosition = rr2.LastCmdX/rr2.dx;
@@ -614,7 +616,7 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
         TX.x = Px + (int)(Buf[i].Value / SizeX);
         TX.y = Py - (int)(Buf[i].Pos * rr->dx * 200000 / SizeY);
         KX = TX.x;
-        //if(KX!=LX)
+        if(KX!=LX)
         {
             LX = KX;            
             switch(Buf[i].State){
@@ -651,7 +653,7 @@ void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, D
             TV.x = Px + (int)(Buf[i].Value / SizeX);
             TV.y = Py - (int)(V * 360.0*10/PI);
             KV = TV.x;
-            //if(KV!=LV)
+            if(KV!=LV)
             {
                 LV = KV;
                 switch(Buf[i].State){
