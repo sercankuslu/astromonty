@@ -496,6 +496,22 @@ void Calc()
     
     DisplayInit();
 
+    BYTE Buf[100] = "";
+    ST_COMMANDS Cmd = STC_REQEST_DATA;
+    ST_FLAGS Flag = STF_OK;
+    ST_RESULT rv;
+    BYTE Len = 0;
+    BYTE * Value = NULL;
+
+    char Str[] = "All good!";
+    BYTE * Str2 = NULL;
+    rv = AddAttribute((BYTE*)Buf, 100, STA_COMMAND, 1, (BYTE*)&Cmd);
+    rv = AddAttribute((BYTE*)Buf, 100, STA_FLAG, 1, (BYTE*)&Flag);
+    rv = AddAttribute((BYTE*)Buf, 100, STA_MESSAGE, sizeof(Str), (BYTE*)Str);
+    rv = CheckBlob((BYTE*)Buf, 100);
+    rv = FindAttribute((BYTE*)Buf, 100, STA_COMMAND, &Len, &Value);    
+    rv = FindAttribute((BYTE*)Buf, 100, STA_FLAG, &Len, &Value);
+    rv = FindAttribute((BYTE*)Buf, 100, STA_MESSAGE, &Len, &Str2);
 // //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
