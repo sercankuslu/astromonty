@@ -634,6 +634,184 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
     }
     return res;
 }
+ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
+{
+    static  enum ST_STATE{
+        ST_REQUEST_CONNECT = 0,
+        ST_WAIT_CONNECT,
+        ST_REQUEST_AUTH,
+        ST_WAIT_AUTH,
+        ST_CONNECTED
+    } ST_STATE = ST_REQUEST_CONNECT;
+    int bBlockPos = 0;    
+    ST_RESULT  res = STR_OK;
+    BYTE AttrLen;
+    BYTE j;
+    BYTE* Answer; 
+    BOOL DoWork = TRUE;
+    BYTE Len = 0;
+    BYTE * Str = NULL;
+    if(*pbDataLength < 0){
+        ST_STATE = ST_REQUEST_CONNECT;
+        ClientConnected = FALSE;
+        return STR_NEED_DISCONNECT;
+    }
+    res = CheckBlob(pbBlob, bBlobLen);
+    if(res != STR_OK) {
+        ST_STATE = ST_REQUEST_CONNECT;
+        ClientConnected = FALSE;
+        return STR_NEED_DISCONNECT;
+    }
+
+    while(DoWork){
+        DoWork = FALSE;
+        switch(ST_STATE){
+        case ST_REQUEST_CONNECT:
+            //RoundBufferInit();
+            AttrLen = 1;
+            //res = FormBlob(RequestConnect, AttrLen, pbBlob, bBlobLen, &bBlockPos);
+            res = BeginCommand(pbBlob, bBlobLen, STA_COMMAND, sizeof(BYTE), (BYTE*)&connectreq);
+            if(res != STR_OK) 
+                return STR_NEED_DISCONNECT;            
+            res = STR_NEED_ANSWER;
+            ST_STATE = ST_WAIT_CONNECT;
+            break;
+        case ST_WAIT_CONNECT:
+            if(*pbDataLength==0) break;            
+            res = FindAttribute(pbBlob, bBlobLen, STA_FLAG, &Len, &Answer);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }
+            if(Data[j].ulValueLen == sizeof(BYTE))
+            {
+                switch(*Answer){
+                case STF_AUTH_NEEDED:
+                    ST_STATE = ST_REQUEST_AUTH;
+                    DoWork = TRUE;
+                    break;
+                case STF_AUTH_NOT_NEEDED:
+                case STF_ACCEPTED:
+                    ST_STATE = ST_CONNECTED;
+                    break;
+                default:
+                    ST_STATE = ST_REQUEST_CONNECT;
+                    break;
+                }
+            }
+            break;
+        case ST_REQUEST_AUTH:            
+            res = BeginCommand(pbBlob, bBlobLen, STA_COMMAND, sizeof(BYTE), (BYTE*)&authreq);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }           
+            res = AddAttribute(pbBlob, bBlobLen, STA_LOGIN, (BYTE)strlen((char*)Login), (BYTE*)Login);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }           
+            res = AddAttribute(pbBlob, bBlobLen, STA_PASSWORD, (BYTE)strlen((char*)Password), (BYTE*)Password);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }
+            res = STR_NEED_ANSWER; 
+            ST_STATE = ST_WAIT_AUTH;
+            break;
+        case ST_WAIT_AUTH:
+            if(*pbDataLength==0) break;            
+            res = FindAttribute(pbBlob, bBlobLen, STA_FLAG, &Len, &Answer);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }           
+            if(Len == sizeof(BYTE)){                
+                switch(*Answer){                
+                case STF_ACCEPTED:
+                    ST_STATE = ST_CONNECTED;
+                    break;
+                default:
+                    ST_STATE = ST_REQUEST_CONNECT;
+                    break;
+                }
+            }
+            break;
+        case ST_CONNECTED:
+            // получение данных
+            if(*pbDataLength > 0){  
+
+                for(j = 0; j < bAttributeLen; j++){
+                    switch (Data[j].type){
+                    case STA_COMMAND:                        
+                    case STA_LOGIN:
+                    case STA_PASSWORD:
+                        break;
+                    case STA_FLAG:
+                        Answer = (BYTE*)Data[j].pValue;
+                        if(*Answer != STF_DATA_READY){
+                            // это ошибка - выходим
+                            j = bAttributeLen;
+                        }
+                        break;
+                    case STA_TIME_SNTP:
+                    case STA_ALPHA:
+                    case STA_DELTA:
+                    case STA_GAMMA:
+                    default:
+                        if(PushAttr(Data[j],IN_BUFFER) != RB_OK){
+                            // переполнение буфера. отключаемся
+                            ST_STATE = ST_REQUEST_CONNECT;
+                            return STR_NEED_DISCONNECT;
+                        }                        
+                    };
+                }                
+            }
+            // отправка данных
+            if(IsDataInBuffer(OUT_BUFFER)){
+                // если в очереди много запросов, формируем большой пакет из них
+                //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
+                BOOL CommandExist = FALSE;
+                do{    
+                    BYTE m[10];
+                    ST_ATTRIBUTE_TYPE Type;                    
+                    RequestData[1].pValue = (void*)&m;
+                    if(GetNextAttrType(OUT_BUFFER, &Type) != RB_OK) {
+                        break;
+                    }                    
+                    if(Type == STA_COMMAND){
+                        if(CommandExist) {
+                            break;
+                        }
+                        CommandExist = TRUE;
+                    }                    
+                    if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){                        
+                        res = FormBlob(&RequestData[1], 1, pbBlob, bBlobLen, &bBlockPos);
+                    }
+                    if(res!=STR_OK) {
+                        ST_STATE = ST_REQUEST_CONNECT;
+                        return STR_NEED_DISCONNECT; 
+                    }
+                }while(IsDataInBuffer(OUT_BUFFER));
+                res = STR_NEED_ANSWER; 
+                ST_STATE = ST_CONNECTED;
+            }
+            break;
+        default: 
+            ST_STATE = ST_REQUEST_CONNECT;
+        };        
+    }
+    if(ST_STATE == ST_CONNECTED){        
+        ClientConnected = 1;
+    } else ClientConnected = 0;
+
+    if(res == STR_NEED_ANSWER){
+        *pbDataLength = bBlockPos;
+    } else {
+        *pbDataLength = 0;
+    }
+    return res;
+}
 #endif // USE_PROTOCOL_CLIENT
 
 ST_RESULT  CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* bMemPos )
@@ -657,4 +835,54 @@ BOOL IsClientConnected()
 void SetClientDisconnect()
 {
     ClientConnected = FALSE;
+}
+
+ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Cmd, BYTE bValueLen, BYTE * Value)
+{
+    // очищаем буфер
+    memset(pBuffer, 0, bBufLen);    
+    // записываем код команды
+    return AddAttribute(pBuffer, bBufLen, Cmd, bValueLen, Value);    
+}
+ST_RESULT AddAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE bValueLen, BYTE * Value)
+{
+    BYTE * pPointer = NULL;
+    //TODO: сделать проверки
+    if(bBufLen <= 0) return STR_BUFFER_TOO_SMALL;
+    pPointer = pBuffer + pBuffer[0] + 1;
+    // записываем код команды
+    *pPointer++ = (BYTE)Attribute;    
+    *pPointer++ = (BYTE)bValueLen;    
+    memcpy(pPointer, Value, bValueLen);
+    // в первом байте хранится размер всего блока
+    pBuffer[0] += sizeof(BYTE(Attribute)) + sizeof((BYTE)bValueLen) + bValueLen;
+    return STR_OK;
+}
+ST_RESULT CheckBlob(BYTE * pBuffer, int bBufLen)
+{
+    BYTE i;    
+    if((bBufLen < 0 ) || (pBuffer[0] > bBufLen)) return STR_DATA_CORRUPTED;
+    if(bBufLen == 0) return STR_BUFFER_TOO_SMALL;
+    for(i = 1; i < pBuffer[0] + 1; i++){
+        i++;
+        i += pBuffer[i];
+        if((i > pBuffer[0] + 1)||(i > bBufLen)) return STR_DATA_CORRUPTED;
+    }
+    return STR_OK;
+}
+ST_RESULT FindAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE * bValueLen, BYTE ** Value)
+{
+    BYTE i;
+    if((bBufLen < 0 ) || (pBuffer[0] > bBufLen)) return STR_DATA_CORRUPTED;
+    for(i = 1; i < pBuffer[0] + 1; i++){
+        if(pBuffer[i] == Attribute){
+            *bValueLen = pBuffer[i + 1];
+            *Value = &pBuffer[i + 2];
+            return STR_OK;
+        }
+        i++;
+        i += pBuffer[i];
+        if((i > pBuffer[0] + 1)||(i > bBufLen)) return STR_DATA_CORRUPTED;
+    }
+    return STR_ATTR_NOT_FOUND;
 }

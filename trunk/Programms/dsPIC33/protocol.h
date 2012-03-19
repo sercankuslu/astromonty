@@ -82,6 +82,7 @@ typedef enum ST_ATTRIBUTE_TYPE {
     STA_GAMMA_START,
     STA_GAMMA_STOP,
     STA_EMERGENCY_STOP,
+    STA_MESSAGE
 }ST_ATTRIBUTE_TYPE;
 
 typedef enum STN_MODE {
@@ -129,4 +130,9 @@ ST_RESULT RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength);
 ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
 BOOL IsClientConnected();
 void SetClientDisconnect();
+
+ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Cmd, BYTE bValueLen, BYTE * Value);
+ST_RESULT AddAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE bValueLen, BYTE * Value);
+ST_RESULT FindAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE * bValueLen, BYTE ** Value);
+ST_RESULT CheckBlob(BYTE * pBuffer, int bBufLen);
 #endif //__PROTOCOL_H_
