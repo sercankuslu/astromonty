@@ -188,6 +188,5 @@ typedef struct DateTimeStruct {
 #endif
     
 void ProcessMenu( KEYS_STR * KeyPressed);
-void ExecuteCommands( void );
 void SecondsToTime(DWORD Seconds, DateTime * Date);
 #endif

@@ -13,10 +13,10 @@
 #define MY_DEFAULT_MASK_BYTE4           (0ul)
 #endif
 
-#include "..\..\dsPIC33\protocol.h"
+
 #include "DisplayBuffer.h"
 #include "Control.h"
-#include "roundbuffer.h"
+
 #include <stdio.h>
 
 #define PI 3.1415926535897932384626433832795
@@ -143,7 +143,6 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     //     Con ^= 1;
     //     A_Run ^= 1;
     //     D_Run ^= 1;
-    ExecuteCommands();
     if(KeyPressed->Val == 0){
         //TimerCount += 2;
         //if(TimerCount % 1 == 0){
@@ -1049,146 +1048,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
     } 
 }
 
-void ExecuteCommands()
-{
-    static BYTE datareq = STC_REQEST_DATA;
-    static BYTE execreq = STC_EXECUTE_COMMAND;
-    static ST_ATTRIBUTE RequestData[] = {
-        {STA_COMMAND,  sizeof(BYTE), &datareq},
-        {STA_NULL,  0, NULL},
-    };
-    static ST_ATTRIBUTE Data = {
-        STA_NULL,  0, NULL
-    };
-    RB_RV rv;
-    if(!IsClientConnected()){ 
-        if(Params.Local.ConnectFlag)
-            Params.Local.IsModified.bits.Flag = 1;
-        Params.Local.ConnectFlag = 0;
-        return; 
-    }else {
-        if(!Params.Local.ConnectFlag)
-            Params.Local.IsModified.bits.Flag = 1;
-        Params.Local.ConnectFlag = 1;
-    }
 
-    while(IsDataInBuffer(IN_BUFFER)){
-        BYTE m[10];
-        Data.pValue = m;
-        rv = PopAttr(&Data,IN_BUFFER);
-        if(rv == RB_OK) {
-            switch(Data.type){
-                case STA_ALPHA:
-                    memcpy(&Params.Alpha.Angle,m, Data.ulValueLen);   
-                    //Params.Alpha.Angle = 20.0* 0.017453292519943295;
-                    Params.Alpha.IsModified.bits.Angle = 1;
-                    break;
-                case STA_DELTA:
-                    memcpy(&Params.Delta.Angle,m, Data.ulValueLen);
-                    //Params.Delta.Angle = 20.0* 0.017453292519943295;
-                    Params.Delta.IsModified.bits.Angle = 1;
-                    break;
-                case STA_GAMMA:
-                    memcpy(&Params.Gamma.Angle,m, Data.ulValueLen);
-                    Params.Gamma.IsModified.bits.Angle = 1;
-                    break;
-            }
-        }
-    }
-    
-    if(Params.NeedToCommit.Val > 0){
-        if(Params.NeedToCommit.bits.Alpha){
-            if(Params.Alpha.NeedToCommit.bits.TargetAngle){
-                RequestData[0].pValue = &execreq;
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_ALPHA_START;
-                RequestData[1].pValue = NULL;
-                RequestData[1].ulValueLen = 0;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_ALPHA_TARGET;
-                RequestData[1].pValue = &Params.Alpha.TargetAngle;
-                RequestData[1].ulValueLen = sizeof(float);
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
-            }
-        }
-        if(Params.NeedToCommit.bits.Delta){
-            if(Params.Delta.NeedToCommit.bits.TargetAngle){
-                RequestData[0].pValue = &execreq;
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_DELTA_START;
-                RequestData[1].pValue = NULL;
-                RequestData[1].ulValueLen = 0;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_DELTA_TARGET;
-                RequestData[1].pValue = &Params.Delta.TargetAngle;
-                RequestData[1].ulValueLen = sizeof(float);
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Delta.NeedToCommit.bits.TargetAngle = 0;
-            }
-        }
-        if(Params.NeedToCommit.bits.Gamma){
-            if(Params.Gamma.NeedToCommit.bits.TargetAngle){
-                RequestData[0].pValue = &execreq;
-                rv = PushAttr(RequestData[0], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_GAMMA_START;
-                RequestData[1].pValue = NULL;
-                RequestData[1].ulValueLen = 0;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                RequestData[1].type = STA_GAMMA_TARGET;
-                RequestData[1].pValue = &Params.Gamma.TargetAngle;
-                RequestData[1].ulValueLen = sizeof(float);
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
-            }
-        }
-        Params.NeedToCommit.bits.Alpha = 0;
-        Params.NeedToCommit.bits.Delta = 0;
-        Params.NeedToCommit.bits.Gamma = 0;
-    } else
-    if(Params.NeedToUpdate.Val > 0){
-        RequestData[0].pValue = &datareq;
-        rv = PushAttr(RequestData[0], OUT_BUFFER);     
-        if(rv!=RB_OK) return;
-        if(Params.NeedToUpdate.bits.Alpha){
-            if(Params.Alpha.NeedToUpdate.bits.Angle){                
-                RequestData[1].type = STA_ALPHA;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Alpha.NeedToUpdate.bits.Angle = 0;
-            }
-        }
-        if(Params.NeedToUpdate.bits.Delta){
-            if(Params.Delta.NeedToUpdate.bits.Angle){
-                RequestData[1].type = STA_DELTA;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Delta.NeedToUpdate.bits.Angle = 0;
-            }
-        }
-        if(Params.NeedToUpdate.bits.Gamma){
-            if(Params.Gamma.NeedToUpdate.bits.Angle){
-                RequestData[1].type = STA_GAMMA;
-                rv = PushAttr(RequestData[1], OUT_BUFFER);
-                if(rv!=RB_OK) return;
-                Params.Gamma.NeedToUpdate.bits.Angle = 0;
-            }
-        }
-        Params.NeedToUpdate.bits.Alpha = 0;
-        Params.NeedToUpdate.bits.Delta = 0;
-        Params.NeedToUpdate.bits.Gamma = 0;
-    }
-
-}
 void GetMsgFromROM(MSGS Msg_id, char* Msg)
 {        
     int i = 0;        

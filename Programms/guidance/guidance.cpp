@@ -361,7 +361,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         { 
         case FIRST_TIMER: 
             ProcessMenu(&Key);
-            ExecuteCommands();
+            //ExecuteCommands();
             GetItemRect(hDlg,&rect,IDC_STATIC);
             if(OnLine){
                 if(BerkleyClient() < 0) {
@@ -502,6 +502,9 @@ void Calc()
     ST_RESULT rv;
     BYTE Len = 0;
     BYTE * Value = NULL;
+    BYTE * pPointer = NULL;
+    ST_ATTRIBUTE_TYPE  Attribute = STA_ALPHA;
+    
 
     char Str[] = "All good!";
     BYTE * Str2 = NULL;
@@ -512,6 +515,9 @@ void Calc()
     rv = FindAttribute((BYTE*)Buf, 100, STA_COMMAND, &Len, &Value);    
     rv = FindAttribute((BYTE*)Buf, 100, STA_FLAG, &Len, &Value);
     rv = FindAttribute((BYTE*)Buf, 100, STA_MESSAGE, &Len, &Str2);
+    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
+    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
+    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
 // //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
@@ -768,7 +774,6 @@ int BerkleyClient()
     static struct sockaddr_in clientService; 
     volatile int err;
 
-    char *sendbuf = "this is a test";
     char recvbuf[DEFAULT_BUFLEN] = "";
     int recvbuflen = DEFAULT_BUFLEN;
     static bool f = true;

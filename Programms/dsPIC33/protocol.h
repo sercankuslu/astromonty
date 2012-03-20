@@ -29,10 +29,13 @@ typedef enum ST_STATUS {
 typedef enum ST_COMMANDS {
     STC_NO_COMMANDS,
     STC_REQEST_CONNECT,
+    STC_CONNECT_ANSWER,
     STC_REQEST_AUTH,
+    STC_AUTH_ANSWER,
     STC_REQEST_DATA,
     STC_SEND_DATA,
-    STC_EXECUTE_COMMAND
+    STC_EXECUTE_COMMAND,
+    STC_EXECUTE_ANSWER
 }ST_COMMANDS;
 
 typedef enum ST_FLAGS {
@@ -105,17 +108,7 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 #define FALSE   0
 #define TRUE    1
 
-#ifdef _WINDOWS
-typedef struct {
-    DWORD_VAL MyIPAddr;
-    DWORD_VAL MyMask;
-    DWORD_VAL MyGateway;
-    DWORD_VAL PrimaryDNSServer;
-    DWORD_VAL SecondaryDNSServer;
-    char NetBIOSName[16];
-    DWORD Time;
-} AppConfigType;
-#endif
+
 
 
 
@@ -131,8 +124,11 @@ ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, B
 BOOL IsClientConnected();
 void SetClientDisconnect();
 
-ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Cmd, BYTE bValueLen, BYTE * Value);
+ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_COMMANDS Value);
 ST_RESULT AddAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE bValueLen, BYTE * Value);
+ST_RESULT AddFlag(BYTE * pBuffer, int bBufLen, ST_FLAGS Value);
 ST_RESULT FindAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE * bValueLen, BYTE ** Value);
+ST_RESULT GetNextAttribute(BYTE * pBuffer, int bBufLen, BYTE ** pPointer, ST_ATTRIBUTE_TYPE * Attribute, BYTE * bValueLen, BYTE ** Value);
 ST_RESULT CheckBlob(BYTE * pBuffer, int bBufLen);
+ST_RESULT GetCommandLength(BYTE * pbBlob, int bBlobLen, int * pbDataLength);
 #endif //__PROTOCOL_H_
