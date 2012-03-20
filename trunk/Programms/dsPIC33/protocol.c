@@ -806,7 +806,7 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
     } else ClientConnected = 0;
 
     if(res == STR_NEED_ANSWER){
-        *pbDataLength = bBlockPos;
+        res = GetCommandLength(pbBlob, bBlobLen, pbDataLength);
     } else {
         *pbDataLength = 0;
     }
@@ -885,4 +885,13 @@ ST_RESULT FindAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute
         if((i > pBuffer[0] + 1)||(i > bBufLen)) return STR_DATA_CORRUPTED;
     }
     return STR_ATTR_NOT_FOUND;
+}
+ST_RESULT GetCommandLength(BYTE * pbBlob, int bBlobLen, int * pbDataLength)
+{
+    if(bBlobLen <= 0) {
+        *pbDataLength = 0;
+        return STR_BUFFER_TOO_SMALL;
+    }
+    *pbDataLength = (int)pbBlob[0];
+    return STR_OK;
 }
