@@ -315,7 +315,7 @@ int InitRR(RR * rr)
     rr->Interval = 32768;
     rr->LastCmdV = 0.0;
     rr->LastCmdX = 0.0;
-    rr1.VMax = 10.0 * Grad_to_Rad;
+    rr->VMax = 10.0 * Grad_to_Rad;
     CalculateParams(rr);
     
     return 0;    

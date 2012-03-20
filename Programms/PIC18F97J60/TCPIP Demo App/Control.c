@@ -322,6 +322,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             EndProcess = true;
             break;
         case MENU: // ***************************************************************************************************************
+            LastPosX = PosX;
             Selected = ProcessKeys(KeyPressed, &PosX, 2, &PosY, 0, MAIN_WINDOW, &State, &SelPosX, &SelPosY);            
             if(Selected == ENTER) { 
                 switch(SelPosX){
@@ -347,12 +348,16 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     break;
                 }
             }            
-            DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
-            OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
-            DrawScrollBar(PosX, 2);            
-            DrawMenuLine(0, MSG_M_S_OBSERV, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
-            DrawMenuLine(1, MSG_M_SETTINGS, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+            if(LastPosX!=PosX) Params.Common.Flags.bits.NeedToRedrawMenus = 1;
+            if(Params.Common.Flags.bits.NeedToRedrawMenus){
+                DrawRectangle(0,0,132,10,1);
+                GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
+                OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
+                DrawScrollBar(PosX, 2);            
+                DrawMenuLine(0, MSG_M_S_OBSERV, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
+                DrawMenuLine(1, MSG_M_SETTINGS, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
+                Params.Common.Flags.bits.NeedToRedrawMenus = 0;
+            }
             EndProcess = true;
             break;
         case SETTINGS: // ***************************************************************************************************************

@@ -72,18 +72,12 @@ typedef enum ST_ATTRIBUTE_TYPE {
     STA_TIME_RTC,
     STA_TIME_SELECT,
     STA_ALPHA,
-    STA_ALPHA_TARGET,
     STA_DELTA,
-    STA_DELTA_TARGET,
     STA_GAMMA,
-    STA_GAMMA_TARGET,
-    // комманды
-    STA_ALPHA_START,            // начинается движение по установленным координтатам; требует наличе STA_ALPHA_TARGET
-    STA_ALPHA_STOP,
-    STA_DELTA_START,
-    STA_DELTA_STOP,
-    STA_GAMMA_START,
-    STA_GAMMA_STOP,
+    STA_TARGET,
+    STA_SPEED,
+    STA_START,            
+    STA_STOP,    
     STA_EMERGENCY_STOP,
     STA_MESSAGE
 }ST_ATTRIBUTE_TYPE;
@@ -114,15 +108,10 @@ typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
 
 //static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 64
+ST_RESULT SetClientDisconnect();
 ST_RESULT ProtocolInit();
-ST_RESULT FormBlob(ST_ATTRIBUTE_PTR pAttribute, BYTE bAttributeLen, BYTE* pbBlock, int bBlockLen ,int* pbBlockPos);
-ST_RESULT ParseBlob(BYTE* pbBlock, int bBlockLen, ST_ATTRIBUTE_PTR pAttribute, BYTE *pbAttributeLen, BYTE* pbMem, BYTE bMemLen, BYTE* bMemPos);
-ST_RESULT FindParam(ST_ATTRIBUTE* pData, BYTE bDataLen, ST_ATTRIBUTE_TYPE bType, BYTE * Index);
 ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlobLen);
 ST_RESULT RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength);
-ST_RESULT CopyAttribute(ST_ATTRIBUTE pDest, ST_ATTRIBUTE pSource, BYTE *pbMem, BYTE bMemLen, BYTE* pMemPos );
-BOOL IsClientConnected();
-void SetClientDisconnect();
 
 ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_COMMANDS Value);
 ST_RESULT AddAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE bValueLen, BYTE * Value);
