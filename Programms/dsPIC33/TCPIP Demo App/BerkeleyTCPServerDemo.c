@@ -122,7 +122,7 @@ void BerkeleyTCPServerDemo(void)
     case BSD_BIND:
         // Bind socket to a local port
         addr.sin_port = PORTNUM;
-        addr.sin_addr.S_un.S_addr = IP_ADDR_ANY;
+        addr.sin_addr.SЭ_un.S_addr = IP_ADDR_ANY;
         if( bind( bsdServerSocket, (struct sockaddr*)&addr, addrlen ) == SOCKET_ERROR )
             return;
 
