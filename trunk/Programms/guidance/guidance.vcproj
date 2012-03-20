@@ -256,18 +256,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\PIC18F97J60\TCPIP Demo App\roundbuffer.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -323,10 +311,6 @@
 			</File>
 			<File
 				RelativePath=".\Resource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
 				>
 			</File>
 			<File

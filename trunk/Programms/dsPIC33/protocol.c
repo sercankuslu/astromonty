@@ -2,8 +2,10 @@
 #include "protocol.h"
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 #ifndef __C30__
-#   include "..\PIC18F97J60\TCPIP Demo App\roundbuffer.h"
+
+#   include "..\PIC18F97J60\TCPIP Demo App\Control.h"
 #endif
+
 #ifdef USE_PROTOCOL_CLIENT
 #define MAX_CONNECTIONS 1
 #else
@@ -13,30 +15,16 @@
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
+extern ALL_PARAMS Params;
 
 typedef struct ST_CONNECTION {
     ST_STATUS Mode;
 }ST_CONNECTION;
 
 #ifndef __C30__
-static ST_COMMANDS  connectreq = STC_REQEST_CONNECT;
-static ST_COMMANDS  authreq = STC_REQEST_AUTH;
-static ST_COMMANDS  datareq = STC_REQEST_DATA;
-
-static ST_ATTRIBUTE RequestConnect[] = {
-    {STA_COMMAND, sizeof(BYTE), &connectreq},
-};
 static char Login[] = "root";
 static char Password[] = "pass";
-static ST_ATTRIBUTE RequestAuth[] = {
-    {STA_COMMAND,  sizeof(BYTE), &authreq},
-    {STA_LOGIN,  0, 0},
-    {STA_PASSWORD,  0, 0},
-};
-static ST_ATTRIBUTE RequestData[] = {
-    {STA_COMMAND,  sizeof(BYTE), &datareq},
-    {STA_TIME_SNTP,  0, NULL},
-};
+
 #endif
 #ifndef __18CXX
 ST_CONNECTION Connections[MAX_CONNECTIONS];
@@ -167,72 +155,79 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
     BYTE i = 0;
     BYTE j = 0;
     BYTE k = 0;
-    static ST_COMMANDS Command = STC_NO_COMMANDS;
-    BOOL NeedAnswer = FALSE;
+    ST_COMMANDS Command = STC_NO_COMMANDS;    
     ST_FLAGS Answers = STF_OK;
     BOOL AuthChecked = TRUE;
-
-    BYTE bAttributeLen = 0;
-    BYTE pbMem[MEM_BUFFER_LEN];
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE bMemPos = 0;
-    int bBlobPos = 0;
+    BYTE bAttributeLen = 0;       
     float d1;
     float d2;
     float d3;
-
-    ST_ATTRIBUTE Answer[] = {
-        {STA_FLAG,  sizeof(BYTE),&Answers }
-    };
-    ST_ATTRIBUTE SendData[] = {
-        {STA_NULL, 0, 0 }
-    };
+    BYTE Len = 0;
+    BYTE * Answer = NULL;
+    char * pLogin = NULL;
+    char * pPassword = NULL;
+    BYTE * pPointer;
+    ST_ATTRIBUTE_TYPE Attribute = STA_NULL;
+    void * Value = NULL;
+    void * OutValue = NULL;
+    ST_FLAGS Flag = STF_OK;
+    static BYTE pbOutBlob[64];
+    
     if(*pbBlobLen == 0) return STR_OK;
     if((*pbBlobLen < 0)||(*pbBlobLen >= pbBlobSize)) {
         Connections[bConnectionID].Mode = STS_NO_CONNECT;
         return STR_NEED_DISCONNECT;
     }
-    memset(pbMem,0,sizeof(pbMem));
-    memset(Data,0,sizeof(Data));
-    
-    res = ParseBlob(pbBlob, *pbBlobLen, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
+       
+    res = CheckBlob(pbBlob, *pbBlobLen);
     if(res != STR_OK) {
         Connections[bConnectionID].Mode = STS_NO_CONNECT;
         return res;  
     }
-    
-    res = FindParam(Data, bAttributeLen, STA_COMMAND, &i); 
-    if(res == STR_ATTR_NOT_FOUND) return STR_COMMAND_UNKNOWN;
-    
-    Command = (ST_COMMANDS)*((BYTE*)Data[i].pValue);	
+    res = FindAttribute(pbBlob, *pbBlobLen, STA_COMMAND, &Len, &Answer);
+    if(res != STR_OK){
+        Connections[bConnectionID].Mode = STS_NO_CONNECT;
+        return STR_COMMAND_UNKNOWN;
+    }
+    if(Len == sizeof(BYTE)){
+        Command = (ST_COMMANDS)*Answer;  
+    }
    
     switch(Connections[bConnectionID].Mode){
-    case STS_NO_CONNECT:    	
+    case STS_NO_CONNECT:
+        res = BeginCommand(pbOutBlob, sizeof(pbOutBlob), STC_CONNECT_ANSWER);
+        if(res != STR_OK){
+            Answers = STF_DECLINED;
+            Connections[bConnectionID].Mode = STS_NO_CONNECT;
+            break;
+        }
         if(Command == STC_REQEST_CONNECT) {
             Answers = STF_AUTH_NEEDED;
             Connections[bConnectionID].Mode = STS_AUTH_REQ;
         } else {
             Answers = STF_DECLINED; 
         }
-        NeedAnswer = TRUE;
+        
         break;
     case STS_AUTH_REQ:
+        res = BeginCommand(pbOutBlob, sizeof(pbOutBlob), STC_AUTH_ANSWER);
+        if(res != STR_OK){
+            Answers = STF_DECLINED;
+            Connections[bConnectionID].Mode = STS_NO_CONNECT;
+            break;
+        }
         if(Command == STC_REQEST_AUTH) {
-            BYTE login;
-            BYTE password;
-            res = FindParam(Data, bAttributeLen, STA_LOGIN,&login);
+            res = FindAttribute(pbBlob, *pbBlobLen, STA_LOGIN, &Len, (BYTE**)&pLogin);
             if(res != STR_OK){
-                Answers = STF_COMMAND_INCOMPLETE;
                 Connections[bConnectionID].Mode = STS_NO_CONNECT;
-                NeedAnswer = TRUE;
-                break; 
+                Answers = STF_COMMAND_INCOMPLETE;                
+                break;
             }
-            res = FindParam(Data, bAttributeLen, STA_PASSWORD, &password); 
+            res = FindAttribute(pbBlob, *pbBlobLen, STA_PASSWORD, &Len, (BYTE**)&pPassword);
             if(res != STR_OK){
-                Answers = STF_COMMAND_INCOMPLETE;
                 Connections[bConnectionID].Mode = STS_NO_CONNECT;
-                NeedAnswer = TRUE;
-                break; 
+                Answers = STF_COMMAND_INCOMPLETE;
+                break;
             }
             {
                 //strcmp();
@@ -248,113 +243,69 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
             Answers = STF_DECLINED; 
             Connections[bConnectionID].Mode = STS_NO_CONNECT;
         }
-        NeedAnswer = TRUE;
         break;   
     case STS_CONNECTED:
-        LED1_IO = 1;        
+        LED1_IO = 1;
+
         switch(Command){
             case STC_REQEST_DATA:
-                for(j = 0; j < bAttributeLen; j++){
-                    Answers = STF_NO_DATA;
-                    switch (Data[j].type){                    
-                    case STA_NETWORK_NAME:  
-                        SendData[0].type = STA_NETWORK_NAME;
-                        SendData[0].ulValueLen = sizeof(AppConfig.NetBIOSName);
-                        SendData[0].pValue = AppConfig.NetBIOSName;
-                        res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-                        if(res!=STR_OK){
-                            Answers = STF_DATA_ERROR;
-                            i = bAttributeLen; // interrupt process
-                            *pbBlobLen = 0;
-                            bBlobPos = 0;	
-                        }else {
-                            Answers = STF_DATA_READY;
-                            *pbBlobLen = bBlobPos;
-                        }	
-                        break;
-                    case STA_TIME_SNTP:
-                        {                            
-                            static BYTE vTime[11];                            
-                            ULtoA(CPUSPEED.Val, vTime);                                    
-                            SendData[0].type = STA_TIME_SNTP;
-                            SendData[0].ulValueLen = sizeof(vTime);
-                            SendData[0].pValue = vTime;
-                            res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-                            if(res!=STR_OK){
-                                Answers = STF_DATA_ERROR;
-                                i = bAttributeLen; // interrupt process
-                                *pbBlobLen = 0;
-                                bBlobPos = 0;	
-                            }else {
-                                Answers = STF_DATA_READY;
-                                *pbBlobLen = bBlobPos;
-                            }
-                        }
-                        break;
-                    case STA_ALPHA:
-                        {   
-                            d1 = (float)(rr1.XPosition * rr1.dx);
-                            SendData[0].type = STA_ALPHA;
-                            SendData[0].ulValueLen = sizeof(float);
-                            SendData[0].pValue = &d1;
-                            res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-                            if(res!=STR_OK){
-                                Answers = STF_DATA_ERROR;
-                                i = bAttributeLen; // interrupt process
-                                *pbBlobLen = 0;
-                                bBlobPos = 0;	
-                            }else {
-                                Answers = STF_DATA_READY;
-                                *pbBlobLen = bBlobPos;
-                            }
-                        }
-                        break;
-                    case STA_DELTA:
-                        {   
-                            d2 = (float)(rr2.XPosition * rr2.dx);
-                            SendData[0].type = STA_DELTA;
-                            SendData[0].ulValueLen = sizeof(float);
-                            SendData[0].pValue = &d2;
-                            res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-                            if(res!=STR_OK){
-                                Answers = STF_DATA_ERROR;
-                                i = bAttributeLen; // interrupt process
-                                *pbBlobLen = 0;
-                                bBlobPos = 0;	
-                            }else {
-                                Answers = STF_DATA_READY;
-                                *pbBlobLen = bBlobPos;
-                            }
-                        }
-                        break;
-                    case STA_GAMMA:
-                        {   
-                            d3 = (float)(rr3.XPosition * rr3.dx);
-                            SendData[0].type = STA_GAMMA;
-                            SendData[0].ulValueLen = sizeof(float);
-                            SendData[0].pValue = &d3;
-                            res = FormBlob(SendData, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-                            if(res!=STR_OK){
-                                Answers = STF_DATA_ERROR;
-                                i = bAttributeLen; // interrupt process
-                                *pbBlobLen = 0;
-                                bBlobPos = 0;	
-                            }else {
-                                Answers = STF_DATA_READY;
-                                *pbBlobLen = bBlobPos;
-                            }
-                        }
-                        break;
-                    default:
-                        break;                        
-                    };
+                pPointer = NULL;
+                res = BeginCommand(pbOutBlob, sizeof(pbOutBlob), STC_SEND_DATA);
+                if(res != STR_OK){
+                    Answers = STF_DATA_ERROR;
+                    Connections[bConnectionID].Mode = STS_NO_CONNECT;
+                    break;
                 }
-                NeedAnswer = TRUE;
+                do{
+                    res = GetNextAttribute(pbBlob, *pbBlobLen, &pPointer, &Attribute, &Len, (BYTE**)&Value);
+                    if(res == STR_OK) {
+                        switch (Attribute){
+                        case STA_ALPHA:
+                            {   
+                                d1 = (float)(rr1.XPosition * rr1.dx);                                 
+                                res = AddAttribute(pbOutBlob, sizeof(pbOutBlob), STA_ALPHA, sizeof(float), (BYTE*)&d1);
+                                if(res != STR_OK){
+                                    Answers = STF_DATA_ERROR;
+                                    Connections[bConnectionID].Mode = STS_NO_CONNECT;
+                                    break;
+                                }
+                                Answers = STF_DATA_READY;                                    
+                            }
+                            break;
+                        case STA_DELTA:
+                            {   
+                                d1 = (float)(rr2.XPosition * rr2.dx);                                 
+                                res = AddAttribute(pbOutBlob, sizeof(pbOutBlob), STA_DELTA, sizeof(float), (BYTE*)&d1);
+                                if(res != STR_OK){
+                                    Answers = STF_DATA_ERROR;
+                                    Connections[bConnectionID].Mode = STS_NO_CONNECT;
+                                    break;
+                                }
+                                Answers = STF_DATA_READY;                                    
+                            }
+                            break;
+                        case STA_GAMMA:
+                            {   
+                                d1 = (float)(rr3.XPosition * rr3.dx);                                 
+                                res = AddAttribute(pbOutBlob, sizeof(pbOutBlob), STA_GAMMA, sizeof(float), (BYTE*)&d1);
+                                if(res != STR_OK){
+                                    Answers = STF_DATA_ERROR;
+                                    Connections[bConnectionID].Mode = STS_NO_CONNECT;
+                                    break;
+                                }
+                                Answers = STF_DATA_READY;                                    
+                            }
+                            break;
+                        default:;
+                        }
+                    }
+                } while (res != STR_ATTR_NOT_FOUND);               
                 res = STR_OK;
                 break;
             case STC_SEND_DATA:
                 res = STR_OK;
                 break;
+#ifdef _DISABLE_
             case STC_EXECUTE_COMMAND: // *************************************************************************
                 {
                     for(j = 0; j < bAttributeLen; j++){
@@ -399,27 +350,38 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         };
                     }
                          
-                }
-                NeedAnswer = TRUE;
+                }                
                 res = STR_OK;
                 break;
+#endif
             default :
-                Answers = STF_COMMAND_UNKNOWN;
+                res = BeginCommand(pbOutBlob, sizeof(pbOutBlob), STC_NO_COMMANDS);
+                if(res != STR_OK){
+                    Answers = STF_DECLINED;
+                    Connections[bConnectionID].Mode = STS_NO_CONNECT;
+                    break;
                 }
+                Answers = STF_COMMAND_UNKNOWN;
+            }
         break;
-    default:        
+    default:
         Connections[bConnectionID].Mode = STS_NO_CONNECT;
         res = STR_FUNCTION_FAILED;  
-    }    
-    if(NeedAnswer) {
-        res = FormBlob(Answer, 1, pbBlob, MAX_BUFFER_LEN, &bBlobPos);
-        *pbBlobLen = bBlobPos;
-        if(res!=STR_OK) return res;
-        if(Connections[bConnectionID].Mode == STS_NO_CONNECT) {
-            res = STR_NEED_DISCONNECT;
-        } else {
-            res = STR_NEED_ANSWER;
-        }
+    }   
+    res = AddFlag(pbOutBlob, sizeof(pbOutBlob), Answers);
+    if(res != STR_OK){        
+        Connections[bConnectionID].Mode = STS_NO_CONNECT;
+        return res;
+    }
+    res = GetCommandLength(pbOutBlob, sizeof(pbOutBlob), pbBlobLen);
+    if(res == STR_OK) {
+        memcpy( pbBlob, pbOutBlob, *pbBlobLen);
+    } else return res;
+   
+    if(Connections[bConnectionID].Mode == STS_NO_CONNECT) {
+        res = STR_NEED_DISCONNECT;
+    } else {
+        res = STR_NEED_ANSWER;
     }
     return res;
 }
@@ -446,203 +408,6 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         ST_WAIT_AUTH,
         ST_CONNECTED
     } ST_STATE = ST_REQUEST_CONNECT;
-    ST_ATTRIBUTE Data[MAX_ATTRIBUTE];
-    BYTE bAttributeLen = 0;
-    BYTE pbMem[MEM_BUFFER_LEN];
-    BYTE bMemPos = 0;	
-    int bBlockPos = 0;    
-    ST_RESULT  res = STR_OK;
-    BYTE AttrLen;
-    BYTE j;
-    BYTE* Answer; 
-    BOOL DoWork = TRUE;
-    if(*pbDataLength < 0){
-        ST_STATE = ST_REQUEST_CONNECT;
-        ClientConnected = FALSE;
-        return STR_NEED_DISCONNECT;
-    }
-      
-    while(DoWork){
-        DoWork = FALSE;
-        switch(ST_STATE){
-        case ST_REQUEST_CONNECT:
-            RoundBufferInit();
-            AttrLen = 1;
-            res = FormBlob(RequestConnect, AttrLen, pbBlob, bBlobLen, &bBlockPos);
-            // TODO: обработка ошибок
-            res = STR_NEED_ANSWER;
-            ST_STATE = ST_WAIT_CONNECT;
-            break;
-        case ST_WAIT_CONNECT:
-            if(*pbDataLength==0) break;
-            res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, (BYTE)sizeof(pbMem), &bMemPos);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            } 
-            res = FindParam(Data, bAttributeLen, STA_FLAG, &j);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }
-            if((Data[j].type == STA_FLAG)&&
-                (Data[j].ulValueLen == sizeof(BYTE)))
-            {
-                Answer = (BYTE*)Data[j].pValue;
-                switch(*Answer){
-                case STF_AUTH_NEEDED:
-                    ST_STATE = ST_REQUEST_AUTH;
-                    DoWork = TRUE;
-                    break;
-                case STF_AUTH_NOT_NEEDED:
-                case STF_ACCEPTED:
-                    ST_STATE = ST_CONNECTED;
-                    break;
-                default:
-                    ST_STATE = ST_REQUEST_CONNECT;
-                    break;
-                }
-            }
-            break;
-        case ST_REQUEST_AUTH:
-            AttrLen = 3;
-            res = FindParam(RequestAuth, AttrLen, STA_LOGIN, &j);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }            
-            RequestAuth[j].pValue = Login;
-            RequestAuth[j].ulValueLen = (BYTE)strlen((char*)Login);
-            res = FindParam(RequestAuth, AttrLen, STA_PASSWORD, &j);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }                        
-            RequestAuth[j].pValue = Password;
-            RequestAuth[j].ulValueLen = (BYTE)strlen((char*)Password);
-            res = FormBlob(RequestAuth, AttrLen, pbBlob, bBlobLen, &bBlockPos);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }                
-            // TODO: обработка ошибок
-            res = STR_NEED_ANSWER; 
-            ST_STATE = ST_WAIT_AUTH;
-            break;
-        case ST_WAIT_AUTH:
-            if(*pbDataLength==0) break;
-            res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, (BYTE)sizeof(pbMem), &bMemPos);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            } 
-            res = FindParam(Data, bAttributeLen, STA_FLAG, &j);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }
-            if((Data[j].type == STA_FLAG)&&
-                (Data[j].ulValueLen == sizeof(BYTE)))
-            {
-                Answer = (BYTE*)Data[j].pValue;
-                switch(*Answer){                
-                case STF_ACCEPTED:
-                    ST_STATE = ST_CONNECTED;
-                    break;
-                default:
-                    ST_STATE = ST_REQUEST_CONNECT;
-                    break;
-                }
-            }
-            break;
-        case ST_CONNECTED:
-            // получение данных
-            if(*pbDataLength > 0){
-                res = ParseBlob(pbBlob, *pbDataLength, Data, &bAttributeLen, pbMem, sizeof(pbMem), &bMemPos);
-                if(res != STR_OK){
-                    ST_STATE = ST_REQUEST_CONNECT;
-                } else {                    
-                    for(j = 0; j < bAttributeLen; j++){
-                        switch (Data[j].type){
-                        case STA_COMMAND:                        
-                        case STA_LOGIN:
-                        case STA_PASSWORD:
-                            break;
-                        case STA_FLAG:
-                            Answer = (BYTE*)Data[j].pValue;
-                            if(*Answer != STF_DATA_READY){
-                                // это ошибка - выходим
-                                j = bAttributeLen;
-                            }
-                            break;
-                        case STA_TIME_SNTP:
-                        case STA_ALPHA:
-                        case STA_DELTA:
-                        case STA_GAMMA:
-                        default:
-                            if(PushAttr(Data[j],IN_BUFFER) != RB_OK){
-                                // переполнение буфера. отключаемся
-                                ST_STATE = ST_REQUEST_CONNECT;
-                                return STR_NEED_DISCONNECT;
-                            }                        
-                        };
-                    }
-                }
-            }
-            // отправка данных
-            if(IsDataInBuffer(OUT_BUFFER)){
-                // если в очереди много запросов, формируем большой пакет из них
-                //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
-                BOOL CommandExist = FALSE;
-                do{    
-                    BYTE m[10];
-                    ST_ATTRIBUTE_TYPE Type;                    
-                    RequestData[1].pValue = (void*)&m;
-                    if(GetNextAttrType(OUT_BUFFER, &Type) != RB_OK) {
-                        break;
-                    }                    
-                    if(Type == STA_COMMAND){
-                        if(CommandExist) {
-                            break;
-                        }
-                        CommandExist = TRUE;
-                    }                    
-                    if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){                        
-                        res = FormBlob(&RequestData[1], 1, pbBlob, bBlobLen, &bBlockPos);
-                    }
-                    if(res!=STR_OK) {
-                        ST_STATE = ST_REQUEST_CONNECT;
-                        return STR_NEED_DISCONNECT; 
-                    }
-                }while(IsDataInBuffer(OUT_BUFFER));
-                res = STR_NEED_ANSWER; 
-                ST_STATE = ST_CONNECTED;
-            }
-            break;
-        default: 
-            ST_STATE = ST_REQUEST_CONNECT;
-        };        
-    }
-    if(ST_STATE == ST_CONNECTED){        
-        ClientConnected = 1;
-    } else ClientConnected = 0;
-
-    if(res == STR_NEED_ANSWER){
-        *pbDataLength = bBlockPos;
-    } else {
-        *pbDataLength = 0;
-    }
-    return res;
-}
-ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
-{
-    static  enum ST_STATE{
-        ST_REQUEST_CONNECT = 0,
-        ST_WAIT_CONNECT,
-        ST_REQUEST_AUTH,
-        ST_WAIT_AUTH,
-        ST_CONNECTED
-    } ST_STATE = ST_REQUEST_CONNECT;
     int bBlockPos = 0;    
     ST_RESULT  res = STR_OK;
     BYTE AttrLen;
@@ -651,6 +416,13 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
     BOOL DoWork = TRUE;
     BYTE Len = 0;
     BYTE * Str = NULL;
+    float * fData = NULL;
+    BYTE bNull = 0;
+    BYTE * pPointer;
+    ST_ATTRIBUTE_TYPE Attribute = STA_NULL;
+    void * Value = NULL;    
+    ST_COMMANDS Command = STC_NO_COMMANDS;
+    
     if(*pbDataLength < 0){
         ST_STATE = ST_REQUEST_CONNECT;
         ClientConnected = FALSE;
@@ -667,10 +439,7 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         DoWork = FALSE;
         switch(ST_STATE){
         case ST_REQUEST_CONNECT:
-            //RoundBufferInit();
-            AttrLen = 1;
-            //res = FormBlob(RequestConnect, AttrLen, pbBlob, bBlobLen, &bBlockPos);
-            res = BeginCommand(pbBlob, bBlobLen, STA_COMMAND, sizeof(BYTE), (BYTE*)&connectreq);
+            res = BeginCommand(pbBlob, bBlobLen, STC_REQEST_CONNECT);
             if(res != STR_OK) 
                 return STR_NEED_DISCONNECT;            
             res = STR_NEED_ANSWER;
@@ -683,7 +452,7 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             }
-            if(Data[j].ulValueLen == sizeof(BYTE))
+            if(Len == sizeof(BYTE))
             {
                 switch(*Answer){
                 case STF_AUTH_NEEDED:
@@ -701,17 +470,17 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             }
             break;
         case ST_REQUEST_AUTH:            
-            res = BeginCommand(pbBlob, bBlobLen, STA_COMMAND, sizeof(BYTE), (BYTE*)&authreq);
+            res = BeginCommand(pbBlob, bBlobLen, STC_REQEST_AUTH);
             if(res != STR_OK){
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             }           
-            res = AddAttribute(pbBlob, bBlobLen, STA_LOGIN, (BYTE)strlen((char*)Login), (BYTE*)Login);
+            res = AddAttribute(pbBlob, bBlobLen, STA_LOGIN, (BYTE)sizeof(Login), (BYTE*)Login);
             if(res != STR_OK){
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
             }           
-            res = AddAttribute(pbBlob, bBlobLen, STA_PASSWORD, (BYTE)strlen((char*)Password), (BYTE*)Password);
+            res = AddAttribute(pbBlob, bBlobLen, STA_PASSWORD, (BYTE)sizeof(Password), (BYTE*)Password);
             if(res != STR_OK){
                 ST_STATE = ST_REQUEST_CONNECT;
                 break;
@@ -739,73 +508,105 @@ ST_RESULT  RunClient_N(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             break;
         case ST_CONNECTED:
             // получение данных
-            if(*pbDataLength > 0){  
-
-                for(j = 0; j < bAttributeLen; j++){
-                    switch (Data[j].type){
-                    case STA_COMMAND:                        
-                    case STA_LOGIN:
-                    case STA_PASSWORD:
-                        break;
-                    case STA_FLAG:
-                        Answer = (BYTE*)Data[j].pValue;
-                        if(*Answer != STF_DATA_READY){
-                            // это ошибка - выходим
-                            j = bAttributeLen;
+            pPointer = NULL;
+            res = FindAttribute(pbBlob, bBlobLen, STA_COMMAND, &Len, &Answer);
+            if(res != STR_OK){
+                ST_STATE = ST_REQUEST_CONNECT;
+                break;
+            }
+            if(Len == sizeof(BYTE)){
+                Command = (ST_COMMANDS)*Answer;  
+            }
+            if(Command == STC_SEND_DATA) {
+                do{
+                    res = GetNextAttribute(pbBlob, bBlobLen, &pPointer, &Attribute, &Len, (BYTE**)&fData);                    
+                    if(res == STR_OK) {
+                        if(Len == sizeof(float)){
+                            switch (Attribute){
+                            case STA_ALPHA:
+                                Params.Alpha.Angle = *fData;
+                                Params.Alpha.IsModified.bits.Angle = 1;                                
+                                break;
+                            case STA_DELTA:
+                                Params.Delta.Angle = *fData;
+                                Params.Delta.IsModified.bits.Angle = 1;                               
+                                break;
+                            case STA_GAMMA:
+                                Params.Gamma.Angle = *fData;
+                                Params.Gamma.IsModified.bits.Angle = 1;                                
+                                break;
+                            }
                         }
-                        break;
-                    case STA_TIME_SNTP:
-                    case STA_ALPHA:
-                    case STA_DELTA:
-                    case STA_GAMMA:
-                    default:
-                        if(PushAttr(Data[j],IN_BUFFER) != RB_OK){
-                            // переполнение буфера. отключаемся
+                    }
+                } while (res != STR_ATTR_NOT_FOUND);
+            }
+            
+            // отправка данных 
+            // все переменные, полученные из блоба должны быть сохранены в других местах!!!
+            if(Params.NeedToUpdate.Val > 0){
+                res = BeginCommand(pbBlob, bBlobLen, STC_REQEST_DATA);
+                if(res != STR_OK){
+                    ST_STATE = ST_REQUEST_CONNECT;
+                    break;
+                }        
+                if(Params.NeedToUpdate.bits.Alpha){
+                    if(Params.Alpha.NeedToUpdate.bits.Angle){ 
+                        res = AddAttribute(pbBlob, bBlobLen, STA_ALPHA, 0, &bNull);
+                        if(res != STR_OK){
                             ST_STATE = ST_REQUEST_CONNECT;
-                            return STR_NEED_DISCONNECT;
-                        }                        
-                    };
-                }                
-            }
-            // отправка данных
-            if(IsDataInBuffer(OUT_BUFFER)){
-                // если в очереди много запросов, формируем большой пакет из них
-                //res = FormBlob(&RequestData[0], 1, pbBlob, bBlobLen, &bBlockPos);
-                BOOL CommandExist = FALSE;
-                do{    
-                    BYTE m[10];
-                    ST_ATTRIBUTE_TYPE Type;                    
-                    RequestData[1].pValue = (void*)&m;
-                    if(GetNextAttrType(OUT_BUFFER, &Type) != RB_OK) {
-                        break;
-                    }                    
-                    if(Type == STA_COMMAND){
-                        if(CommandExist) {
                             break;
-                        }
-                        CommandExist = TRUE;
-                    }                    
-                    if(PopAttr(&RequestData[1], OUT_BUFFER) == RB_OK){                        
-                        res = FormBlob(&RequestData[1], 1, pbBlob, bBlobLen, &bBlockPos);
+                        } 
+                        Params.Alpha.NeedToUpdate.bits.Angle = 0;
+                        Params.NeedToUpdate.bits.Alpha = 0;
                     }
-                    if(res!=STR_OK) {
-                        ST_STATE = ST_REQUEST_CONNECT;
-                        return STR_NEED_DISCONNECT; 
+                }
+                if(Params.NeedToUpdate.bits.Delta){
+                    if(Params.Delta.NeedToUpdate.bits.Angle){ 
+                        res = AddAttribute(pbBlob, bBlobLen, STA_DELTA, 0, &bNull);
+                        if(res != STR_OK){
+                            ST_STATE = ST_REQUEST_CONNECT;
+                            break;
+                        } 
+                        Params.Delta.NeedToUpdate.bits.Angle = 0;
+                        Params.NeedToUpdate.bits.Delta = 0;
                     }
-                }while(IsDataInBuffer(OUT_BUFFER));
-                res = STR_NEED_ANSWER; 
-                ST_STATE = ST_CONNECTED;
+                }
+                if(Params.NeedToUpdate.bits.Gamma){
+                    if(Params.Gamma.NeedToUpdate.bits.Angle){ 
+                        res = AddAttribute(pbBlob, bBlobLen, STA_GAMMA, 0, &bNull);
+                        if(res != STR_OK){
+                            ST_STATE = ST_REQUEST_CONNECT;
+                            break;
+                        } 
+                        Params.Gamma.NeedToUpdate.bits.Angle = 0;
+                        Params.NeedToUpdate.bits.Gamma = 0;
+                    }
+                }
+                res = STR_NEED_ANSWER;
             }
+            
             break;
         default: 
             ST_STATE = ST_REQUEST_CONNECT;
         };        
     }
     if(ST_STATE == ST_CONNECTED){        
-        ClientConnected = 1;
-    } else ClientConnected = 0;
+        if(!Params.Local.ConnectFlag)
+            Params.Local.IsModified.bits.Flag = 1;
+        Params.Local.ConnectFlag = 1;
+    } else {
+        ClientConnected = 0;
+        if(Params.Local.ConnectFlag)
+            Params.Local.IsModified.bits.Flag = 1;
+        Params.Local.ConnectFlag = 0;    
+    }
 
     if(res == STR_NEED_ANSWER){
+        res = AddFlag(pbBlob, bBlobLen, STF_OK);
+        if(res != STR_OK){
+            ST_STATE = ST_REQUEST_CONNECT;
+            return res;
+        }
         res = GetCommandLength(pbBlob, bBlobLen, pbDataLength);
     } else {
         *pbDataLength = 0;
@@ -837,12 +638,16 @@ void SetClientDisconnect()
     ClientConnected = FALSE;
 }
 
-ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Cmd, BYTE bValueLen, BYTE * Value)
+ST_RESULT BeginCommand(BYTE * pBuffer, int bBufLen, ST_COMMANDS Value)
 {
     // очищаем буфер
     memset(pBuffer, 0, bBufLen);    
     // записываем код команды
-    return AddAttribute(pBuffer, bBufLen, Cmd, bValueLen, Value);    
+    return AddAttribute(pBuffer, bBufLen, STA_COMMAND, 1, (BYTE*)&Value);    
+}
+ST_RESULT AddFlag(BYTE * pBuffer, int bBufLen, ST_FLAGS Value)
+{
+    return AddAttribute(pBuffer, bBufLen, STA_FLAG, 1, (BYTE*)&Value);    
 }
 ST_RESULT AddAttribute(BYTE * pBuffer, int bBufLen, ST_ATTRIBUTE_TYPE Attribute, BYTE bValueLen, BYTE * Value)
 {
@@ -892,6 +697,102 @@ ST_RESULT GetCommandLength(BYTE * pbBlob, int bBlobLen, int * pbDataLength)
         *pbDataLength = 0;
         return STR_BUFFER_TOO_SMALL;
     }
-    *pbDataLength = (int)pbBlob[0];
+    *pbDataLength = (int)pbBlob[0] + 1;
     return STR_OK;
 }
+ST_RESULT GetNextAttribute(BYTE * pBuffer, int bBufLen, BYTE ** pPointer, ST_ATTRIBUTE_TYPE * Attribute, BYTE * bValueLen, BYTE ** Value)
+{
+    if(bBufLen <= 0) return STR_BUFFER_TOO_SMALL;
+    if(*pPointer == NULL) { // начинаем с начала
+        *pPointer = pBuffer + 1;
+    }
+    if(*pPointer >= pBuffer + pBuffer[0]) {
+        return STR_ATTR_NOT_FOUND;
+    }
+    // Читаем команду
+    *Attribute = (ST_ATTRIBUTE_TYPE)**pPointer;
+    (*pPointer)++;
+    *bValueLen = **pPointer;
+    (*pPointer)++;
+    *Value = *pPointer;    
+    (*pPointer) += *bValueLen;
+    return STR_OK;
+}
+
+
+#ifdef __DISABLE__
+void ExecuteCommands()
+{
+    static BYTE datareq = STC_REQEST_DATA;
+    static BYTE execreq = STC_EXECUTE_COMMAND;
+    static ST_ATTRIBUTE RequestData[] = {
+        {STA_COMMAND,  sizeof(BYTE), &datareq},
+        {STA_NULL,  0, NULL},
+    };
+    static ST_ATTRIBUTE Data = {
+        STA_NULL,  0, NULL
+    };
+    
+    if(Params.NeedToCommit.Val > 0){
+        if(Params.NeedToCommit.bits.Alpha){
+            if(Params.Alpha.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_ALPHA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_ALPHA_TARGET;
+                RequestData[1].pValue = &Params.Alpha.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
+        if(Params.NeedToCommit.bits.Delta){
+            if(Params.Delta.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_DELTA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_DELTA_TARGET;
+                RequestData[1].pValue = &Params.Delta.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                Params.Delta.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
+        if(Params.NeedToCommit.bits.Gamma){
+            if(Params.Gamma.NeedToCommit.bits.TargetAngle){
+                RequestData[0].pValue = &execreq;
+                rv = PushAttr(RequestData[0], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_GAMMA_START;
+                RequestData[1].pValue = NULL;
+                RequestData[1].ulValueLen = 0;
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                RequestData[1].type = STA_GAMMA_TARGET;
+                RequestData[1].pValue = &Params.Gamma.TargetAngle;
+                RequestData[1].ulValueLen = sizeof(float);
+                rv = PushAttr(RequestData[1], OUT_BUFFER);
+                if(rv!=RB_OK) return;
+                Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
+            }
+        }
+        Params.NeedToCommit.bits.Alpha = 0;
+        Params.NeedToCommit.bits.Delta = 0;
+        Params.NeedToCommit.bits.Gamma = 0;
+    } else
+        
+
+}
+#endif //#ifdef __DISABLE__

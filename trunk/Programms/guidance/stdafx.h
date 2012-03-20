@@ -128,6 +128,20 @@ typedef union WORD_VAL
     } bits;
 } WORD_VAL;
 #endif
-#endif
+
+
+#if !defined _APP_CONFIG_TYPE
+#define _APP_CONFIG_TYPE
+typedef struct { 
+    DWORD_VAL MyIPAddr;
+    DWORD_VAL MyMask;
+    DWORD_VAL MyGateway;
+    DWORD_VAL PrimaryDNSServer;
+    DWORD_VAL SecondaryDNSServer;
+    char NetBIOSName[16];
+    DWORD Time;
+} AppConfigType;
+#endif //#if !defined _APP_CONFIG_TYPE
+#endif //_WINDOWS
 
 // TODO. Установите здесь ссылки на дополнительные заголовки, требующиеся для программы
