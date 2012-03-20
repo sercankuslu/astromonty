@@ -434,7 +434,16 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         ClientConnected = FALSE;
         return STR_NEED_DISCONNECT;
     }
-
+    res = FindAttribute(pbBlob, pbBlobLen, STA_COMMAND, &Len, &Answer);
+    if(res != STR_OK){
+        ST_STATE = ST_REQUEST_CONNECT;
+        ClientConnected = FALSE;       
+        return STR_COMMAND_UNKNOWN;
+    }
+    if(Len == sizeof(BYTE)){
+        Command = (ST_COMMANDS)*Answer;  
+    }
+   
     while(DoWork){
         DoWork = FALSE;
         switch(ST_STATE){
@@ -487,7 +496,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             }
             res = STR_NEED_ANSWER; 
             ST_STATE = ST_WAIT_AUTH;
-            break;
+            brea;
         case ST_WAIT_AUTH:
             if(*pbDataLength==0) break;            
             res = FindAttribute(pbBlob, bBlobLen, STA_FLAG, &Len, &Answer);
@@ -509,15 +518,8 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         case ST_CONNECTED:
             // получение данных
             pPointer = NULL;
-            res = FindAttribute(pbBlob, bBlobLen, STA_COMMAND, &Len, &Answer);
-            if(res != STR_OK){
-                ST_STATE = ST_REQUEST_CONNECT;
-                break;
-            }
-            if(Len == sizeof(BYTE)){
-                Command = (ST_COMMANDS)*Answer;  
-            }
-            if(Command == STC_SEND_DATA) {
+            switch(Command) {
+            case STC_SEND_DATA:
                 do{
                     res = GetNextAttribute(pbBlob, bBlobLen, &pPointer, &Attribute, &Len, (BYTE**)&fData);                    
                     if(res == STR_OK) {
@@ -539,6 +541,8 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                         }
                     }
                 } while (res != STR_ATTR_NOT_FOUND);
+                break;
+            default:;
             }
             
             // отправка данных 
