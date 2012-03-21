@@ -54,10 +54,11 @@
 #if defined(STACK_USE_BERKELEY_API)
 
 #include "TCPIP Stack/TCPIP.h"
+#include "..\..\dsPIC33\protocol.h"
 
 
 #define PORTNUM 80
-static ROM BYTE ServerName[] =  "www.google.com";
+static ROM BYTE ServerName[] =  "ASTROMONTY";
 // This is specific to this HTTP Client example
 static BYTE sendRequest[] = "GET /search?as_q=Microchip&as_sitesearch=microchip.com HTTP/1.0\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
 
@@ -81,17 +82,18 @@ void BerkeleyTCPClientDemo(void)
 	#if defined(STACK_USE_DNS)
     static SOCKET bsdClientSocket;
     static struct sockaddr_in addr;
-    char recvBuffer[9];
+    char recvBuffer[64];
     int i;
     int addrlen;
-   
+    BYTE res = 0;
+    BYTE BlobLen;
     static enum
     {
 	    DNS_START_RESOLUTION = 0,
 	    DNS_GET_RESULT,
         BSD_START,
         BSD_CONNECT,
-        BSD_SEND,
+        //BSD_SEND,
         BSD_OPERATION,
         BSD_CLOSE,
         BSD_DONE
@@ -145,37 +147,26 @@ void BerkeleyTCPClientDemo(void)
             if(connect( bsdClientSocket, (struct sockaddr*)&addr, addrlen) < 0)
             	return;
 
-            BSDClientState = BSD_SEND;
-            // No break needed
-
-        case BSD_SEND:
-            //send TCP data
-            send(bsdClientSocket, (const char*)sendRequest, strlen((char*)sendRequest), 0);  
             BSDClientState = BSD_OPERATION;
-            break;
+            // No break needed
         
         case BSD_OPERATION:
             // Obtian and print the server reply
             while(1)
             {
-				i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer)-1, 0); //get the data from the recv queue
-
-                if(i == 0)
-					break;
-                
-                if(i< 0) //error condition
-                {
-                    BSDClientState = BSD_CLOSE;
-                    break;
-                }
-                
-                #if defined(STACK_USE_UART)
-                recvBuffer[i] = '\0';	// Null terminate data
-                putsUART((char*)recvBuffer);
-                #endif
-
-                if(BSDClientState == BSD_OPERATION)
-                    break;
+	            i = recv(bsdClientSocket, recvBuffer, sizeof(recvBuffer), 0); //get the data from the recv queue
+                res = RunClient(recvBuffer, sizeof(recvBuffer), &i);
+                switch(res){
+	            case STR_NEED_ANSWER:  
+	            	send(bsdClientSocket, recvBuffer, i, 0);
+	            case STR_OK:
+	            	break;
+	            case STR_NEED_DISCONNECT:	            	
+	            default:
+	            	BSDClientState = BSD_CLOSE;
+	            	break;
+                }     
+			    break;
             }
             break;
          

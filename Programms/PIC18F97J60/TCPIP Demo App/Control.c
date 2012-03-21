@@ -882,8 +882,8 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
 }
 void DrawScrollBar(int Pos, int Max)
 {
-    WORD Size = 53 / Max;
-    WORD Y = Pos * Size;
+    WORD Size = (WORD)(53 / Max);
+    WORD Y = (WORD)(Pos * Size);
     FloodRectangle(122,10,132,63,0);
     DrawRectangle(122,10,132,63,1);
     FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
@@ -892,7 +892,7 @@ void DrawScrollBar(int Pos, int Max)
 
 void DrawMessageLine(MSGS Msg_id, int Step, BOOL Blink)
 {
-
+    if((Msg_id == 0) || Step == 0 || Blink) return;
 }
 
 BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMax, MENU_ID LastState, MENU_ID * State, BYTE * YSelPos, BYTE * XSelPos)

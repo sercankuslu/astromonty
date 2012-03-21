@@ -90,23 +90,9 @@ typedef enum STN_MODE {
 
 #define MEM_BUFFER_LEN 32
 #define MAX_ATTRIBUTE 8
-
-typedef struct ST_ATTRIBUTE {
-    ST_ATTRIBUTE_TYPE   type;
-    BYTE                ulValueLen;  /* in bytes */
-    void*               pValue;
-} ST_ATTRIBUTE;
-typedef ST_ATTRIBUTE*  ST_ATTRIBUTE_PTR;
-#define IN_BUFFER 0
-#define OUT_BUFFER 1
 #define FALSE   0
 #define TRUE    1
 
-
-
-
-
-//static BYTE SendAttributes();
 #define MAX_BUFFER_LEN 64
 ST_RESULT SetClientDisconnect();
 ST_RESULT ProtocolInit();

@@ -466,10 +466,7 @@ int main(void)
     static int sy1 = 2;
     static BYTE RBuffer[30];	
     KEYS_STR K;
-    ST_ATTRIBUTE ReceivePacket = {
-		0, 0, RBuffer
-	};
-	    
+	
     BYTE count; 
     UpdateKey(&K);    
     DisplayInit(); 

@@ -66,16 +66,10 @@ ST_RESULT ProtocolInit()
 ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlobLen)
 {
     ST_RESULT res = STR_OK;
-    BYTE i = 0;
-    BYTE j = 0;
-    BYTE k = 0;
     ST_COMMANDS Command = STC_NO_COMMANDS;    
     ST_FLAGS Answers = STF_OK;
     BOOL AuthChecked = TRUE;
-    BYTE bAttributeLen = 0;       
     float d1;
-    float d2;
-    float d3;
     float Target = 0.0;
     float Speed = 0.0;
     BYTE Len = 0;
@@ -85,8 +79,6 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
     BYTE * pPointer;
     ST_ATTRIBUTE_TYPE Attribute = STA_NULL;
     void * Value = NULL;
-    void * OutValue = NULL;
-    ST_FLAGS Flag = STF_OK;
     static BYTE pbOutBlob[64];
     RR * rr = NULL;
     
@@ -314,14 +306,10 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         ST_WAIT_AUTH,
         ST_CONNECTED
     } ST_STATE = ST_REQUEST_CONNECT;
-    int bBlockPos = 0;    
     ST_RESULT  res = STR_OK;
-    BYTE AttrLen;
-    BYTE j;
     BYTE* Answer; 
     BOOL DoWork = TRUE;
     BYTE Len = 0;
-    BYTE * Str = NULL;
     float * fData = NULL;
     BYTE bNull = 0;
     BYTE * pPointer;
