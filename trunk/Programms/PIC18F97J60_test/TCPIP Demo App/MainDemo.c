@@ -102,6 +102,14 @@
 
 // Include functions specific to this stack application
 #include "MainDemo.h"
+#define USE_OR_MASKS
+#include "p18cxxx.h"
+#include <timers.h>
+#include <pwm.h>
+#include "flash.h"
+#include "DisplayBuffer.h"
+#include "pcf8535.h"
+#include "Control.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -111,6 +119,22 @@ APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
 
+static struct SCKeys {    
+    KEYS_STR Scan;
+    KEYS_STR Pressed;
+
+	DWORD TIMEOUT_up;
+	DWORD TIMEOUT_down;
+	DWORD TIMEOUT_left;
+	DWORD TIMEOUT_right;
+	DWORD TIMEOUT_esc;
+	DWORD TIMEOUT_enter;
+	
+} CKeys;
+//static BYTE CKeys=0;
+static BYTE add1 = PCF8535_BUS_ADDRESS;
+static int DisplayBright = 0x0F00;
+static int DisplaydB = 0;      // changing the value DisplayBright of every second 
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
@@ -123,6 +147,9 @@ BYTE AN0String[8];
 static void InitAppConfig(void);
 static void InitializeBoard(void);
 static void ProcessIO(void);
+static void UpdateKey(KEYS_STR * K);
+static void InitTimerAndPWM(void);
+
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
@@ -203,7 +230,19 @@ int main(void)
 {
 	static DWORD t = 0;
 	static DWORD dwLastIP = 0;
-
+	static DWORD t1 = 0;
+	static DWORD displayup = 0;
+	static DWORD tt = 0;
+    static int x = 0;
+    static int y = 0;
+    static int x1 = 0;
+    static int y1 = 0;
+    static int sx1 = 2;
+    static int sy1 = 2;
+    KEYS_STR K;
+	
+    BYTE count; 
+    
 	// Initialize application specific hardware
 	InitializeBoard();
 
@@ -302,7 +341,16 @@ int main(void)
 
     mDNSMulticastFilterRegister();			
 	#endif
-
+   
+    UpdateKey(&K);    
+    DisplayInit(); 
+    ProcessMenu(&K);
+    pcfLCDInit(add1);
+    DisplayDraw(add1);
+    LED0_TRIS = 0;
+	INTCONbits.INT0IE = 0;
+	INTCONbits.INT0IF = 0;  
+	
 	// Now that all items are initialized, begin the co-operative
 	// multitasking loop.  This infinite loop will continuously 
 	// execute all stack-related tasks, as well as your own
@@ -316,12 +364,13 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        // Blink LED0 (right most one) every second.
-        if(TickGet() - t >= TICK_SECOND/2ul)
-        {
-            t = TickGet();
-            LED0_IO ^= 1;
-        }
+        UpdateKey(&K);
+        if((TickGet() - t1 >= TICK_SECOND)||(K.Val>0))
+        {            
+	     	t1 = TickGet();   
+            ProcessMenu( &K );
+            DisplayDraw(add1);		
+	    } 
 
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
@@ -380,8 +429,8 @@ int main(void)
 		
 		#if defined(STACK_USE_BERKELEY_API)
 		BerkeleyTCPClientDemo();
-		BerkeleyTCPServerDemo();
-		BerkeleyUDPClientDemo();
+		//BerkeleyTCPServerDemo();
+		//BerkeleyUDPClientDemo();
 		#endif
 
 		ProcessIO();
@@ -595,6 +644,7 @@ void DisplayIPValue(IP_ADDR IPVal)
 // Processes A/D data from the potentiometer
 static void ProcessIO(void)
 {
+    WORD ADRES_Data;
 #if defined(__C30__) || defined(__C32__)
     // Convert potentiometer result into ASCII string
     uitoa((WORD)ADC1BUF0, AN0String);
@@ -613,7 +663,22 @@ static void ProcessIO(void)
 		ADCON2 = temp;
 	}
 	#endif
-
+	// ”правление €ркостью экрана, учитыва€ освещенность фотоэлемента
+    ADRES_Data = *((WORD*)(&ADRESL));
+	if(ADRES_Data>10){
+		DisplayBright = (DisplayBright+(1024 - ADRES_Data))/2;
+	} else {
+		DisplayBright = (DisplayBright+(1024 - 900))/2;
+	}	
+		
+	if(DisplayBright<0){
+		DisplayBright = 0;
+	}	
+	if(DisplayBright>0x03FF){
+		DisplayBright = 0x03FF;
+	}	
+	SetDCPWM5(DisplayBright);        //set the duty cycle   
+	  
     // Convert 10-bit value into ASCII string
     uitoa(*((WORD*)(&ADRESL)), AN0String);
 #endif
@@ -662,7 +727,7 @@ static void InitializeBoard(void)
 
 	// PICDEM.net 2 board has POT on AN2, Temp Sensor on AN3
 	#if defined(PICDEMNET2)
-		ADCON0 = 0x09;		// ADON, Channel 2
+		ADCON0 = 0x11;		// ADON, Channel 2
 		ADCON1 = 0x0B;		// Vdd/Vss is +/-REF, AN0, AN1, AN2, AN3 are analog
 	#elif defined(PICDEMZ)
 		ADCON0 = 0x81;		// ADON, Channel 0, Fosc/32
@@ -958,6 +1023,8 @@ static void InitializeBoard(void)
 #if defined(SPIFLASH_CS_TRIS)
 	SPIFlashInit();
 #endif
+
+    InitTimerAndPWM();
 }
 
 /*********************************************************************
@@ -1194,4 +1261,221 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
     #endif
 }
 #endif
+static void UpdateKey(KEYS_STR * K)
+{
+    BYTE i;
+    BYTE j;		
+    static BYTE a = 0;
+    static BYTE b = 0;
+    static BYTE k = 0;
+    static const DWORD TIME_PERIOD = TICK_SECOND/10;
+    static BOOL Init = 0;
+    DWORD CurrTime;
+    CurrTime = TickGet();
+    if(!Init){
+        CKeys.TIMEOUT_up    = 0;
+        CKeys.TIMEOUT_down  = 0;
+        CKeys.TIMEOUT_left  = 0;
+        CKeys.TIMEOUT_right = 0;
+        CKeys.TIMEOUT_esc   = 0;
+        CKeys.TIMEOUT_enter = 0;
+        CKeys.Scan.Val = 0;
+        CKeys.Pressed.Val = 0;
+        Init = 1;
+    }
+    
+    TRISBbits.TRISB1 = 1;
+    TRISBbits.TRISB2 = 1;
+    TRISBbits.TRISB3 = 1;
+    TRISBbits.TRISB4 = 1;
+    TRISDbits.TRISD0 = 0;
+    TRISDbits.TRISD1 = 0;
+    TRISDbits.TRISD2 = 0;
+    TRISBbits.TRISB5 = 0;
+    LATD = 0;
+	LATBbits.LATB1 = 0;
+	LATBbits.LATB2 = 0;
+	LATBbits.LATB3 = 0;
+	LATBbits.LATB4 = 0;
+	LATBbits.LATB5 = 0;
+	
+	LATDbits.LATD0 = 1; // перва€ строка (menu и enter)
+	Nop();Nop();
+	CKeys.Scan.keys.esc = PORTBbits.RB1^0x01;
+	CKeys.Scan.keys.enter = PORTBbits.RB3^0x01;	
+	LATDbits.LATD0 = 0; // перва€ строка (menu и enter)	
+	Nop();
+	LATDbits.LATD1 = 1; // перва€ строка (menu и enter)
+	Nop();Nop();
+	CKeys.Scan.keys.left = PORTBbits.RB1;
+	CKeys.Scan.keys.right = PORTBbits.RB2;	
+	CKeys.Scan.keys.up = PORTBbits.RB3;
+	CKeys.Scan.keys.down = PORTBbits.RB4;	
+	LATDbits.LATD1 = 0; // перва€ строка (menu и enter)	
+	Nop();
+	// нажали-обь€вили-таймаут-ждем отпускани€-отпустили-таймаут-ждем нажати€
+	if(CurrTime > CKeys.TIMEOUT_up){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.up){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.up){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.up = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_up = CurrTime + TIME_PERIOD;
+        	    K->keys.up = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.up){
+            	// если она была нажата
+            	CKeys.Pressed.keys.up = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_up = CurrTime + TIME_PERIOD;
+            	K->keys.up = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_down){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.down){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.down){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.down = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_down = CurrTime + TIME_PERIOD;
+        	    K->keys.down = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.down){
+            	// если она была нажата
+            	CKeys.Pressed.keys.down = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_down = CurrTime + TIME_PERIOD;
+            	K->keys.down = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_left){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.left){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.left){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.left = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_left = CurrTime + TIME_PERIOD;
+        	    K->keys.left = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.left){
+            	// если она была нажата
+            	CKeys.Pressed.keys.left = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_left = CurrTime + TIME_PERIOD;
+            	K->keys.left = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_right){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.right){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.right){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.right = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_right = CurrTime + TIME_PERIOD;
+        	    K->keys.right = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.right){
+            	// если она была нажата
+            	CKeys.Pressed.keys.right = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_right = CurrTime + TIME_PERIOD;
+            	K->keys.right = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_esc){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.esc){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.esc){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.esc = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_esc = CurrTime + TIME_PERIOD;
+        	    K->keys.esc = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.esc){
+            	// если она была нажата
+            	CKeys.Pressed.keys.esc = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_esc = CurrTime + TIME_PERIOD;
+            	K->keys.esc = 0;
+        	} 
+    	}
+	}
+	if(CurrTime > CKeys.TIMEOUT_enter){
+    	// ждем таймаут
+    	if(CKeys.Scan.keys.enter){
+        	// если кнопка нажата
+        	if(!CKeys.Pressed.keys.enter){
+        	    // если она не была нажата
+        	    CKeys.Pressed.keys.enter = 1; // нажимаем и ждем таймаут 
+        	    CKeys.TIMEOUT_enter = CurrTime + TIME_PERIOD;
+        	    K->keys.enter = 1;           // сообщаем о нажатии
+        	}
+    	} else {
+    	    // если отпущена
+        	if(CKeys.Pressed.keys.enter){
+            	// если она была нажата
+            	CKeys.Pressed.keys.enter = 0; // отпускаем и ждем таймаут
+            	CKeys.TIMEOUT_enter = CurrTime + TIME_PERIOD;
+            	K->keys.enter = 0;
+        	} 
+    	}
+	}
+}
+static void InitTimerAndPWM(void)
+{
+	//CCP5
+	char period=0x00;
+    unsigned char outputconfig=0;
+    unsigned char outputmode=0;
+    unsigned char config=0;
+    unsigned int duty_cycle=0;
+    //Timer0
+    unsigned char config0=0x00;
+    unsigned int timer0_value=0x00;
+    //Timer1    
+    unsigned char config1=0x00;
+    unsigned int timer1_value=0x00;
+    //Timer2    
+    unsigned char config2=0x00;
+    unsigned int timer2_value=0x00;
+    //----Configure Timer1----
+    //timer1_value = 0x00;    
+    //WriteTimer1(timer1_value);            //clear timer if previously contains any value
+        
+    //config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
+    //OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
+    //IPR1bits.TMR1IP = 0; // HIGH
+    //PIR1bits.TMR1IF = 0; 
+    //PIE1bits.TMR1IE = 1;
+    
+    //----Configure Timer2----
+    timer2_value = 0x00;    
+    WriteTimer2(timer2_value);            //clear timer if previously contains any value
 
+    config2 =  T2_POST_1_16 | T2_PS_1_16 | TIMER_INT_OFF;
+    OpenTimer2(config2);                //API configures the tmer1 as per user defined parameters
+
+    SetTmrCCPSrc(T12_SOURCE_CCP);
+    PIE1bits.TMR2IE = 0;
+    //----Configure pwm ----
+    period = 0xFF;
+    OpenPWM5( period);            //Configure PWM module and initialize PWM period
+
+    //-----set duty cycle----
+    duty_cycle = 0x0F00;
+    SetDCPWM5(duty_cycle);        //set the duty cycle
+}
