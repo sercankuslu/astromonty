@@ -245,7 +245,9 @@ int main(void)
     
 	// Initialize application specific hardware
 	InitializeBoard();
-
+	//UpdateKey(&K);
+	//ProcessMenu(&K);
+	
 	#if defined(USE_LCD)
 	// Initialize and display the stack version on the LCD
 	LCDInit();
@@ -342,14 +344,15 @@ int main(void)
     mDNSMulticastFilterRegister();			
 	#endif
    
-    UpdateKey(&K);    
-    DisplayInit(); 
-    ProcessMenu(&K);
-    pcfLCDInit(add1);
-    DisplayDraw(add1);
-    LED0_TRIS = 0;
-	INTCONbits.INT0IE = 0;
-	INTCONbits.INT0IF = 0;  
+    
+    
+    
+    //pcfLCDInit(add1);
+    //DisplayInit(); 
+    //DisplayDraw(add1);
+    //LED0_TRIS = 0;
+	//INTCONbits.INT0IE = 0;
+	//INTCONbits.INT0IF = 0;  
 	
 	// Now that all items are initialized, begin the co-operative
 	// multitasking loop.  This infinite loop will continuously 
@@ -1024,7 +1027,7 @@ static void InitializeBoard(void)
 	SPIFlashInit();
 #endif
 
-    InitTimerAndPWM();
+    //InitTimerAndPWM();
 }
 
 /*********************************************************************

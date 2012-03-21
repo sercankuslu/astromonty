@@ -332,18 +332,20 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     } else {    
                         State = ERROR_NO_CONNECTION;
                         LastState = MENU;
-                    }
+                    }                    
                     break;
                 case 1:
                     State = SETTINGS;
                     break;
                 case 2:
                     break;
-                }     
+                }    
+                Params.Common.Flags.bits.NeedToRedrawMenus = true; 
                 DisplayClear();
                 break;
             } else {
                 if(Selected == ESC) {
+	                Params.Common.Flags.bits.NeedToRedrawMenus = true;
                     DisplayClear();
                     break;
                 }
