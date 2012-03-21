@@ -57,7 +57,7 @@
 #include "..\..\dsPIC33\protocol.h"
 
 
-#define PORTNUM 80
+#define PORTNUM 9764
 static ROM BYTE ServerName[] =  "ASTROMONTY";
 // This is specific to this HTTP Client example
 static BYTE sendRequest[] = "GET /search?as_q=Microchip&as_sitesearch=microchip.com HTTP/1.0\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
@@ -176,8 +176,13 @@ void BerkeleyTCPClientDemo(void)
             // No break needed
             
         case BSD_DONE:
-            if(BUTTON2_IO == 0u)
-            	BSDClientState = DNS_START_RESOLUTION;
+            //if(BUTTON2_IO == 0u)
+            	//BSDClientState = DNS_START_RESOLUTION;
+            	BSDClientState = BSD_START;
+            addr.sin_addr.S_un.S_un_b.s_b1 = 192;
+            addr.sin_addr.S_un.S_un_b.s_b2 = 168;
+            addr.sin_addr.S_un.S_un_b.s_b3 = 1;
+            addr.sin_addr.S_un.S_un_b.s_b4 = 33;
             break;
          
         default:
