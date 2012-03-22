@@ -237,8 +237,12 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                         case STA_GAMMA:
                             rr = &rr3;                            
                             break;
-                        case STA_TARGET:
+                        case STA_ABS_TARGET:
                             Target = *((float*)Value);
+                            break;
+                        case STA_ASTRO_TARGET:
+                            Target = *((float*)Value);
+                            //StarToAbs( Target, &Target);
                             break;
                         case STA_SPEED:
                             Speed = *((float*)Value);
@@ -502,7 +506,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                     }
                 }
                 // задаем координаты
-                res = AddAttribute(pbBlob, bBlobLen, STA_TARGET, (BYTE)sizeof(float), (BYTE*)Value);
+                res = AddAttribute(pbBlob, bBlobLen, STA_ABS_TARGET, (BYTE)sizeof(float), (BYTE*)Value);
                 if(res != STR_OK){
                     ST_STATE = ST_REQUEST_CONNECT;
                     break;
