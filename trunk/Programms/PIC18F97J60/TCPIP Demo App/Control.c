@@ -42,11 +42,11 @@
 #ifndef _WINDOWS
 #pragma romdata overlay MSG_SECTION
 #define C_ROM const rom
+// char *strncpypgm2ram (auto char *s1, auto const MEM_MODEL rom char *s2, auto sizeram_t n);
 #else 
 #define C_ROM const
 extern AppConfigType AppConfig;
 #endif
-
 typedef enum MENU_ID {
     MAIN_WINDOW, 
     MENU, SETTINGS, 
@@ -83,14 +83,21 @@ static C_ROM char * const MsgsCommon[]=
     "Тип монтировки",
     "AS-CONTROL", "Имя:", "IP:", "Mask:", "Gate:", "DNS1:", "DNS2:", "NTP:",
     "Ошибка",
+    // TODO: сделать возможность автоматического разбиения строки 
+    // TODO: сделать поддержку бегущей строки
     "Указанные координаты", "в данный момент вре-", "мени находятся вне", "зоны видимости",
     "Нет подключения к",    "серверу. Действие не", "доступно" , ""
 };
-
+// TODO: 
 #ifndef _WINDOWS
 #pragma romdata
+#define GetMsgFromROM(Msg_id, Msg) strncpypgm2ram((char*)Msg, (C_ROM char*)(MsgsCommon[Msg_id]))
+#else
+#define GetMsgFromROM(Msg_id, Msg) strcpy(Msg, MsgsCommon[Msg_id])
 #endif
 ALL_PARAMS Params;
+
+
 
 void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
@@ -99,7 +106,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 int SubStrToInt(const char* Text, int Beg, int * Val);
 void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue);
-void GetMsgFromROM(MSGS Msg_id, char* Msg);
+//void GetMsgFromROM(MSGS Msg_id, char* Msg);
 
 void ProcessMenu( KEYS_STR * KeyPressed )
 {
@@ -173,7 +180,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         //Params.Local.ConnectFlag = 0;
         Params.NeedToUpdate.Val = 0;
         Params.Alpha.NeedToUpdate.Val = 0;
-        GetMsgFromROM(MSG_SNL_NAME, (char*)&Params.Local.Name);
+        GetMsgFromROM(MSG_SNL_NAME, Params.Local.Name);
         Params.Alpha.IsModified.Val = 0xFF;
         Params.Delta.IsModified.Val = 0xFF;
         Params.Gamma.IsModified.Val = 0xFF;
@@ -332,20 +339,18 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     } else {    
                         State = ERROR_NO_CONNECTION;
                         LastState = MENU;
-                    }                    
+                    }
                     break;
                 case 1:
                     State = SETTINGS;
                     break;
                 case 2:
                     break;
-                }    
-                Params.Common.Flags.bits.NeedToRedrawMenus = true; 
+                }     
                 DisplayClear();
                 break;
             } else {
                 if(Selected == ESC) {
-	                Params.Common.Flags.bits.NeedToRedrawMenus = true;
                     DisplayClear();
                     break;
                 }
@@ -1055,7 +1060,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
     } 
 }
 
-
+/*
 void GetMsgFromROM(MSGS Msg_id, char* Msg)
 {        
     int i = 0;        
@@ -1063,7 +1068,7 @@ void GetMsgFromROM(MSGS Msg_id, char* Msg)
         Msg[i] = MsgsCommon[Msg_id][i];        
     }while(Msg[i++] != '\0');        
     
-}
+}*/
 void SecondsToTime(DWORD Seconds, DateTime * Date)
 {
     DWORD Y = 70;
