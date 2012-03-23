@@ -218,7 +218,6 @@ static void InitTimerAndPWM(void);
 	}
 #endif
 
-
 //
 // Main application entry point.
 //
@@ -243,6 +242,9 @@ int main(void)
 	
     BYTE count; 
     
+    
+    
+        
 	// Initialize application specific hardware
 	InitializeBoard();
 	//UpdateKey(&K);
