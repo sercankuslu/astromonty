@@ -462,62 +462,64 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                     ST_STATE = ST_REQUEST_CONNECT;
                     break;
                 }
-                if(Params.NeedToCommit.bits.Alpha){
-                    if(Params.Alpha.NeedToCommit.bits.TargetAngle){
-                        // выбираем канал ALPHA
-                        res = AddAttribute(pbBlob, bBlobLen, STA_ALPHA, 0, &bNull); 
-                        if(res != STR_OK){
-                            ST_STATE = ST_REQUEST_CONNECT;
-                            break;
+                do {
+                    if(Params.NeedToCommit.bits.Alpha){
+                        if(Params.Alpha.NeedToCommit.bits.TargetAngle){
+                            // выбираем канал ALPHA
+                            res = AddAttribute(pbBlob, bBlobLen, STA_ALPHA, 0, &bNull); 
+                            if(res != STR_OK){
+                                ST_STATE = ST_REQUEST_CONNECT;
+                                break;
+                            }
+                            Value = &Params.Alpha.TargetAngle;
+                            Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
+                            Params.NeedToCommit.bits.Alpha = 0;
                         }
-                        Value = &Params.Alpha.TargetAngle;
-                        Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
-                        Params.NeedToCommit.bits.Alpha = 0;
-                    }
-                } else
-                if(Params.NeedToCommit.bits.Delta){
-                    if(Params.Delta.NeedToCommit.bits.TargetAngle){
-                        // выбираем канал ALPHA
-                        res = AddAttribute(pbBlob, bBlobLen, STA_DELTA, 0, &bNull); 
-                        if(res != STR_OK){
-                            ST_STATE = ST_REQUEST_CONNECT;
-                            break;
+                    } else
+                    if(Params.NeedToCommit.bits.Delta){
+                        if(Params.Delta.NeedToCommit.bits.TargetAngle){
+                            // выбираем канал ALPHA
+                            res = AddAttribute(pbBlob, bBlobLen, STA_DELTA, 0, &bNull); 
+                            if(res != STR_OK){
+                                ST_STATE = ST_REQUEST_CONNECT;
+                                break;
+                            }
+                            Value = &Params.Delta.TargetAngle;
+                            res = STR_NEED_ANSWER; 
+                            Params.Delta.NeedToCommit.bits.TargetAngle = 0;
+                            Params.NeedToCommit.bits.Delta = 0;
                         }
-                        Value = &Params.Delta.TargetAngle;
-                        res = STR_NEED_ANSWER; 
-                        Params.Delta.NeedToCommit.bits.TargetAngle = 0;
-                        Params.NeedToCommit.bits.Delta = 0;
-                    }
-                } else
-                if(Params.NeedToCommit.bits.Gamma){
-                    if(Params.Gamma.NeedToCommit.bits.TargetAngle){
-                        // выбираем канал ALPHA
-                        res = AddAttribute(pbBlob, bBlobLen, STA_GAMMA, 0, &bNull); 
-                        if(res != STR_OK){
-                            ST_STATE = ST_REQUEST_CONNECT;
-                            break;
+                    } else
+                    if(Params.NeedToCommit.bits.Gamma){
+                        if(Params.Gamma.NeedToCommit.bits.TargetAngle){
+                            // выбираем канал ALPHA
+                            res = AddAttribute(pbBlob, bBlobLen, STA_GAMMA, 0, &bNull); 
+                            if(res != STR_OK){
+                                ST_STATE = ST_REQUEST_CONNECT;
+                                break;
+                            }
+                            Value = &Params.Gamma.TargetAngle;
+                            res = STR_NEED_ANSWER; 
+                            Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
+                            Params.NeedToCommit.bits.Gamma = 0;
                         }
-                        Value = &Params.Gamma.TargetAngle;
-                        res = STR_NEED_ANSWER; 
-                        Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
-                        Params.NeedToCommit.bits.Gamma = 0;
                     }
-                }
-                // задаем координаты
-                res = AddAttribute(pbBlob, bBlobLen, STA_ABS_TARGET, (BYTE)sizeof(float), (BYTE*)Value);
-                if(res != STR_OK){
-                    ST_STATE = ST_REQUEST_CONNECT;
-                    break;
-                }
-                // подтверждаем начало выполнения
-                res = AddAttribute(pbBlob, bBlobLen, STA_START, 0, &bNull);
-                if(res != STR_OK){
-                    ST_STATE = ST_REQUEST_CONNECT;
-                    break;
-                }
+                    // задаем координаты
+                    res = AddAttribute(pbBlob, bBlobLen, STA_ABS_TARGET, (BYTE)sizeof(float), (BYTE*)Value);
+                    if(res != STR_OK){
+                        ST_STATE = ST_REQUEST_CONNECT;
+                        break;
+                    }
+                    // подтверждаем начало выполнения
+                    res = AddAttribute(pbBlob, bBlobLen, STA_START, 0, &bNull);
+                    if(res != STR_OK){
+                        ST_STATE = ST_REQUEST_CONNECT;
+                        break;
+                    }
+                } while (Params.NeedToCommit.Val > 0);
                 res = STR_NEED_ANSWER;
                 break;
-            }
+            } 
             // отправка запросов на данные 
             // все переменные, полученные из блоба должны быть сохранены в других местах!!!            
             if(Params.NeedToUpdate.Val > 0){

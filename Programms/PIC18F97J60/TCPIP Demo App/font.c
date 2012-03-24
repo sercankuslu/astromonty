@@ -28,10 +28,10 @@ const
 	0x2E01,0x020,                                                    // .
 	0x2F03,0x030,0x00C,0x003,                                        // /
 	0x3004,0x01E,0x021,0x021,0x01E,                                  // 0
-	0x3102,0x002,0x03F,                                              // 1
+	0x3104,0x000,0x002,0x03F,0x000,                                  // 1
 	0x3204,0x022,0x031,0x029,0x026,                                  // 2
 	0x3304,0x012,0x021,0x025,0x01A,                                  // 3
-	0x3405,0x018,0x014,0x012,0x03F,0x010,                            // 4
+        0x3404,0x007,0x008,0x008,0x03F,                                  // 4
 	0x3504,0x017,0x025,0x025,0x019,                                  // 5
 	0x3604,0x01E,0x025,0x025,0x019,                                  // 6
 	0x3704,0x001,0x039,0x005,0x003,                                  // 7
@@ -205,8 +205,8 @@ const
      0x3706,0x001,0x0F1,0x0F9,0x00D,0x007,0x003,                                 // 7     
      0x3806,0x076,0x0FF,0x089,0x089,0x0FF,0x076,                                 // 8     
      0x3906,0x04E,0x0DF,0x091,0x091,0x0FF,0x07E,                                 // 9     
-     0x3A02,0x0CC,0x0CC,                                                         // :     
-     0x3B02,0x2CC,0x1CC,                                                         // ;     
+     0x3A02,0x0CC,0x0CC,                                             // :     
+     0x3B02,0x2CC,0x1CC,                                             // ;     
      0x3C05,0x018,0x018,0x024,0x024,0x042,                                       // <     
      0x3D05,0x028,0x028,0x028,0x028,0x028,                                       // =     
      0x3E05,0x042,0x024,0x024,0x018,0x018,                                       // >     
@@ -344,9 +344,9 @@ const
 #ifndef _WINDOWS
 #pragma romdata
 #endif
-#define Arial_Data_L_Size 835
-#define Arial_Data_B_Size 1116
-
+static WORD Arial_Data_L_Size = 0;
+static WORD Arial_Data_B_Size = 0;
+static BYTE FontInit = 0;
 int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
 {
     WORD i;        
@@ -354,6 +354,11 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
     WORD Size =  0;
     WORD_VAL c;
     c.Val = 0;
+    if(!FontInit){
+        Arial_Data_L_Size = sizeof(Arial_Data_L)/sizeof(WORD);
+        Arial_Data_B_Size = sizeof(Arial_Data_B)/sizeof(WORD);
+        FontInit = 1;
+    }
     memset(Image,0,(*ImageSize));
     switch(CFont){
         case ARIAL_L: 

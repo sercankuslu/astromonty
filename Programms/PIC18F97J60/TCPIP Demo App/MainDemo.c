@@ -132,6 +132,7 @@ static struct SCKeys {
 	
 } CKeys;
 static WORD_VAL Duty;
+static WORD_VAL Period;
 //static BYTE CKeys=0;
 static BYTE add1 = PCF8535_BUS_ADDRESS;
 static int DisplayBright = 0x0F00;
@@ -178,6 +179,7 @@ static void InitTimerAndPWM(void);
 	void HighISR(void)
 	#endif
 	{
+		static BYTE T = 0;
 	    #if defined(STACK_USE_UART2TCP_BRIDGE)
 			UART2TCPBridgeISR();
 		#endif
@@ -187,9 +189,17 @@ static void InitTimerAndPWM(void);
 		#endif // WF_CS_TRIS
 		if(PIR3bits.CCP5IF  == 1){
 			PIR3bits.CCP5IF  = 0;
-			CCPR5H += Duty.byte.HB;		// set CCP
-			CCPR5L += Duty.byte.LB;
-			LED0_IO ^= 1;
+			if(T){
+				CCPR5H += Duty.byte.HB;		// set CCP
+				CCPR5L += Duty.byte.LB;
+				LED0_IO = 1;
+				T = 0;
+			} else {
+				CCPR5H += Period.byte.HB - Duty.byte.HB;		// set CCP
+				CCPR5L += Period.byte.LB - Duty.byte.LB;
+				LED0_IO = 0;
+				T = 1;
+			}
 		}
 	}
 
@@ -688,8 +698,8 @@ static void ProcessIO(void)
 	}	
 	if(DisplayBright>0x03FF){
 		DisplayBright = 0x03FF;
-	}	
-	SetDCPWM5(DisplayBright);        //set the duty cycle   
+	}
+	Duty.Val = DisplayBright;
 	  
     // Convert 10-bit value into ASCII string
     uitoa(*((WORD*)(&ADRESL)), AN0String);
@@ -1461,7 +1471,8 @@ static void InitTimerAndPWM(void)
 	T1CONbits.TMR1CS  = 0;		// Internal clock (FOSC/4)
 	TMR1H = 0;					// reset TMR1
 	TMR1L = 0;    
-	Duty.Val = 4096;			// reset interval varable
+	Duty.Val = 256;			// reset interval varable
+	Period.Val = 2048;
 	CCPR5H = 0;					// set CCP
 	CCPR5L = 0;
 	PIR3bits.CCP5IF   = 0;		// clear interrupt flag
