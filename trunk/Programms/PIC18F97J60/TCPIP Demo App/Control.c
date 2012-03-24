@@ -134,6 +134,11 @@ C_ROM char * MSG_ERR_NOCONNECTION3          = "";
 
 #else
 #define strncpypgm2ram(Msg, Msg_id, x) strcpy(Msg, Msg_id)
+static DWORD TIME_IN_SECONDS = 0;
+DWORD SNTPGetUTCSeconds(){ 
+    return TIME_IN_SECONDS;
+}
+
 #endif
 #ifndef _WINDOWS
 #pragma udata PARAMS_SECTION1
@@ -161,6 +166,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static float Xd = (float)(-33.1 * PI / 180.0);
     static float Xg = (float)(47.2 * PI / 180.0);
     static char TimeT[] = "23:56";    
+    static char SecondT[] = ".00";
     
 
     static MENU_ID State = MAIN_WINDOW;
@@ -188,49 +194,70 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static float * TmpDoValue = NULL;
     static BOOL TmpIsHours = false;
     BYTE Selected = 0;
-    static char * EditTxt; 
+    static char EditTxt[25]; 
     DWORD_VAL TmpDWval;
     static BOOL Init = false;
     static int TimerCount = 0;
+    static DWORD dwTime;
+    static DateTime Date;
     
+#ifdef _WINDOWS_
+    SYSTEMTIME systemTime;
+    FILETIME fileTime;
+    UINT64 qwtime = 0;
+    GetSystemTime( &systemTime );    
+    SystemTimeToFileTime( &systemTime, &fileTime );
+    qwtime = ((UINT64)fileTime.dwHighDateTime) << 32;
+    qwtime += (UINT64)fileTime.dwLowDateTime;
+    TIME_IN_SECONDS = (UINT64)qwtime/10000000;
+#endif
+
     Params.Common.Flags.bits.NeedToRedrawTime = false;
-    //     Con ^= 1;
-    //     A_Run ^= 1;
-    //     D_Run ^= 1;
-    if(KeyPressed->Val == 0){
-        //TimerCount += 2;
-        //if(TimerCount % 1 == 0){
+    if(dwTime != SNTPGetUTCSeconds())
+    {
+        dwTime = SNTPGetUTCSeconds();      
+        SecondsToTime(dwTime, &Date);
         Time_Run ^= 1;
         Params.Common.Flags.bits.NeedToRedrawTime = true;
-        //}
+        TimeT[0] = '0' + Date.Hour / 10;
+        TimeT[1] = '0' + Date.Hour % 10;
+        TimeT[3] = '0' + Date.Min / 10;
+        TimeT[4] = '0' + Date.Min % 10;
+        SecondT[1] = '0' +  Date.Sec / 10;
+        SecondT[2] = '0' +  Date.Sec % 10;
         if(Time_Run){
             TimeT[2] = ':';
         } else {
             TimeT[2] = ' ';
         }
     }
+
+
     if(!Init){
         Params.Local.IP = AppConfig.MyIPAddr.Val;
         Params.Local.Mask = AppConfig.MyMask.Val;
         Params.Local.Gate = AppConfig.MyGateway.Val;
         Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
         Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
-        Params.Alpha.Angle = 3.14f/2.0f;        
-        Params.Delta.Angle = 3.14f/3.0f; 
-        Params.Gamma.Angle = 3.14f/4.0f;
+        Params.Alpha.Angle = 0.0f;        
+        Params.Delta.Angle = 0.0f; 
+        Params.Gamma.Angle = 0.0f;
+        Params.Alpha.TargetAngle = 0.0f;
+        Params.Delta.TargetAngle = 0.0f;
+        Params.Gamma.TargetAngle = 0.0f;
         Params.Alpha.StatusFlag.bits.Enable = 1;
         Params.Delta.StatusFlag.bits.Enable = 1;
         Params.Gamma.StatusFlag.bits.Enable = 0;
         //Params.Alpha.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
-        //Params.Local.ConnectFlag = 0;
+        Params.Local.ConnectFlag = 0;
         Params.NeedToUpdate.Val = 0;
         Params.Alpha.NeedToUpdate.Val = 0;
         strncpypgm2ram((char*)Params.Local.Name, MSG_SNL_NAME, sizeof(Params.Local.Name));
-        Params.Alpha.IsModified.Val = 0xFF;
-        Params.Delta.IsModified.Val = 0xFF;
-        Params.Gamma.IsModified.Val = 0xFF;
+        Params.Alpha.IsModified.Val = 0x00;
+        Params.Delta.IsModified.Val = 0x00;
+        Params.Gamma.IsModified.Val = 0x00;
         Params.NeedToCommit.Val = 0x00;
         memset(TmpValue,0,sizeof(TmpValue));
         Params.Common.Flags.bits.NeedToRedrawMenus = true;
@@ -334,7 +361,9 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 Params.NeedToUpdate.bits.Gamma = 1;
             }
             if(Params.Common.Flags.bits.NeedToRedrawTime||Params.Common.Flags.bits.NeedToRedrawMenus){
-                OutTextXY(101,54,(const char*)TimeT,ARIAL_B,NORMAL);
+                WORD XX = 0;
+                XX = OutTextXY(90,54,(const char*)TimeT,ARIAL_B,NORMAL);
+                OutTextXY(XX,56,(const char*)SecondT,ARIAL_L,NORMAL);
                 Params.Common.Flags.bits.NeedToRedrawTime = 0;
             }
            
@@ -351,12 +380,8 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 OutTextXY(Con_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
             }
             if(Params.Common.Flags.bits.NeedToRedrawMenus){
-                //GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
-                //OutTextXY(2,53,(const char*)MsgValue,ARIAL_B,NORMAL);
                 Line(0,52,132,52,1);
                 Line(0,9,132,9,1);
-                //DrawRectangle(0,51,132,63,1);
-                //DrawRectangle(0,0,132,10,1);  
                 if(1){
                     color = 0;
                     Effect = NORMAL;
@@ -370,7 +395,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     strncpypgm2ram((char*)&MsgValue, MSG_MW_MODE_AUTO, sizeof(MsgValue));
                 OutTextXY(2,54,(const char*)MsgValue,ARIAL_L, Effect);                
                 //Line(36,52,36,63,1);
-                Line(99,52,99,63,1);
+                Line(88,52,88,63,1);
                 Params.Common.Flags.bits.NeedToRedrawMenus = 0;
             }
             EndProcess = true;
@@ -501,23 +526,23 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
                 case 1:
-                     EditTxt = (char*)MSG_SN_IP;
+                     strncpypgm2ram((char*)&MsgValue, MSG_SN_IP, sizeof(MsgValue));
                      TmpDWValue = &Params.Local.IP;
                      break;
                 case 2:
-                    EditTxt = (char*)MSG_SN_MASK;
+                    strncpypgm2ram((char*)&MsgValue, MSG_SN_MASK, sizeof(MsgValue));
                     TmpDWValue = &Params.Local.Mask;
                     break;
                 case 3:
-                    EditTxt = (char*)MSG_SN_GATE;
+                    strncpypgm2ram((char*)&MsgValue, MSG_SN_GATE, sizeof(MsgValue));
                     TmpDWValue = &Params.Local.Gate;
                     break;
                 case 4:
-                    EditTxt = (char*)MSG_SN_DNS1;
+                    strncpypgm2ram((char*)&MsgValue, MSG_SN_DNS1, sizeof(MsgValue));
                     TmpDWValue = &Params.Local.DNS1;
                     break;
                 case 5:
-                    EditTxt = (char*)MSG_SN_DNS2;
+                    strncpypgm2ram((char*)&MsgValue, MSG_SN_DNS2, sizeof(MsgValue));
                     TmpDWValue = &Params.Local.DNS2;
                     break; 
                 default:
@@ -603,36 +628,41 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
                 case 0:
-                    EditTxt = (char*)MSG_C_ALPHA;                    
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_ALPHA, sizeof(MsgValue));
                     TmpDoValue = &Params.Alpha.TargetAngle;
                     TmpIsHours = true;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 1);
+                    Params.Alpha.IsModified.bits.TargetAngle = 1;
                     break;
                 case 1:
-                    EditTxt = (char*)MSG_C_DELTA;                    
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_DELTA, sizeof(MsgValue));
                     TmpDoValue = &Params.Delta.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
+                    Params.Delta.IsModified.bits.TargetAngle = 1;
                     break;
                 case 2:
-                    EditTxt = (char*)MSG_C_GAMMA;                    
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_GAMMA, sizeof(MsgValue));
                     TmpDoValue = &Params.Gamma.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
+                    Params.Gamma.IsModified.bits.TargetAngle = 1;
                     break;
                 case 3:
                     State = MAIN_WINDOW;  
                     // отправка команды на перевод телескопа на координаты
-                    if(Params.Alpha.StatusFlag.bits.Enable) {
+                    if(Params.Alpha.StatusFlag.bits.Enable && Params.Alpha.IsModified.bits.TargetAngle) {
+                        Params.Alpha.IsModified.bits.TargetAngle = 0;
                         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit.bits.Alpha = 1;
-                        
                     }
-                    if(Params.Delta.StatusFlag.bits.Enable) {
+                    if(Params.Delta.StatusFlag.bits.Enable && Params.Delta.IsModified.bits.TargetAngle) {
+                        Params.Alpha.IsModified.bits.TargetAngle = 0;
                         Params.Delta.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit.bits.Delta = 1;
                     }
-                    if(Params.Gamma.StatusFlag.bits.Enable) {
+                    if(Params.Gamma.StatusFlag.bits.Enable && Params.Gamma.IsModified.bits.TargetAngle) {
+                        Params.Alpha.IsModified.bits.TargetAngle = 0;
                         Params.Gamma.NeedToCommit.bits.TargetAngle = 1;
                         Params.NeedToCommit.bits.Gamma = 1;                    
                     }
@@ -710,7 +740,6 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }
             DrawRectangle(0,0,132,10,1);
-            strncpypgm2ram((char*)&MsgValue, EditTxt, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);    
             
@@ -760,11 +789,15 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }             
             DrawRectangle(0,0,132,10,1);
-            strncpypgm2ram((char*)&MsgValue, EditTxt, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);   
             if(PosY>0){                
-                if((TmpValue[PosY-1] == '.')||(TmpValue[PosY-1] == '`')||(TmpValue[PosY-1] == '\'')||(TmpValue[PosY-1] == '"')||(TmpValue[PosY-1] == 'h')){
+                if((TmpValue[PosY-1] == '.')||
+                   (TmpValue[PosY-1] == '`')||
+                   (TmpValue[PosY-1] == '\'')||
+                   (TmpValue[PosY-1] == '"')||
+                   (TmpValue[PosY-1] == 'h')||
+                   (TmpValue[PosY-1] == ':')){
                     if(TmpPosY < PosY) {
                         PosY++;
                         if(PosY >= MaxY) PosY = 1;
@@ -870,6 +903,7 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, i
     static int CPosX = 0;
     char Name[25] = "";
     WORD StringXPos = 0;
+    WORD Xtmp = 0;
     int ValueLength = 0;
     BYTE color =0;
     BYTE Line;
@@ -921,6 +955,10 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, i
     if(Msg_id != MSG_NOMSG){
         strncpypgm2ram((char*)&Name, Msg_id, sizeof(Name));
         StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
+        Xtmp = StringXPos % 10;
+        if( Xtmp > 0){
+            StringXPos += 10 - Xtmp;
+        }
     }
     if(Value!= NULL){
         ValueLength = strlen((const char*)Value);
@@ -1016,12 +1054,12 @@ void XtoTimeString( char * Text, float X, BOOL hour )
     if(Sign){
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+            sprintf (Text, "+%0.2d:%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
         } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     } else {
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+            sprintf (Text, "-%0.2d:%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
         } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     }
 
@@ -1074,6 +1112,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
             case '.':
             case '\'':
             case '"':
+            case ':':
                 TmpValue[i] = ' ';
         }
     }
@@ -1133,7 +1172,8 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
     DWORD dd;
     DWORD Days;      
     Days = Seconds/86400;
-    Seconds -= (DWORD)Days*86400;
+    //Seconds -= (DWORD)Days*86400;
+    Seconds = Seconds % 86400;
     s1 = Days/7;
     dd = (DWORD)s1;
     d = (BYTE)((Days - dd*7) + 5);
