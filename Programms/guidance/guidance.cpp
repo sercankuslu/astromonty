@@ -348,7 +348,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     static KEYS_STR Key;
     ST_RESULT rv = STR_OK;  
-    static bool OnLine = FALSE;
+    static bool OnLine = TRUE;
     static BYTE bfr[64] = "";
     static int length = 0;
 

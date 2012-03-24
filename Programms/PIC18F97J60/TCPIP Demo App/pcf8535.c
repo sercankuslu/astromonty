@@ -3,7 +3,7 @@
 
 #ifndef _WINDOWS
 #include "TCPIP Stack/TCPIP.h"
-#include "i2c.h"
+#include <i2c.h>
 #endif
 
 #ifdef _WINDOWS
@@ -129,7 +129,7 @@ void pcfLCDInit(BYTE addr)
     sync_mode = MASTER;
     slew = SLEW_OFF;
 
-    OpenI2C(sync_mode,slew);
+    OpenI2C1(sync_mode,slew);
 
     SSPADD=0x0A;             //400kHz Baud clock(9) @8MHz
     //check for bus idle condition in multi master communication
@@ -228,11 +228,11 @@ int LCDSendData(BYTE add1,BYTE* wrptr, BYTE size)
                         d1.bits.b6 = d.bits.b1; 
                         d1.bits.b7 = d.bits.b0; 
 //
-			if ( WriteI2C1( d1.Val ) )    // write 1 byte
+			if ( WriteI2C( d1.Val ) )    // write 1 byte
 			{
 			  return ( -3 );             // return with write collision error
 			}
-			IdleI2C1();                  // test for idle condition
+			IdleI2C();                  // test for idle condition
 			if ( SSP1CON2bits.ACKSTAT )  // test received ack bit state
 			{
 			  return ( -2 );             // bus device responded with  NOT ACK
