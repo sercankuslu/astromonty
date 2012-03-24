@@ -41,7 +41,7 @@
 
 #ifndef _WINDOWS
 #pragma romdata overlay MSG_SECTION
-#define C_ROM const rom
+#define C_ROM far const rom
 // char *strncpypgm2ram (auto char *s1, auto const MEM_MODEL rom char *s2, auto sizeram_t n);
 #else 
 #define C_ROM const
@@ -56,7 +56,7 @@ typedef enum MENU_ID {
     EDIT_IP,EDIT_TIME,EDIT_ANGLE, 
     ERROR_COORDINATE,ERROR_NO_CONNECTION
 } MENU_ID;
-
+/*
 typedef enum MSGS {
     MSG_NOMSG,
     MSG_MW_ALPHA, MSG_MW_DELTA, MSG_MW_GAMMA, MSG_MW_MENU, MSG_C_NET, MSG_MW_MODE_AUTO, MSG_MW_MODE_MANUAL, 
@@ -87,19 +87,66 @@ static C_ROM char * const MsgsCommon[]=
     // TODO: сделать поддержку бегущей строки
     "Указанные координаты", "в данный момент вре-", "мени находятся вне", "зоны видимости",
     "Нет подключения к",    "серверу. Действие не", "доступно" , ""
-};
+};*/
+
+C_ROM char * MSG_NOMSG                      = "";                    
+C_ROM char * MSG_MW_ALPHA                   = "А:";                  
+C_ROM char * MSG_MW_DELTA                   = "Д:";                  
+C_ROM char * MSG_MW_GAMMA                   = "Г:";                  
+C_ROM char * MSG_MW_MENU                    = "Меню";                
+C_ROM char * MSG_C_NET                      = "Сеть";                
+C_ROM char * MSG_MW_MODE_AUTO               = "Авто наведение";      
+C_ROM char * MSG_MW_MODE_MANUAL             = "Ручное наведение";    
+C_ROM char * MSG_C_ALPHA                    = "Альфа";               
+C_ROM char * MSG_C_DELTA                    = "Дельта";              
+C_ROM char * MSG_C_GAMMA                    = "Гамма";               
+C_ROM char * MSG_M_SETTINGS                 = "Настройки";           
+C_ROM char * MSG_M_S_OBSERV                 = "Наблюдение";          
+C_ROM char * MSG_MO_GOTO                    = "Навести";             
+C_ROM char * MSG_MO_MANUAL                  = "Ручной режим";        
+C_ROM char * MSG_MO_SPACECRAFT              = "Режим спутников";     
+C_ROM char * MSG_C_START                    = "Старт";               
+C_ROM char * MSG_C_CONTINUE                 = "Продолжить";          
+C_ROM char * MSG_S_MONTY                    = "Монтировка";          
+C_ROM char * MSG_S_DISPLAY                  = "Экран";               
+C_ROM char * MSG_SM_TYPE                    = "Тип монтировки";      
+C_ROM char * MSG_SNL_NAME                   = "AS-CONTROL";          
+C_ROM char * MSG_SN_NAME                    = "Имя:";                
+C_ROM char * MSG_SN_IP                      = "IP:";                 
+C_ROM char * MSG_SN_MASK                    = "Mask:";               
+C_ROM char * MSG_SN_GATE                    = "Gate:";               
+C_ROM char * MSG_SN_DNS1                    = "DNS1:";               
+C_ROM char * MSG_SN_DNS2                    = "DNS2:";               
+C_ROM char * MSG_SN_NTP                     = "NTP:";                
+C_ROM char * MSG_C_ERROR                    = "Ошибка";              
+C_ROM char * MSG_ERR_NOTREACHABLE0          = "Указанные координаты";
+C_ROM char * MSG_ERR_NOTREACHABLE1          = "в данный момент вре-";
+C_ROM char * MSG_ERR_NOTREACHABLE2          = "мени находятся вне";  
+C_ROM char * MSG_ERR_NOTREACHABLE3          = "зоны видимости";      
+C_ROM char * MSG_ERR_NOCONNECTION0          = "Нет подключения к";   
+C_ROM char * MSG_ERR_NOCONNECTION1          = "серверу. Действие не";
+C_ROM char * MSG_ERR_NOCONNECTION2          = "доступно";            
+C_ROM char * MSG_ERR_NOCONNECTION3          = "";                    
+
 // TODO: 
 #ifndef _WINDOWS
 #pragma romdata
-#define GetMsgFromROM(Msg_id, Msg) strncpypgm2ram((char*)Msg, (C_ROM char*)(MsgsCommon[Msg_id]))
+
 #else
-#define GetMsgFromROM(Msg_id, Msg) strcpy(Msg, MsgsCommon[Msg_id])
+#define strncpypgm2ram(Msg, Msg_id, x) strcpy(Msg, Msg_id)
 #endif
-ALL_PARAMS Params;
+#ifndef _WINDOWS
+#pragma udata PARAMS_SECTION1
+#endif
+
+far ALL_PARAMS Params;
+
+#ifndef _WINDOWS
+#pragma udata
+#endif
 
 
-
-void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
+void DrawMenuLine( BYTE ID,  C_ROM char * Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, float X, BOOL hour );
 BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
@@ -141,7 +188,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static float * TmpDoValue = NULL;
     static BOOL TmpIsHours = false;
     BYTE Selected = 0;
-    static MSGS EditTxt = MSG_NOMSG; 
+    static char * EditTxt; 
     DWORD_VAL TmpDWval;
     static BOOL Init = false;
     static int TimerCount = 0;
@@ -180,7 +227,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         //Params.Local.ConnectFlag = 0;
         Params.NeedToUpdate.Val = 0;
         Params.Alpha.NeedToUpdate.Val = 0;
-        GetMsgFromROM(MSG_SNL_NAME, Params.Local.Name);
+        strncpypgm2ram((char*)Params.Local.Name, MSG_SNL_NAME, sizeof(Params.Local.Name));
         Params.Alpha.IsModified.Val = 0xFF;
         Params.Delta.IsModified.Val = 0xFF;
         Params.Gamma.IsModified.Val = 0xFF;
@@ -235,7 +282,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         Effect = INVERT;
                     }
                     FloodRectangle(A_FlagX,0,D_FlagX,8,color);
-                    GetMsgFromROM(MSG_C_ALPHA, (char*)&MsgValue);
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_ALPHA, sizeof(MsgValue));
                     OutTextXY(A_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Alpha.IsModified.bits.Flag = 0;
                 }
@@ -257,7 +304,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         Effect = INVERT;
                     }
                     FloodRectangle(D_FlagX,0,G_FlagX,8,color);
-                    GetMsgFromROM(MSG_C_DELTA, (char*)&MsgValue);
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_DELTA, sizeof(MsgValue));
                     OutTextXY(D_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Delta.IsModified.bits.Flag = 0;
                 }
@@ -279,7 +326,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                         Effect = INVERT;
                     }
                     FloodRectangle(G_FlagX,0,131,8,color);
-                    GetMsgFromROM(MSG_C_GAMMA, (char*)&MsgValue);
+                    strncpypgm2ram((char*)&MsgValue, MSG_C_GAMMA, sizeof(MsgValue));
                     OutTextXY(G_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
                     Params.Gamma.IsModified.bits.Flag = 0;
                 }
@@ -300,7 +347,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     Effect = INVERT;
                 }
                 FloodRectangle(Con_FlagX,0,A_FlagX ,8,color);
-                GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
+                strncpypgm2ram((char*)&MsgValue, MSG_C_NET, sizeof(MsgValue));
                 OutTextXY(Con_FlagX+2,1,(const char*)MsgValue,ARIAL_L,Effect);
             }
             if(Params.Common.Flags.bits.NeedToRedrawMenus){
@@ -318,9 +365,9 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                     Effect = INVERT;
                 }
                 if(Params.Common.Flags.bits.Man_Auto)
-                    GetMsgFromROM(MSG_MW_MODE_MANUAL, (char*)&MsgValue);
+                    strncpypgm2ram((char*)&MsgValue, MSG_MW_MODE_MANUAL, sizeof(MsgValue));
                 else
-                    GetMsgFromROM(MSG_MW_MODE_AUTO,   (char*)&MsgValue);
+                    strncpypgm2ram((char*)&MsgValue, MSG_MW_MODE_AUTO, sizeof(MsgValue));
                 OutTextXY(2,54,(const char*)MsgValue,ARIAL_L, Effect);                
                 //Line(36,52,36,63,1);
                 Line(99,52,99,63,1);
@@ -358,7 +405,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(LastPosX!=PosX) Params.Common.Flags.bits.NeedToRedrawMenus = 1;
             if(Params.Common.Flags.bits.NeedToRedrawMenus){
                 DrawRectangle(0,0,132,10,1);
-                GetMsgFromROM(MSG_MW_MENU, (char*)&MsgValue);
+                strncpypgm2ram((char*)&MsgValue, MSG_MW_MENU, sizeof(MsgValue));
                 OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
                 DrawScrollBar(PosX, 2);            
                 DrawMenuLine(0, MSG_M_S_OBSERV, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);            
@@ -394,8 +441,8 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }            
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_M_SETTINGS, (char*)&MsgValue);
-            OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
+            strncpypgm2ram((char*)&MsgValue, MSG_M_SETTINGS, sizeof(MsgValue));
+            OutTextXY(15,2,(const char*)MsgValue, ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);     
             DrawMenuLine(0,MSG_C_NET, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
             DrawMenuLine(1,MSG_S_MONTY, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
@@ -434,7 +481,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             }            
             
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_S_MONTY, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_S_MONTY, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
             DrawMenuLine(0,MSG_SM_TYPE, NULL, PosX, 0, SELECT_LINE|FONT_TYPE_B);
@@ -454,23 +501,23 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
                 case 1:
-                     EditTxt = MSG_SN_IP;
+                     EditTxt = (char*)MSG_SN_IP;
                      TmpDWValue = &Params.Local.IP;
                      break;
                 case 2:
-                    EditTxt = MSG_SN_MASK;
+                    EditTxt = (char*)MSG_SN_MASK;
                     TmpDWValue = &Params.Local.Mask;
                     break;
                 case 3:
-                    EditTxt = MSG_SN_GATE;
+                    EditTxt = (char*)MSG_SN_GATE;
                     TmpDWValue = &Params.Local.Gate;
                     break;
                 case 4:
-                    EditTxt = MSG_SN_DNS1;
+                    EditTxt = (char*)MSG_SN_DNS1;
                     TmpDWValue = &Params.Local.DNS1;
                     break;
                 case 5:
-                    EditTxt = MSG_SN_DNS2;
+                    EditTxt = (char*)MSG_SN_DNS2;
                     TmpDWValue = &Params.Local.DNS2;
                     break; 
                 default:
@@ -493,7 +540,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }            
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_C_NET, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_C_NET, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 7);              
             DrawMenuLine(0,MSG_SN_NAME, (const char*)Params.Local.Name, PosX, 0, SELECT_LINE|FONT_TYPE_B);
@@ -541,7 +588,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }             
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_M_S_OBSERV, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_M_S_OBSERV, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 3);        
             //DrawMenuLine(0,O_GoTo, NULL, PosX, 0, SELECT_LINE);
@@ -556,19 +603,19 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(Selected == ENTER) { //Enter   
                 switch(SelPosX){
                 case 0:
-                    EditTxt = MSG_C_ALPHA;                    
+                    EditTxt = (char*)MSG_C_ALPHA;                    
                     TmpDoValue = &Params.Alpha.TargetAngle;
                     TmpIsHours = true;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 1);
                     break;
                 case 1:
-                    EditTxt = MSG_C_DELTA;                    
+                    EditTxt = (char*)MSG_C_DELTA;                    
                     TmpDoValue = &Params.Delta.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
                     break;
                 case 2:
-                    EditTxt = MSG_C_GAMMA;                    
+                    EditTxt = (char*)MSG_C_GAMMA;                    
                     TmpDoValue = &Params.Gamma.TargetAngle;
                     TmpIsHours = false;
                     XtoTimeString((char*)TmpValue,*TmpDoValue, 0);
@@ -612,7 +659,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }                
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_MO_GOTO, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_MO_GOTO, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 4);        
             XtoTimeString((char*)&TmpValue, Params.Alpha.TargetAngle, 1 );
@@ -663,7 +710,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(EditTxt, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, EditTxt, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);    
             
@@ -713,7 +760,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }             
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(EditTxt, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, EditTxt, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             //DrawScrollBar(PosX, 1);   
             if(PosY>0){                
@@ -766,7 +813,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_C_ERROR, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_C_ERROR, sizeof(MsgValue));            
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 5);
             DrawMenuLine(0, MSG_ERR_NOTREACHABLE0, NULL, PosX, PosY, NO_SELECT);
@@ -790,7 +837,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 }
             }
             DrawRectangle(0,0,132,10,1);
-            GetMsgFromROM(MSG_C_ERROR, (char*)&MsgValue);
+            strncpypgm2ram((char*)&MsgValue, MSG_C_ERROR, sizeof(MsgValue));
             OutTextXY(15,2,(const char*)MsgValue,ARIAL_L,NORMAL);
             DrawScrollBar(PosX, 5);
             DrawMenuLine(0, MSG_ERR_NOCONNECTION0, NULL, PosX, PosY, NO_SELECT);
@@ -817,7 +864,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     KeyPressed->Val = 0;
 }
 
-void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX, BYTE Mode )
+void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, int PosX, BYTE Mode )
 {
     static int CPosY = 0;
     static int CPosX = 0;
@@ -872,7 +919,7 @@ void DrawMenuLine( BYTE ID, MSGS Msg_id, const char * Value, int PosY, int PosX,
 
     FloodRectangle(1,Line,120,Line+fsize,color);
     if(Msg_id != MSG_NOMSG){
-        GetMsgFromROM(Msg_id, (char*)&Name);
+        strncpypgm2ram((char*)&Name, Msg_id, sizeof(Name));
         StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
     }
     if(Value!= NULL){
@@ -897,7 +944,7 @@ void DrawScrollBar(int Pos, int Max)
 
 }
 
-void DrawMessageLine(MSGS Msg_id, int Step, BOOL Blink)
+void DrawMessageLine(C_ROM char * Msg_id, int Step, BOOL Blink)
 {
     if((Msg_id == 0) || Step == 0 || Blink) return;
 }
@@ -911,6 +958,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE
         (*YPos) = 0;
         (*XPos) = 0;
         KeyPressed->keys.esc = 0;
+        Params.Common.Flags.bits.NeedToRedrawMenus = true;
         return ESC;
     }
     if(KeyPressed->keys.enter) { //Enter         
@@ -919,6 +967,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE
         (*YPos) = 0;
         (*XPos) = 0;
         KeyPressed->keys.enter = 0;
+        Params.Common.Flags.bits.NeedToRedrawMenus = true;
         return ENTER;
     }
     if(KeyPressed->keys.up) { //UP

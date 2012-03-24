@@ -102,10 +102,10 @@
 
 // Include functions specific to this stack application
 #include "MainDemo.h"
-#define USE_OR_MASKS
-#include "p18cxxx.h"
-#include <timers.h>
-#include <pwm.h>
+//#define USE_OR_MASKS
+//#include "p18cxxx.h"
+//#include <timers.h>
+//#include <pwm.h>
 #include "flash.h"
 #include "DisplayBuffer.h"
 #include "pcf8535.h"
@@ -131,6 +131,7 @@ static struct SCKeys {
 	DWORD TIMEOUT_enter;
 	
 } CKeys;
+static WORD_VAL Duty;
 //static BYTE CKeys=0;
 static BYTE add1 = PCF8535_BUS_ADDRESS;
 static int DisplayBright = 0x0F00;
@@ -184,6 +185,12 @@ static void InitTimerAndPWM(void);
 		#if defined(WF_CS_TRIS)
 			WFEintISR();
 		#endif // WF_CS_TRIS
+		if(PIR3bits.CCP5IF  == 1){
+			PIR3bits.CCP5IF  = 0;
+			CCPR5H += Duty.byte.HB;		// set CCP
+			CCPR5L += Duty.byte.LB;
+			LED0_IO ^= 1;
+		}
 	}
 
 	#if !defined(HI_TECH_C)
@@ -242,13 +249,13 @@ int main(void)
 	
     BYTE count; 
     
-    
-    
-        
 	// Initialize application specific hardware
 	InitializeBoard();
-	//UpdateKey(&K);
-	//ProcessMenu(&K);
+	pcfLCDInit(add1);
+    DisplayInit();     
+	UpdateKey(&K);
+	ProcessMenu(&K);
+	DisplayDraw(add1);
 	
 	#if defined(USE_LCD)
 	// Initialize and display the stack version on the LCD
@@ -349,12 +356,10 @@ int main(void)
     
     
     
-    //pcfLCDInit(add1);
-    //DisplayInit(); 
-    //DisplayDraw(add1);
-    //LED0_TRIS = 0;
-	//INTCONbits.INT0IE = 0;
-	//INTCONbits.INT0IF = 0;  
+    
+    LED0_TRIS = 0;
+	INTCONbits.INT0IE = 0;
+	INTCONbits.INT0IF = 0;  
 	
 	// Now that all items are initialized, begin the co-operative
 	// multitasking loop.  This infinite loop will continuously 
@@ -370,9 +375,10 @@ int main(void)
     while(1)
     {
         UpdateKey(&K);
-        if((TickGet() - t1 >= TICK_SECOND)||(K.Val>0))
+        if((TickGet() - t1 >= (TICK_SECOND>>4))||(K.Val>0))
         {            
-	     	t1 = TickGet();   
+	     	t1 = TickGet();  
+	     	//LED0_IO ^= 1; 
             ProcessMenu( &K );
             DisplayDraw(add1);		
 	    } 
@@ -669,6 +675,7 @@ static void ProcessIO(void)
 	}
 	#endif
 	// Управление яркостью экрана, учитывая освещенность фотоэлемента
+	
     ADRES_Data = *((WORD*)(&ADRESL));
 	if(ADRES_Data>10){
 		DisplayBright = (DisplayBright+(1024 - ADRES_Data))/2;
@@ -1029,7 +1036,7 @@ static void InitializeBoard(void)
 	SPIFlashInit();
 #endif
 
-    //InitTimerAndPWM();
+    InitTimerAndPWM();
 }
 
 /*********************************************************************
@@ -1440,47 +1447,27 @@ static void UpdateKey(KEYS_STR * K)
     	}
 	}
 }
+
 static void InitTimerAndPWM(void)
 {
-	//CCP5
-	char period=0x00;
-    unsigned char outputconfig=0;
-    unsigned char outputmode=0;
-    unsigned char config=0;
-    unsigned int duty_cycle=0;
-    //Timer0
-    unsigned char config0=0x00;
-    unsigned int timer0_value=0x00;
-    //Timer1    
-    unsigned char config1=0x00;
-    unsigned int timer1_value=0x00;
-    //Timer2    
-    unsigned char config2=0x00;
-    unsigned int timer2_value=0x00;
-    //----Configure Timer1----
-    //timer1_value = 0x00;    
-    //WriteTimer1(timer1_value);            //clear timer if previously contains any value
-        
-    //config1 =  TIMER_INT_ON|T1_16BIT_RW|T1_SOURCE_INT|T1_PS_1_8|T1_OSC1EN_OFF|T1_SYNC_EXT_OFF;
-    //OpenTimer1(config1);                //API configures the tmer1 as per user defined parameters
-    //IPR1bits.TMR1IP = 0; // HIGH
-    //PIR1bits.TMR1IF = 0; 
-    //PIE1bits.TMR1IE = 1;
-    
-    //----Configure Timer2----
-    timer2_value = 0x00;    
-    WriteTimer2(timer2_value);            //clear timer if previously contains any value
-
-    config2 =  T2_POST_1_16 | T2_PS_1_16 | TIMER_INT_OFF;
-    OpenTimer2(config2);                //API configures the tmer1 as per user defined parameters
-
-    SetTmrCCPSrc(T12_SOURCE_CCP);
-    PIE1bits.TMR2IE = 0;
-    //----Configure pwm ----
-    period = 0xFF;
-    OpenPWM5( period);            //Configure PWM module and initialize PWM period
-
-    //-----set duty cycle----
-    duty_cycle = 0x0F00;
-    SetDCPWM5(duty_cycle);        //set the duty cycle
+	CCP5CONbits.CCP5M = 0x0;
+	TRISGbits.TRISG4  = 0;		// port RG4 as out	
+	T3CONbits.T3CCP1  = 0x00; 	// Timer1 -> CCP5
+	T1CONbits.TMR1ON  = 0x00;	// Выключим таймер
+	T1CONbits.RD16    = 1;		// 16 bit
+	T1CONbits.T1RUN   = 0;		// Device clock is derived from another source
+	T1CONbits.T1CKPS  = 3;		// 1:8 Prescale value
+	T1CONbits.T1OSCEN = 0; 	 	// Timer1 oscillator is shut off
+	T1CONbits.TMR1CS  = 0;		// Internal clock (FOSC/4)
+	TMR1H = 0;					// reset TMR1
+	TMR1L = 0;    
+	Duty.Val = 4096;			// reset interval varable
+	CCPR5H = 0;					// set CCP
+	CCPR5L = 0;
+	PIR3bits.CCP5IF   = 0;		// clear interrupt flag
+	PIE3bits.CCP5IE   = 1;		// enable interrupts
+	IPR3bits.CCP5IP   = 1;		// high priority
+	T1CONbits.TMR1ON  = 1;		// enable timer1	
+	CCP5CONbits.CCP5M = 0x0A; 	// Compare mode; generate software interrupt on compare match 
+								// (CCPxIF bit is set, CCPx pin reflects I/O state)
 }

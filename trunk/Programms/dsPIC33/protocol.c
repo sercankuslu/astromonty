@@ -102,7 +102,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
         Command = (ST_COMMANDS)*Answer;  
     }
    
-    switch(Connections[bConnectionID].Mode){
+    switch(Connections[bConnectionID].Mode) {
     case STS_NO_CONNECT:
         res = BeginCommand(pbOutBlob, sizeof(pbOutBlob), STC_CONNECT_ANSWER);
         if(res != STR_OK){
@@ -357,8 +357,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             break;
         case ST_WAIT_CONNECT:
             if(Command != STC_CONNECT_ANSWER){
-                ST_STATE = ST_REQUEST_CONNECT;
-                return STR_NEED_DISCONNECT;
+                return STR_OK;
             }
             res = FindAttribute(pbBlob, bBlobLen, STA_FLAG, &Len, &Answer);
             if(res != STR_OK){
@@ -403,8 +402,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             break;
         case ST_WAIT_AUTH:
             if(Command != STC_AUTH_ANSWER){
-                ST_STATE = ST_REQUEST_CONNECT;
-                return STR_NEED_DISCONNECT;
+                return STR_OK;
             }
             res = FindAttribute(pbBlob, bBlobLen, STA_FLAG, &Len, &Answer);
             if(res != STR_OK){
