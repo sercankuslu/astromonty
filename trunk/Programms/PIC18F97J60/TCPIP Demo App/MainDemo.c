@@ -258,12 +258,13 @@ int main(void)
     KEYS_STR K;
 	
     BYTE count; 
-    
+    NewProcessMenu();
 	// Initialize application specific hardware
 	InitializeBoard();
 	pcfLCDInit(add1);
     DisplayInit();     
 	UpdateKey(&K);
+	K.Val = 0;
 	ProcessMenu(&K);
 	DisplayDraw(add1);
 	

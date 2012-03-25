@@ -45,6 +45,7 @@
 // char *strncpypgm2ram (auto char *s1, auto const MEM_MODEL rom char *s2, auto sizeram_t n);
 #else 
 #define C_ROM const
+#define rom
 extern AppConfigType AppConfig;
 #endif
 typedef enum MENU_ID {
@@ -89,6 +90,118 @@ static C_ROM char * const MsgsCommon[]=
     "Нет подключения к",    "серверу. Действие не", "доступно" , ""
 };*/
 
+typedef enum VAL_TYPE {
+   VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR
+}VAL_TYPE;
+typedef enum ITEM_TYPE {
+    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING
+}ITEM_TYPE;
+// тип постоянного элемента меню
+typedef struct MENU_ITEMS_ROM {
+   ITEM_TYPE Type;
+   rom char * Name;
+} MENU_ITEMS_ROM;
+// тип изменяемого компонента элемента меню
+typedef struct MENU_ITEMS_RAM {
+   BYTE Id;
+   VAL_TYPE ValType;
+   void * Value;        
+} MENU_ITEMS_RAM;
+// 
+typedef struct MENUS {
+   BYTE Id;
+   BYTE BrunchId;
+} MENUS;
+typedef struct MENU_STACK {
+    BYTE LastId;
+    BYTE LastPosY;
+} MENU_STACK;
+MENU_STACK MenuStack[10];
+BYTE MStackHeap = 0;
+
+#ifndef _WINDOWS
+#pragma udata PARAMS_SECTION1
+#endif
+
+far ALL_PARAMS Params;
+
+#ifndef _WINDOWS
+#pragma udata
+#endif
+// список всех элементов меню 
+const rom MENU_ITEMS_ROM MenuItems[] = {
+   {ITEM_FOLDER,    "Меню"},                       // 0
+   {ITEM_ANGLE,     "А:"},                         // 1
+   {ITEM_ANGLE,     "Д:"},                         // 2
+   {ITEM_ANGLE,     "Г:"},                         // 3
+   {ITEM_FOLDER,    "Сеть"},                       // 4
+   {ITEM_MSG,       "Авто наведение"},             // 5
+   {ITEM_MSG,       "Ручное наведение"},           // 6
+   {ITEM_FOLDER,    "Альфа"},                      // 7
+   {ITEM_FOLDER,    "Дельта"},                     // 8
+   {ITEM_FOLDER,    "Гамма"},                      // 9
+   {ITEM_FOLDER,    "Настройки"},                  // 10
+   {ITEM_FOLDER,    "Наблюдение"},                 // 11
+   {ITEM_FOLDER,    "Навести"},                    // 12
+   {ITEM_FOLDER,    "Ручной режим"},               // 13
+   {ITEM_FOLDER,    "Режим спутников"},            // 14
+   {ITEM_BUTTON,    "Старт"},                      // 15
+   {ITEM_BUTTON,    "Продолжить"},                 // 16
+   {ITEM_FOLDER,    "Монтировка"},                 // 17
+   {ITEM_FOLDER,    "Экран"},                      // 18
+   {ITEM_FOLDER,    "Тип монтировки"},             // 19
+   {ITEM_STRING,    "Имя:"},                       // 20
+   {ITEM_IP_ADDRES, "IP:"},                        // 21
+   {ITEM_IP_ADDRES, "Mask:"},                      // 22
+   {ITEM_IP_ADDRES, "Gate:"},                      // 23
+   {ITEM_IP_ADDRES, "DNS1:"},                      // 24
+   {ITEM_IP_ADDRES, "DNS2:"},                      // 25
+   {ITEM_IP_ADDRES, "NTP:"},                       // 26
+   {ITEM_MSG, "Ошибка"},                           // 27
+   {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
+   {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
+};                                                                                              
+static MENU_ITEMS_RAM MenuItemsM[] = {
+    {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle},
+    {2, VAL_ANGLE, (void*)&Params.Delta.Angle},
+    {3, VAL_ANGLE, (void*)&Params.Gamma.Angle},
+    {20, VAL_STRING, (void*)&Params.Local.Name},
+    {21, VAL_IP_ADDRES, (void*)&Params.Local.IP},
+    {22, VAL_IP_ADDRES, (void*)&Params.Local.Mask},
+    {23, VAL_IP_ADDRES, (void*)&Params.Local.Gate},
+    {24, VAL_IP_ADDRES, (void*)&Params.Local.DNS1},
+    {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2},
+    {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP},
+};
+// список папок
+const rom MENUS Menus[] = {
+   {0, 11},     //Меню
+   {0, 10},
+   {10, 4},     //Настройки
+   {10, 17},
+   {10, 18},
+   {10, 19},
+   {10, 11},
+   {4, 20},     //Сеть
+   {4, 21},
+   {4, 22},
+   {4, 23},
+   {4, 24},
+   {4, 25},
+   {4, 26},
+   {11, 12},    //Наблюдение
+   {11, 13},
+   {11, 14},
+   {12, 1},    //Навести
+   {12, 2},
+   {12, 3},
+};
+
+
+
+
+
+
 C_ROM char * MSG_NOMSG                      = "";                    
 C_ROM char * MSG_MW_ALPHA                   = "А:";                  
 C_ROM char * MSG_MW_DELTA                   = "Д:";                  
@@ -130,7 +243,7 @@ C_ROM char * MSG_ERR_NOCONNECTION3          = "";
 
 // TODO: 
 #ifndef _WINDOWS
-#pragma romdata
+//#pragma romdata
 
 #else
 #define strncpypgm2ram(Msg, Msg_id, x) strcpy(Msg, Msg_id)
@@ -138,17 +251,8 @@ static DWORD TIME_IN_SECONDS = 0;
 DWORD SNTPGetUTCSeconds(){ 
     return TIME_IN_SECONDS;
 }
-
-#endif
-#ifndef _WINDOWS
-#pragma udata PARAMS_SECTION1
 #endif
 
-far ALL_PARAMS Params;
-
-#ifndef _WINDOWS
-#pragma udata
-#endif
 
 
 void DrawMenuLine( BYTE ID,  C_ROM char * Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
@@ -158,6 +262,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 int SubStrToInt(const char* Text, int Beg, int * Val);
 void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue);
+void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed);
 //void GetMsgFromROM(MSGS Msg_id, char* Msg);
 
 void ProcessMenu( KEYS_STR * KeyPressed )
@@ -188,18 +293,19 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static BYTE TmpPosY = 0;
     static BYTE SelPosX = 0;
     static BYTE SelPosY = 0;
-    static char TmpValue[25];
-    static char MsgValue[25];
+    static char TmpValue[20];
+    static char MsgValue[20];
     static DWORD * TmpDWValue = NULL;
     static float * TmpDoValue = NULL;
     static BOOL TmpIsHours = false;
     BYTE Selected = 0;
-    static char EditTxt[25]; 
+    static char EditTxt[20]; 
     DWORD_VAL TmpDWval;
     static BOOL Init = false;
     static int TimerCount = 0;
     static DWORD dwTime;
     static DateTime Date;
+    static BYTE Id = 0;
     
 #ifdef _WINDOWS_
     SYSTEMTIME systemTime;
@@ -209,7 +315,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     SystemTimeToFileTime( &systemTime, &fileTime );
     qwtime = ((UINT64)fileTime.dwHighDateTime) << 32;
     qwtime += (UINT64)fileTime.dwLowDateTime;
-    TIME_IN_SECONDS = (UINT64)qwtime/10000000;
+    TIME_IN_SECONDS = (DWORD)qwtime/10000000;
 #endif
 
     Params.Common.Flags.bits.NeedToRedrawTime = false;
@@ -219,12 +325,12 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         SecondsToTime(dwTime, &Date);
         Time_Run ^= 1;
         Params.Common.Flags.bits.NeedToRedrawTime = true;
-        TimeT[0] = '0' + Date.Hour / 10;
-        TimeT[1] = '0' + Date.Hour % 10;
-        TimeT[3] = '0' + Date.Min / 10;
-        TimeT[4] = '0' + Date.Min % 10;
-        SecondT[1] = '0' +  Date.Sec / 10;
-        SecondT[2] = '0' +  Date.Sec % 10;
+        TimeT[0]   = '0' + Date.Hour / 10;
+        TimeT[1]   = '0' + Date.Hour % 10;
+        TimeT[3]   = '0' + Date.Min  / 10;
+        TimeT[4]   = '0' + Date.Min  % 10;
+        SecondT[1] = '0' + Date.Sec  / 10;
+        SecondT[2] = '0' + Date.Sec  % 10;
         if(Time_Run){
             TimeT[2] = ':';
         } else {
@@ -234,6 +340,10 @@ void ProcessMenu( KEYS_STR * KeyPressed )
 
 
     if(!Init){
+        AppConfig.MyIPAddr.Val = 0x3701A8C0;
+        AppConfig.MyMask.Val = 0x00FFFFFF;
+        AppConfig.MyGateway.Val = 0x0101A8C0;
+        AppConfig.PrimaryDNSServer.Val = 0x0101A8C0;
         Params.Local.IP = AppConfig.MyIPAddr.Val;
         Params.Local.Mask = AppConfig.MyMask.Val;
         Params.Local.Gate = AppConfig.MyGateway.Val;
@@ -268,6 +378,10 @@ void ProcessMenu( KEYS_STR * KeyPressed )
 //         Params.Alpha.NeedToCommit.bits.TargetAngle = 1;
     }
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
+    
+    NewProcessMenu(&Id, KeyPressed);
+    EndProcess = true;
+    if(0)
     while(!EndProcess){
         switch (State) {
         case MAIN_WINDOW:   // ***************************************************************************************************************
@@ -894,14 +1008,14 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             break;
         }
     } 
-    KeyPressed->Val = 0;
+    KeyPressed->Val = 0;  
 }
 
-void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, int PosX, BYTE Mode )
+void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosX, int PosY, BYTE Mode )
 {
     static int CPosY = 0;
     static int CPosX = 0;
-    char Name[25] = "";
+    char Name[20] = "";
     WORD StringXPos = 0;
     WORD Xtmp = 0;
     int ValueLength = 0;
@@ -951,7 +1065,7 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, i
         if(((int)ID - CPosY < 0) || ((int)ID - CPosY > 4)) return;
     }
 
-    FloodRectangle(1,Line,120,Line+fsize,color);
+    FloodRectangle(1,Line,124,Line+fsize,color);
     if(Msg_id != MSG_NOMSG){
         strncpypgm2ram((char*)&Name, Msg_id, sizeof(Name));
         StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
@@ -974,12 +1088,14 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosY, i
 }
 void DrawScrollBar(int Pos, int Max)
 {
-    WORD Size = (WORD)(53 / Max);
-    WORD Y = (WORD)(Pos * Size);
-    FloodRectangle(122,10,132,63,0);
-    DrawRectangle(122,10,132,63,1);
-    FloodRectangle(123,11 + Y,131,11 + Y + Size,1);
-
+    WORD Size = 0;
+    WORD Y = 0;
+    FloodRectangle(126,10,132,63,0);
+    DrawRectangle(126,10,132,63,1);
+    if(Max == 0) Max = 1;
+    Size = (WORD)(53 / Max);
+    Y = (WORD)(Pos * Size);
+    FloodRectangle(127,11 + Y,131,11 + Y + Size,1);
 }
 
 void DrawMessageLine(C_ROM char * Msg_id, int Step, BOOL Blink)
@@ -987,7 +1103,7 @@ void DrawMessageLine(C_ROM char * Msg_id, int Step, BOOL Blink)
     if((Msg_id == 0) || Step == 0 || Blink) return;
 }
 
-BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * YPos, BYTE YMax, BYTE* XPos, BYTE XMax, MENU_ID LastState, MENU_ID * State, BYTE * YSelPos, BYTE * XSelPos)
+BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE* XPos, BYTE XMax, BYTE * YPos, BYTE YMax, MENU_ID LastState, MENU_ID * State, BYTE * XSelPos, BYTE * YSelPos)
 {
     if(KeyPressed->keys.esc) { //ESC
         (*State) = LastState;
@@ -1054,12 +1170,12 @@ void XtoTimeString( char * Text, float X, BOOL hour )
     if(Sign){
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "+%0.2d:%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+            sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
         } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     } else {
         if(hour){
             /*Grad /= 15;*/
-            sprintf (Text, "-%0.2d:%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+            sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
         } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     }
 
@@ -1228,6 +1344,181 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
     Date->DayOfWeak = d;
     Date->Day = D;
     Date->Month = M;
-    Date->Year = Y;
+    Date->Year = (WORD)Y;
  
 }
+
+void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
+{
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    static BYTE PosX = 0;
+    static BYTE PosY = 0;
+    BYTE MaxX = 0;
+    BYTE MaxY = 0;
+    static BYTE SelPosX = 0;
+    static BYTE SelPosY = 0;
+    static MENU_ID State = SETTINGS;  // не нужен?
+    BYTE Selected = 0;
+    static int MenusLen = 0;
+    static int RamMenusLen = 0;
+    char * TmpString = NULL;
+    DWORD * TmpDW = NULL;
+    float * TmpFloat = NULL;
+    char TmpMsg[20] = "";
+
+    if(!Params.Common.Flags.bits.NeedToRedrawMenus && !KeyPressed->Val) 
+        return;
+    if(!MenusLen){
+        MenusLen = sizeof(Menus)/sizeof(Menus[0]);
+    }
+    if(!RamMenusLen){
+        RamMenusLen = sizeof(MenuItemsM)/sizeof(MenuItemsM[0]);
+    }
+    
+     
+    // заголовок
+    DrawRectangle(0,0,132,10,1);
+    strncpypgm2ram((char*)&TmpMsg, MenuItems[*ItemId].Name, strlen(MenuItems[*ItemId].Name));
+    OutTextXY(15,2,(const char*)TmpMsg,ARIAL_L,NORMAL);
+   
+    
+    switch (MenuItems[*ItemId].Type) {
+    case ITEM_FOLDER:
+        // подсчет количества строк 
+        for(i = 0; i < MenusLen; i++){
+            if(Menus[i].Id == *ItemId) {
+                MaxY++;
+            }
+        }
+        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, MAIN_WINDOW, &State, &SelPosX, &SelPosY);
+        if(Selected == ESC){
+            if(MStackHeap != 0) {
+                MStackHeap--;
+                *ItemId = MenuStack[MStackHeap].LastId;
+                PosY = MenuStack[MStackHeap].LastPosY;
+            }
+            DisplayClear();
+        }
+        DrawScrollBar(PosY, MaxY);
+        for(i = 0; i < MenusLen; i++){
+            if(Menus[i].Id == *ItemId) {
+                switch(MenuItems[Menus[i].BrunchId].Type){
+                case ITEM_FOLDER:
+                    DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, NULL, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                    if((Selected == ENTER)&&(SelPosY == j)){                        
+                        MenuStack[MStackHeap].LastId = *ItemId;
+                        MenuStack[MStackHeap].LastPosY = SelPosY;
+                        MStackHeap++;
+                        *ItemId = Menus[i].BrunchId;
+                        DisplayClear();
+                        return;
+                    }
+                    break;
+                case ITEM_STRING:
+                case ITEM_IP_ADDRES:
+                case ITEM_ANGLE:
+                    TmpString = NULL;
+                    for(k = 0; k < RamMenusLen; k++){
+                        if(MenuItemsM[k].Id == Menus[i].BrunchId) {
+                            switch(MenuItemsM[k].ValType){
+                            case VAL_STRING:
+                                TmpString = (char*)MenuItemsM[k].Value;
+                                break;
+                            case VAL_IP_ADDRES: 
+                                TmpDW = (DWORD*)MenuItemsM[k].Value;
+                                IPtoText(*TmpDW, (char*)TmpMsg, 0);
+                                TmpString = (char*)&TmpMsg;
+                                break;
+                            case VAL_ANGLE: 
+                                TmpFloat = (float*)MenuItemsM[k].Value;                                
+                                XtoTimeString((char*)&TmpMsg, *TmpFloat, 0 ); 
+                                TmpString = (char*)&TmpMsg;
+                                break;
+                            case VAL_ANGLE_HOUR:
+                                TmpFloat = (float*)MenuItemsM[k].Value;                                
+                                XtoTimeString((char*)&TmpMsg, *TmpFloat, 1 ); 
+                                TmpString = (char*)&TmpMsg;
+                                break;
+                            default:
+                                break;
+                            }
+                            break;
+                        }
+                    }
+                    DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                    if((Selected == ENTER)&&(SelPosY == j)){                        
+                        MenuStack[MStackHeap].LastId = *ItemId;
+                        MenuStack[MStackHeap].LastPosY = SelPosY;
+                        MStackHeap++;
+                        *ItemId = Menus[i].BrunchId;
+                        DisplayClear();
+                        return;
+                    }
+                    break;
+                }
+                j++;
+            }
+        }
+        break;
+    case ITEM_ANGLE:
+        TmpString = NULL;
+        for(k = 0; k < RamMenusLen; k++){
+            if(MenuItemsM[k].Id == *ItemId) {
+                switch(MenuItemsM[k].ValType){
+                case VAL_STRING:
+                    TmpString = (char*)MenuItemsM[k].Value;
+                    break;
+                case VAL_IP_ADDRES: 
+                    // 255.255.255.255
+                    TmpDW = (DWORD*)MenuItemsM[k].Value;
+                    IPtoText(*TmpDW, (char*)TmpMsg, 0);
+                    TmpString = (char*)&TmpMsg;
+                    break;
+                case VAL_ANGLE:  
+                    // +90`59'59.99"
+                    TmpFloat = (float*)MenuItemsM[k].Value;                                
+                    XtoTimeString((char*)&TmpMsg, *TmpFloat, 0 ); 
+                    TmpString = (char*)&TmpMsg;
+                    break;
+                case VAL_ANGLE_HOUR:
+                    // +12`59'59.99"
+                    TmpFloat = (float*)MenuItemsM[k].Value;                                
+                    XtoTimeString((char*)&TmpMsg, *TmpFloat, 1 ); 
+                    TmpString = (char*)&TmpMsg;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            }
+        }
+        // подсчет количества столбцов
+        if(MenuItems[*ItemId].Type == ITEM_ANGLE){
+            MaxX = strlen(TmpString);
+        }
+        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, MAIN_WINDOW, &State, &SelPosX, &SelPosY);
+        if(Selected == ESC){
+            if(MStackHeap != 0) {
+                MStackHeap--;
+                *ItemId = MenuStack[MStackHeap].LastId;
+                PosY = MenuStack[MStackHeap].LastPosY;
+            }
+            DisplayClear();
+        }
+        DrawMenuLine(j, MenuItems[*ItemId].Name, (const char*)TmpString, PosX, PosY, SELECT_COLUMN|FONT_TYPE_B);
+        if(Selected == ENTER){
+            if(MStackHeap != 0) {
+                MStackHeap--;
+                *ItemId = MenuStack[MStackHeap].LastId;
+                PosY = MenuStack[MStackHeap].LastPosY;
+            }
+            DisplayClear();
+        }
+        break;
+    default:;
+    }
+    Params.Common.Flags.bits.NeedToRedrawMenus = 0; 
+}
+

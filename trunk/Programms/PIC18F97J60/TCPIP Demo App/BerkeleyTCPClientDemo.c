@@ -82,7 +82,7 @@ void BerkeleyTCPClientDemo(void)
 	#if defined(STACK_USE_DNS)
     static SOCKET bsdClientSocket;
     static struct sockaddr_in addr;
-    char recvBuffer[64];
+    char recvBuffer[32];
     int i;
     int addrlen;
     BYTE res = 0;

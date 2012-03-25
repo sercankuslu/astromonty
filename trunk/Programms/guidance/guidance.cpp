@@ -348,7 +348,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     static KEYS_STR Key;
     ST_RESULT rv = STR_OK;  
-    static bool OnLine = true;
+    static bool OnLine = false;
     static BYTE bfr[64] = "";
     static int length = 0;
 
@@ -508,17 +508,9 @@ void Calc()
 
     char Str[] = "All good!";
     BYTE * Str2 = NULL;
-    rv = AddAttribute((BYTE*)Buf, 100, STA_COMMAND, 1, (BYTE*)&Cmd);
-    rv = AddAttribute((BYTE*)Buf, 100, STA_FLAG, 1, (BYTE*)&Flag);
-    rv = AddAttribute((BYTE*)Buf, 100, STA_MESSAGE, sizeof(Str), (BYTE*)Str);
-    rv = CheckBlob((BYTE*)Buf, 100);
-    rv = FindAttribute((BYTE*)Buf, 100, STA_COMMAND, &Len, &Value);    
-    rv = FindAttribute((BYTE*)Buf, 100, STA_FLAG, &Len, &Value);
-    rv = FindAttribute((BYTE*)Buf, 100, STA_MESSAGE, &Len, &Str2);
-    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
-    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
-    rv = GetNextAttribute((BYTE*)Buf, 100, &pPointer, &Attribute, &Len, &Value);
-// //    double XX = 5.0 * Grad_to_Rad;
+    
+
+    // //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
     // x = X0 + V0*T
