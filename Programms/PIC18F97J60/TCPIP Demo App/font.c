@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "font.h"
 
+WORD FindFrom(BYTE symbol, FONT CFont);
+WORD FindSymbol(BYTE symbol, FONT CFont);
 
 #ifndef _WINDOWS
 #include "GenericTypeDefs.h"
@@ -195,7 +197,7 @@ const
      0x2D05,0x010,0x010,0x010,0x010,0x010,                                       // -     
      0x2E02,0x0C0,0x0C0,                                                         // .     
      0x2F03,0x0C0,0x03C,0x003,                                                   // /     
-     0x3006,0x07E,0x0FF,0x081,0x081,0x0FF,0x07E,                                 // 0     
+     0x3006,0x07E,0x0FF,0x081,0x081,0x0FF,0x07E,                                 // 0     ==1
      0x3106,0x008,0x00C,0x086,0x0FF,0x0FF,0x080,                                 // 1     
      0x3206,0x0E2,0x0F3,0x091,0x091,0x09F,0x08E,                                 // 2     
      0x3306,0x042,0x0C3,0x089,0x089,0x0FF,0x076,                                 // 3     
@@ -212,7 +214,7 @@ const
      0x3E05,0x042,0x024,0x024,0x018,0x018,                                       // >     
      0x3F05,0x002,0x0D3,0x0D9,0x00F,0x006,                                       // ?     
      0x400A,0x078,0x186,0x132,0x24D,0x285,0x2C5,0x2FD,0x28D,0x142,0x13C,         // @     
-     0x4107,0x0E0,0x0FC,0x03F,0x023,0x03F,0x0FC,0x0E0,                           // A     
+     0x4107,0x0E0,0x0FC,0x03F,0x023,0x03F,0x0FC,0x0E0,                           // A     ==2
      0x4206,0x0FF,0x0FF,0x089,0x089,0x0FF,0x076,                                 // B     
      0x4307,0x03C,0x07E,0x0C3,0x081,0x081,0x0C3,0x042,                           // C     
      0x4406,0x0FF,0x0FF,0x081,0x081,0x0FF,0x07E,                                 // D     
@@ -227,7 +229,7 @@ const
      0x4D09,0x0FF,0x0FF,0x00F,0x07C,0x0E0,0x07C,0x00F,0x0FF,0x0FF,               // M     
      0x4E06,0x0FF,0x0FF,0x00C,0x030,0x0FF,0x0FF,                                 // N     
      0x4F07,0x03C,0x07E,0x0C3,0x081,0x0C3,0x07E,0x03C,                           // O     
-     0x5006,0x0FF,0x0FF,0x011,0x011,0x01F,0x00E,                                 // P     
+     0x5006,0x0FF,0x0FF,0x011,0x011,0x01F,0x00E,                                 // P     ==3
      0x5108,0x03C,0x07E,0x0C3,0x0A1,0x0C3,0x0FE,0x13C,0x100,                     // Q     
      0x5207,0x0FF,0x0FF,0x011,0x031,0x07F,0x0CE,0x080,                           // R     
      0x5306,0x04E,0x0CF,0x099,0x099,0x0F3,0x072,                                 // S     
@@ -244,7 +246,7 @@ const
      0x5E05,0x008,0x00E,0x003,0x00E,0x008,                                       // ^     
      0x5F06,0x200,0x200,0x200,0x200,0x200,0x200,                                 // _     
      0x6005,0x006,0x00F,0x009,0x00F,0x006,                                       // `	  
-     0x6105,0x068,0x0F4,0x094,0x0FC,0x0F8,                                       // a	  
+     0x6105,0x068,0x0F4,0x094,0x0FC,0x0F8,                                       // a	  ==4
      0x6206,0x0FF,0x0FF,0x084,0x084,0x0FC,0x078,                                 // b     
      0x6305,0x078,0x0FC,0x084,0x0CC,0x048,                                       // c     
      0x6406,0x078,0x0FC,0x084,0x084,0x0FF,0x0FF,                                 // d     
@@ -259,7 +261,7 @@ const
      0x6D0A,0x0FC,0x0FC,0x004,0x004,0x0FC,0x0FC,0x004,0x004,0x0FC,0x0F8,         // m     
      0x6E06,0x0FC,0x0FC,0x004,0x004,0x0FC,0x0F8,                                 // n     
      0x6F06,0x078,0x0FC,0x084,0x084,0x0FC,0x078,                                 // o     
-     0x7006,0x3FC,0x3FC,0x084,0x084,0x0FC,0x078,                                 // p     
+     0x7006,0x3FC,0x3FC,0x084,0x084,0x0FC,0x078,                                 // p     ==5
      0x7106,0x078,0x0FC,0x084,0x084,0x3FC,0x3FC,                                 // q     
      0x7206,0x0FC,0x0FC,0x008,0x004,0x004,0x004,                                 // r     
      0x7306,0x058,0x0DC,0x0B4,0x0B4,0x0EC,0x068,                                 // s     
@@ -276,7 +278,7 @@ const
      0x7E05,0x010,0x008,0x008,0x010,0x008,                                       // ~     
      0xA006,0x0FE,0x0FF,0x092,0x092,0x083,0x082,                                 // Ё     
      0xB006,0x078,0x0FD,0x094,0x094,0x0DD,0x058,                                 // ё     
-     0xC007,0x0E0,0x0FC,0x03F,0x023,0x03F,0x0FC,0x0E0,                           // А     
+     0xC007,0x0E0,0x0FC,0x03F,0x023,0x03F,0x0FC,0x0E0,                           // А     ==6
      0xC107,0x0FF,0x0FF,0x089,0x089,0x089,0x0F9,0x070,                           // Б     
      0xC206,0x0FF,0x0FF,0x089,0x089,0x0FF,0x076,                                 // В     
      0xC305,0x0FF,0x0FF,0x001,0x001,0x001,                                       // Г     
@@ -292,7 +294,7 @@ const
      0xCD06,0x0FF,0x0FF,0x008,0x008,0x0FF,0x0FF,                                 // Н     
      0xCE07,0x03C,0x07E,0x0C3,0x081,0x0C3,0x07E,0x03C,                           // О     
      0xCF07,0x0FF,0x0FF,0x001,0x001,0x001,0x0FF,0x0FF,                           // П     
-     0xD006,0x0FF,0x0FF,0x011,0x011,0x01F,0x00E,                                 // Р     
+     0xD006,0x0FF,0x0FF,0x011,0x011,0x01F,0x00E,                                 // Р     ==7
      0xD107,0x03C,0x07E,0x0C3,0x081,0x081,0x0C3,0x042,                           // С     
      0xD206,0x001,0x001,0x0FF,0x0FF,0x001,0x001,                                 // Т     
      0xD306,0x003,0x08F,0x0FC,0x078,0x01F,0x007,                                 // У     
@@ -308,7 +310,7 @@ const
      0xDD07,0x024,0x066,0x0C3,0x089,0x0CB,0x07E,0x03C,                           // Э     
      0xDE0A,0x0FF,0x0FF,0x018,0x03C,0x07E,0x0C3,0x081,0x0C3,0x07E,0x03C,         // Ю     
      0xDF07,0x080,0x0CE,0x07F,0x031,0x011,0x0FF,0x0FF,                           // Я     
-     0xE005,0x068,0x0F4,0x094,0x0FC,0x0F8,                                       // а     
+     0xE005,0x068,0x0F4,0x094,0x0FC,0x0F8,                                       // а     ==8
      0xE106,0x07E,0x0FD,0x085,0x085,0x0FD,0x079,                                 // б     
      0xE206,0x0FC,0x0FC,0x094,0x094,0x0FC,0x068,                                 // в     
      0xE304,0x0FC,0x0FC,0x004,0x004,                                             // г     
@@ -324,7 +326,7 @@ const
      0xED06,0x0FC,0x0FC,0x010,0x010,0x0FC,0x0FC,                                 // н     
      0xEE06,0x078,0x0FC,0x084,0x084,0x0FC,0x078,                                 // о     
      0xEF06,0x0FC,0x0FC,0x004,0x004,0x0FC,0x0FC,                                 // п     
-     0xF006,0x3FC,0x3FC,0x084,0x084,0x0FC,0x078,                                 // р     
+     0xF006,0x3FC,0x3FC,0x084,0x084,0x0FC,0x078,                                 // р     ==9
      0xF105,0x078,0x0FC,0x084,0x0CC,0x048,                                       // с     
      0xF204,0x004,0x0FC,0x0FC,0x004,                                             // т     
      0xF307,0x204,0x23C,0x3F8,0x1C0,0x0F8,0x03C,0x004,                           // у     
@@ -347,63 +349,134 @@ const
 static WORD Arial_Data_L_Size = 0;
 static WORD Arial_Data_B_Size = 0;
 static BYTE FontInit = 0;
+typedef struct CACHE_TYPE {
+    char Symbol;
+    WORD ImgPos;
+}CACHE_TYPE;
+static CACHE_TYPE Cache_B[] = {
+	{0x20,0},
+    {0x30,0},
+    {0x40,0},
+    {0x50,0},
+    {0x60,0},
+    {0x70,0},
+    {0xA0,0},
+    {0xC0,0},
+    {0xD0,0},
+    {0xE0,0},
+    {0xF0,0},
+};
+static CACHE_TYPE Cache_L[] = {
+	{0x20,0},
+    {0x30,0},
+    {0x40,0},
+    {0x50,0},
+    {0x60,0},
+    {0x70,0},
+    {0xA0,0},
+    {0xC0,0},
+    {0xD0,0},
+    {0xE0,0},
+    {0xF0,0},
+};
+WORD FindFrom(BYTE symbol, FONT CFont)
+{
+    WORD i = 0;
+    if(FontInit == 0) return 0;
+    for(i = 10; i >= 0; i--){
+        switch(CFont){
+        case ARIAL_L:  
+            if(Cache_L[i].Symbol <= symbol)
+                return Cache_L[i].ImgPos;
+            break;
+        case ARIAL_B:
+            if(Cache_B[i].Symbol <= symbol)
+                return Cache_B[i].ImgPos;
+            break;
+        default:
+            return 0;
+        }
+    }
+    return 0;
+}
+WORD FindSymbol(BYTE symbol, FONT CFont)
+{    
+    WORD i;        
+    WORD_VAL c;
+    c.Val = 0;
+    switch(CFont){
+        case ARIAL_L: 
+            for(i = FindFrom(symbol, CFont);i < Arial_Data_L_Size;){
+                c.Val = Arial_Data_L[i];
+                if(c.byte.HB == symbol) {
+                    return i;
+                }
+                i += c.byte.LB + 1;
+            } 
+            break;
+        case ARIAL_B:
+            for(i = FindFrom(symbol, CFont);i < Arial_Data_B_Size;){
+                c.Val = Arial_Data_B[i];
+                if(c.byte.HB == symbol) {
+                    return i;
+                }
+                i += c.byte.LB + 1;
+            } 
+            break;
+        default:
+            return 0xFFFF;
+    }
+    return 0xFFFF;
+}
 int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
 {
     WORD i;        
     WORD Begin =  0;
-    WORD Size =  0;
     WORD_VAL c;
     c.Val = 0;
     if(!FontInit){
         Arial_Data_L_Size = sizeof(Arial_Data_L)/sizeof(WORD);
         Arial_Data_B_Size = sizeof(Arial_Data_B)/sizeof(WORD);
+        for(i=0; i < 10; i++){
+            Cache_B[i].ImgPos = FindSymbol(Cache_B[i].Symbol, ARIAL_B);
+            Cache_L[i].ImgPos = FindSymbol(Cache_L[i].Symbol, ARIAL_L);
+        }
         FontInit = 1;
     }
     memset(Image,0,(*ImageSize));
+    i = FindSymbol(symbol, CFont);
     switch(CFont){
         case ARIAL_L: 
-            for(i = 0;i < Arial_Data_L_Size;){
-                c.Val = Arial_Data_L[i];
-                if(c.byte.HB == symbol) {
-                    Begin = i + 1;
-                    Size = c.byte.LB;
-                    break;
-                }
-                i += c.byte.LB + 1;
+            if(i > Arial_Data_L_Size) return 0;
+            c.Val = Arial_Data_L[i];
+            Begin = i + 1;
+            if((c.byte.LB>(*ImageSize))||(symbol!=c.byte.HB)){
+                (*ImageSize) = c.byte.LB;
+                return c.byte.LB;
             } 
-            if((Size>(*ImageSize))||(symbol!=c.byte.HB)){
-                (*ImageSize) = Size;
-                return Size;
-            } 
-            for(i = 0; i<Size;i++){
+            for(i = 0; i< c.byte.LB;i++){
                 Image[i] = Arial_Data_L[Begin+i];
             }
             //memcpy(Image,&Arial_Data_L[Begin],Size*sizeof(WORD));
         break;
          case ARIAL_B:
-             for(i = 0;i < Arial_Data_B_Size;){
-                 c.Val = Arial_Data_B[i];
-                 if(c.byte.HB == symbol) {
-                     Begin = i + 1;
-                     Size = c.byte.LB;
-                     break;
-                 }
-                 i += c.byte.LB + 1;
+             if(i > Arial_Data_B_Size) return 0;
+             c.Val = Arial_Data_B[i];
+             Begin = i + 1;              
+             if((c.byte.LB>(*ImageSize))||(symbol!=c.byte.HB)){
+                 (*ImageSize) = c.byte.LB;
+                 return c.byte.LB;
              } 
-             if((Size>(*ImageSize))||(symbol!=c.byte.HB)){
-                 (*ImageSize) = Size;
-                 return Size;
-             } 
-             for(i = 0; i<Size;i++){
+             for(i = 0; i<c.byte.LB;i++){
                  Image[i] = Arial_Data_B[Begin+i];
              }   
              //memcpy(Image,&Arial_Data_B[Begin],Size*2);
         break;
         default:
-            Begin = 0;
-            Size = 0;
+            Begin = 0;  
+            c.byte.LB = 0;
     }       
-    (*ImageSize) = Size;
+    (*ImageSize) = c.byte.LB;
     return (*ImageSize);
 }
 

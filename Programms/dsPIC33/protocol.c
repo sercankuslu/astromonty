@@ -9,13 +9,15 @@ extern ALL_PARAMS Params;
 
 #ifdef USE_PROTOCOL_CLIENT
 #define MAX_CONNECTIONS 1
-#else
-#define MAX_CONNECTIONS 5
 #endif
-
+#ifdef USE_PROTOCOL_SERVER
+#define MAX_CONNECTIONS 5
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
+#endif
+
+
 
 
 typedef struct ST_CONNECTION {
