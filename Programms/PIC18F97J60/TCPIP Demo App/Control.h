@@ -8,21 +8,14 @@
 #endif
 // флаги для NeedToUpdate и NeedToCommit
 
-
-typedef union {
-    BYTE Val;
-    struct __PACKED
-    {        
-        BYTE Angle:1;
-        BYTE Speed:1;
-        BYTE AbsStep:1;
-        BYTE TargetAngle:1;
-        BYTE TargetAbsStep:1;
-        BYTE Flag:1;
-        BYTE b6:1;
-        BYTE b7:1;
-    } bits;
-} AXIS_FLAG_STRUCT; 
+typedef struct PARAMS_FLAGS {
+    BYTE NeedToUpdate:1;
+    BYTE NeedToCommit:1;
+    BYTE IsModified:1;
+    BYTE Enable;
+    BYTE b5:4;
+}PARAMS_FLAGS;
+ 
 typedef union {
     BYTE Val;
     struct __PACKED
@@ -38,39 +31,23 @@ typedef union {
     } bits;
 } AXIS_STATUS_FLAG_STRUCT; 
 typedef struct AXIS_PARAM
-{
-    AXIS_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    AXIS_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
-    AXIS_FLAG_STRUCT  IsModified;
-
+{   
+    PARAMS_FLAGS AngleFlag;
+    PARAMS_FLAGS SpeedFlag;
+    PARAMS_FLAGS TargetAngleFlag;
+    PARAMS_FLAGS TargetSpeedFlag;
     float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды   
     BYTE  Speed;           // номер позиции скорости
-    DWORD  AbsSteps;         // текущий номер шага    
     float TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
-    DWORD  TargetAbsSteps;         // текущий номер шага    
+    float TargetSpeed;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // флаг состояния оси
 } AXIS_PARAM;
 // флаги для NeedToUpdate и NeedToCommit
 
-typedef union {
-    BYTE Val;
-    struct __PACKED
-    {        
-        BYTE IP:1;
-        BYTE Mask:1;
-        BYTE Gate:1;
-        BYTE DNS1:1;
-        BYTE DNS2:1;
-        BYTE Name:1;
-        BYTE NTP:1;
-        BYTE Flag:1;
-    } bits;
-} NET_FLAG_STRUCT;
 typedef struct NETWORK_SETTINGS
 {
-    NET_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    NET_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
-    NET_FLAG_STRUCT  IsModified;
+    PARAMS_FLAGS NetFlags;
+    PARAMS_FLAGS StatusFlag;
     DWORD IP;
     DWORD Mask;
     DWORD Gate;
@@ -78,41 +55,12 @@ typedef struct NETWORK_SETTINGS
     DWORD DNS2;    
     char  Name[16];    
     DWORD NTP;
-    BYTE ConnectFlag;
+    BYTE Status;
 }NETWORK_SETTINGS;
-// флаги для NeedToUpdate и NeedToCommit
 
-typedef union SYSTEM_FLAG_STRUCT {
-    BYTE Val;
-    struct __PACKED
-    {        
-        BYTE Alpha:1;
-        BYTE Delta:1;
-        BYTE Gamma:1;
-        BYTE Local:1;
-        BYTE Remote:1;
-        BYTE Common:1;
-        BYTE b6:1;
-        BYTE b7:1;
-    } bits;
-} SYSTEM_FLAG_STRUCT;
 
-typedef union COMMON_FLAG_STRUCT {
-    BYTE Val;
-    struct __PACKED
-    {        
-        BYTE Flags:1;
-        BYTE Speed:1;
-        BYTE b2:1;
-        BYTE b3:1;
-        BYTE b4:1;
-        BYTE b5:1;
-        BYTE b6:1;
-        BYTE b7:1;
-    } bits;
-} COMMON_FLAG_STRUCT ;
-
-typedef union COMMON_SETTINGS_FLAG_STRUCT{
+typedef union COMMON_SETTINGS_FLAG_STRUCT
+{
     BYTE Val;
     struct __PACKED
     {        
@@ -128,20 +76,20 @@ typedef union COMMON_SETTINGS_FLAG_STRUCT{
 } COMMON_SETTINGS_FLAG_STRUCT;
 typedef struct COMMON_SETTINGS
 {
-    COMMON_FLAG_STRUCT  NeedToUpdate;     // необходимо запросить с сервера указанные параметры
-    COMMON_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
-    COMMON_FLAG_STRUCT  IsModified;
-
+    PARAMS_FLAGS MaxGuidanceSpeedFlag;
     COMMON_SETTINGS_FLAG_STRUCT Flags;
     double MaxGuidanceSpeed;              // максимальная скорость наведения в ручном/автоматическом режимах
     
 } COMMON_SETTINGS;
+
 typedef struct All_PARAMS
 {
-    // битовые карты -флаги 
-    SYSTEM_FLAG_STRUCT NeedToUpdate;   // необходимо запросить с сервера указанные параметры
-    SYSTEM_FLAG_STRUCT NeedToCommit;   // необходимо отправить на сервер указанные параметры    
-    SYSTEM_FLAG_STRUCT IsModified;
+    PARAMS_FLAGS AlphaFlag;
+    PARAMS_FLAGS DeltaFlag;
+    PARAMS_FLAGS GammaFlag;
+    PARAMS_FLAGS LocalFlag;
+    PARAMS_FLAGS RemoteFlag;
+    PARAMS_FLAGS CommonFlag;
 
     AXIS_PARAM Alpha;
     AXIS_PARAM Delta;

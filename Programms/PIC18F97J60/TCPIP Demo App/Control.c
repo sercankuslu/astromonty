@@ -105,7 +105,8 @@ typedef struct MENU_ITEMS_ROM {
 typedef struct MENU_ITEMS_RAM {
    BYTE Id;
    VAL_TYPE ValType;
-   void * Value;        
+   void * Value; 
+   PARAMS_FLAGS * Flags;
 } MENU_ITEMS_RAM;
 // 
 typedef struct MENUS {
@@ -163,17 +164,17 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
    {ITEM_COMBO,    "Скорость:"},            // 30
 };                                                                                              
 static MENU_ITEMS_RAM MenuItemsM[] = {
-    {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle},
-    {2, VAL_ANGLE, (void*)&Params.Delta.Angle},
-    {3, VAL_ANGLE, (void*)&Params.Gamma.Angle},
-    {20, VAL_STRING, (void*)&Params.Local.Name},
-    {21, VAL_IP_ADDRES, (void*)&Params.Local.IP},
-    {22, VAL_IP_ADDRES, (void*)&Params.Local.Mask},
-    {23, VAL_IP_ADDRES, (void*)&Params.Local.Gate},
-    {24, VAL_IP_ADDRES, (void*)&Params.Local.DNS1},
-    {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2},
-    {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP},
-    {30, VAL_WORD, (void*)&Params.Alpha.Speed},
+    {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle, &Params.Alpha.AngleFlag},
+    {2, VAL_ANGLE, (void*)&Params.Delta.Angle, &Params.Delta.AngleFlag},
+    {3, VAL_ANGLE, (void*)&Params.Gamma.Angle, &Params.Gamma.AngleFlag},
+    {20, VAL_STRING, (void*)&Params.Local.Name, &Params.Local.NetFlags},
+    {21, VAL_IP_ADDRES, (void*)&Params.Local.IP, &Params.Local.NetFlags},
+    {22, VAL_IP_ADDRES, (void*)&Params.Local.Mask, &Params.Local.NetFlags},
+    {23, VAL_IP_ADDRES, (void*)&Params.Local.Gate, &Params.Local.NetFlags},
+    {24, VAL_IP_ADDRES, (void*)&Params.Local.DNS1, &Params.Local.NetFlags},
+    {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
+    {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
+    {30, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
 };
 // список папок
 const rom MENUS Menus[] = {
@@ -274,6 +275,9 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed);
 
 void ProcessMenu( KEYS_STR * KeyPressed )
 {
+    static BOOL Init = false;
+    static BYTE Id = 0;
+#ifdef _DISABLE_
     static float Xa = 0.0;//91.3 * PI / 180.0;
     static float Xd = (float)(-33.1 * PI / 180.0);
     static float Xg = (float)(47.2 * PI / 180.0);
@@ -308,11 +312,11 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     BYTE Selected = 0;
     static char EditTxt[20]; 
     DWORD_VAL TmpDWval;
-    static BOOL Init = false;
+    
     static int TimerCount = 0;
     static DWORD dwTime;
     static DateTime Date;
-    static BYTE Id = 0;
+    
     
 #ifdef _WINDOWS_
     SYSTEMTIME systemTime;
@@ -344,7 +348,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             TimeT[2] = ' ';
         }
     }
-
+#endif
 
     if(!Init){
         AppConfig.MyIPAddr.Val = 0x3701A8C0;
@@ -366,18 +370,18 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Alpha.StatusFlag.bits.Enable = 1;
         Params.Delta.StatusFlag.bits.Enable = 1;
         Params.Gamma.StatusFlag.bits.Enable = 0;
+        Params.AlphaFlag.Enable = 1;
+        Params.DeltaFlag.Enable = 1;
+        Params.GammaFlag.Enable = 0;
+        Params.Alpha.AngleFlag.Enable = 1;
+        Params.Delta.AngleFlag.Enable = 1;
+        Params.Gamma.AngleFlag.Enable = 0;
         //Params.Alpha.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
         //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
-        Params.Local.ConnectFlag = 0;
-        Params.NeedToUpdate.Val = 0;
-        Params.Alpha.NeedToUpdate.Val = 0;
-        strncpypgm2ram((char*)Params.Local.Name, MSG_SNL_NAME, sizeof(Params.Local.Name));
-        Params.Alpha.IsModified.Val = 0x00;
-        Params.Delta.IsModified.Val = 0x00;
-        Params.Gamma.IsModified.Val = 0x00;
-        Params.NeedToCommit.Val = 0x00;
-        memset(TmpValue,0,sizeof(TmpValue));
+        Params.Local.Status = 0;        
+        strncpypgm2ram((char*)Params.Local.Name, MSG_SNL_NAME, sizeof(Params.Local.Name));        
+        //memset(TmpValue,0,sizeof(TmpValue));
         Params.Common.Flags.bits.NeedToRedrawMenus = true;
 
         Init = true;            
@@ -388,8 +392,8 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     //Params.Alpha.Angle += (2.0 * PI /(360.0 * 200.0 * 16.0))*13.333333333334/5.0;
     
     NewProcessMenu(&Id, KeyPressed);
-    EndProcess = true;
 #ifdef _DISABLE_
+    EndProcess = true;
     while(!EndProcess){
         switch (State) {
         case MAIN_WINDOW:   // ***************************************************************************************************************
@@ -403,7 +407,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
                 break;
             }
             if(KeyPressed->keys.enter) { //Enter    
-                if(Params.Local.ConnectFlag){
+                if(Params.Local.Status){
                     State = OBSERV;
                 } else {    
                     State = ERROR_NO_CONNECTION;
@@ -490,7 +494,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             }
            
             if(Params.Local.IsModified.bits.Flag||Params.Common.Flags.bits.NeedToRedrawMenus){
-                if(Params.Local.ConnectFlag){
+                if(Params.Local.Status){
                     color = 0;
                     Effect = NORMAL;
                 } else {
@@ -528,7 +532,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
             if(Selected == ENTER) { 
                 switch(SelPosX){
                 case 0:
-                    if(Params.Local.ConnectFlag){
+                    if(Params.Local.Status){
                         State = OBSERV;
                     } else {    
                         State = ERROR_NO_CONNECTION;
@@ -1401,7 +1405,14 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     static char TmpEditMsg[20] = "";
     static VAL_TYPE TmpValType = VAL_ANGLE;
     static WORD TmpIndex = 0;
+    PARAMS_FLAGS DefaultFlags;
+    PARAMS_FLAGS * TmpFlags = &DefaultFlags;
 
+    DefaultFlags.Enable = 1;
+    DefaultFlags.IsModified = 0;
+    DefaultFlags.NeedToCommit = 0;
+    DefaultFlags.NeedToUpdate = 0;
+    
     if(!Params.Common.Flags.bits.NeedToRedrawMenus && !KeyPressed->Val) 
         return;
     if(!MenusLen){
@@ -1456,8 +1467,10 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                 case ITEM_BUTTON:
                 case ITEM_COMBO:
                     TmpString = NULL;
+                    TmpFlags = &DefaultFlags;
                     for(k = 0; k < RamMenusLen; k++){
                         if(MenuItemsM[k].Id == Menus[i].BrunchId) {
+                            TmpFlags = MenuItemsM[k].Flags;
                             switch(MenuItemsM[k].ValType){
                             case VAL_STRING:
                                 strcpy((char*)&TmpMsg, (char*)MenuItemsM[k].Value);
@@ -1484,7 +1497,8 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                             break;
                         }
                     }
-                    DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                    if(TmpFlags->Enable)
+                        DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
                     if((Selected == ENTER)&&(SelPosY == j)){                        
                         MenuStack[MStackHeap].LastId = *ItemId;
                         MenuStack[MStackHeap].LastPosY = SelPosY;

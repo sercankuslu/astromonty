@@ -429,20 +429,20 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             Key.keys.enter = 1;
             break;
         case IDC_BUTTON_CON:
-            Params.Local.ConnectFlag ^= 1;
-            Params.Local.IsModified.bits.Flag = 1;
+            Params.Local.Status ^= 1;
+            //Params.Local.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_A:
             Params.Alpha.StatusFlag.bits.Run ^= 1;
-            Params.Alpha.IsModified.bits.Flag = 1;
+            //Params.Alpha.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_D:
             Params.Delta.StatusFlag.bits.Run ^= 1;
-            Params.Delta.IsModified.bits.Flag = 1;
+            //Params.Delta.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_G:
             Params.Gamma.StatusFlag.bits.Run ^= 1;
-            Params.Gamma.IsModified.bits.Flag = 1;
+            //Params.Gamma.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_CON2:
             //Params.Local.ConnectFlag ^= 1;
@@ -450,18 +450,18 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             break;
         case IDC_BUTTON_A2:
             Params.Alpha.StatusFlag.bits.Enable ^= 1;
-            Params.Alpha.IsModified.bits.Flag = 1;
-            Params.Alpha.IsModified.bits.Angle = 1;
+//             Params.Alpha.IsModified.bits.Flag = 1;
+//             Params.Alpha.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_D2:
             Params.Delta.StatusFlag.bits.Enable ^= 1;
-            Params.Delta.IsModified.bits.Flag = 1;
-            Params.Delta.IsModified.bits.Angle = 1;
+//             Params.Delta.IsModified.bits.Flag = 1;
+//             Params.Delta.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_G2:
             Params.Gamma.StatusFlag.bits.Enable ^= 1;
-            Params.Gamma.IsModified.bits.Flag = 1;
-            Params.Gamma.IsModified.bits.Angle = 1;
+//             Params.Gamma.IsModified.bits.Flag = 1;
+//             Params.Gamma.IsModified.bits.Angle = 1;
             break;
         case IDC_CHECK1:
             OnLine = IsDlgButtonChecked(hDlg, IDC_CHECK1);            

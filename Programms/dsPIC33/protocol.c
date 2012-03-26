@@ -433,16 +433,16 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                         if(Len == sizeof(float)){
                             switch (Attribute){
                             case STA_ALPHA:
-                                Params.Alpha.Angle = *fData;
-                                Params.Alpha.IsModified.bits.Angle = 1;                                
+                                Params.Alpha.Angle = *fData;                                
+                                Params.Alpha.AngleFlag.IsModified = 1;
                                 break;
                             case STA_DELTA:
                                 Params.Delta.Angle = *fData;
-                                Params.Delta.IsModified.bits.Angle = 1;                               
+                                Params.Delta.AngleFlag.IsModified = 1;                               
                                 break;
                             case STA_GAMMA:
                                 Params.Gamma.Angle = *fData;
-                                Params.Gamma.IsModified.bits.Angle = 1;                                
+                                Params.Gamma.AngleFlag.IsModified = 1;                                
                                 break;
                             }
                         }
@@ -458,15 +458,15 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             default: ;
             }
             // отправка команд
-            if(Params.NeedToCommit.Val > 0){
+            if(Params.AlphaFlag.NeedToCommit||Params.DeltaFlag.NeedToCommit||Params.GammaFlag.NeedToCommit){
                 res = BeginCommand(pbBlob, bBlobLen, STC_EXECUTE_COMMAND);
                 if(res != STR_OK){
                     ST_STATE = ST_REQUEST_CONNECT;
                     break;
                 }
                 do {
-                    if(Params.NeedToCommit.bits.Alpha){
-                        if(Params.Alpha.NeedToCommit.bits.TargetAngle){
+                    if(Params.AlphaFlag.NeedToCommit){
+                        if(Params.Alpha.TargetAngleFlag.NeedToCommit){
                             // выбираем канал ALPHA
                             res = AddAttribute(pbBlob, bBlobLen, STA_ALPHA, 0, &bNull); 
                             if(res != STR_OK){
@@ -474,12 +474,13 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                                 break;
                             }
                             Value = &Params.Alpha.TargetAngle;
-                            Params.Alpha.NeedToCommit.bits.TargetAngle = 0;
-                            Params.NeedToCommit.bits.Alpha = 0;
+                            Params.Alpha.TargetAngleFlag.NeedToCommit = 0;
+                            
                         }
+                        Params.AlphaFlag.NeedToCommit = 0;
                     } else
-                    if(Params.NeedToCommit.bits.Delta){
-                        if(Params.Delta.NeedToCommit.bits.TargetAngle){
+                    if(Params.DeltaFlag.NeedToCommit){
+                        if(Params.Delta.TargetAngleFlag.NeedToCommit){
                             // выбираем канал ALPHA
                             res = AddAttribute(pbBlob, bBlobLen, STA_DELTA, 0, &bNull); 
                             if(res != STR_OK){
@@ -488,12 +489,12 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                             }
                             Value = &Params.Delta.TargetAngle;
                             res = STR_NEED_ANSWER; 
-                            Params.Delta.NeedToCommit.bits.TargetAngle = 0;
-                            Params.NeedToCommit.bits.Delta = 0;
+                            Params.Delta.TargetAngleFlag.NeedToCommit = 0;
                         }
+                        Params.DeltaFlag.NeedToCommit = 0;
                     } else
-                    if(Params.NeedToCommit.bits.Gamma){
-                        if(Params.Gamma.NeedToCommit.bits.TargetAngle){
+                    if(Params.DeltaFlag.NeedToCommit){
+                        if(Params.Gamma.TargetAngleFlag.NeedToCommit){
                             // выбираем канал ALPHA
                             res = AddAttribute(pbBlob, bBlobLen, STA_GAMMA, 0, &bNull); 
                             if(res != STR_OK){
@@ -502,9 +503,10 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                             }
                             Value = &Params.Gamma.TargetAngle;
                             res = STR_NEED_ANSWER; 
-                            Params.Gamma.NeedToCommit.bits.TargetAngle = 0;
-                            Params.NeedToCommit.bits.Gamma = 0;
+                            Params.Gamma.TargetAngleFlag.NeedToCommit = 0;
+                            
                         }
+                        Params.GammaFlag.NeedToCommit = 0;
                     }
                     // задаем координаты
                     res = AddAttribute(pbBlob, bBlobLen, STA_ABS_TARGET, (BYTE)sizeof(float), (BYTE*)Value);
@@ -518,50 +520,50 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
                         ST_STATE = ST_REQUEST_CONNECT;
                         break;
                     }
-                } while (Params.NeedToCommit.Val > 0);
+                } while (Params.AlphaFlag.NeedToCommit||Params.DeltaFlag.NeedToCommit||Params.GammaFlag.NeedToCommit);
                 res = STR_NEED_ANSWER;
                 break;
             } 
             // отправка запросов на данные 
             // все переменные, полученные из блоба должны быть сохранены в других местах!!!            
-            if(Params.NeedToUpdate.Val > 0){
+            if(Params.AlphaFlag.NeedToUpdate||Params.DeltaFlag.NeedToUpdate||Params.GammaFlag.NeedToUpdate){
                 res = BeginCommand(pbBlob, bBlobLen, STC_REQEST_DATA);
                 if(res != STR_OK){
                     ST_STATE = ST_REQUEST_CONNECT;
                     break;
                 }        
-                if(Params.NeedToUpdate.bits.Alpha){
-                    if(Params.Alpha.NeedToUpdate.bits.Angle){ 
+                if(Params.AlphaFlag.NeedToUpdate){
+                    if(Params.Alpha.AngleFlag.NeedToUpdate){ 
                         res = AddAttribute(pbBlob, bBlobLen, STA_ALPHA, 0, &bNull);
                         if(res != STR_OK){
                             ST_STATE = ST_REQUEST_CONNECT;
                             break;
                         } 
-                        Params.Alpha.NeedToUpdate.bits.Angle = 0;
-                        Params.NeedToUpdate.bits.Alpha = 0;
+                        Params.Alpha.AngleFlag.NeedToUpdate = 0;
                     }
+                    Params.AlphaFlag.NeedToUpdate = 0;
                 }
-                if(Params.NeedToUpdate.bits.Delta){
-                    if(Params.Delta.NeedToUpdate.bits.Angle){ 
+                if(Params.DeltaFlag.NeedToUpdate){
+                    if(Params.Delta.AngleFlag.NeedToUpdate){ 
                         res = AddAttribute(pbBlob, bBlobLen, STA_DELTA, 0, &bNull);
                         if(res != STR_OK){
                             ST_STATE = ST_REQUEST_CONNECT;
                             break;
                         } 
-                        Params.Delta.NeedToUpdate.bits.Angle = 0;
-                        Params.NeedToUpdate.bits.Delta = 0;
+                        Params.Delta.AngleFlag.NeedToUpdate = 0;
                     }
+                    Params.DeltaFlag.NeedToUpdate = 0;
                 }
-                if(Params.NeedToUpdate.bits.Gamma){
-                    if(Params.Gamma.NeedToUpdate.bits.Angle){ 
+                if(Params.GammaFlag.NeedToUpdate){
+                    if(Params.Gamma.AngleFlag.NeedToUpdate){ 
                         res = AddAttribute(pbBlob, bBlobLen, STA_GAMMA, 0, &bNull);
                         if(res != STR_OK){
                             ST_STATE = ST_REQUEST_CONNECT;
                             break;
                         } 
-                        Params.Gamma.NeedToUpdate.bits.Angle = 0;
-                        Params.NeedToUpdate.bits.Gamma = 0;
+                        Params.Gamma.AngleFlag.NeedToUpdate = 0;
                     }
+                    Params.GammaFlag.NeedToUpdate = 0;
                 }
                 res = STR_NEED_ANSWER;
             }
@@ -572,14 +574,14 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
         };        
     }
     if(ST_STATE == ST_CONNECTED){        
-        if(!Params.Local.ConnectFlag)
-            Params.Local.IsModified.bits.Flag = 1;
-        Params.Local.ConnectFlag = 1;
+        if(!Params.Local.Status)
+            Params.Local.StatusFlag.IsModified = 1;
+        Params.Local.Status = 1;
     } else {
         ClientConnected = 0;
-        if(Params.Local.ConnectFlag)
-            Params.Local.IsModified.bits.Flag = 1;
-        Params.Local.ConnectFlag = 0;    
+        if(Params.Local.Status)
+            Params.Local.StatusFlag.IsModified = 1;
+        Params.Local.Status = 0;    
     }
 
     if(res == STR_NEED_ANSWER){
