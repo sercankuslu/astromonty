@@ -94,7 +94,7 @@ typedef enum VAL_TYPE {
    VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR
 }VAL_TYPE;
 typedef enum ITEM_TYPE {
-    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING
+    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING, ITEM_COMBO
 }ITEM_TYPE;
 // тип постоянного элемента меню
 typedef struct MENU_ITEMS_ROM {
@@ -160,6 +160,7 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
    {ITEM_MSG, "Ошибка"},                           // 27
    {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
    {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
+   {ITEM_COMBO,    "Скорость:"},            // 30
 };                                                                                              
 static MENU_ITEMS_RAM MenuItemsM[] = {
     {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle},
@@ -172,6 +173,7 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {24, VAL_IP_ADDRES, (void*)&Params.Local.DNS1},
     {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2},
     {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP},
+    {30, VAL_WORD, (void*)&Params.Alpha.Speed},
 };
 // список папок
 const rom MENUS Menus[] = {
@@ -195,6 +197,9 @@ const rom MENUS Menus[] = {
    {12, 1},    //Навести
    {12, 2},
    {12, 3},
+   {12, 30},
+   {12, 15},
+
 };
 
 
@@ -259,7 +264,9 @@ void DrawMenuLine( BYTE ID,  C_ROM char * Msg_id, const char * Value, int PosY,i
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, float X, BOOL hour );
 BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
+BYTE ModifyString(KEYS_STR * KeyPressed, BYTE* XPos, char * Value, VAL_TYPE ValType);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
+void TextToIP(char* TmpValue, DWORD * TmpDoValue);
 int SubStrToInt(const char* Text, int Beg, int * Val);
 void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue);
 void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed);
@@ -352,6 +359,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Alpha.Angle = 0.0f;        
         Params.Delta.Angle = 0.0f; 
         Params.Gamma.Angle = 0.0f;
+        Params.Alpha.Speed = 10;
         Params.Alpha.TargetAngle = 0.0f;
         Params.Delta.TargetAngle = 0.0f;
         Params.Gamma.TargetAngle = 0.0f;
@@ -381,7 +389,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     
     NewProcessMenu(&Id, KeyPressed);
     EndProcess = true;
-    if(0)
+#ifdef _DISABLE_
     while(!EndProcess){
         switch (State) {
         case MAIN_WINDOW:   // ***************************************************************************************************************
@@ -1009,6 +1017,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         }
     } 
     KeyPressed->Val = 0;  
+#endif //#ifdef _DISABLE_
 }
 
 void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosX, int PosY, BYTE Mode )
@@ -1145,6 +1154,7 @@ BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE* XPos, BYTE XMax, BYTE * YPos, BYTE
     return 0;
 }
 
+
 void XtoTimeString( char * Text, float X, BOOL hour )
 {    
     double Xg;
@@ -1263,7 +1273,27 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
         (*TmpDoValue) = (float)Xg;
     } 
 }
+void TextToIP(char* TmpValue, DWORD * TmpDoValue)
+{
+    BYTE i = 0;
+    DWORD_VAL TmpDWval;
+    int B=0;                    
+    int c = 0;
 
+    for(i = 0;i < strlen((const char*)TmpValue);i++){
+        if(TmpValue[i]=='.') TmpValue[i] = ' ';
+    }                       
+    c = SubStrToInt((const char*)TmpValue, 0, &B);
+    TmpDWval.byte.LB = (BYTE)B;
+    c = SubStrToInt((const char*)TmpValue, c, &B);
+    TmpDWval.byte.HB = (BYTE)B;
+    c = SubStrToInt((const char*)TmpValue, c, &B);
+    TmpDWval.byte.UB = (BYTE)B;
+    c = SubStrToInt((const char*)TmpValue, c, &B);
+    TmpDWval.byte.MB = (BYTE)B; 
+    
+    *TmpDoValue = TmpDWval.Val;
+}
 /*
 void GetMsgFromROM(MSGS Msg_id, char* Msg)
 {        
@@ -1363,10 +1393,14 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     BYTE Selected = 0;
     static int MenusLen = 0;
     static int RamMenusLen = 0;
-    char * TmpString = NULL;
+    static char * TmpString = NULL;
+    static BOOL BeginEdit = FALSE;
     DWORD * TmpDW = NULL;
     float * TmpFloat = NULL;
-    char TmpMsg[20] = "";
+    static char TmpMsg[20] = "";
+    static char TmpEditMsg[20] = "";
+    static VAL_TYPE TmpValType = VAL_ANGLE;
+    static WORD TmpIndex = 0;
 
     if(!Params.Common.Flags.bits.NeedToRedrawMenus && !KeyPressed->Val) 
         return;
@@ -1419,12 +1453,15 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                 case ITEM_STRING:
                 case ITEM_IP_ADDRES:
                 case ITEM_ANGLE:
+                case ITEM_BUTTON:
+                case ITEM_COMBO:
                     TmpString = NULL;
                     for(k = 0; k < RamMenusLen; k++){
                         if(MenuItemsM[k].Id == Menus[i].BrunchId) {
                             switch(MenuItemsM[k].ValType){
                             case VAL_STRING:
-                                TmpString = (char*)MenuItemsM[k].Value;
+                                strcpy((char*)&TmpMsg, (char*)MenuItemsM[k].Value);
+                                TmpString = (char*)&TmpMsg;
                                 break;
                             case VAL_IP_ADDRES: 
                                 TmpDW = (DWORD*)MenuItemsM[k].Value;
@@ -1463,62 +1500,262 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         }
         break;
     case ITEM_ANGLE:
-        TmpString = NULL;
-        for(k = 0; k < RamMenusLen; k++){
-            if(MenuItemsM[k].Id == *ItemId) {
-                switch(MenuItemsM[k].ValType){
-                case VAL_STRING:
-                    TmpString = (char*)MenuItemsM[k].Value;
-                    break;
-                case VAL_IP_ADDRES: 
-                    // 255.255.255.255
-                    TmpDW = (DWORD*)MenuItemsM[k].Value;
-                    IPtoText(*TmpDW, (char*)TmpMsg, 0);
-                    TmpString = (char*)&TmpMsg;
-                    break;
-                case VAL_ANGLE:  
-                    // +90`59'59.99"
-                    TmpFloat = (float*)MenuItemsM[k].Value;                                
-                    XtoTimeString((char*)&TmpMsg, *TmpFloat, 0 ); 
-                    TmpString = (char*)&TmpMsg;
-                    break;
-                case VAL_ANGLE_HOUR:
-                    // +12`59'59.99"
-                    TmpFloat = (float*)MenuItemsM[k].Value;                                
-                    XtoTimeString((char*)&TmpMsg, *TmpFloat, 1 ); 
-                    TmpString = (char*)&TmpMsg;
-                    break;
-                default:
+    case ITEM_IP_ADDRES:
+    case ITEM_STRING:
+        if(!BeginEdit){
+            for(k = 0; k < RamMenusLen; k++){
+                if(MenuItemsM[k].Id == *ItemId) {
+                    BeginEdit = TRUE;
+                    TmpIndex = k;
+                    TmpValType = MenuItemsM[k].ValType;
+                    switch(MenuItemsM[k].ValType){
+                    case VAL_STRING:
+                        strcpy((char*)&TmpEditMsg, (char*)MenuItemsM[k].Value);
+                        break;
+                    case VAL_IP_ADDRES: 
+                        TmpDW = (DWORD*)MenuItemsM[k].Value;
+                        IPtoText(*TmpDW, (char*)TmpEditMsg, 1);
+                        break;
+                    case VAL_ANGLE:  
+                        // +90`59'59.99"
+                        TmpFloat = (float*)MenuItemsM[k].Value;                                
+                        XtoTimeString((char*)&TmpEditMsg, *TmpFloat, 0 ); 
+                        break;
+                    case VAL_ANGLE_HOUR:
+                        // +12`59'59.99"
+                        TmpFloat = (float*)MenuItemsM[k].Value;                                
+                        XtoTimeString((char*)&TmpEditMsg, *TmpFloat, 1 ); 
+                        break;
+                    default:
+                        break;
+                    }
                     break;
                 }
-                break;
             }
         }
-        // подсчет количества столбцов
-        if(MenuItems[*ItemId].Type == ITEM_ANGLE){
-            MaxX = strlen(TmpString);
-        }
-        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, MAIN_WINDOW, &State, &SelPosX, &SelPosY);
+        Selected = ModifyString(KeyPressed, &PosX, TmpEditMsg, TmpValType);
+        DrawMenuLine(j,"", (const char*)TmpEditMsg, PosX, PosY, SELECT_COLUMN|FONT_TYPE_B);
         if(Selected == ESC){
             if(MStackHeap != 0) {
                 MStackHeap--;
                 *ItemId = MenuStack[MStackHeap].LastId;
                 PosY = MenuStack[MStackHeap].LastPosY;
             }
+            BeginEdit = FALSE;
             DisplayClear();
-        }
-        DrawMenuLine(j, MenuItems[*ItemId].Name, (const char*)TmpString, PosX, PosY, SELECT_COLUMN|FONT_TYPE_B);
+        }        
         if(Selected == ENTER){
+            switch(TmpValType){
+            case VAL_STRING:
+                strcpy((char*)MenuItemsM[TmpIndex].Value, (char*)&TmpEditMsg);
+                break;
+            case VAL_ANGLE_HOUR:
+                TextToTimeD(TmpEditMsg, TRUE, (float*)MenuItemsM[TmpIndex].Value);
+                break;
+            case VAL_ANGLE:
+                TextToTimeD(TmpEditMsg, FALSE, (float*)MenuItemsM[TmpIndex].Value);
+                break;
+            case VAL_IP_ADDRES:
+                TextToIP(TmpEditMsg, (DWORD*)MenuItemsM[TmpIndex].Value);
+                break;
+            }
             if(MStackHeap != 0) {
                 MStackHeap--;
                 *ItemId = MenuStack[MStackHeap].LastId;
                 PosY = MenuStack[MStackHeap].LastPosY;
             }
+            BeginEdit = FALSE;
             DisplayClear();
         }
+        
         break;
     default:;
     }
     Params.Common.Flags.bits.NeedToRedrawMenus = 0; 
 }
+// 012345678901234
+// +##`##'##.##"
+// ###.###.###.###
+// VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR
+BYTE ModifyString(KEYS_STR * KeyPressed, BYTE* XPos, char * Value, VAL_TYPE ValType)
+{   
+    BYTE XMax = 0;
+    BYTE YMax = 0;
+    int XPosMod = 0;
+    char BaseSymbol = '0';
+    // подсчет количества столбцов
+    XMax = strlen(Value);
+    if(XMax == 0) 
+        return 0;
+    if(*XPos > XMax) 
+        *XPos = XMax;
 
+    if(KeyPressed->keys.left) { //LEFT
+        if((*XPos) > 0) (*XPos)--;
+        if((*XPos) > 0) XPosMod = -1;
+        KeyPressed->keys.left = 0;        
+    }
+    if(KeyPressed->keys.right) { //RIGHT
+        if(XMax > 0){
+            if((*XPos) < XMax-1) (*XPos)++;
+            if((*XPos) < XMax-1)  XPosMod = 1;
+        }
+        KeyPressed->keys.right = 0;        
+    }    
+    switch(ValType){
+    case VAL_STRING:
+        YMax = 160;
+        BaseSymbol = ' ';
+        break;
+    case VAL_IP_ADDRES:
+        BaseSymbol = '0';
+        switch(*XPos){
+        case 0: case 4: case 8: case 12:  // 0,1,2
+            YMax = 3;
+            break;    
+        case 1: case 2:             // 0,1,2,3,4,5,6,7,8,9 (if Value[0] <2 0) 0,1,2,3,4,5 (if Value[0] == 2)
+            if(Value[0] < '2')     
+                    YMax = 10; 
+            if(Value[0] == '2')
+                YMax = 6; 
+            break;    
+        case 5: case 6:
+            if(Value[4] < '2')     
+                YMax = 10; 
+            if(Value[4] == '2')
+                YMax = 6; 
+            break;    
+        case 9: case 10:
+            if(Value[8] < '2')     
+                YMax = 10; 
+            if(Value[8] == '2')
+                YMax = 6; 
+            break; 
+        case 13: case 14:
+            if(Value[12] < '2')     
+                YMax = 10; 
+            if(Value[12] == '2')
+                YMax = 6; 
+            break; 
+        case 3:case 7:case 11:       // . 
+            *XPos += XPosMod;
+            YMax = 0;
+            break;        
+        default:
+            YMax = 0;
+        }      
+        break;
+    case VAL_ANGLE_HOUR:
+        BaseSymbol = '0';
+        switch(*XPos){
+        case 0:                     // +, -
+            YMax = 2; 
+            BaseSymbol = '+';
+            break;    
+        case 1: YMax = 2; break;    // 0,1
+        case 2:                     // 0,1,2,3,4,5,6,7,8,9 (if Value[1] == 0) 0,1,2 (if Value[1] == 1)
+            if(Value[1] == '0')
+                YMax = 10; 
+            if(Value[1] == '1')
+                YMax = 3; 
+            break; 
+        case 3:case 6:case 9:       // `, ', . ,"
+            *XPos += XPosMod;
+            YMax = 0;
+            break;        
+        case 4:case 7:              // 0,1,2,3,4,5,6
+            YMax = 6; break;
+        case 5: case 8: case 10: case 11:
+            YMax = 10; break;
+        case 12:
+            *XPos -= 1;
+        default:
+            YMax = 0;
+        }      
+        break;
+    case VAL_ANGLE:
+        BaseSymbol = '0';
+        switch(*XPos){
+        case 0:                     // +, -
+            YMax = 2; 
+            break;    
+        case 1:case 2:              // 0,1,2,3,4,5,6,7,8,9
+        case 5: case 8: case 10: case 11:
+            YMax = 10; break;
+        case 3:case 6:case 9:
+            *XPos += XPosMod;
+            YMax = 0; 
+            break;                  // `, ', . ,"
+        case 4:case 7:              // 0,1,2,3,4,5,6
+            YMax = 6; break;
+        case 12:
+            *XPos -= 1;
+        default:
+            YMax = 0;
+        }      
+        break;
+    default:
+        break;
+    }
+    if(KeyPressed->keys.up) { //UP
+        switch(ValType){
+        case VAL_ANGLE_HOUR:
+        case VAL_ANGLE:
+            if(*XPos == 0)
+                if(Value[*XPos] == '+')
+                    Value[*XPos] = '-';
+                else
+                    Value[*XPos] = '+';
+            else {
+                if(Value[*XPos] < BaseSymbol + YMax -1) 
+                    Value[*XPos]++;
+                else
+                    Value[*XPos] = BaseSymbol;
+            }
+            break;
+        default:
+            if(Value[*XPos] < BaseSymbol + YMax -1) 
+                Value[*XPos]++;
+            else
+                Value[*XPos] = BaseSymbol;
+        }
+        KeyPressed->keys.up = 0;      
+    }
+    if(KeyPressed->keys.down) { //DOWN
+        switch(ValType){
+        case VAL_ANGLE_HOUR:
+        case VAL_ANGLE:
+            if(*XPos == 0)
+                if(Value[*XPos] == '+')
+                    Value[*XPos] = '-';
+                else
+                    Value[*XPos] = '+';
+            else {
+                if(Value[*XPos] > BaseSymbol) 
+                    Value[*XPos]--;
+                else
+                    Value[*XPos] = BaseSymbol + YMax -1;
+            }
+        default:
+            if(Value[*XPos] > BaseSymbol) 
+                Value[*XPos]--;
+            else
+                Value[*XPos] = BaseSymbol + YMax -1;
+        }
+        KeyPressed->keys.down = 0;       
+    }
+    
+    if(KeyPressed->keys.esc) { //ESC
+        (*XPos) = 0;
+        KeyPressed->keys.esc = 0;
+        Params.Common.Flags.bits.NeedToRedrawMenus = true;
+        return ESC;
+    }
+    if(KeyPressed->keys.enter) { //Enter 
+        (*XPos) = 0;
+        KeyPressed->keys.enter = 0;
+        Params.Common.Flags.bits.NeedToRedrawMenus = true;
+        return ENTER;
+    }
+    return 0;
+}
