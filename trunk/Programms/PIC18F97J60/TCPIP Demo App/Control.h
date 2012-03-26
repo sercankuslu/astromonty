@@ -14,11 +14,11 @@ typedef union {
     struct __PACKED
     {        
         BYTE Angle:1;
+        BYTE Speed:1;
         BYTE AbsStep:1;
         BYTE TargetAngle:1;
         BYTE TargetAbsStep:1;
         BYTE Flag:1;
-        BYTE b5:1;
         BYTE b6:1;
         BYTE b7:1;
     } bits;
@@ -43,7 +43,8 @@ typedef struct AXIS_PARAM
     AXIS_FLAG_STRUCT  NeedToCommit;     // необходимо отправить на сервер указанные параметры
     AXIS_FLAG_STRUCT  IsModified;
 
-    float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
+    float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды   
+    BYTE  Speed;           // номер позиции скорости
     DWORD  AbsSteps;         // текущий номер шага    
     float TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
     DWORD  TargetAbsSteps;         // текущий номер шага    
