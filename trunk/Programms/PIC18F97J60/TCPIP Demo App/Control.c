@@ -91,10 +91,10 @@ static C_ROM char * const MsgsCommon[]=
 };*/
 
 typedef enum VAL_TYPE {
-   VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR
+   VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR, VAL_NONE, VAL_FLAG
 }VAL_TYPE;
 typedef enum ITEM_TYPE {
-    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING, ITEM_COMBO
+    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING, ITEM_COMBO, ITEM_HEADER, ITEM_FOOTER
 }ITEM_TYPE;
 // тип постоянного элемента меню
 typedef struct MENU_ITEMS_ROM {
@@ -162,7 +162,17 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
    {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
    {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
    {ITEM_COMBO,    "Скорость:"},            // 30
-};                                                                                              
+   {ITEM_FOLDER,    "Главное окно"},            // 31
+   {ITEM_HEADER,    "Сеть"},            // 32
+   {ITEM_HEADER,    "Альфа"},            // 33
+   {ITEM_HEADER,    "Дельта"},            // 34
+   {ITEM_HEADER,    "Гамма"},            // 35
+   {ITEM_ANGLE,     "А:"},                         // 36
+   {ITEM_ANGLE,     "Д:"},                         // 37
+   {ITEM_ANGLE,     "Г:"},                         // 38
+
+};       
+
 static MENU_ITEMS_RAM MenuItemsM[] = {
     {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle, &Params.Alpha.AngleFlag},
     {2, VAL_ANGLE, (void*)&Params.Delta.Angle, &Params.Delta.AngleFlag},
@@ -175,11 +185,20 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
     {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
     {30, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
+    {31, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
+    {33, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
+    {33, VAL_FLAG, (void*)&Params.Alpha.StatusFlag, &Params.Alpha.AngleFlag},
+    {34, VAL_FLAG, (void*)&Params.Delta.StatusFlag, &Params.Delta.AngleFlag},
+    {35, VAL_FLAG, (void*)&Params.Gamma.StatusFlag, &Params.Gamma.AngleFlag},
+    {36, VAL_ANGLE_HOUR, (void*)&Params.Alpha.TargetAngle, &Params.Alpha.TargetAngleFlag},
+    {37, VAL_ANGLE, (void*)&Params.Delta.TargetAngle, &Params.Delta.TargetAngleFlag},
+    {38, VAL_ANGLE, (void*)&Params.Gamma.TargetAngle, &Params.Gamma.TargetAngleFlag},
 };
 // список папок
 const rom MENUS Menus[] = {
    {0, 11},     //Меню
    {0, 10},
+   {0, 31},
    {10, 4},     //Настройки
    {10, 17},
    {10, 18},
@@ -195,57 +214,21 @@ const rom MENUS Menus[] = {
    {11, 12},    //Наблюдение
    {11, 13},
    {11, 14},
-   {12, 1},    //Навести
-   {12, 2},
-   {12, 3},
+   {12, 36},     //Навести
+   {12, 37},
+   {12, 38},
    {12, 30},
    {12, 15},
+   {31, 1},     //Главное окно
+   {31, 2},
+   {31, 3},
+   {31, 32},
+   {31, 33},
+   {31, 34},
+   {31, 35},
 
 };
 
-
-
-
-
-
-C_ROM char * MSG_NOMSG                      = "";                    
-C_ROM char * MSG_MW_ALPHA                   = "А:";                  
-C_ROM char * MSG_MW_DELTA                   = "Д:";                  
-C_ROM char * MSG_MW_GAMMA                   = "Г:";                  
-C_ROM char * MSG_MW_MENU                    = "Меню";                
-C_ROM char * MSG_C_NET                      = "Сеть";                
-C_ROM char * MSG_MW_MODE_AUTO               = "Авто наведение";      
-C_ROM char * MSG_MW_MODE_MANUAL             = "Ручное наведение";    
-C_ROM char * MSG_C_ALPHA                    = "Альфа";               
-C_ROM char * MSG_C_DELTA                    = "Дельта";              
-C_ROM char * MSG_C_GAMMA                    = "Гамма";               
-C_ROM char * MSG_M_SETTINGS                 = "Настройки";           
-C_ROM char * MSG_M_S_OBSERV                 = "Наблюдение";          
-C_ROM char * MSG_MO_GOTO                    = "Навести";             
-C_ROM char * MSG_MO_MANUAL                  = "Ручной режим";        
-C_ROM char * MSG_MO_SPACECRAFT              = "Режим спутников";     
-C_ROM char * MSG_C_START                    = "Старт";               
-C_ROM char * MSG_C_CONTINUE                 = "Продолжить";          
-C_ROM char * MSG_S_MONTY                    = "Монтировка";          
-C_ROM char * MSG_S_DISPLAY                  = "Экран";               
-C_ROM char * MSG_SM_TYPE                    = "Тип монтировки";      
-C_ROM char * MSG_SNL_NAME                   = "AS-CONTROL";          
-C_ROM char * MSG_SN_NAME                    = "Имя:";                
-C_ROM char * MSG_SN_IP                      = "IP:";                 
-C_ROM char * MSG_SN_MASK                    = "Mask:";               
-C_ROM char * MSG_SN_GATE                    = "Gate:";               
-C_ROM char * MSG_SN_DNS1                    = "DNS1:";               
-C_ROM char * MSG_SN_DNS2                    = "DNS2:";               
-C_ROM char * MSG_SN_NTP                     = "NTP:";                
-C_ROM char * MSG_C_ERROR                    = "Ошибка";              
-C_ROM char * MSG_ERR_NOTREACHABLE0          = "Указанные координаты";
-C_ROM char * MSG_ERR_NOTREACHABLE1          = "в данный момент вре-";
-C_ROM char * MSG_ERR_NOTREACHABLE2          = "мени находятся вне";  
-C_ROM char * MSG_ERR_NOTREACHABLE3          = "зоны видимости";      
-C_ROM char * MSG_ERR_NOCONNECTION0          = "Нет подключения к";   
-C_ROM char * MSG_ERR_NOCONNECTION1          = "серверу. Действие не";
-C_ROM char * MSG_ERR_NOCONNECTION2          = "доступно";            
-C_ROM char * MSG_ERR_NOCONNECTION3          = "";                    
 
 // TODO: 
 #ifndef _WINDOWS
@@ -264,7 +247,7 @@ DWORD SNTPGetUTCSeconds(){
 void DrawMenuLine( BYTE ID,  C_ROM char * Msg_id, const char * Value, int PosY,int PosX , BYTE Mode );
 void DrawScrollBar(int Pos, int Max);
 void XtoTimeString( char * Text, float X, BOOL hour );
-BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, MENU_ID LastState, MENU_ID * State, BYTE * SelPosX, BYTE * SelPosY);
+BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE * PosX, BYTE MaxX, BYTE* PosY, BYTE MaxY, BYTE * SelPosX, BYTE * SelPosY);
 BYTE ModifyString(KEYS_STR * KeyPressed, BYTE* XPos, char * Value, VAL_TYPE ValType);
 void IPtoText (DWORD IP, char * Text, BOOL ForEdit);
 void TextToIP(char* TmpValue, DWORD * TmpDoValue);
@@ -316,20 +299,7 @@ void ProcessMenu( KEYS_STR * KeyPressed )
     static int TimerCount = 0;
     static DWORD dwTime;
     static DateTime Date;
-    
-    
-#ifdef _WINDOWS_
-    SYSTEMTIME systemTime;
-    FILETIME fileTime;
-    UINT64 qwtime = 0;
-    GetSystemTime( &systemTime );    
-    SystemTimeToFileTime( &systemTime, &fileTime );
-    qwtime = ((UINT64)fileTime.dwHighDateTime) << 32;
-    qwtime += (UINT64)fileTime.dwLowDateTime;
-    TIME_IN_SECONDS = (DWORD)qwtime/10000000;
-#endif
-
-    Params.Common.Flags.bits.NeedToRedrawTime = false;
+Params.Common.Flags.bits.NeedToRedrawTime = false;
     if(dwTime != SNTPGetUTCSeconds())
     {
         dwTime = SNTPGetUTCSeconds();      
@@ -366,21 +336,35 @@ void ProcessMenu( KEYS_STR * KeyPressed )
         Params.Alpha.Speed = 10;
         Params.Alpha.TargetAngle = 0.0f;
         Params.Delta.TargetAngle = 0.0f;
-        Params.Gamma.TargetAngle = 0.0f;
-        Params.Alpha.StatusFlag.bits.Enable = 1;
-        Params.Delta.StatusFlag.bits.Enable = 1;
-        Params.Gamma.StatusFlag.bits.Enable = 0;
+        Params.Gamma.TargetAngle = 0.0f;        
         Params.AlphaFlag.Enable = 1;
         Params.DeltaFlag.Enable = 1;
         Params.GammaFlag.Enable = 0;
+        Params.Alpha.TargetAngleFlag.Enable = 1;
+        Params.Delta.TargetAngleFlag.Enable = 1;
+        Params.Gamma.TargetAngleFlag.Enable = 0;
+        Params.Alpha.TargetAngleFlag.CanSelected = 1;
+        Params.Delta.TargetAngleFlag.CanSelected = 1;
+        Params.Gamma.TargetAngleFlag.CanSelected = 1;
+
         Params.Alpha.AngleFlag.Enable = 1;
         Params.Delta.AngleFlag.Enable = 1;
         Params.Gamma.AngleFlag.Enable = 0;
-        //Params.Alpha.StatusFlag = 0;//|= AXIS_RUN;
-        //Params.Delta.StatusFlag = 0;//|= AXIS_RUN;
-        //Params.Gamma.StatusFlag = 0;// |= AXIS_RUN;
-        Params.Local.Status = 0;        
-        strncpypgm2ram((char*)Params.Local.Name, MSG_SNL_NAME, sizeof(Params.Local.Name));        
+        Params.Alpha.StatusFlag.Run = 1;
+        Params.Delta.StatusFlag.Run = 1;
+        Params.Gamma.StatusFlag.Run = 0;
+        Params.Local.Status = 0;   
+        Params.Local.NetFlags.Enable = 1;
+        Params.Alpha.AngleFlag.CanSelected = 0;
+        Params.Delta.AngleFlag.CanSelected = 0;
+        Params.Gamma.AngleFlag.CanSelected = 0;
+        Params.Local.NetFlags.Enable = 1;
+        Params.Local.NetFlags.CanSelected = 1;
+        Params.MainMenuFlag.AltFooter = 1;
+        Params.MainMenuFlag.AltHeader = 1;
+        Params.MainMenuFlag.Enable = 1;
+        Params.MainMenuFlag.HideScroll = 1;
+        strncpypgm2ram((char*)Params.Local.Name, "AC_CONTROL", sizeof(Params.Local.Name));        
         //memset(TmpValue,0,sizeof(TmpValue));
         Params.Common.Flags.bits.NeedToRedrawMenus = true;
 
@@ -1079,7 +1063,7 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosX, i
     }
 
     FloodRectangle(1,Line,124,Line+fsize,color);
-    if(Msg_id != MSG_NOMSG){
+    if(Msg_id != ""){
         strncpypgm2ram((char*)&Name, Msg_id, sizeof(Name));
         StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
         Xtmp = StringXPos % 10;
@@ -1116,10 +1100,9 @@ void DrawMessageLine(C_ROM char * Msg_id, int Step, BOOL Blink)
     if((Msg_id == 0) || Step == 0 || Blink) return;
 }
 
-BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE* XPos, BYTE XMax, BYTE * YPos, BYTE YMax, MENU_ID LastState, MENU_ID * State, BYTE * XSelPos, BYTE * YSelPos)
+BYTE ProcessKeys(KEYS_STR * KeyPressed, BYTE* XPos, BYTE XMax, BYTE * YPos, BYTE YMax, BYTE * XSelPos, BYTE * YSelPos)
 {
     if(KeyPressed->keys.esc) { //ESC
-        (*State) = LastState;
         (*YSelPos) = 0;
         (*XSelPos) = 0;
         (*YPos) = 0;
@@ -1381,7 +1364,20 @@ void SecondsToTime(DWORD Seconds, DateTime * Date)
     Date->Year = (WORD)Y;
  
 }
-
+WORD FindRAMItem(BYTE ItemId)
+{
+    WORD k = 0;
+    static int RamMenusLen = 0;
+    if(!RamMenusLen){
+        RamMenusLen = sizeof(MenuItemsM)/sizeof(MenuItemsM[0]);
+    }
+    for(k = 0; k < RamMenusLen; k++){
+        if(MenuItemsM[k].Id == ItemId) {
+            return k;
+        }
+    }
+    return 0;
+}
 void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
 {
     int i = 0;
@@ -1407,11 +1403,24 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     static WORD TmpIndex = 0;
     PARAMS_FLAGS DefaultFlags;
     PARAMS_FLAGS * TmpFlags = &DefaultFlags;
+    EFFECT Effect;
+    BOOL color = FALSE;
+    BOOL TmpFlag = FALSE;
+    // время
+    WORD XX = 0;
+    DWORD dwTime = 0;
+    DateTime Date;
+    char TimeT[] = "00:00";
+    char SecondT[] = ".00";
 
     DefaultFlags.Enable = 1;
     DefaultFlags.IsModified = 0;
     DefaultFlags.NeedToCommit = 0;
     DefaultFlags.NeedToUpdate = 0;
+    DefaultFlags.HideScroll = 0;
+    DefaultFlags.AltFooter = 0;
+    DefaultFlags.AltHeader = 0;
+    DefaultFlags.CanSelected = 1;
     
     if(!Params.Common.Flags.bits.NeedToRedrawMenus && !KeyPressed->Val) 
         return;
@@ -1422,12 +1431,60 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         RamMenusLen = sizeof(MenuItemsM)/sizeof(MenuItemsM[0]);
     }
     
-     
+    TmpFlags = &DefaultFlags;
+    k = FindRAMItem(*ItemId);
+    if(k != 0) TmpFlags = MenuItemsM[k].Flags;
+
     // заголовок
-    DrawRectangle(0,0,132,10,1);
-    strncpypgm2ram((char*)&TmpMsg, MenuItems[*ItemId].Name, strlen(MenuItems[*ItemId].Name));
-    OutTextXY(15,2,(const char*)TmpMsg,ARIAL_L,NORMAL);
-   
+    if(!TmpFlags->AltHeader){
+        // стандартный заголовок
+        DrawRectangle(0,0,132,10,1);
+        strncpypgm2ram((char*)&TmpMsg, MenuItems[*ItemId].Name, strlen(MenuItems[*ItemId].Name));
+        OutTextXY(15,2,(const char*)TmpMsg,ARIAL_L,NORMAL);
+    } else {
+        // альтернативный заголовок
+        Line(0,52,132,52,1);
+        Line(0,9,132,9,1);
+    }
+    if(TmpFlags->AltFooter){
+        Effect = NORMAL;
+        
+        if(Params.Common.Flags.bits.Man_Auto)
+            strncpypgm2ram((char*)&TmpMsg, "Ручное наведение", sizeof(TmpMsg));
+        else
+            strncpypgm2ram((char*)&TmpMsg, "Авто наведение", sizeof(TmpMsg));
+        OutTextXY(2,54,(const char*)TmpMsg,ARIAL_L, Effect);                        
+        Line(88,52,88,63,1);
+
+#ifdef _WINDOWS_
+        SYSTEMTIME systemTime;
+        FILETIME fileTime;
+        UINT64 qwtime = 0;
+        GetSystemTime( &systemTime );    
+        SystemTimeToFileTime( &systemTime, &fileTime );
+        qwtime = ((UINT64)fileTime.dwHighDateTime) << 32;
+        qwtime += (UINT64)fileTime.dwLowDateTime;
+        TIME_IN_SECONDS = (DWORD)qwtime/10000000;
+#endif
+        if(dwTime != SNTPGetUTCSeconds()) {
+            dwTime = SNTPGetUTCSeconds();      
+            SecondsToTime(dwTime, &Date);
+            Params.Common.Flags.bits.NeedToRedrawTime = true;
+            TimeT[0]   = '0' + Date.Hour / 10;
+            TimeT[1]   = '0' + Date.Hour % 10;
+            TimeT[3]   = '0' + Date.Min  / 10;
+            TimeT[4]   = '0' + Date.Min  % 10;
+            SecondT[1] = '0' + Date.Sec  / 10;
+            SecondT[2] = '0' + Date.Sec  % 10;
+            if(TimeT[2] == ':'){
+                TimeT[2] = ' ';
+            } else {
+                TimeT[2] = ':';
+            }
+        }
+        XX = OutTextXY(90,54,(const char*)TimeT,ARIAL_B,NORMAL);
+        OutTextXY(XX,56,(const char*)SecondT,ARIAL_L,NORMAL);
+    }
     
     switch (MenuItems[*ItemId].Type) {
     case ITEM_FOLDER:
@@ -1437,7 +1494,9 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                 MaxY++;
             }
         }
-        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, MAIN_WINDOW, &State, &SelPosX, &SelPosY);
+        if(!TmpFlags->HideScroll)
+            DrawScrollBar(PosY, MaxY);
+        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, &SelPosX, &SelPosY);
         if(Selected == ESC){
             if(MStackHeap != 0) {
                 MStackHeap--;
@@ -1446,8 +1505,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
             }
             DisplayClear();
         }
-        DrawScrollBar(PosY, MaxY);
-        for(i = 0; i < MenusLen; i++){
+         for(i = 0; i < MenusLen; i++){
             if(Menus[i].Id == *ItemId) {
                 switch(MenuItems[Menus[i].BrunchId].Type){
                 case ITEM_FOLDER:
@@ -1459,6 +1517,27 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                         *ItemId = Menus[i].BrunchId;
                         DisplayClear();
                         return;
+                    }
+                    break;
+                case ITEM_HEADER:
+                    TmpString = NULL;
+                    TmpFlags = &DefaultFlags;
+                    for(k = 0; k < RamMenusLen; k++){
+                        if(MenuItemsM[k].Id == Menus[i].BrunchId) {
+                            TmpFlags = MenuItemsM[k].Flags;
+                            TmpFlag = *(BOOL*)MenuItemsM[k].Value;
+                            if(TmpFlag){
+                                color = 0;
+                                Effect = NORMAL;
+                            } else {
+                                color = 1;
+                                Effect = INVERT;
+                            }
+                            // TODO: сделать последовательное заполнение
+                            FloodRectangle(Con_FlagX,0,A_FlagX ,8, color);
+                            strncpypgm2ram((char*)&TmpMsg, MenuItems[Menus[i].BrunchId].Name, sizeof(TmpMsg));
+                            OutTextXY(Con_FlagX+2,1,(const char*)TmpMsg,ARIAL_L, Effect);
+                        }
                     }
                     break;
                 case ITEM_STRING:
@@ -1497,8 +1576,12 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                             break;
                         }
                     }
-                    if(TmpFlags->Enable)
-                        DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                    if(TmpFlags->Enable){
+                        if(TmpFlags->CanSelected)
+                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                        else
+                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);
+                    }
                     if((Selected == ENTER)&&(SelPosY == j)){                        
                         MenuStack[MStackHeap].LastId = *ItemId;
                         MenuStack[MStackHeap].LastPosY = SelPosY;

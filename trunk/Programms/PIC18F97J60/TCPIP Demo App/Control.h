@@ -9,26 +9,19 @@
 // флаги для NeedToUpdate и NeedToCommit
 
 typedef struct PARAMS_FLAGS {
-    BYTE NeedToUpdate:1;
-    BYTE NeedToCommit:1;
-    BYTE IsModified:1;
-    BYTE Enable;
-    BYTE b5:4;
+    BYTE NeedToUpdate:1;    //0
+    BYTE NeedToCommit:1;    //1
+    BYTE IsModified:1;      //2
+    BYTE Enable:1;          //3
+    BYTE HideScroll:1;      //4
+    BYTE AltHeader:1;       //5
+    BYTE AltFooter:1;       //6
+    BYTE CanSelected:1;         //7
 }PARAMS_FLAGS;
  
-typedef union {
-    BYTE Val;
-    struct __PACKED
-    {        
-        BYTE Enable:1;
-        BYTE Run:1;
-        BYTE b2:1;
-        BYTE b3:1;
-        BYTE b4:1;
-        BYTE b5:1;
-        BYTE b6:1;
-        BYTE b7:1;
-    } bits;
+typedef struct AXIS_STATUS_FLAG_STRUCT {   
+    BYTE Run:1;
+    BYTE b2:7;  
 } AXIS_STATUS_FLAG_STRUCT; 
 typedef struct AXIS_PARAM
 {   
@@ -90,6 +83,7 @@ typedef struct All_PARAMS
     PARAMS_FLAGS LocalFlag;
     PARAMS_FLAGS RemoteFlag;
     PARAMS_FLAGS CommonFlag;
+    PARAMS_FLAGS MainMenuFlag;
 
     AXIS_PARAM Alpha;
     AXIS_PARAM Delta;

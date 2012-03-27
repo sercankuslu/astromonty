@@ -433,15 +433,15 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             //Params.Local.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_A:
-            Params.Alpha.StatusFlag.bits.Run ^= 1;
+            //Params.Alpha.StatusFlag.bits.Run ^= 1;
             //Params.Alpha.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_D:
-            Params.Delta.StatusFlag.bits.Run ^= 1;
+            //Params.Delta.StatusFlag.bits.Run ^= 1;
             //Params.Delta.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_G:
-            Params.Gamma.StatusFlag.bits.Run ^= 1;
+            //Params.Gamma.StatusFlag.bits.Run ^= 1;
             //Params.Gamma.IsModified.bits.Flag = 1;
             break;
         case IDC_BUTTON_CON2:
@@ -449,17 +449,17 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             //BerkleyClient();            
             break;
         case IDC_BUTTON_A2:
-            Params.Alpha.StatusFlag.bits.Enable ^= 1;
+            //Params.Alpha.StatusFlag.bits.Enable ^= 1;
 //             Params.Alpha.IsModified.bits.Flag = 1;
 //             Params.Alpha.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_D2:
-            Params.Delta.StatusFlag.bits.Enable ^= 1;
+            //Params.Delta.StatusFlag.bits.Enable ^= 1;
 //             Params.Delta.IsModified.bits.Flag = 1;
 //             Params.Delta.IsModified.bits.Angle = 1;
             break;
         case IDC_BUTTON_G2:
-            Params.Gamma.StatusFlag.bits.Enable ^= 1;
+            //Params.Gamma.StatusFlag.bits.Enable ^= 1;
 //             Params.Gamma.IsModified.bits.Flag = 1;
 //             Params.Gamma.IsModified.bits.Angle = 1;
             break;
