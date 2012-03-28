@@ -13,8 +13,8 @@
 #define PF_ENABLE           0x08
 #define PF_CAN_SELECTED     0x10
 #define PF_HIDE_SCROLL      0x20
-#define PF_ALT_HEADER       0x40
-#define PF_ALT_FOOTER       0x80
+#define PF_IS_HIDE          0x40
+#define PF_ALT_MENU         0x80
 
 #define PF_UPDATED          0xFE 
 #define PF_COMMITED         0xFD
@@ -103,6 +103,7 @@ typedef struct All_PARAMS
     PARAMS_FLAGS RemoteFlag;
     PARAMS_FLAGS CommonFlag;
     PARAMS_FLAGS MainMenuFlag;
+    PARAMS_FLAGS MainMenu2Flag;
 
     AXIS_PARAM Alpha;
     AXIS_PARAM Delta;
