@@ -7,7 +7,26 @@
 #   include "GenericTypeDefs.h"
 #endif
 // флаги для NeedToUpdate и NeedToCommit
+#define PF_NEED_UPDATE      0x01
+#define PF_NEED_COMMIT      0x02
+#define PF_IS_MODIFIED      0x04
+#define PF_ENABLE           0x08
+#define PF_CAN_SELECTED     0x10
+#define PF_HIDE_SCROLL      0x20
+#define PF_ALT_HEADER       0x40
+#define PF_ALT_FOOTER       0x80
 
+#define PF_UPDATED          0xFE 
+#define PF_COMMITED         0xFD
+#define PF_NO_MODIFY        0xFB
+#define PF_DISABLE          0xF7
+#define PF_CANT_SELECTED    0xEF
+#define PF_SHOW_SCROLL      0xDF
+#define PF_STD_HEADER       0xBF
+#define PF_STD_FOOTER       0x7F
+
+typedef BYTE PARAMS_FLAGS;
+/*
 typedef struct PARAMS_FLAGS {
     BYTE NeedToUpdate:1;    //0
     BYTE NeedToCommit:1;    //1
@@ -18,7 +37,7 @@ typedef struct PARAMS_FLAGS {
     BYTE AltFooter:1;       //6
     BYTE CanSelected:1;         //7
 }PARAMS_FLAGS;
- 
+ */
 typedef struct AXIS_STATUS_FLAG_STRUCT {   
     BYTE Run:1;
     BYTE b2:7;  
@@ -30,9 +49,9 @@ typedef struct AXIS_PARAM
     PARAMS_FLAGS TargetAngleFlag;
     PARAMS_FLAGS TargetSpeedFlag;
     float Angle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды   
-    BYTE  Speed;           // номер позиции скорости
+    float Speed;           // максимальная скорость наведения
     float TargetAngle;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
-    float TargetSpeed;           // текущая координата в радианах (угол относительно весеннего равноденствия) то есть положение звезды    
+    float TargetSpeed;           // скорость звезды
     AXIS_STATUS_FLAG_STRUCT  StatusFlag;       // флаг состояния оси
 } AXIS_PARAM;
 // флаги для NeedToUpdate и NeedToCommit

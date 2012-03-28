@@ -186,7 +186,7 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
     {30, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
     {31, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
-    {33, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
+    {32, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
     {33, VAL_FLAG, (void*)&Params.Alpha.StatusFlag, &Params.Alpha.AngleFlag},
     {34, VAL_FLAG, (void*)&Params.Delta.StatusFlag, &Params.Delta.AngleFlag},
     {35, VAL_FLAG, (void*)&Params.Gamma.StatusFlag, &Params.Gamma.AngleFlag},
@@ -330,42 +330,38 @@ Params.Common.Flags.bits.NeedToRedrawTime = false;
         Params.Local.Gate = AppConfig.MyGateway.Val;
         Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
         Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
-        Params.Alpha.Angle = 0.0f;        
-        Params.Delta.Angle = 0.0f; 
-        Params.Gamma.Angle = 0.0f;
-        Params.Alpha.Speed = 10;
+        Params.Local.Status = 0;
+        Params.Local.NetFlags = PF_ENABLE | PF_CAN_SELECTED;   
+        
+        Params.Alpha.Angle = 0.0f;
         Params.Alpha.TargetAngle = 0.0f;
-        Params.Delta.TargetAngle = 0.0f;
-        Params.Gamma.TargetAngle = 0.0f;        
-        Params.AlphaFlag.Enable = 1;
-        Params.DeltaFlag.Enable = 1;
-        Params.GammaFlag.Enable = 0;
-        Params.Alpha.TargetAngleFlag.Enable = 1;
-        Params.Delta.TargetAngleFlag.Enable = 1;
-        Params.Gamma.TargetAngleFlag.Enable = 0;
-        Params.Alpha.TargetAngleFlag.CanSelected = 1;
-        Params.Delta.TargetAngleFlag.CanSelected = 1;
-        Params.Gamma.TargetAngleFlag.CanSelected = 1;
-
-        Params.Alpha.AngleFlag.Enable = 1;
-        Params.Delta.AngleFlag.Enable = 1;
-        Params.Gamma.AngleFlag.Enable = 0;
+        Params.Alpha.Speed = 0.0f;
+        Params.Alpha.SpeedFlag = PF_ENABLE | PF_CAN_SELECTED;
+        Params.AlphaFlag = PF_ENABLE;
+        Params.Alpha.AngleFlag = PF_ENABLE;
+        Params.Alpha.TargetAngleFlag = PF_ENABLE | PF_CAN_SELECTED;
         Params.Alpha.StatusFlag.Run = 1;
+    
+        Params.Delta.Angle = 0.0f;
+        Params.Delta.TargetAngle = 0.0f;
+        Params.Delta.Speed = 0.0f;
+        Params.DeltaFlag = PF_ENABLE;
+        Params.Delta.AngleFlag = PF_ENABLE;
+        Params.Delta.TargetAngleFlag = PF_ENABLE | PF_CAN_SELECTED;
         Params.Delta.StatusFlag.Run = 1;
+
+        Params.Gamma.Angle = 0.0f;
+        Params.Gamma.TargetAngle = 0.0f;                
+        Params.Gamma.Speed = 0.0f;
+        Params.GammaFlag = 0;
+        Params.Gamma.AngleFlag = 0;
+        Params.Gamma.TargetAngleFlag = PF_ENABLE | PF_CAN_SELECTED;
         Params.Gamma.StatusFlag.Run = 0;
-        Params.Local.Status = 0;   
-        Params.Local.NetFlags.Enable = 1;
-        Params.Alpha.AngleFlag.CanSelected = 0;
-        Params.Delta.AngleFlag.CanSelected = 0;
-        Params.Gamma.AngleFlag.CanSelected = 0;
-        Params.Local.NetFlags.Enable = 1;
-        Params.Local.NetFlags.CanSelected = 1;
-        Params.MainMenuFlag.AltFooter = 1;
-        Params.MainMenuFlag.AltHeader = 1;
-        Params.MainMenuFlag.Enable = 1;
-        Params.MainMenuFlag.HideScroll = 1;
+
+        Params.MainMenuFlag = PF_ENABLE | PF_ALT_HEADER | PF_ALT_FOOTER | PF_HIDE_SCROLL;
+
         strncpypgm2ram((char*)Params.Local.Name, "AC_CONTROL", sizeof(Params.Local.Name));        
-        //memset(TmpValue,0,sizeof(TmpValue));
+        
         Params.Common.Flags.bits.NeedToRedrawMenus = true;
 
         Init = true;            
@@ -1063,7 +1059,7 @@ void DrawMenuLine( BYTE ID, C_ROM char * Msg_id, const char * Value, int PosX, i
     }
 
     FloodRectangle(1,Line,124,Line+fsize,color);
-    if(Msg_id != ""){
+    if(Msg_id != NULL){
         strncpypgm2ram((char*)&Name, Msg_id, sizeof(Name));
         StringXPos = OutTextXY(5,Line + 2,Name,F,Effect); 
         Xtmp = StringXPos % 10;
@@ -1401,7 +1397,8 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     static char TmpEditMsg[20] = "";
     static VAL_TYPE TmpValType = VAL_ANGLE;
     static WORD TmpIndex = 0;
-    PARAMS_FLAGS DefaultFlags;
+    WORD wTmp = 0;
+    PARAMS_FLAGS DefaultFlags = 0;
     PARAMS_FLAGS * TmpFlags = &DefaultFlags;
     EFFECT Effect;
     BOOL color = FALSE;
@@ -1412,15 +1409,11 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     DateTime Date;
     char TimeT[] = "00:00";
     char SecondT[] = ".00";
+    // координаты меню
+    BYTE PX = 0;
+    BYTE PX2 = 0;
 
-    DefaultFlags.Enable = 1;
-    DefaultFlags.IsModified = 0;
-    DefaultFlags.NeedToCommit = 0;
-    DefaultFlags.NeedToUpdate = 0;
-    DefaultFlags.HideScroll = 0;
-    DefaultFlags.AltFooter = 0;
-    DefaultFlags.AltHeader = 0;
-    DefaultFlags.CanSelected = 1;
+    DefaultFlags = PF_ENABLE | PF_CAN_SELECTED;
     
     if(!Params.Common.Flags.bits.NeedToRedrawMenus && !KeyPressed->Val) 
         return;
@@ -1436,7 +1429,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     if(k != 0) TmpFlags = MenuItemsM[k].Flags;
 
     // заголовок
-    if(!TmpFlags->AltHeader){
+    if(!(*TmpFlags & PF_ALT_HEADER)){
         // стандартный заголовок
         DrawRectangle(0,0,132,10,1);
         strncpypgm2ram((char*)&TmpMsg, MenuItems[*ItemId].Name, strlen(MenuItems[*ItemId].Name));
@@ -1446,7 +1439,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         Line(0,52,132,52,1);
         Line(0,9,132,9,1);
     }
-    if(TmpFlags->AltFooter){
+    if(*TmpFlags & PF_ALT_FOOTER){
         Effect = NORMAL;
         
         if(Params.Common.Flags.bits.Man_Auto)
@@ -1491,10 +1484,23 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         // подсчет количества строк 
         for(i = 0; i < MenusLen; i++){
             if(Menus[i].Id == *ItemId) {
-                MaxY++;
+                wTmp = FindRAMItem(Menus[i].BrunchId);
+                switch (MenuItems[Menus[i].BrunchId].Type ) {
+                    case ITEM_FOLDER:
+                    case ITEM_STRING:
+                    case ITEM_IP_ADDRES:
+                    case ITEM_ANGLE:
+                    case ITEM_BUTTON:
+                    case ITEM_COMBO:
+                    if(*MenuItemsM[wTmp].Flags & PF_ENABLE)
+                        MaxY++;
+                    break;
+                    default:
+                        break;
+                }
             }
         }
-        if(!TmpFlags->HideScroll)
+        if(!(*TmpFlags & PF_HIDE_SCROLL))
             DrawScrollBar(PosY, MaxY);
         Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, &SelPosX, &SelPosY);
         if(Selected == ESC){
@@ -1520,7 +1526,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                     }
                     break;
                 case ITEM_HEADER:
-                    TmpString = NULL;
+                    TmpString = NULL;                    
                     TmpFlags = &DefaultFlags;
                     for(k = 0; k < RamMenusLen; k++){
                         if(MenuItemsM[k].Id == Menus[i].BrunchId) {
@@ -1533,10 +1539,12 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                                 color = 1;
                                 Effect = INVERT;
                             }
-                            // TODO: сделать последовательное заполнение
-                            FloodRectangle(Con_FlagX,0,A_FlagX ,8, color);
-                            strncpypgm2ram((char*)&TmpMsg, MenuItems[Menus[i].BrunchId].Name, sizeof(TmpMsg));
-                            OutTextXY(Con_FlagX+2,1,(const char*)TmpMsg,ARIAL_L, Effect);
+                            if(*TmpFlags & PF_ENABLE){
+                                PX2 = OutTextXY(PX + 2,1,(const char*)MenuItems[Menus[i].BrunchId].Name,ARIAL_L, Effect);
+                                FloodRectangle(PX, 0, PX2 + 2 ,8, color);
+                                OutTextXY(PX + 2,1,(const char*)MenuItems[Menus[i].BrunchId].Name,ARIAL_L, Effect);
+                                PX = PX2 + 2;
+                            }
                         }
                     }
                     break;
@@ -1576,19 +1584,19 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                             break;
                         }
                     }
-                    if(TmpFlags->Enable){
-                        if(TmpFlags->CanSelected)
+                    if(*TmpFlags & PF_ENABLE){
+                        if(*TmpFlags & PF_CAN_SELECTED)
                             DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
                         else
-                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);
-                    }
-                    if((Selected == ENTER)&&(SelPosY == j)){                        
-                        MenuStack[MStackHeap].LastId = *ItemId;
-                        MenuStack[MStackHeap].LastPosY = SelPosY;
-                        MStackHeap++;
-                        *ItemId = Menus[i].BrunchId;
-                        DisplayClear();
-                        return;
+                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);                    
+                        if((Selected == ENTER)&&(SelPosY == j)){                        
+                            MenuStack[MStackHeap].LastId = *ItemId;
+                            MenuStack[MStackHeap].LastPosY = SelPosY;
+                            MStackHeap++;
+                            *ItemId = Menus[i].BrunchId;
+                            DisplayClear();
+                            return;
+                        }
                     }
                     break;
                 }
