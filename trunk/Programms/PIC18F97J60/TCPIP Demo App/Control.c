@@ -129,104 +129,119 @@ far ALL_PARAMS Params;
 #ifndef _WINDOWS
 #pragma udata
 #endif
+
 // список всех элементов меню 
 const rom MENU_ITEMS_ROM MenuItems[] = {
-   {ITEM_FOLDER,    "Меню"},                       // 0
-   {ITEM_ANGLE,     "А:"},                         // 1
-   {ITEM_ANGLE,     "Д:"},                         // 2
-   {ITEM_ANGLE,     "Г:"},                         // 3
-   {ITEM_FOLDER,    "Сеть"},                       // 4
-   {ITEM_MSG,       "Авто наведение"},             // 5
-   {ITEM_MSG,       "Ручное наведение"},           // 6
-   {ITEM_FOLDER,    "Альфа"},                      // 7
-   {ITEM_FOLDER,    "Дельта"},                     // 8
-   {ITEM_FOLDER,    "Гамма"},                      // 9
-   {ITEM_FOLDER,    "Настройки"},                  // 10
-   {ITEM_FOLDER,    "Наблюдение"},                 // 11
-   {ITEM_FOLDER,    "Навести"},                    // 12
-   {ITEM_FOLDER,    "Ручной режим"},               // 13
-   {ITEM_FOLDER,    "Режим спутников"},            // 14
-   {ITEM_BUTTON,    "Старт"},                      // 15
-   {ITEM_BUTTON,    "Продолжить"},                 // 16
-   {ITEM_FOLDER,    "Монтировка"},                 // 17
-   {ITEM_FOLDER,    "Экран"},                      // 18
-   {ITEM_FOLDER,    "Тип монтировки"},             // 19
-   {ITEM_STRING,    "Имя:"},                       // 20
-   {ITEM_IP_ADDRES, "IP:"},                        // 21
-   {ITEM_IP_ADDRES, "Mask:"},                      // 22
-   {ITEM_IP_ADDRES, "Gate:"},                      // 23
-   {ITEM_IP_ADDRES, "DNS1:"},                      // 24
-   {ITEM_IP_ADDRES, "DNS2:"},                      // 25
-   {ITEM_IP_ADDRES, "NTP:"},                       // 26
-   {ITEM_MSG, "Ошибка"},                           // 27
-   {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
-   {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
-   {ITEM_COMBO,    "Скорость:"},            // 30
-   {ITEM_FOLDER,    "Главное окно"},            // 31
-   {ITEM_HEADER,    "Сеть"},            // 32
-   {ITEM_HEADER,    "Альфа"},            // 33
-   {ITEM_HEADER,    "Дельта"},            // 34
-   {ITEM_HEADER,    "Гамма"},            // 35
-   {ITEM_ANGLE,     "А:"},                         // 36
-   {ITEM_ANGLE,     "Д:"},                         // 37
-   {ITEM_ANGLE,     "Г:"},                         // 38
+    {ITEM_FOLDER,    "Главное окно"},               // 31
+    {ITEM_FOLDER,    "Меню"},                       // 0
+    {ITEM_ANGLE,     "А:"},                         // 1
+    {ITEM_ANGLE,     "Д:"},                         // 2
+    {ITEM_ANGLE,     "Г:"},                         // 3
+    {ITEM_FOLDER,    "Сеть"},                       // 4
+    {ITEM_MSG,       "Авто наведение"},             // 5
+    {ITEM_MSG,       "Ручное наведение"},           // 6
+    {ITEM_FOLDER,    "Альфа"},                      // 7
+    {ITEM_FOLDER,    "Дельта"},                     // 8
+    {ITEM_FOLDER,    "Гамма"},                      // 9
+    {ITEM_FOLDER,    "Настройки"},                  // 10
+    {ITEM_FOLDER,    "Наблюдение"},                 // 11
+    {ITEM_FOLDER,    "Наблюдение"},                 // 11
+    {ITEM_FOLDER,    "Навести"},                    // 12
+    {ITEM_FOLDER,    "Ручной режим"},               // 13
+    {ITEM_FOLDER,    "Режим спутников"},            // 14
+    {ITEM_BUTTON,    "Старт"},                      // 15
+    {ITEM_BUTTON,    "Продолжить"},                 // 16
+    {ITEM_FOLDER,    "Монтировка"},                 // 17
+    {ITEM_FOLDER,    "Экран"},                      // 18
+    {ITEM_FOLDER,    "Тип монтировки"},             // 19
+    {ITEM_STRING,    "Имя:"},                       // 20
+    {ITEM_IP_ADDRES, "IP:"},                        // 21
+    {ITEM_IP_ADDRES, "Mask:"},                      // 22
+    {ITEM_IP_ADDRES, "Gate:"},                      // 23
+    {ITEM_IP_ADDRES, "DNS1:"},                      // 24
+    {ITEM_IP_ADDRES, "DNS2:"},                      // 25
+    {ITEM_IP_ADDRES, "NTP:"},                       // 26
+    {ITEM_MSG, "Ошибка"},                           // 27
+    {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
+    {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
+    {ITEM_COMBO,    "Скорость:"},            // 30
+    {ITEM_HEADER,    "Сеть"},            // 32
+    {ITEM_HEADER,    "Альфа"},            // 33
+    {ITEM_HEADER,    "Дельта"},            // 34
+    {ITEM_HEADER,    "Гамма"},            // 35
+    {ITEM_ANGLE,     "А:"},                         // 36
+    {ITEM_ANGLE,     "Д:"},                         // 37
+    {ITEM_ANGLE,     "Г:"},                         // 38
+    {ITEM_FOLDER,    "Наблюдение"},                 // 39
 
 };       
+enum {
+    IT_F_DESKTOP, IT_F_MENU, IT_A_ALPHA, IT_A_DELTA, IT_A_GAMMA, IT_F_NET, IT_M_AUTOAIM, IT_M_MANUALAIM, IT_F_ALPHA, IT_F_DELTA, IT_F_GAMMA,
+    IT_F_OPTIONS, IT_F_OBSERV, IT_F_OBSERV2, IT_F_GOTO, IT_F_MANUALMODE, IT_F_SPACEMODE, IT_B_START, IT_B_CONTINUE, IT_F_MONTYOPTION,
+    IT_F_DISPLAY, IT_F_MONTYTYPE, IT_S_NETNAME, IT_IP_ADDRES, IT_IP_MASK, IT_IP_GATE, IT_IP_DNS1, IT_IP_DNS2, IT_IP_NTP,
+    IT_M_ERROR, IT_M_ANGLEERROR, IT_M_CONNECTERROR, IT_C_SPEED, IT_H_NET, IT_H_ALPHA, IT_H_DELTA, IT_H_GAMMA,
+    IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT,
+} ITEMS;
 
 static MENU_ITEMS_RAM MenuItemsM[] = {
-    {1, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle, &Params.Alpha.AngleFlag},
-    {2, VAL_ANGLE, (void*)&Params.Delta.Angle, &Params.Delta.AngleFlag},
-    {3, VAL_ANGLE, (void*)&Params.Gamma.Angle, &Params.Gamma.AngleFlag},
-    {20, VAL_STRING, (void*)&Params.Local.Name, &Params.Local.NetFlags},
-    {21, VAL_IP_ADDRES, (void*)&Params.Local.IP, &Params.Local.NetFlags},
-    {22, VAL_IP_ADDRES, (void*)&Params.Local.Mask, &Params.Local.NetFlags},
-    {23, VAL_IP_ADDRES, (void*)&Params.Local.Gate, &Params.Local.NetFlags},
-    {24, VAL_IP_ADDRES, (void*)&Params.Local.DNS1, &Params.Local.NetFlags},
-    {25, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
-    {26, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
-    {30, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
-    {31, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
-    {32, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
-    {33, VAL_FLAG, (void*)&Params.Alpha.StatusFlag, &Params.Alpha.AngleFlag},
-    {34, VAL_FLAG, (void*)&Params.Delta.StatusFlag, &Params.Delta.AngleFlag},
-    {35, VAL_FLAG, (void*)&Params.Gamma.StatusFlag, &Params.Gamma.AngleFlag},
-    {36, VAL_ANGLE_HOUR, (void*)&Params.Alpha.TargetAngle, &Params.Alpha.TargetAngleFlag},
-    {37, VAL_ANGLE, (void*)&Params.Delta.TargetAngle, &Params.Delta.TargetAngleFlag},
-    {38, VAL_ANGLE, (void*)&Params.Gamma.TargetAngle, &Params.Gamma.TargetAngleFlag},
+    {IT_A_ALPHA, VAL_ANGLE_HOUR, (void*)&Params.Alpha.Angle, &Params.Alpha.AngleFlag},
+    {IT_A_DELTA, VAL_ANGLE, (void*)&Params.Delta.Angle, &Params.Delta.AngleFlag},
+    {IT_A_GAMMA, VAL_ANGLE, (void*)&Params.Gamma.Angle, &Params.Gamma.AngleFlag},
+    {IT_S_NETNAME, VAL_STRING, (void*)&Params.Local.Name, &Params.Local.NetFlags},
+    {IT_IP_ADDRES, VAL_IP_ADDRES, (void*)&Params.Local.IP, &Params.Local.NetFlags},
+    {IT_IP_MASK, VAL_IP_ADDRES, (void*)&Params.Local.Mask, &Params.Local.NetFlags},
+    {IT_IP_GATE, VAL_IP_ADDRES, (void*)&Params.Local.Gate, &Params.Local.NetFlags},
+    {IT_IP_DNS1, VAL_IP_ADDRES, (void*)&Params.Local.DNS1, &Params.Local.NetFlags},
+    {IT_IP_DNS2, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
+    {IT_IP_NTP, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
+    {IT_C_SPEED, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
+    {IT_F_DESKTOP, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
+    {IT_H_NET, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
+    {IT_H_ALPHA, VAL_FLAG, (void*)&Params.Alpha.StatusFlag, &Params.Alpha.AngleFlag},
+    {IT_H_DELTA, VAL_FLAG, (void*)&Params.Delta.StatusFlag, &Params.Delta.AngleFlag},
+    {IT_H_GAMMA, VAL_FLAG, (void*)&Params.Gamma.StatusFlag, &Params.Gamma.AngleFlag},
+    {IT_A_TARGETALPHA, VAL_ANGLE_HOUR, (void*)&Params.Alpha.TargetAngle, &Params.Alpha.TargetAngleFlag},
+    {IT_A_TARGETDELTA, VAL_ANGLE, (void*)&Params.Delta.TargetAngle, &Params.Delta.TargetAngleFlag},
+    {IT_A_TARGETGAMMA, VAL_ANGLE, (void*)&Params.Gamma.TargetAngle, &Params.Gamma.TargetAngleFlag},
+    {IT_F_OBSERV2, VAL_NONE, (void*)NULL, &Params.MainMenu2Flag},
 };
 // список папок
 const rom MENUS Menus[] = {
-   {0, 11},     //Меню
-   {0, 10},
-   {0, 31},
-   {10, 4},     //Настройки
-   {10, 17},
-   {10, 18},
-   {10, 19},
-   {10, 11},
-   {4, 20},     //Сеть
-   {4, 21},
-   {4, 22},
-   {4, 23},
-   {4, 24},
-   {4, 25},
-   {4, 26},
-   {11, 12},    //Наблюдение
-   {11, 13},
-   {11, 14},
-   {12, 36},     //Навести
-   {12, 37},
-   {12, 38},
-   {12, 30},
-   {12, 15},
-   {31, 1},     //Главное окно
-   {31, 2},
-   {31, 3},
-   {31, 32},
-   {31, 33},
-   {31, 34},
-   {31, 35},
-
+    {IT_F_DESKTOP,   IT_A_ALPHA},     //Главное окно
+    {IT_F_DESKTOP,   IT_A_DELTA},
+    {IT_F_DESKTOP,   IT_A_GAMMA},
+    {IT_F_DESKTOP,   IT_F_OBSERV2},
+    {IT_F_DESKTOP,   IT_H_NET},
+    {IT_F_DESKTOP,   IT_H_ALPHA},
+    {IT_F_DESKTOP,   IT_H_DELTA},
+    {IT_F_DESKTOP,   IT_H_GAMMA},
+    {IT_F_MENU,      IT_F_OBSERV},     //Меню
+    {IT_F_MENU,      IT_F_OPTIONS},
+    {IT_F_OPTIONS,   IT_F_NET},     //Настройки
+    {IT_F_OPTIONS,   IT_F_MONTYOPTION},
+    {IT_F_OPTIONS,   IT_F_DISPLAY},
+    {IT_F_OPTIONS,   IT_F_MONTYTYPE},
+    {IT_F_OPTIONS,   IT_F_OBSERVOPT},
+    {IT_F_NET,       IT_S_NETNAME},     //Сеть
+    {IT_F_NET,       IT_IP_ADDRES},
+    {IT_F_NET,       IT_IP_MASK},
+    {IT_F_NET,       IT_IP_GATE},
+    {IT_F_NET,       IT_IP_DNS1},
+    {IT_F_NET,       IT_IP_DNS2},
+    {IT_F_NET,       IT_IP_NTP},
+    {IT_F_OBSERV,    IT_F_GOTO},    //Наблюдение
+    {IT_F_OBSERV,    IT_F_MANUALMODE},
+    {IT_F_OBSERV,    IT_F_SPACEMODE},
+    {IT_F_OBSERV2,      IT_A_TARGETALPHA},     
+    {IT_F_OBSERV2,      IT_A_TARGETDELTA},
+    {IT_F_OBSERV2,      IT_A_TARGETGAMMA},
+    {IT_F_OBSERV2,      IT_C_SPEED},
+    {IT_F_OBSERV2,      IT_B_START},
+    {IT_F_GOTO,      IT_A_TARGETALPHA},     //Навести
+    {IT_F_GOTO,      IT_A_TARGETDELTA},
+    {IT_F_GOTO,      IT_A_TARGETGAMMA},
+    {IT_F_GOTO,      IT_C_SPEED},
+    {IT_F_GOTO,      IT_B_START},
 };
 
 
@@ -355,10 +370,11 @@ Params.Common.Flags.bits.NeedToRedrawTime = false;
         Params.Gamma.Speed = 0.0f;
         Params.GammaFlag = 0;
         Params.Gamma.AngleFlag = 0;
-        Params.Gamma.TargetAngleFlag = PF_ENABLE | PF_CAN_SELECTED;
+        Params.Gamma.TargetAngleFlag = 0;
         Params.Gamma.StatusFlag.Run = 0;
 
-        Params.MainMenuFlag = PF_ENABLE | PF_ALT_HEADER | PF_ALT_FOOTER | PF_HIDE_SCROLL;
+        Params.MainMenu2Flag = PF_ENABLE | PF_IS_HIDE | PF_CAN_SELECTED;
+        Params.MainMenuFlag = PF_ENABLE | PF_ALT_MENU | PF_HIDE_SCROLL;
 
         strncpypgm2ram((char*)Params.Local.Name, "AC_CONTROL", sizeof(Params.Local.Name));        
         
@@ -1429,7 +1445,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     if(k != 0) TmpFlags = MenuItemsM[k].Flags;
 
     // заголовок
-    if(!(*TmpFlags & PF_ALT_HEADER)){
+    if(!(*TmpFlags & PF_ALT_MENU)){
         // стандартный заголовок
         DrawRectangle(0,0,132,10,1);
         strncpypgm2ram((char*)&TmpMsg, MenuItems[*ItemId].Name, strlen(MenuItems[*ItemId].Name));
@@ -1439,7 +1455,7 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         Line(0,52,132,52,1);
         Line(0,9,132,9,1);
     }
-    if(*TmpFlags & PF_ALT_FOOTER){
+    if(*TmpFlags & PF_ALT_MENU){
         Effect = NORMAL;
         
         if(Params.Common.Flags.bits.Man_Auto)
@@ -1492,8 +1508,12 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                     case ITEM_ANGLE:
                     case ITEM_BUTTON:
                     case ITEM_COMBO:
-                    if(*MenuItemsM[wTmp].Flags & PF_ENABLE)
-                        MaxY++;
+                        if(*MenuItemsM[wTmp].Flags & PF_ENABLE){
+                            if(!(*TmpFlags & PF_CAN_SELECTED)){
+                                if(PosY < MaxY) PosY++ ;
+                            }
+                            MaxY++;
+                        }
                     break;
                     default:
                         break;
@@ -1508,6 +1528,13 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                 MStackHeap--;
                 *ItemId = MenuStack[MStackHeap].LastId;
                 PosY = MenuStack[MStackHeap].LastPosY;
+            } else {
+                MenuStack[MStackHeap].LastId = 0;
+                MenuStack[MStackHeap].LastPosY = 0;
+                MStackHeap++;
+                *ItemId = 1;
+                DisplayClear();
+                return;
             }
             DisplayClear();
         }
@@ -1515,15 +1542,31 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
             if(Menus[i].Id == *ItemId) {
                 switch(MenuItems[Menus[i].BrunchId].Type){
                 case ITEM_FOLDER:
-                    DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, NULL, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
-                    if((Selected == ENTER)&&(SelPosY == j)){                        
-                        MenuStack[MStackHeap].LastId = *ItemId;
-                        MenuStack[MStackHeap].LastPosY = SelPosY;
-                        MStackHeap++;
-                        *ItemId = Menus[i].BrunchId;
-                        DisplayClear();
-                        return;
+                    TmpString = NULL;
+                    TmpFlags = &DefaultFlags;
+                    for(k = 0; k < RamMenusLen; k++){
+                        if(MenuItemsM[k].Id == Menus[i].BrunchId) {
+                            TmpFlags = MenuItemsM[k].Flags;
+                        }
                     }
+                    if(*TmpFlags & PF_ENABLE){
+                        if(*TmpFlags & PF_CAN_SELECTED){
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, NULL, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                            if((Selected == ENTER)&&(SelPosY == j)){                        
+                                MenuStack[MStackHeap].LastId = *ItemId;
+                                MenuStack[MStackHeap].LastPosY = SelPosY;
+                                MStackHeap++;
+                                *ItemId = Menus[i].BrunchId;
+                                DisplayClear();
+                                return;
+                            }
+                        } else {
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, NULL, PosX, PosY, NO_SELECT|FONT_TYPE_B);
+                        }
+                    }
+                    
                     break;
                 case ITEM_HEADER:
                     TmpString = NULL;                    
@@ -1585,22 +1628,27 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
                         }
                     }
                     if(*TmpFlags & PF_ENABLE){
-                        if(*TmpFlags & PF_CAN_SELECTED)
-                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
-                        else
-                            DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);                    
-                        if((Selected == ENTER)&&(SelPosY == j)){                        
-                            MenuStack[MStackHeap].LastId = *ItemId;
-                            MenuStack[MStackHeap].LastPosY = SelPosY;
-                            MStackHeap++;
-                            *ItemId = Menus[i].BrunchId;
-                            DisplayClear();
-                            return;
+                        if(*TmpFlags & PF_CAN_SELECTED){
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                            if((Selected == ENTER)&&(SelPosY == j)){                        
+                                MenuStack[MStackHeap].LastId = *ItemId;
+                                MenuStack[MStackHeap].LastPosY = SelPosY;
+                                MStackHeap++;
+                                *ItemId = Menus[i].BrunchId;
+                                DisplayClear();
+                                return;
+                            }
+                        } else {
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);                    
                         }
+                        
                     }
                     break;
                 }
-                j++;
+                if(*TmpFlags & PF_ENABLE)
+                    j++;
             }
         }
         break;
@@ -1674,7 +1722,18 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         }
         
         break;
-    default:;
+    default:
+        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, &SelPosX, &SelPosY);
+        if(Selected == ESC){
+            if(MStackHeap != 0) {
+                MStackHeap--;
+                *ItemId = MenuStack[MStackHeap].LastId;
+                PosY = MenuStack[MStackHeap].LastPosY;
+            }
+            BeginEdit = FALSE;
+            DisplayClear();
+        }
+        break;
     }
     Params.Common.Flags.bits.NeedToRedrawMenus = 0; 
 }
@@ -1841,11 +1900,12 @@ BYTE ModifyString(KEYS_STR * KeyPressed, BYTE* XPos, char * Value, VAL_TYPE ValT
                 else
                     Value[*XPos] = BaseSymbol + YMax -1;
             }
+            break;
         default:
             if(Value[*XPos] > BaseSymbol) 
                 Value[*XPos]--;
             else
-                Value[*XPos] = BaseSymbol + YMax -1;
+                Value[*XPos] = BaseSymbol + YMax;
         }
         KeyPressed->keys.down = 0;       
     }
