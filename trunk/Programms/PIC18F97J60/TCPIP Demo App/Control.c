@@ -132,47 +132,50 @@ far ALL_PARAMS Params;
 
 // список всех элементов меню 
 const rom MENU_ITEMS_ROM MenuItems[] = {
-    {ITEM_FOLDER,    "Главное окно"},               // 31
-    {ITEM_FOLDER,    "Меню"},                       // 0
-    {ITEM_ANGLE,     "А:"},                         // 1
-    {ITEM_ANGLE,     "Д:"},                         // 2
-    {ITEM_ANGLE,     "Г:"},                         // 3
-    {ITEM_FOLDER,    "Сеть"},                       // 4
-    {ITEM_MSG,       "Авто наведение"},             // 5
-    {ITEM_MSG,       "Ручное наведение"},           // 6
-    {ITEM_FOLDER,    "Альфа"},                      // 7
-    {ITEM_FOLDER,    "Дельта"},                     // 8
-    {ITEM_FOLDER,    "Гамма"},                      // 9
-    {ITEM_FOLDER,    "Настройки"},                  // 10
-    {ITEM_FOLDER,    "Наблюдение"},                 // 11
-    {ITEM_FOLDER,    "Наблюдение"},                 // 11
-    {ITEM_FOLDER,    "Навести"},                    // 12
-    {ITEM_FOLDER,    "Ручной режим"},               // 13
-    {ITEM_FOLDER,    "Режим спутников"},            // 14
-    {ITEM_BUTTON,    "Старт"},                      // 15
-    {ITEM_BUTTON,    "Продолжить"},                 // 16
-    {ITEM_FOLDER,    "Монтировка"},                 // 17
-    {ITEM_FOLDER,    "Экран"},                      // 18
-    {ITEM_FOLDER,    "Тип монтировки"},             // 19
-    {ITEM_STRING,    "Имя:"},                       // 20
-    {ITEM_IP_ADDRES, "IP:"},                        // 21
-    {ITEM_IP_ADDRES, "Mask:"},                      // 22
-    {ITEM_IP_ADDRES, "Gate:"},                      // 23
-    {ITEM_IP_ADDRES, "DNS1:"},                      // 24
-    {ITEM_IP_ADDRES, "DNS2:"},                      // 25
-    {ITEM_IP_ADDRES, "NTP:"},                       // 26
-    {ITEM_MSG, "Ошибка"},                           // 27
-    {ITEM_MSG, "Указанные координаты в данный момент времени находятся внезоны видимости"},      // 28
-    {ITEM_MSG, "Нет подключения к серверу. Действие не доступно"},                               // 29
-    {ITEM_COMBO,    "Скорость:"},            // 30
-    {ITEM_HEADER,    "Сеть"},            // 32
-    {ITEM_HEADER,    "Альфа"},            // 33
-    {ITEM_HEADER,    "Дельта"},            // 34
-    {ITEM_HEADER,    "Гамма"},            // 35
-    {ITEM_ANGLE,     "А:"},                         // 36
-    {ITEM_ANGLE,     "Д:"},                         // 37
-    {ITEM_ANGLE,     "Г:"},                         // 38
-    {ITEM_FOLDER,    "Наблюдение"},                 // 39
+    {ITEM_FOLDER,    "Главное окно"},              
+    {ITEM_FOLDER,    "Меню"},                      
+    {ITEM_ANGLE,     "А:"},                        
+    {ITEM_ANGLE,     "Д:"},                        
+    {ITEM_ANGLE,     "Г:"},                        
+    {ITEM_FOLDER,    "Сеть"},                      
+    {ITEM_MSG,       "Авто наведение"},            
+    {ITEM_MSG,       "Ручное наведение"},          
+    {ITEM_FOLDER,    "Альфа"},                     
+    {ITEM_FOLDER,    "Дельта"},                    
+    {ITEM_FOLDER,    "Гамма"},                     
+    {ITEM_FOLDER,    "Настройки"},                 
+    {ITEM_FOLDER,    "Наблюдение"},                
+    {ITEM_FOLDER,    "Наблюдение"},                
+    {ITEM_FOLDER,    "Навести"},                   
+    {ITEM_FOLDER,    "Ручной режим"},              
+    {ITEM_FOLDER,    "Режим спутников"},           
+    {ITEM_BUTTON,    "Старт"},                     
+    {ITEM_BUTTON,    "Продолжить"},                
+    {ITEM_FOLDER,    "Монтировка"},                
+    {ITEM_FOLDER,    "Экран"},                     
+    {ITEM_FOLDER,    "Тип монтировки"},            
+    {ITEM_STRING,    "Имя:"},                      
+    {ITEM_IP_ADDRES, "IP:"},                       
+    {ITEM_IP_ADDRES, "Mask:"},                     
+    {ITEM_IP_ADDRES, "Gate:"},                     
+    {ITEM_IP_ADDRES, "DNS1:"},                     
+    {ITEM_IP_ADDRES, "DNS2:"},                     
+    {ITEM_IP_ADDRES, "NTP:"},                      
+    {ITEM_MSG,       "Ошибка"},                          
+    {ITEM_MSG,       "Указанные координаты в данный момент времени находятся внезоны видимости"},     
+    {ITEM_MSG,       "Нет подключения к серверу. Действие не доступно"},                              
+    {ITEM_COMBO,     "Скорость:"},      
+    {ITEM_HEADER,    "Сеть"},          
+    {ITEM_HEADER,    "Альфа"},         
+    {ITEM_HEADER,    "Дельта"},        
+    {ITEM_HEADER,    "Гамма"},         
+    {ITEM_ANGLE,     "А:"},            
+    {ITEM_ANGLE,     "Д:"},            
+    {ITEM_ANGLE,     "Г:"},            
+    {ITEM_FOLDER,    "Наблюдение"},   
+    {ITEM_COMBO,     "Тип:"},
+    {ITEM_MSG,       "Азимутальная"}, 
+    {ITEM_MSG,       "Экваториальная"}, 
 
 };       
 enum {
@@ -180,7 +183,7 @@ enum {
     IT_F_OPTIONS, IT_F_OBSERV, IT_F_OBSERV2, IT_F_GOTO, IT_F_MANUALMODE, IT_F_SPACEMODE, IT_B_START, IT_B_CONTINUE, IT_F_MONTYOPTION,
     IT_F_DISPLAY, IT_F_MONTYTYPE, IT_S_NETNAME, IT_IP_ADDRES, IT_IP_MASK, IT_IP_GATE, IT_IP_DNS1, IT_IP_DNS2, IT_IP_NTP,
     IT_M_ERROR, IT_M_ANGLEERROR, IT_M_CONNECTERROR, IT_C_SPEED, IT_H_NET, IT_H_ALPHA, IT_H_DELTA, IT_H_GAMMA,
-    IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT,
+    IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT, IT_C_MONTYTYPE, IT_M_AZIMUT, IT_M_EQUATOR
 } ITEMS;
 
 static MENU_ITEMS_RAM MenuItemsM[] = {
@@ -219,8 +222,7 @@ const rom MENUS Menus[] = {
     {IT_F_MENU,      IT_F_OPTIONS},
     {IT_F_OPTIONS,   IT_F_NET},     //Настройки
     {IT_F_OPTIONS,   IT_F_MONTYOPTION},
-    {IT_F_OPTIONS,   IT_F_DISPLAY},
-    {IT_F_OPTIONS,   IT_F_MONTYTYPE},
+    {IT_F_OPTIONS,   IT_F_DISPLAY},    
     {IT_F_OPTIONS,   IT_F_OBSERVOPT},
     {IT_F_NET,       IT_S_NETNAME},     //Сеть
     {IT_F_NET,       IT_IP_ADDRES},
@@ -242,6 +244,11 @@ const rom MENUS Menus[] = {
     {IT_F_GOTO,      IT_A_TARGETGAMMA},
     {IT_F_GOTO,      IT_C_SPEED},
     {IT_F_GOTO,      IT_B_START},
+    {IT_F_MONTYOPTION,   IT_C_MONTYTYPE},
+    {IT_C_MONTYTYPE,      IT_M_AZIMUT},
+    {IT_C_MONTYTYPE,      IT_M_EQUATOR},
+   
+
 };
 
 
