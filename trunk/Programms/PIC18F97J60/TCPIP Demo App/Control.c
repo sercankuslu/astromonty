@@ -94,7 +94,7 @@ typedef enum VAL_TYPE {
    VAL_BYTE, VAL_WORD, VAL_DWORD, VAL_FLOAT, VAL_STRING, VAL_IP_ADDRES, VAL_ANGLE, VAL_ANGLE_HOUR, VAL_NONE, VAL_FLAG
 }VAL_TYPE;
 typedef enum ITEM_TYPE {
-    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING, ITEM_COMBO, ITEM_HEADER, ITEM_FOOTER
+    ITEM_FOLDER, ITEM_IP_ADDRES, ITEM_ANGLE, ITEM_MSG, ITEM_BUTTON, ITEM_STRING, ITEM_COMBO, ITEM_HEADER, ITEM_FOOTER, ITEM_VALUE
 }ITEM_TYPE;
 // тип постоянного элемента меню
 typedef struct MENU_ITEMS_ROM {
@@ -176,14 +176,20 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_COMBO,     "Тип:"},
     {ITEM_MSG,       "Азимутальная"}, 
     {ITEM_MSG,       "Экваториальная"}, 
-
+    {ITEM_VALUE,     "10`"}, 
+    {ITEM_VALUE,     "1`"}, 
+    {ITEM_VALUE,     "10'"}, 
+    {ITEM_VALUE,     "1'"}, 
+    {ITEM_VALUE,     "10\""}, 
+    {ITEM_VALUE,     "1\""}, 
 };       
 enum {
     IT_F_DESKTOP, IT_F_MENU, IT_A_ALPHA, IT_A_DELTA, IT_A_GAMMA, IT_F_NET, IT_M_AUTOAIM, IT_M_MANUALAIM, IT_F_ALPHA, IT_F_DELTA, IT_F_GAMMA,
-    IT_F_OPTIONS, IT_F_OBSERV, IT_F_OBSERV2, IT_F_GOTO, IT_F_MANUALMODE, IT_F_SPACEMODE, IT_B_START, IT_B_CONTINUE, IT_F_MONTYOPTION,
+    IT_F_OPTIONS, IT_F_OBSERV, IT_F_GOTO_MIROR, IT_F_GOTO, IT_F_MANUALMODE, IT_F_SPACEMODE, IT_B_START, IT_B_CONTINUE, IT_F_MONTYOPTION,
     IT_F_DISPLAY, IT_F_MONTYTYPE, IT_S_NETNAME, IT_IP_ADDRES, IT_IP_MASK, IT_IP_GATE, IT_IP_DNS1, IT_IP_DNS2, IT_IP_NTP,
     IT_M_ERROR, IT_M_ANGLEERROR, IT_M_CONNECTERROR, IT_C_SPEED, IT_H_NET, IT_H_ALPHA, IT_H_DELTA, IT_H_GAMMA,
-    IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT, IT_C_MONTYTYPE, IT_M_AZIMUT, IT_M_EQUATOR
+    IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT, IT_C_MONTYTYPE, IT_M_AZIMUT, IT_M_EQUATOR,
+    IT_V_1, IT_V_2, IT_V_3, IT_V_4, IT_V_5
 } ITEMS;
 
 static MENU_ITEMS_RAM MenuItemsM[] = {
@@ -197,7 +203,7 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {IT_IP_DNS1, VAL_IP_ADDRES, (void*)&Params.Local.DNS1, &Params.Local.NetFlags},
     {IT_IP_DNS2, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
     {IT_IP_NTP, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
-    {IT_C_SPEED, VAL_WORD, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
+    {IT_C_SPEED, VAL_FLOAT, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
     {IT_F_DESKTOP, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
     {IT_H_NET, VAL_FLAG, (void*)&Params.Local.StatusFlag, &Params.Local.NetFlags},
     {IT_H_ALPHA, VAL_FLAG, (void*)&Params.Alpha.StatusFlag, &Params.Alpha.AngleFlag},
@@ -206,14 +212,14 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {IT_A_TARGETALPHA, VAL_ANGLE_HOUR, (void*)&Params.Alpha.TargetAngle, &Params.Alpha.TargetAngleFlag},
     {IT_A_TARGETDELTA, VAL_ANGLE, (void*)&Params.Delta.TargetAngle, &Params.Delta.TargetAngleFlag},
     {IT_A_TARGETGAMMA, VAL_ANGLE, (void*)&Params.Gamma.TargetAngle, &Params.Gamma.TargetAngleFlag},
-    {IT_F_OBSERV2, VAL_NONE, (void*)NULL, &Params.MainMenu2Flag},
+    {IT_F_GOTO_MIROR, VAL_NONE, (void*)NULL, &Params.MainMenu2Flag},
 };
 // список папок
 const rom MENUS Menus[] = {
     {IT_F_DESKTOP,   IT_A_ALPHA},     //Главное окно
     {IT_F_DESKTOP,   IT_A_DELTA},
     {IT_F_DESKTOP,   IT_A_GAMMA},
-    {IT_F_DESKTOP,   IT_F_OBSERV2},
+    {IT_F_DESKTOP,   IT_F_GOTO_MIROR},
     {IT_F_DESKTOP,   IT_H_NET},
     {IT_F_DESKTOP,   IT_H_ALPHA},
     {IT_F_DESKTOP,   IT_H_DELTA},
@@ -234,11 +240,11 @@ const rom MENUS Menus[] = {
     {IT_F_OBSERV,    IT_F_GOTO},    //Наблюдение
     {IT_F_OBSERV,    IT_F_MANUALMODE},
     {IT_F_OBSERV,    IT_F_SPACEMODE},
-    {IT_F_OBSERV2,      IT_A_TARGETALPHA},     
-    {IT_F_OBSERV2,      IT_A_TARGETDELTA},
-    {IT_F_OBSERV2,      IT_A_TARGETGAMMA},
-    {IT_F_OBSERV2,      IT_C_SPEED},
-    {IT_F_OBSERV2,      IT_B_START},
+    {IT_F_GOTO_MIROR,      IT_A_TARGETALPHA},     
+    {IT_F_GOTO_MIROR,      IT_A_TARGETDELTA},
+    {IT_F_GOTO_MIROR,      IT_A_TARGETGAMMA},
+    {IT_F_GOTO_MIROR,      IT_C_SPEED},
+    {IT_F_GOTO_MIROR,      IT_B_START},
     {IT_F_GOTO,      IT_A_TARGETALPHA},     //Навести
     {IT_F_GOTO,      IT_A_TARGETDELTA},
     {IT_F_GOTO,      IT_A_TARGETGAMMA},
@@ -247,6 +253,11 @@ const rom MENUS Menus[] = {
     {IT_F_MONTYOPTION,   IT_C_MONTYTYPE},
     {IT_C_MONTYTYPE,      IT_M_AZIMUT},
     {IT_C_MONTYTYPE,      IT_M_EQUATOR},
+    {IT_C_SPEED,      IT_V_1},
+    {IT_C_SPEED,      IT_V_2},
+    {IT_C_SPEED,      IT_V_3},
+    {IT_C_SPEED,      IT_V_4},
+    {IT_C_SPEED,      IT_V_5},
    
 
 };
@@ -1503,7 +1514,9 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
     }
     
     switch (MenuItems[*ItemId].Type) {
+    //*************************************************************************************************************************
     case ITEM_FOLDER:
+    //*************************************************************************************************************************
         // подсчет количества строк 
         for(i = 0; i < MenusLen; i++){
             if(Menus[i].Id == *ItemId) {
@@ -1659,9 +1672,11 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
             }
         }
         break;
+    //*************************************************************************************************************************
     case ITEM_ANGLE:
     case ITEM_IP_ADDRES:
     case ITEM_STRING:
+    //*************************************************************************************************************************
         if(!BeginEdit){
             for(k = 0; k < RamMenusLen; k++){
                 if(MenuItemsM[k].Id == *ItemId) {
@@ -1729,7 +1744,104 @@ void NewProcessMenu(BYTE * ItemId, KEYS_STR * KeyPressed)
         }
         
         break;
+    //*************************************************************************************************************************
+    case ITEM_COMBO:
+    //*************************************************************************************************************************
+        // подсчет количества строк 
+        for(i = 0; i < MenusLen; i++){
+            if(Menus[i].Id == *ItemId) {
+                wTmp = FindRAMItem(Menus[i].BrunchId);
+                switch (MenuItems[Menus[i].BrunchId].Type ) {                
+                case ITEM_VALUE:
+                    if(*MenuItemsM[wTmp].Flags & PF_ENABLE){
+                        if(!(*TmpFlags & PF_CAN_SELECTED)){
+                            if(PosY < MaxY) PosY++ ;
+                        }
+                        MaxY++;
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        if(!(*TmpFlags & PF_HIDE_SCROLL))
+            DrawScrollBar(PosY, MaxY);
+        Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, &SelPosX, &SelPosY);
+        if(Selected == ESC){
+            if(MStackHeap != 0) {
+                MStackHeap--;
+                *ItemId = MenuStack[MStackHeap].LastId;
+                PosY = MenuStack[MStackHeap].LastPosY;
+            } else {
+                MenuStack[MStackHeap].LastId = 0;
+                MenuStack[MStackHeap].LastPosY = 0;
+                MStackHeap++;
+                *ItemId = 1;
+                DisplayClear();
+                return;
+            }
+            DisplayClear();
+        }
+        for(i = 0; i < MenusLen; i++){
+            if(Menus[i].Id == *ItemId) {
+                switch(MenuItems[Menus[i].BrunchId].Type){                
+                case ITEM_STRING:                
+                case ITEM_VALUE:
+                    TmpString = NULL;
+                    TmpFlags = &DefaultFlags;
+                    for(k = 0; k < RamMenusLen; k++){
+                        if(MenuItemsM[k].Id == Menus[i].BrunchId) {
+                            TmpFlags = MenuItemsM[k].Flags;
+                            switch(MenuItemsM[k].ValType){
+                            case VAL_STRING:
+                                strcpy((char*)&TmpMsg, (char*)MenuItemsM[k].Value);
+                                TmpString = (char*)&TmpMsg;
+                                break;
+                            default:
+                                break;
+                            }
+                            break;
+                        }
+                    }
+                    if(*TmpFlags & PF_ENABLE){
+                        if(*TmpFlags & PF_CAN_SELECTED){
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, SELECT_LINE|FONT_TYPE_B);
+                            if((Selected == ENTER)&&(SelPosY == j)){
+                                wTmp = FindRAMItem(*ItemId);
+                                // TODO: нужна функция распознавания строки в угол
+								
+                                //TODO: из этого MenuItems[Menus[i].BrunchId].Name сделать скорость
+								// и записать сюда:
+                                //TmpFloat = (float*)MenuItemsM[k].Value;                                
+
+
+                                if(MStackHeap != 0) {
+                                    MStackHeap--;
+                                    *ItemId = MenuStack[MStackHeap].LastId;
+                                    PosY = MenuStack[MStackHeap].LastPosY;
+                                }
+                                
+                                DisplayClear();
+                                return;
+                            }
+                        } else {
+                            if(!(*TmpFlags & PF_IS_HIDE))
+                                DrawMenuLine(j, MenuItems[Menus[i].BrunchId].Name, (const char*)TmpString, PosX, PosY, NO_SELECT|FONT_TYPE_B);                    
+                        }
+
+                    }
+                    break;
+                }
+                if(*TmpFlags & PF_ENABLE)
+                    j++;
+            }
+        }
+        break; 
+    //*************************************************************************************************************************        
     default:
+    //*************************************************************************************************************************
         Selected = ProcessKeys(KeyPressed, &PosX, MaxX, &PosY, MaxY, &SelPosX, &SelPosY);
         if(Selected == ESC){
             if(MStackHeap != 0) {
