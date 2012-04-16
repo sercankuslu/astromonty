@@ -1,17 +1,19 @@
 object Form2: TForm2
-  Left = 751
-  Top = 458
+  Left = 355
+  Top = 283
+  Anchors = []
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
   ClientHeight = 433
   ClientWidth = 559
-  Color = clBtnFace
+  Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -54,7 +56,7 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label4: TLabel
-    Left = 288
+    Left = 272
     Top = 200
     Width = 84
     Height = 18
@@ -106,16 +108,16 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label8: TLabel
-    Left = 288
-    Top = 272
-    Width = 100
-    Height = 17
+    Left = 272
+    Top = 288
+    Width = 109
+    Height = 18
     Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100':'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -15
     Font.Name = 'Arial'
-    Font.Style = []
+    Font.Style = [fsBold]
     ParentFont = False
   end
   object Label9: TLabel
@@ -159,10 +161,10 @@ object Form2: TForm2
   end
   object Label12: TLabel
     Left = 400
-    Top = 272
-    Width = 104
+    Top = 288
+    Width = 129
     Height = 17
-    Caption = '_____________'
+    Caption = #1050#1086#1083#1077#1089#1085#1080#1082#1086#1074#1072' '#1052'.'#1044'.'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -15
@@ -173,9 +175,9 @@ object Form2: TForm2
   object Label13: TLabel
     Left = 256
     Top = 336
-    Width = 35
+    Width = 39
     Height = 16
-    Caption = '2012'#1075
+    Caption = '2012 '#1075
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
