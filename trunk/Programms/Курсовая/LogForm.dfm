@@ -1,7 +1,7 @@
 object Form3: TForm3
-  Left = 607
-  Top = 236
-  Width = 400
+  Left = 1027
+  Top = 201
+  Width = 405
   Height = 437
   Caption = #1058#1077#1089#1090#1080#1088#1091#1077#1084
   Color = clBtnFace
@@ -26,9 +26,10 @@ object Form3: TForm3
     Top = 32
     Width = 369
     Height = 337
-    Lines.Strings = (
-      'Memo1')
+    ReadOnly = True
+    ScrollBars = ssVertical
     TabOrder = 0
+    WantReturns = False
   end
   object SaveDialog1: TSaveDialog
     Left = 384
@@ -48,5 +49,9 @@ object Form3: TForm3
         Caption = #1047#1072#1082#1088#1099#1090#1100
       end
     end
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 384
+    Top = 56
   end
 end

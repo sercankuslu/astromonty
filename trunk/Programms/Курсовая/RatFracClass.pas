@@ -301,13 +301,13 @@ Begin
             if(b=false) then l := i;
             b:=true; // начинается число
             k := k + 1;
-        end else if(b) then
-        begin // конец числа
-            r := Copy(Line, l, k);
-            PosFrom := i;
-            Result := StrToInt(r);
-            exit;
-        end;
+        end else if(b) then break;
+    end;
+    if(b) then
+    begin // конец числа
+        r := Copy(Line, l, k);
+        PosFrom := i;
+        Result := StrToInt(r);
     end;
 End;
 
