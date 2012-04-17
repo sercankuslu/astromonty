@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, ComCtrls, Menus,
-  ToolWin, RatFracClass, AboutForm;
+  ToolWin, RatFracClass, AboutForm, LogForm;
 
 type
   TForm1 = class(TForm)
@@ -93,7 +93,7 @@ type
     procedure FunctSelectClick(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
-
+    function CheckStringOper(s : string; var LogStr:string) : boolean;
   private
     X, X1, Res : TRationalFraction;
     Operation : short;
@@ -450,17 +450,31 @@ procedure TForm1.N3Click(Sender: TObject);
 var
     T1, T2, T3 : TRationalFraction;
     i,m, k : integer;
-    s :string;
+    s, log : string;
     c,c1 : char;
     b : boolean;
 begin
-    s := '2/3   *  3/2 = 1/1   ';
+    s := '2/3  +  3/2 = 1/2 ';
+    CheckStringOper(s, log);
+    Form3.Show;
+    Form3.Memo1.Lines[0]:=log;
+
+end;
+function TForm1.CheckStringOper(s : string; var LogStr :string) : boolean;
+var
+    T1, T2, T3, Res1 : TRationalFraction;
+    i,m, k : integer;
+    c,c1 : char;
+    b : boolean;
+begin    
     k:=0;
     b:=false;
     T1 := TRationalFraction.Create;
     T2 := TRationalFraction.Create;
     T3 := TRationalFraction.Create;
+    Res1 := TRationalFraction.Create;
     T1.SetFromString(s, k);
+    LogStr := T1.StrNumerator + '/' + T1.StrDenominator;
     for i:=k to Length(s) do
         if(s[i]<> ' ') then
             case s[i] of
@@ -473,32 +487,42 @@ begin
                 end;
                 else break;
             end;
+    LogStr:= LogStr+' '+c+' ';
 
-    if(c <> '=') then
-    begin
-        T2.SetFromString(s, k);
-        for i:=k to Length(s) do
-            if(s[i]<> ' ') then
-                case s[i] of
-                    '=': begin
-                        c1 := s[i];
-                        k := i;
-                    end;
-                else break;
+
+    T2.SetFromString(s, k);
+    for i:=k to Length(s) do
+        if(s[i]<> ' ') then
+            case s[i] of
+                '=': begin
+                    c1 := s[i];
+                    k := i;
                 end;
-    end;
+                else break;
+            end;
+    LogStr := LogStr + T2.StrNumerator + '/' + T2.StrDenominator;
+    LogStr := LogStr + ' ' + c1 + ' ';
+
 
     T3.SetFromString(s, k);
-    Res.SetValue(T1);
+    LogStr:=LogStr + T3.StrNumerator + '/' + T3.StrDenominator;
+    // вычисляем
+    Res1.SetValue(T1);
     case c of
-        '*': Res.Multiply(T2);
-        '/': Res.Divide(T2);
-        '+': Res.Add(T2);
-        '-': Res.Sub(T2);
-        '=': b:=Res.Eq(T3);
+        '*': Res1.Multiply(T2);
+        '/': Res1.Divide(T2);
+        '+': Res1.Add(T2);
+        '-': Res1.Sub(T2);
+        '=': b:=Res1.Eq(T3);
     end;
-    b := Res.Eq(T3);
-    //writeln(b);
+    b := Res1.Eq(T3);
+    if(b) then
+        LogStr:=LogStr + ' Истина'
+    else
+        LogStr:=LogStr + ' Ложь';
+    T1.Free;
+    T2.Free;
+    T3.Free;
+    Result := b;
 end;
-
 end.
