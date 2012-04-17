@@ -16,8 +16,10 @@ type
     N3: TMenuItem;
     N4: TMenuItem;
     Label1: TLabel;
+    OpenDialog1: TOpenDialog;
   private
     { Private declarations }
+    FLine : integer;
   public
     { Public declarations }
   end;
@@ -28,5 +30,5 @@ var
 implementation
 
 {$R *.dfm}
-
+  
 end.

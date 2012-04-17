@@ -445,50 +445,80 @@ procedure TForm1.N2Click(Sender: TObject);
 begin
     Form2.ShowModal;
 end;
-
+// функция читает из выбранного файла данные, обрабатывает их и выводит на форму Form3
 procedure TForm1.N3Click(Sender: TObject);
 var
     T1, T2, T3 : TRationalFraction;
-    i,m, k : integer;
+    i,m, k, l : integer;
     s, log : string;
     c,c1 : char;
     b : boolean;
-begin
-    s := '2/3  +  3/2 = 1/2 ';
-    CheckStringOper(s, log);
-    Form3.Show;
-    Form3.Memo1.Lines[0]:=log;
+    f: Textfile;
 
+begin
+    if(Form3.OpenDialog1.Execute) then
+    begin
+        Form3.Memo1.Clear;
+        Form3.Show;
+        AssignFile(f, Form3.OpenDialog1.FileName ); {Assigns the Filename}
+        Reset(f); {Opens the file for reading}
+        Form3.Memo1.Lines.Add('Открыт файл : ' + Form3.OpenDialog1.FileName);
+        repeat
+            Readln(f, s);
+            CheckStringOper(s, log);
+            Form3.Memo1.Lines.Add(log);
+        until(Eof(f));
+        CloseFile(f);
+    end;
 end;
+//******************************************************************************
+// функция возвращает результат проверки утверждения из строки s
+// формат строки
+// проверка арифметических операций
+// X1/Y1 S X2/Y2 = X3/Y3 , где S может быть '+', '-', '*', '/'
+// проверка операций сравнения
+// X1/Y1 S X2/Y2 = R , где R может быть 't', 'f',
+// X1,Y1, X2, Y2 операнды
+// X3, Y3  ожидаемый результат опперации
 function TForm1.CheckStringOper(s : string; var LogStr :string) : boolean;
 var
     T1, T2, T3, Res1 : TRationalFraction;
     i,m, k : integer;
-    c,c1 : char;
-    b : boolean;
+    c,c1,c3 : char;
+    b, eq, b1 : boolean;
+    Sym : string;
 begin    
     k:=0;
     b:=false;
+    b1 := false;
+    eq := false;
+    c := ' ';
+    c1 := ' ';
     T1 := TRationalFraction.Create;
     T2 := TRationalFraction.Create;
     T3 := TRationalFraction.Create;
     Res1 := TRationalFraction.Create;
     T1.SetFromString(s, k);
-    LogStr := T1.StrNumerator + '/' + T1.StrDenominator;
+
     for i:=k to Length(s) do
         if(s[i]<> ' ') then
             case s[i] of
                 '*', '/',
-                '+', '-',
-                '=': begin
+                '+', '-' : begin
                     c := s[i];
-                    k:=i;
+                    k := i+1;
+                    break;
+                end;
+                '=', '>',
+                '<', '!',
+                ',', '.' : begin
+                    c := s[i];
+                    k := i + 1;
+                    eq := true;
                     break;
                 end;
                 else break;
             end;
-    LogStr:= LogStr+' '+c+' ';
-
 
     T2.SetFromString(s, k);
     for i:=k to Length(s) do
@@ -496,33 +526,75 @@ begin
             case s[i] of
                 '=': begin
                     c1 := s[i];
-                    k := i;
+                    k := i + 1;
+                    break;
                 end;
                 else break;
             end;
-    LogStr := LogStr + T2.StrNumerator + '/' + T2.StrDenominator;
-    LogStr := LogStr + ' ' + c1 + ' ';
-
-
-    T3.SetFromString(s, k);
-    LogStr:=LogStr + T3.StrNumerator + '/' + T3.StrDenominator;
+    if(not eq) then
+        T3.SetFromString(s, k)
+    else
+    begin
+        for i:=k to Length(s) do
+            if((s[i] = 't') or (s[i] = 'f')) then
+            begin
+                c3 :=s[i];
+                k := i + 1;
+                break;
+            end;
+    end;
     // вычисляем
     Res1.SetValue(T1);
+    Sym:= c;
     case c of
         '*': Res1.Multiply(T2);
         '/': Res1.Divide(T2);
         '+': Res1.Add(T2);
         '-': Res1.Sub(T2);
-        '=': b:=Res1.Eq(T3);
+        '=': b:=T1.Eq(T2);
+        '!': begin b:=T1.Ne(T2); Sym:='<>'; end;
+        '<': b:=T1.Lt(T2);
+        '>': b:=T1.Gt(T2); 
+        ',': begin b:=T1.Le(T2); Sym:='<='; end;
+        '.': begin b:=T1.Ge(T2); Sym:='>='; end;
     end;
-    b := Res1.Eq(T3);
-    if(b) then
-        LogStr:=LogStr + ' Истина'
-    else
-        LogStr:=LogStr + ' Ложь';
+
+    LogStr := T1.StrNumerator + '/' + T1.StrDenominator + ' ' + Sym + ' ' + T2.StrNumerator + '/' + T2.StrDenominator  + ' ' + c1 + ' ';
+    if( not eq) then
+    begin
+        b := Res1.Eq(T3);
+        LogStr := LogStr + Res1.StrNumerator + '/' + Res1.StrDenominator + ' (Ожидаем : ' + T3.StrNumerator + '/' + T3.StrDenominator + ')';
+        if(b) then
+            LogStr:=LogStr + ' - (Верно)'
+        else
+            LogStr:=LogStr + ' - (Ошибка)';
+        Result := b;
+    end else
+    begin
+        if(b) then
+            LogStr := LogStr + ' Истина '
+        else
+            LogStr := LogStr + ' Ложь ';
+        LogStr := LogStr + ' (Ожидаем : ';
+        if(c3 = 't') then
+        begin
+            LogStr := LogStr + ' Истина) ';
+            b1 := true;
+        end else
+        begin
+            LogStr := LogStr + ' Ложь) ';
+            b1:=false;
+        end;
+        if(b = b1) then
+            LogStr:=LogStr + ' - (Верно)'
+        else
+            LogStr:=LogStr + ' - (Ошибка)';
+        Result := (b = b1);
+    end;
+
     T1.Free;
     T2.Free;
     T3.Free;
-    Result := b;
+    Res1.Free;
 end;
 end.
