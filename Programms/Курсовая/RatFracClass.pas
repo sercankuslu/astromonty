@@ -166,39 +166,38 @@ begin
     r := 1;
     repeat
     if m = 0 then begin r := r * n; break; end; // NOD(0,n) = n
-    if n = 0 then begin r := r * m; break; end;// NOD(0,n) = n
-    if m = n then begin r := r * m; break; end;// NOD(m,m) = m
+    if (n = 0) or (m = n) then begin r := r * m; break; end;// NOD(0,n) = n
     if (m = 1) or (n = 1) then break;
-    if (m mod 2 = 0) then
+    if (m and 1 = 0) then
     begin
-        if ( n mod 2 = 0) then
+        if ( n and 1 = 0) then
         begin
-            r := r * 2;
-            m := m div 2;
-            n := n div 2;
+            r := r Shl 1;
+            m := m Shr 1;
+            n := n Shr 1;
             Continue;
         end else
         begin
-            m := m div 2;
+            m := m Shr 1;
             Continue;
         end;
     end else
     begin
-        if ( n mod 2 = 0) then
+        if ( n and 1 = 0) then
         begin
-            n := n div 2;
+            n := n Shr 1;
             Continue;
         end else
         begin
             if (n > m) then
             begin
                 k := m;
-                m := (n - m) div 2;
+                m := (n - m) Shr 1;
                 n := k;
                 Continue;
             end else
             begin
-                m := (m - n) div 2;
+                m := (m - n) Shr 1;
                 Continue;
             end;
         end;

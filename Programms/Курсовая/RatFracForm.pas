@@ -482,19 +482,92 @@ end;
 function TForm1.CheckStringOper(InStr : string; var LogStr :string) : boolean;
 var
     T1, T2, T3, Res1 : TRationalFraction;
-    i,m, k : integer;
+    i,m, k, o, r : integer;
     c,c1,c3 : char;
-    b, eq, b1, t : boolean;
+    b, eq, b1, t, br : boolean;
     Sym, s, Comment : string;
 begin
     k:=0;
     b:=false;
     b1 := false;
-    eq := false;
+
     c := ' ';
     c1 := ' ';
     t:=true;
 
+
+    T1 := TRationalFraction.Create;
+    T2 := TRationalFraction.Create;
+    T3 := TRationalFraction.Create;
+    Res1 := TRationalFraction.Create;
+
+    br := false;
+    r := 0;
+    eq := false;
+    o := 0;
+    k := 1;
+    i := 0;
+    while (i <= Length(InStr) and k < 7) do
+    begin
+        i := i + 1;
+        if(InStr[i] = ' ') then continue else
+        if(InStr[i] = '#') then break;   // дальше идет коментарий
+        case k of
+            1: begin    // первый аргумент
+                T1.SetFromString(InStr, i);
+                k := 2;
+            end;
+            2: begin    // символ операции
+                case InStr[i] of
+                    '+': o := 1;
+                    '-': o := 2;
+                    '*': o := 3;
+                    '/': o := 4;
+                    '<': begin
+                        if(InStr[i+1]=' ') then o := 5 else     // <
+                        begin
+                            if(InStr[i+1]='=') then o := 9 else // <=
+                            if(InStr[i+1]='>') then o := 7 else // <>
+                            i:= i + 1;
+                        end;
+                        eq := true;
+                    end;
+                    '>': begin
+                        if(InStr[i+1]=' ') then o := 6 else     // >
+                        begin
+                            if(InStr[i+1]='=') then o := 10 else // >=
+                            i:= i + 1;
+                        end;
+                        eq := true;
+                    end;
+                    '=': begin o := 8; eq:= true end;
+                    else break; // неизвестный символ
+                end;
+                k := 3;
+            end;
+            3: begin    // второй аргумент
+                T2.SetFromString(InStr, i);
+                k := 4;
+            end;
+            4: begin    // символ равенства
+                if InStr[i] <> '=' then break; // если не равно - ошибка
+                if(not eq) then k := 5 else k := 6;
+            end;
+            5: begin    // ожидаемый результат - дробь
+                if InStr[i] = 'e' then begin r := 1; break; end; // ожидаемый результат - ошибка
+                T3.SetFromString(InStr, i);
+                k:=7;  // ввод данных завершен
+            end;
+            6: begin    // ожидаемый результат символ
+                if InStr[i] = 't' then br := true else
+                if InStr[i] = 'f' then br := false;
+                k:=7;  // ввод данных завершен
+            end;
+            else break;
+        end;
+    end;
+    if(o = 0) then exit;
+    {
     for i:= 1 to Length(InStr) do
     begin
         if(InStr[i] = '#') then
@@ -503,14 +576,12 @@ begin
             t := false;
             break;
         end;
+
     end;
 
     if(t) then s := InStr;
 
-    T1 := TRationalFraction.Create;
-    T2 := TRationalFraction.Create;
-    T3 := TRationalFraction.Create;
-    Res1 := TRationalFraction.Create;
+
 
 
     T1.SetFromString(s, k);
@@ -605,7 +676,7 @@ begin
             LogStr:=LogStr + ' - (Ошибка) ' + Comment;
         Result := (b = b1);
     end;
-
+    }
     T1.Free;
     T2.Free;
     T3.Free;
