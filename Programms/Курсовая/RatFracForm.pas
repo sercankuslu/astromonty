@@ -93,7 +93,7 @@ type
     procedure FunctSelectClick(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
-    function CheckStringOper(s : string; var LogStr:string) : boolean;
+    function CheckStringOper(InStr : string; var LogStr:string) : boolean;
   private
     X, X1, Res : TRationalFraction;
     Operation : short;
@@ -454,7 +454,6 @@ var
     c,c1 : char;
     b : boolean;
     f: Textfile;
-
 begin
     if(Form3.OpenDialog1.Execute) then
     begin
@@ -480,26 +479,41 @@ end;
 // X1/Y1 S X2/Y2 = R , где R может быть 't', 'f',
 // X1,Y1, X2, Y2 операнды
 // X3, Y3  ожидаемый результат опперации
-function TForm1.CheckStringOper(s : string; var LogStr :string) : boolean;
+function TForm1.CheckStringOper(InStr : string; var LogStr :string) : boolean;
 var
     T1, T2, T3, Res1 : TRationalFraction;
     i,m, k : integer;
     c,c1,c3 : char;
-    b, eq, b1 : boolean;
-    Sym : string;
-begin    
+    b, eq, b1, t : boolean;
+    Sym, s, Comment : string;
+begin
     k:=0;
     b:=false;
     b1 := false;
     eq := false;
     c := ' ';
     c1 := ' ';
+    t:=true;
+
+    for i:= 1 to Length(InStr) do
+    begin
+        if(InStr[i] = '#') then
+        begin
+            s := Copy(InStr,1, i - 1);
+            t := false;
+            break;
+        end;
+    end;
+
+    if(t) then s := InStr;
+
     T1 := TRationalFraction.Create;
     T2 := TRationalFraction.Create;
     T3 := TRationalFraction.Create;
     Res1 := TRationalFraction.Create;
-    T1.SetFromString(s, k);
 
+
+    T1.SetFromString(s, k);
     for i:=k to Length(s) do
         if(s[i]<> ' ') then
             case s[i] of
@@ -565,9 +579,9 @@ begin
         b := Res1.Eq(T3);
         LogStr := LogStr + Res1.StrNumerator + '/' + Res1.StrDenominator + ' (Ожидаем : ' + T3.StrNumerator + '/' + T3.StrDenominator + ')';
         if(b) then
-            LogStr:=LogStr + ' - (Верно)'
+            LogStr:=LogStr + ' - (Верно) ' + Comment
         else
-            LogStr:=LogStr + ' - (Ошибка)';
+            LogStr:=LogStr + ' - (Ошибка) ' + Comment;
         Result := b;
     end else
     begin
@@ -586,9 +600,9 @@ begin
             b1:=false;
         end;
         if(b = b1) then
-            LogStr:=LogStr + ' - (Верно)'
+            LogStr:=LogStr + ' - (Верно) ' + Comment
         else
-            LogStr:=LogStr + ' - (Ошибка)';
+            LogStr:=LogStr + ' - (Ошибка) ' + Comment;
         Result := (b = b1);
     end;
 
