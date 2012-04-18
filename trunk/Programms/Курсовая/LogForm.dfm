@@ -1,9 +1,10 @@
 object Form3: TForm3
   Left = 1027
   Top = 201
-  Width = 405
-  Height = 437
+  BorderStyle = bsSingle
   Caption = #1058#1077#1089#1090#1080#1088#1091#1077#1084
+  ClientHeight = 382
+  ClientWidth = 383
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -41,12 +42,14 @@ object Form3: TForm3
       Caption = #1060#1072#1081#1083
       object N2: TMenuItem
         Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+        OnClick = N2Click
       end
       object N3: TMenuItem
         Caption = '-'
       end
       object N4: TMenuItem
         Caption = #1047#1072#1082#1088#1099#1090#1100
+        OnClick = N4Click
       end
     end
   end
