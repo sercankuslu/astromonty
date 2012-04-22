@@ -1,12 +1,9 @@
 unit RatFracForm;
-
 interface
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, ComCtrls, Menus,
   ToolWin, RatFracClass, AboutForm, LogForm;
-
 type
   TForm1 = class(TForm)
     StatusBar1: TStatusBar;
@@ -82,6 +79,8 @@ type
     BitBtn1: TBitBtn;
     N1: TMenuItem;
     N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
@@ -94,6 +93,9 @@ type
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
     function CheckStringOper(InStr : string; var LogStr:string) : boolean;
+    function IntFromString(Line: string; var PosFrom: integer): integer;
+    function SetFromString(Line: string; var PosFrom: integer; var Res1 : TRationalFraction): boolean;
+    procedure N5Click(Sender: TObject);
   private
     X, X1, Res : TRationalFraction;
     Operation : short;
@@ -108,6 +110,8 @@ var
 implementation
 
 {$R *.dfm}
+
+
 procedure TForm1.FormShow(Sender: TObject);
 begin
     EnterNum.Text := '1';
@@ -119,6 +123,7 @@ var
     CompResult : boolean;
     N, Res1, Res2 : TRationalFraction;
 begin
+    CompResult := false;
     // вводим данные с обработкой ошибок
     try
         a := StrToInt(EnterNum.Text);
@@ -297,6 +302,7 @@ procedure TForm1.OperatorSelectClick(Sender: TObject);
 var
     isCompare : bool;
 begin
+    isCompare := false;
     if(SimpleBtn.Checked) then
     begin
 
@@ -448,11 +454,7 @@ end;
 // функция читает из выбранного файла данные, обрабатывает их и выводит на форму Form3
 procedure TForm1.N3Click(Sender: TObject);
 var
-    T1, T2, T3 : TRationalFraction;
-    i,m, k, l : integer;
     s, log : string;
-    c,c1 : char;
-    b : boolean;
     f: Textfile;
 begin
     if(Form3.OpenDialog1.Execute) then
@@ -462,59 +464,59 @@ begin
         AssignFile(f, Form3.OpenDialog1.FileName ); {Assigns the Filename}
         Reset(f); {Opens the file for reading}
         Form3.Memo1.Lines.Add('Открыт файл : ' + Form3.OpenDialog1.FileName);
+        Form3.Memo1.Lines.Add('Результат обработки данных: ');
         repeat
             Readln(f, s);
             CheckStringOper(s, log);
-            Form3.Memo1.Lines.Add(log);
+            if(log <> '') then
+                Form3.Memo1.Lines.Add(log);            
         until(Eof(f));
         CloseFile(f);
     end;
 end;
 //******************************************************************************
 // функция возвращает результат проверки утверждения из строки s
-// формат строки
-// проверка арифметических операций
-// X1/Y1 S X2/Y2 = X3/Y3 , где S может быть '+', '-', '*', '/'
-// проверка операций сравнения
-// X1/Y1 S X2/Y2 = R , где R может быть 't', 'f',
+// символы после '#' игнорируются
+// формат строки:
+// 1. проверка арифметических операций:
+//      X1/Y1 S X2/Y2 = X3/Y3 или 'e' (при ошибке),
+// где S может быть '+', '-', '*', '/'
+// 2. проверка операций сравнения:
+//      X1/Y1 S X2/Y2 = R , где R может быть 't', 'f',
+// где S : '>', '<', '=', '<>', '>=', '<=' 
 // X1,Y1, X2, Y2 операнды
-// X3, Y3  ожидаемый результат опперации
+// X3, Y3, R  ожидаемый результат опперации
 function TForm1.CheckStringOper(InStr : string; var LogStr :string) : boolean;
 var
     T1, T2, T3, Res1 : TRationalFraction;
-    i,m, k, o, r : integer;
-    c,c1,c3 : char;
-    b, eq, b1, t, br : boolean;
-    Sym, s, Comment : string;
+    i, o, k : integer;
+    b, eq, br : boolean;
+    er : boolean; // признаки ошибок
+    Sym, Comment : string;
 begin
-    k:=0;
-    b:=false;
-    b1 := false;
-
-    c := ' ';
-    c1 := ' ';
-    t:=true;
-
-
+    // создаем обьекты
     T1 := TRationalFraction.Create;
     T2 := TRationalFraction.Create;
     T3 := TRationalFraction.Create;
     Res1 := TRationalFraction.Create;
 
+    // инициализируем переменные
+    b:=false;
     br := false;
-    r := 0;
+    er := false;
     eq := false;
     o := 0;
     k := 1;
     i := 0;
-    while (i <= Length(InStr) and k < 7) do
+    // разбираем полученную строку
+    while (i <= Length(InStr)) and (k < 7) do
     begin
         i := i + 1;
         if(InStr[i] = ' ') then continue else
         if(InStr[i] = '#') then break;   // дальше идет коментарий
         case k of
             1: begin    // первый аргумент
-                T1.SetFromString(InStr, i);
+                SetFromString(InStr, i, T1);
                 k := 2;
             end;
             2: begin    // символ операции
@@ -527,7 +529,7 @@ begin
                         if(InStr[i+1]=' ') then o := 5 else     // <
                         begin
                             if(InStr[i+1]='=') then o := 9 else // <=
-                            if(InStr[i+1]='>') then o := 7 else // <>
+                            if(InStr[i+1]='>') then o := 7;// <>
                             i:= i + 1;
                         end;
                         eq := true;
@@ -535,7 +537,7 @@ begin
                     '>': begin
                         if(InStr[i+1]=' ') then o := 6 else     // >
                         begin
-                            if(InStr[i+1]='=') then o := 10 else // >=
+                            if(InStr[i+1]='=') then o := 10; // >=
                             i:= i + 1;
                         end;
                         eq := true;
@@ -546,7 +548,7 @@ begin
                 k := 3;
             end;
             3: begin    // второй аргумент
-                T2.SetFromString(InStr, i);
+                SetFromString(InStr, i, T2);
                 k := 4;
             end;
             4: begin    // символ равенства
@@ -554,8 +556,8 @@ begin
                 if(not eq) then k := 5 else k := 6;
             end;
             5: begin    // ожидаемый результат - дробь
-                if InStr[i] = 'e' then begin r := 1; break; end; // ожидаемый результат - ошибка
-                T3.SetFromString(InStr, i);
+                if InStr[i] = 'e' then begin er := true; break; end; // ожидаемый результат - ошибка
+                SetFromString(InStr, i , T3);
                 k:=7;  // ввод данных завершен
             end;
             6: begin    // ожидаемый результат символ
@@ -566,120 +568,156 @@ begin
             else break;
         end;
     end;
-    if(o = 0) then exit;
-    {
-    for i:= 1 to Length(InStr) do
-    begin
-        if(InStr[i] = '#') then
-        begin
-            s := Copy(InStr,1, i - 1);
-            t := false;
-            break;
-        end;
-
-    end;
-
-    if(t) then s := InStr;
-
-
-
-
-    T1.SetFromString(s, k);
-    for i:=k to Length(s) do
-        if(s[i]<> ' ') then
-            case s[i] of
-                '*', '/',
-                '+', '-' : begin
-                    c := s[i];
-                    k := i+1;
-                    break;
-                end;
-                '=', '>',
-                '<', '!',
-                ',', '.' : begin
-                    c := s[i];
-                    k := i + 1;
-                    eq := true;
-                    break;
-                end;
-                else break;
-            end;
-
-    T2.SetFromString(s, k);
-    for i:=k to Length(s) do
-        if(s[i]<> ' ') then
-            case s[i] of
-                '=': begin
-                    c1 := s[i];
-                    k := i + 1;
-                    break;
-                end;
-                else break;
-            end;
-    if(not eq) then
-        T3.SetFromString(s, k)
+    // вычисляем полученное уравнение
+    Res1.SetValue(T1);     
+    case o of
+        1:  begin Res1.Add(T2);     Sym:='+'; end;
+        2:  begin Res1.Sub(T2);     Sym:='-'; end;
+        3:  begin Res1.Multiply(T2);Sym:='*'; end;
+        4:  begin Res1.Divide(T2);  Sym:='/'; end;
+        5:  begin b:=T1.Lt(T2);     Sym:='<'; end;
+        6:  begin b:=T1.Gt(T2);     Sym:='>'; end;
+        7:  begin b:=T1.Ne(T2);     Sym:='<>'; end;
+        8:  begin b:=T1.Eq(T2);     Sym:='='; end;
+        9:  begin b:=T1.Le(T2);     Sym:='<='; end;
+        10: begin b:=T1.Ge(T2);     Sym:='>='; end;
     else
-    begin
-        for i:=k to Length(s) do
-            if((s[i] = 't') or (s[i] = 'f')) then
-            begin
-                c3 :=s[i];
-                k := i + 1;
-                break;
-            end;
+        Result := true;
+        exit;
     end;
-    // вычисляем
-    Res1.SetValue(T1);
-    Sym:= c;
-    case c of
-        '*': Res1.Multiply(T2);
-        '/': Res1.Divide(T2);
-        '+': Res1.Add(T2);
-        '-': Res1.Sub(T2);
-        '=': b:=T1.Eq(T2);
-        '!': begin b:=T1.Ne(T2); Sym:='<>'; end;
-        '<': b:=T1.Lt(T2);
-        '>': b:=T1.Gt(T2); 
-        ',': begin b:=T1.Le(T2); Sym:='<='; end;
-        '.': begin b:=T1.Ge(T2); Sym:='>='; end;
-    end;
+    if(not Result) then
+    Begin
+		// формируем строку с отчетом
+		LogStr := T1.StrNumerator + '/' + T1.StrDenominator + ' ' + Sym + ' '
+				+ T2.StrNumerator + '/' + T2.StrDenominator  + ' = ';
+		if( not eq) then  // операции + - * /
+		begin
+			b := Res1.Eq(T3);
+			LogStr := LogStr + Res1.StrNumerator + '/' + Res1.StrDenominator +
+				' (Ожидаем : ';
+			if(er) then
+			begin
+				LogStr := LogStr + 'Ошибка ) ';
+				if(Res1.ErrorFlag) then
+					LogStr:=LogStr + ' - (Верно) ' + Comment
+				else
+					LogStr:=LogStr + ' - (Ошибка) ' + Comment;
 
-    LogStr := T1.StrNumerator + '/' + T1.StrDenominator + ' ' + Sym + ' ' + T2.StrNumerator + '/' + T2.StrDenominator  + ' ' + c1 + ' ';
-    if( not eq) then
-    begin
-        b := Res1.Eq(T3);
-        LogStr := LogStr + Res1.StrNumerator + '/' + Res1.StrDenominator + ' (Ожидаем : ' + T3.StrNumerator + '/' + T3.StrDenominator + ')';
-        if(b) then
-            LogStr:=LogStr + ' - (Верно) ' + Comment
-        else
-            LogStr:=LogStr + ' - (Ошибка) ' + Comment;
-        Result := b;
-    end else
-    begin
-        if(b) then
-            LogStr := LogStr + ' Истина '
-        else
-            LogStr := LogStr + ' Ложь ';
-        LogStr := LogStr + ' (Ожидаем : ';
-        if(c3 = 't') then
-        begin
-            LogStr := LogStr + ' Истина) ';
-            b1 := true;
-        end else
-        begin
-            LogStr := LogStr + ' Ложь) ';
-            b1:=false;
-        end;
-        if(b = b1) then
-            LogStr:=LogStr + ' - (Верно) ' + Comment
-        else
-            LogStr:=LogStr + ' - (Ошибка) ' + Comment;
-        Result := (b = b1);
-    end;
-    }
+			end else
+			begin
+				LogStr := LogStr + T3.StrNumerator + '/' + T3.StrDenominator + ')';
+				if(b) then
+					LogStr:=LogStr + ' - (Верно) ' + Comment
+				else
+					LogStr:=LogStr + ' - (Ошибка) ' + Comment;
+			end;
+			Result := b;
+		end else
+		begin   // операции сравнения
+			if(b) then
+				LogStr := LogStr + ' Истина '
+			else
+				LogStr := LogStr + ' Ложь ';
+			LogStr := LogStr + ' (Ожидаем : ';
+			if(br) then
+			begin
+				LogStr := LogStr + ' Истина) ';
+			end else
+			begin
+				LogStr := LogStr + ' Ложь) ';
+			end;
+			if(b = br) then
+				LogStr:=LogStr + ' - (Верно) ' + Comment
+			else
+				LogStr:=LogStr + ' - (Ошибка) ' + Comment;
+			Result := (b = br);
+		end;
+    End else LogStr:= 'Ошибка разбора строки.';
+    // освобождаем ресурсы
     T1.Free;
     T2.Free;
     T3.Free;
     Res1.Free;
 end;
+//******************************************************************************
+// Функция считывает из строки Line последовательность типа рациональная дробь и
+// задает значение Res1
+// считывание начинается с позиции PosFrom
+// в случае ошибок преобразования обьект типа TRationalFraction
+// устанавливается в сосотояние ошибки 
+//******************************************************************************
+function TForm1.SetFromString(Line: string; var PosFrom: integer; var Res1 : TRationalFraction): boolean;
+var
+    l, m : integer;
+    c : char;
+begin
+    Result := false;
+    l := 0;
+    m := 0;
+    try
+        l := IntFromString(Line,PosFrom);
+    except
+        on Exception : EConvertError do
+            Result :=  Result or true;
+    end;
+
+    c := Line[PosFrom];
+    PosFrom:= PosFrom + 1;
+
+    try
+        m := IntFromString(Line,PosFrom);
+    except
+        on Exception : EConvertError do
+            Result := Result or true;
+    end;
+    if(Result) then m := 0; // заставляем обьект перейти в ошибочное состояние
+    if(c = '/') then
+    begin
+        Res1.SetValue(l,m);
+        Result := Result or false;
+    end else
+    begin
+        Result := Result or true;
+    end;
+end;
+//******************************************************************************
+// Функция считывает из строки число, начиная с позиции PosFrom и заканчивая
+// концом строки, первым пробелом или символом '/' после позиции PosFrom
+// в случае ошибки, появляется прерывание EConvertError
+//******************************************************************************
+function TForm1.IntFromString(Line: string; var PosFrom: integer): integer;
+var
+    i, k, l : integer;
+    b : boolean;
+    r : string;
+Begin
+    b := false;
+    k := 0;
+    l := 0;
+    for i := PosFrom to Length(Line) do
+    begin
+        if((Line[i] <> ' ') and (Line[i] <> '/')) then
+        begin
+            if(b=false) then
+            begin
+                l := i;
+                b:=true; // начинается число
+            end;
+            k := k + 1;
+        end else if(b) then break;
+    end;
+    if(b) then
+    begin // конец числа
+        r := Copy(Line, l, k);
+        PosFrom := i;
+        Result := StrToInt(r);
+        exit;
+    end;
+    Result := 0; // число не найдено (ошибка)
+End;
+procedure TForm1.N5Click(Sender: TObject);
+begin
+    Application.Terminate;
+end;
+
 end.

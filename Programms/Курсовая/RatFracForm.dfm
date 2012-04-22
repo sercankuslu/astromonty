@@ -1,10 +1,10 @@
 object Form1: TForm1
-  Left = 642
-  Top = 193
+  Left = 431
+  Top = 292
   BorderStyle = bsSingle
   Caption = 'Form1'
   ClientHeight = 296
-  ClientWidth = 330
+  ClientWidth = 327
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,6 +13,7 @@ object Form1: TForm1
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
+  Position = poDesktopCenter
   Visible = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -49,7 +50,7 @@ object Form1: TForm1
   object StatusBar1: TStatusBar
     Left = 0
     Top = 269
-    Width = 330
+    Width = 327
     Height = 27
     Panels = <
       item
@@ -183,7 +184,7 @@ object Form1: TForm1
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Arial'
-    Font.Style = []
+    Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 4
     object ResNum: TLabel
@@ -197,7 +198,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -212,7 +213,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -226,14 +227,14 @@ object Form1: TForm1
     object CmpRes1: TLabel
       Left = 8
       Top = 40
-      Width = 7
-      Height = 15
+      Width = 6
+      Height = 14
       Alignment = taCenter
       Caption = '1'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
       Visible = False
@@ -356,13 +357,13 @@ object Form1: TForm1
     object Label2: TLabel
       Left = 32
       Top = 40
-      Width = 31
-      Height = 15
+      Width = 25
+      Height = 14
       Caption = '2X + '
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -384,7 +385,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -399,7 +400,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -430,7 +431,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -445,7 +446,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -461,13 +462,13 @@ object Form1: TForm1
     object Label5: TLabel
       Left = 32
       Top = 40
-      Width = 13
-      Height = 15
+      Width = 10
+      Height = 14
       Caption = 'X '
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -489,7 +490,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -504,33 +505,33 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
     object Label10: TLabel
       Left = 40
       Top = 32
-      Width = 7
-      Height = 15
+      Width = 6
+      Height = 14
       Caption = '2'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
     object Label11: TLabel
       Left = 54
       Top = 40
-      Width = 8
-      Height = 15
+      Width = 7
+      Height = 14
       Caption = '- '
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -547,12 +548,12 @@ object Form1: TForm1
       Left = 48
       Top = 40
       Width = 4
-      Height = 15
+      Height = 14
       Caption = '-'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -574,7 +575,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -589,7 +590,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -604,7 +605,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -626,7 +627,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -640,7 +641,7 @@ object Form1: TForm1
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
-    Font.Name = 'Arial Black'
+    Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 10
@@ -648,13 +649,13 @@ object Form1: TForm1
     object Label17: TLabel
       Left = 48
       Top = 40
-      Width = 7
-      Height = 15
+      Width = 6
+      Height = 14
       Caption = '+'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -676,7 +677,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -691,7 +692,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -706,7 +707,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -728,7 +729,7 @@ object Form1: TForm1
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
-      Font.Name = 'Arial Black'
+      Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
     end
@@ -810,8 +811,15 @@ object Form1: TForm1
     object N1: TMenuItem
       Caption = #1060#1072#1081#1083
       object N3: TMenuItem
-        Caption = #1058#1077#1089#1090
+        Caption = #1042#1099#1087#1086#1083#1085#1080#1090#1100' '#1090#1077#1089#1090
         OnClick = N3Click
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object N5: TMenuItem
+        Caption = #1042#1099#1081#1090#1080
+        OnClick = N5Click
       end
     end
     object N2: TMenuItem

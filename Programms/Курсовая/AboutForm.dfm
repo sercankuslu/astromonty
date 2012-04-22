@@ -1,6 +1,6 @@
 object Form2: TForm2
-  Left = 355
-  Top = 283
+  Left = 327
+  Top = 329
   Anchors = []
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
@@ -13,7 +13,7 @@ object Form2: TForm2
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poMainFormCenter
+  Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
