@@ -1,10 +1,9 @@
 object Form3: TForm3
-  Left = 1027
-  Top = 201
-  BorderStyle = bsSingle
-  Caption = #1058#1077#1089#1090#1080#1088#1091#1077#1084
-  ClientHeight = 382
-  ClientWidth = 383
+  Left = 615
+  Top = 211
+  Width = 560
+  Height = 467
+  Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099' '#1090#1077#1089#1090#1080#1088#1086#1074#1072#1085#1080#1103' '#1076#1072#1085#1085#1099#1084#1080' '#1080#1079' '#1092#1072#1081#1083#1072':'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,28 +12,24 @@ object Form3: TForm3
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
+  Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 8
-    Top = 8
-    Width = 235
-    Height = 13
-    Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099' '#1090#1077#1089#1090#1080#1088#1086#1074#1072#1085#1080#1103' '#1076#1072#1085#1085#1099#1084#1080' '#1080#1079' '#1092#1072#1081#1083#1072':'
-  end
   object Memo1: TMemo
-    Left = 8
-    Top = 32
-    Width = 369
-    Height = 337
+    Left = 0
+    Top = 0
+    Width = 544
+    Height = 409
+    Align = alClient
     ReadOnly = True
-    ScrollBars = ssVertical
+    ScrollBars = ssBoth
     TabOrder = 0
     WantReturns = False
   end
   object SaveDialog1: TSaveDialog
-    Left = 384
-    Top = 24
+    DefaultExt = '*.log'
+    Filter = #1058#1077#1082#1089#1090#1086#1074#1099#1077' '#1092#1072#1081#1083#1099'|*.txt|'#1060#1072#1081#1083#1099' '#1083#1086#1075#1086#1074'|*.log|'#1042#1089#1077' '#1092#1072#1081#1083#1099'|*.*'
+    Left = 376
   end
   object MainMenu1: TMainMenu
     Left = 344
@@ -54,7 +49,8 @@ object Form3: TForm3
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 384
-    Top = 56
+    DefaultExt = '*.txt'
+    Filter = #1058#1077#1082#1089#1090#1086#1074#1099#1077' '#1092#1072#1081#1083#1099'|*.txt|'#1060#1072#1081#1083#1099' '#1083#1086#1075#1086#1074'|*.log|'#1042#1089#1077' '#1092#1072#1081#1083#1099'|*.*'
+    Left = 408
   end
 end

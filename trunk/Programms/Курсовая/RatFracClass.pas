@@ -15,7 +15,6 @@ type
         // служебные функции
         function Nod( a, b : integer) : integer;
         procedure Normalize;
-        function IntFromString(Line: string; var PosFrom: integer): integer;
     public        
         // свойства
         property Numerator      : integer read FNumerator;
@@ -43,7 +42,7 @@ type
         function Ne( Factor : TRationalFraction ):boolean; Overload; //<>
         function Ge( Factor : TRationalFraction ):boolean; Overload; //>=
         function Le( Factor : TRationalFraction ):boolean; Overload; //<=
-        function SetFromString( Line : string; var PosFrom : integer) : integer; 
+
     end;
 var
     RF, RF1, RF2 : TRationalFraction;
@@ -266,48 +265,6 @@ begin
     else Ne := false;
 end;
 
-function TRationalFraction.SetFromString(Line: string; var PosFrom: integer): integer;
-var
-    l, m : integer;
-    c : char;
-begin
-    l := IntFromString(Line,PosFrom);
-    c := Line[PosFrom];
-    m := IntFromString(Line,PosFrom);
-    if(c = '/') then
-    begin
-        SetValue(l,m);
-        Result := PosFrom;
-    end else
-        FErrorFlag := true;
-end;
-// #----
-//    +123  #
-//    -123
-function TRationalFraction.IntFromString(Line: string; var PosFrom: integer): integer;
-var
-    i, k, l : integer;
-    b, n : boolean;
-    r : string;
-Begin
-    b := false;
-    n := false;
-    k := 0;
-    for i := PosFrom to Length(Line) do
-    begin
-        if((Line[i] = '-') or ((Line[i] >= '0') and (Line[i] <= '9'))) then
-        begin
-            if(b=false) then l := i;
-            b:=true; // начинается число
-            k := k + 1;
-        end else if(b) then break;
-    end;
-    if(b) then
-    begin // конец числа
-        r := Copy(Line, l, k);
-        PosFrom := i;
-        Result := StrToInt(r);
-    end;
-End;
+
 
 END.
