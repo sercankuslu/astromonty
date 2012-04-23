@@ -509,11 +509,15 @@ begin
     k := 1;
     i := 0;
     // разбираем полученную строку
-    while (i <= Length(InStr)) and (k < 7) do
+    while (i <= Length(InStr)) do
     begin
         i := i + 1;
         if(InStr[i] = ' ') then continue else
-        if(InStr[i] = '#') then break;   // дальше идет коментарий
+        if(InStr[i] = '#') then
+        begin  // дальше идет коментарий
+            Comment := Copy(InStr, i, Length(InStr) - i + 1);
+            break;
+        end;
         case k of
             1: begin    // первый аргумент
                 SetFromString(InStr, i, T1);
@@ -556,8 +560,8 @@ begin
                 if(not eq) then k := 5 else k := 6;
             end;
             5: begin    // ожидаемый результат - дробь
-                if InStr[i] = 'e' then begin er := true; break; end; // ожидаемый результат - ошибка
-                SetFromString(InStr, i , T3);
+                if InStr[i] = 'e' then begin er := true; end else // ожидаемый результат - ошибка
+                    SetFromString(InStr, i , T3);
                 k:=7;  // ввод данных завершен
             end;
             6: begin    // ожидаемый результат символ
@@ -565,11 +569,11 @@ begin
                 if InStr[i] = 'f' then br := false;
                 k:=7;  // ввод данных завершен
             end;
-            else break;
+            //else break;
         end;
     end;
     // вычисляем полученное уравнение
-    Res1.SetValue(T1);     
+    Res1.SetValue(T1);
     case o of
         1:  begin Res1.Add(T2);     Sym:='+'; end;
         2:  begin Res1.Sub(T2);     Sym:='-'; end;
@@ -593,43 +597,43 @@ begin
 		if( not eq) then  // операции + - * /
 		begin
 			b := Res1.Eq(T3);
-			LogStr := LogStr + Res1.StrNumerator + '/' + Res1.StrDenominator +
-				' (Ожидаем : ';
+			LogStr := LogStr + #$9 + Res1.StrNumerator + '/' + Res1.StrDenominator +
+				#$9 + '(Ожидаем : ';
 			if(er) then
 			begin
 				LogStr := LogStr + 'Ошибка ) ';
 				if(Res1.ErrorFlag) then
-					LogStr:=LogStr + ' - (Верно) ' + Comment
+					LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
 				else
-					LogStr:=LogStr + ' - (Ошибка) ' + Comment;
+					LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
 
 			end else
 			begin
 				LogStr := LogStr + T3.StrNumerator + '/' + T3.StrDenominator + ')';
 				if(b) then
-					LogStr:=LogStr + ' - (Верно) ' + Comment
+					LogStr:=LogStr + #$9 + #$9 + '- (Верно)' + #$9 + Comment
 				else
-					LogStr:=LogStr + ' - (Ошибка) ' + Comment;
+					LogStr:=LogStr + #$9 + #$9 + '- (Ошибка)' + #$9 + Comment;
 			end;
 			Result := b;
 		end else
 		begin   // операции сравнения
 			if(b) then
-				LogStr := LogStr + ' Истина '
+				LogStr := LogStr + #$9 + 'Истина '
 			else
-				LogStr := LogStr + ' Ложь ';
-			LogStr := LogStr + ' (Ожидаем : ';
+				LogStr := LogStr + #$9 + 'Ложь ';
+			LogStr := LogStr + #$9 + '(Ожидаем : ';
 			if(br) then
 			begin
-				LogStr := LogStr + ' Истина) ';
+				LogStr := LogStr + 'Истина)';
 			end else
 			begin
-				LogStr := LogStr + ' Ложь) ';
+				LogStr := LogStr + 'Ложь)  ';
 			end;
 			if(b = br) then
-				LogStr:=LogStr + ' - (Верно) ' + Comment
+				LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
 			else
-				LogStr:=LogStr + ' - (Ошибка) ' + Comment;
+				LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
 			Result := (b = br);
 		end;
     End else LogStr:= 'Ошибка разбора строки.';

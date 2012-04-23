@@ -2,9 +2,9 @@ object Form1: TForm1
   Left = 431
   Top = 292
   BorderStyle = bsSingle
-  Caption = 'Form1'
-  ClientHeight = 296
-  ClientWidth = 327
+  Caption = #1054#1073#1098#1077#1082#1090' "'#1056#1072#1094#1080#1086#1085#1072#1083#1100#1085#1072#1103' '#1076#1088#1086#1073#1100'"'
+  ClientHeight = 299
+  ClientWidth = 330
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,7 +22,7 @@ object Form1: TForm1
   TextHeight = 13
   object Label1: TLabel
     Left = 216
-    Top = 80
+    Top = 88
     Width = 16
     Height = 33
     AutoSize = False
@@ -36,7 +36,7 @@ object Form1: TForm1
   end
   object OperatorSymbol: TLabel
     Left = 80
-    Top = 80
+    Top = 88
     Width = 16
     Height = 32
     Caption = '+'
@@ -49,8 +49,8 @@ object Form1: TForm1
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 269
-    Width = 327
+    Top = 272
+    Width = 330
     Height = 27
     Panels = <
       item
@@ -66,14 +66,14 @@ object Form1: TForm1
   end
   object Operand1: TGroupBox
     Left = 8
-    Top = 48
+    Top = 56
     Width = 65
     Height = 89
     Caption = 'X'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
-    Font.Name = 'Arial Black'
+    Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 1
@@ -88,7 +88,7 @@ object Form1: TForm1
       Left = 16
       Top = 24
       Width = 33
-      Height = 25
+      Height = 23
       Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
       TabOrder = 0
       Text = '1'
@@ -98,7 +98,7 @@ object Form1: TForm1
       Left = 16
       Top = 56
       Width = 33
-      Height = 25
+      Height = 23
       Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
       TabOrder = 1
       Text = '1'
@@ -107,10 +107,16 @@ object Form1: TForm1
   end
   object GroupBox7: TGroupBox
     Left = 8
-    Top = 0
+    Top = 8
     Width = 313
     Height = 41
     Caption = #1056#1077#1078#1080#1084' '#1088#1072#1073#1086#1090#1099
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 2
     object SimpleBtn: TRadioButton
       Left = 8
@@ -135,14 +141,14 @@ object Form1: TForm1
   end
   object Operand2: TGroupBox
     Left = 128
-    Top = 48
+    Top = 56
     Width = 65
     Height = 89
     Caption = 'X1'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
-    Font.Name = 'Arial Black'
+    Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 3
@@ -157,7 +163,7 @@ object Form1: TForm1
       Left = 16
       Top = 24
       Width = 33
-      Height = 25
+      Height = 23
       Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
       TabOrder = 0
       Text = '1'
@@ -167,7 +173,7 @@ object Form1: TForm1
       Left = 16
       Top = 56
       Width = 33
-      Height = 25
+      Height = 23
       Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
       TabOrder = 1
       Text = '1'
@@ -176,7 +182,7 @@ object Form1: TForm1
   end
   object ResultGroup: TGroupBox
     Left = 240
-    Top = 48
+    Top = 56
     Width = 81
     Height = 89
     Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
@@ -242,14 +248,14 @@ object Form1: TForm1
   end
   object Operators: TGroupBox
     Left = 8
-    Top = 144
+    Top = 152
     Width = 313
     Height = 81
     Caption = #1054#1087#1077#1088#1072#1094#1080#1080
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
-    Font.Name = 'Arial Black'
+    Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 5
@@ -348,10 +354,16 @@ object Form1: TForm1
   end
   object F1: TGroupBox
     Left = 80
-    Top = 48
+    Top = 56
     Width = 121
     Height = 89
     Caption = 'F(X)'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 6
     Visible = False
     object Label2: TLabel
@@ -407,10 +419,16 @@ object Form1: TForm1
   end
   object F2: TGroupBox
     Left = 80
-    Top = 48
+    Top = 56
     Width = 121
     Height = 89
     Caption = 'F(X)'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 7
     Visible = False
     object Bevel3: TBevel
@@ -453,10 +471,16 @@ object Form1: TForm1
   end
   object F3: TGroupBox
     Left = 80
-    Top = 48
+    Top = 56
     Width = 121
     Height = 89
     Caption = 'F(X)'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 8
     Visible = False
     object Label5: TLabel
@@ -538,10 +562,16 @@ object Form1: TForm1
   end
   object F4: TGroupBox
     Left = 80
-    Top = 48
+    Top = 56
     Width = 121
     Height = 89
     Caption = 'F(X)'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 9
     Visible = False
     object Label12: TLabel
@@ -634,7 +664,7 @@ object Form1: TForm1
   end
   object F5: TGroupBox
     Left = 80
-    Top = 48
+    Top = 56
     Width = 121
     Height = 89
     Caption = 'F(X)'
@@ -736,14 +766,14 @@ object Form1: TForm1
   end
   object Functions: TGroupBox
     Left = 8
-    Top = 144
+    Top = 152
     Width = 313
     Height = 81
     Caption = #1060#1091#1085#1082#1094#1080#1080
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
-    Font.Name = 'Arial Black'
+    Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 11
@@ -798,7 +828,7 @@ object Form1: TForm1
   end
   object BitBtn1: TBitBtn
     Left = 8
-    Top = 232
+    Top = 240
     Width = 313
     Height = 25
     Caption = #1042#1099#1095#1080#1089#1083#1080#1090#1100
