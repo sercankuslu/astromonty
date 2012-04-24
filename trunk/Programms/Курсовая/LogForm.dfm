@@ -1,8 +1,8 @@
 object Form3: TForm3
-  Left = 615
-  Top = 211
-  Width = 560
-  Height = 467
+  Left = 297
+  Top = 651
+  Width = 632
+  Height = 325
   Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099' '#1090#1077#1089#1090#1080#1088#1086#1074#1072#1085#1080#1103' '#1076#1072#1085#1085#1099#1084#1080' '#1080#1079' '#1092#1072#1081#1083#1072':'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,14 +12,14 @@ object Form3: TForm3
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
-  Position = poMainFormCenter
+  Position = poDefaultPosOnly
   PixelsPerInch = 96
   TextHeight = 13
   object Memo1: TMemo
     Left = 0
     Top = 0
-    Width = 544
-    Height = 409
+    Width = 616
+    Height = 267
     Align = alClient
     ReadOnly = True
     ScrollBars = ssBoth

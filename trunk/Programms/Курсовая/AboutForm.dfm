@@ -4,8 +4,8 @@ object Form2: TForm2
   Anchors = []
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-  ClientHeight = 433
-  ClientWidth = 559
+  ClientHeight = 430
+  ClientWidth = 558
   Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,9 +16,16 @@ object Form2: TForm2
   Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 13
+  object Bevel1: TBevel
+    Left = 16
+    Top = 0
+    Width = 521
+    Height = 97
+    Shape = bsBottomLine
+  end
   object Label1: TLabel
-    Left = 48
-    Top = 16
+    Left = 32
+    Top = 112
     Width = 477
     Height = 23
     Caption = #1050#1091#1088#1089#1086#1074#1072#1103' '#1088#1072#1073#1086#1090#1072' '#1087#1086' '#1090#1077#1093#1085#1086#1083#1086#1075#1080#1080' '#1087#1088#1086#1075#1088#1072#1084#1084#1080#1088#1086#1074#1072#1085#1080#1103'.'
@@ -30,8 +37,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label2: TLabel
-    Left = 240
-    Top = 40
+    Left = 241
+    Top = 136
     Width = 58
     Height = 23
     Caption = #1058#1077#1084#1072': '
@@ -43,8 +50,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 152
-    Top = 64
+    Left = 145
+    Top = 160
     Width = 251
     Height = 18
     Caption = #1054#1073#1098#1077#1082#1090' "'#1056#1072#1094#1080#1086#1085#1072#1083#1100#1085#1072#1103' '#1076#1088#1086#1073#1100'"'
@@ -56,8 +63,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label4: TLabel
-    Left = 272
-    Top = 200
+    Left = 264
+    Top = 224
     Width = 84
     Height = 18
     Caption = #1042#1099#1087#1086#1083#1085#1080#1083':'
@@ -69,8 +76,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label5: TLabel
-    Left = 288
-    Top = 240
+    Left = 280
+    Top = 264
     Width = 50
     Height = 17
     Caption = #1043#1088#1091#1087#1087#1072':'
@@ -82,8 +89,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label6: TLabel
-    Left = 288
-    Top = 224
+    Left = 280
+    Top = 248
     Width = 70
     Height = 17
     Caption = #1060#1072#1082#1091#1083#1100#1090#1077#1090
@@ -95,8 +102,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label7: TLabel
-    Left = 288
-    Top = 256
+    Left = 280
+    Top = 280
     Width = 61
     Height = 17
     Caption = #1057#1090#1091#1076#1077#1085#1090':'
@@ -108,8 +115,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label8: TLabel
-    Left = 272
-    Top = 288
+    Left = 264
+    Top = 312
     Width = 109
     Height = 18
     Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100':'
@@ -121,8 +128,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label9: TLabel
-    Left = 400
-    Top = 224
+    Left = 392
+    Top = 248
     Width = 20
     Height = 17
     Caption = #1048#1058
@@ -134,8 +141,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label10: TLabel
-    Left = 400
-    Top = 240
+    Left = 392
+    Top = 264
     Width = 66
     Height = 17
     Caption = #1042#1040#1048'-2-10'
@@ -147,8 +154,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label11: TLabel
-    Left = 400
-    Top = 256
+    Left = 392
+    Top = 280
     Width = 110
     Height = 17
     Caption = #1052#1086#1096#1082#1072#1083#1077#1074' '#1044'.'#1042'.'
@@ -160,8 +167,8 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label12: TLabel
-    Left = 400
-    Top = 288
+    Left = 392
+    Top = 312
     Width = 129
     Height = 17
     Caption = #1050#1086#1083#1077#1089#1085#1080#1082#1086#1074#1072' '#1052'.'#1044'.'
@@ -173,21 +180,86 @@ object Form2: TForm2
     ParentFont = False
   end
   object Label13: TLabel
-    Left = 256
-    Top = 336
-    Width = 39
-    Height = 16
+    Left = 240
+    Top = 352
+    Width = 49
+    Height = 18
     Caption = '2012 '#1075
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
-    Font.Height = -13
+    Font.Height = -16
     Font.Name = 'Arial'
     Font.Style = [fsBold, fsItalic]
     ParentFont = False
   end
+  object Label18: TLabel
+    Left = 39
+    Top = 72
+    Width = 472
+    Height = 17
+    Caption = #1069#1051#1045#1050#1058#1056#1054#1053#1048#1050#1048' '#1048' '#1040#1042#1058#1054#1052#1040#1058#1048#1050#1048' ('#1058#1045#1061#1053#1048#1063#1045#1057#1050#1048#1049' '#1059#1053#1048#1042#1045#1056#1057#1048#1058#1045#1058')"'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label17: TLabel
+    Left = 33
+    Top = 56
+    Width = 484
+    Height = 17
+    Caption = '"'#1052#1054#1057#1050#1054#1042#1057#1050#1048#1049' '#1043#1054#1057#1059#1044#1040#1056#1057#1058#1042#1045#1053#1053#1067#1049' '#1048#1053#1057#1058#1048#1058#1059#1058' '#1056#1040#1044#1048#1054#1058#1045#1061#1053#1048#1050#1048', '
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label16: TLabel
+    Left = 88
+    Top = 24
+    Width = 375
+    Height = 17
+    Caption = #1042#1067#1057#1064#1045#1043#1054' '#1055#1056#1054#1060#1045#1057#1057#1048#1054#1053#1040#1051#1068#1053#1054#1043#1054' '#1054#1041#1056#1040#1047#1054#1042#1040#1053#1048#1071
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label15: TLabel
+    Left = 69
+    Top = 40
+    Width = 412
+    Height = 17
+    Caption = #1043#1054#1057#1059#1044#1040#1056#1057#1058#1042#1045#1053#1053#1054#1045' '#1054#1041#1056#1040#1047#1054#1042#1040#1058#1045#1051#1068#1053#1054#1045' '#1059#1063#1056#1045#1046#1044#1045#1053#1048#1045
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label14: TLabel
+    Left = 168
+    Top = 8
+    Width = 214
+    Height = 17
+    Caption = #1052#1048#1053#1054#1041#1056#1040#1047#1054#1042#1040#1053#1048#1071' '#1056#1054#1057#1057#1048#1048
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+  end
   object OK: TBitBtn
-    Left = 240
-    Top = 384
+    Left = 224
+    Top = 392
     Width = 75
     Height = 25
     TabOrder = 0
