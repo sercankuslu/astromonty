@@ -4,7 +4,7 @@ object Form1: TForm1
   BorderStyle = bsSingle
   Caption = #1054#1073#1098#1077#1082#1090' "'#1056#1072#1094#1080#1086#1085#1072#1083#1100#1085#1072#1103' '#1076#1088#1086#1073#1100'"'
   ClientHeight = 299
-  ClientWidth = 330
+  ClientWidth = 329
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -50,7 +50,7 @@ object Form1: TForm1
   object StatusBar1: TStatusBar
     Left = 0
     Top = 272
-    Width = 330
+    Width = 329
     Height = 27
     Panels = <
       item
@@ -460,7 +460,7 @@ object Form1: TForm1
       Height = 13
       Alignment = taCenter
       AutoSize = False
-      Caption = 'X - 2'
+      Caption = 'X + 2'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -841,20 +841,23 @@ object Form1: TForm1
     object N1: TMenuItem
       Caption = #1060#1072#1081#1083
       object N3: TMenuItem
-        Caption = #1042#1099#1087#1086#1083#1085#1080#1090#1100' '#1090#1077#1089#1090
+        Caption = #1054#1090#1082#1088#1099#1090#1100' '#1090#1077#1089#1090#1086#1074#1099#1081' '#1092#1072#1081#1083
         OnClick = N3Click
       end
       object N4: TMenuItem
         Caption = '-'
       end
       object N5: TMenuItem
-        Caption = #1042#1099#1081#1090#1080
+        Caption = #1047#1072#1082#1088#1099#1090#1100' '#1087#1088#1086#1075#1088#1072#1084#1084#1091
         OnClick = N5Click
       end
     end
-    object N2: TMenuItem
-      Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-      OnClick = N2Click
+    object N6: TMenuItem
+      Caption = #1057#1087#1088#1072#1074#1082#1072
+      object N2: TMenuItem
+        Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
+        OnClick = N2Click
+      end
     end
   end
 end

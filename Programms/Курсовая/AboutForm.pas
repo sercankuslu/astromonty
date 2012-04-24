@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons;
+  Dialogs, StdCtrls, Buttons, ExtCtrls;
 
 type
   TForm2 = class(TForm)
@@ -20,8 +20,14 @@ type
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
-    OK: TBitBtn;
     Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Bevel1: TBevel;
+    OK: TBitBtn;
   private
     { Private declarations }
   public

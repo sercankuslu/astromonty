@@ -81,9 +81,9 @@ type
     N3: TMenuItem;
     N4: TMenuItem;
     N5: TMenuItem;
+    N6: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-
     procedure FormDestroy(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure OperatorSelectClick(Sender: TObject);
@@ -209,10 +209,10 @@ begin
             N.Free;
             Res1.Free;
         end;
-        11 : begin   // F(x) = (x-1)/(x-2)
+        11 : begin   // F(x) = (x-1)/(x+2)
             Res1 := TRationalFraction.Create(X);
             N := TRationalFraction.Create(2,1);
-            Res1.Sub(N);
+            Res1.Add(N);
             Res.SetValue(X);
             N.SetValue(1,1);
             Res.Sub(N);
@@ -459,17 +459,17 @@ var
 begin
     if(Form3.OpenDialog1.Execute) then
     begin
-        Form3.Memo1.Clear;
+        Form3.ClearLog;
         Form3.Show;
         AssignFile(f, Form3.OpenDialog1.FileName ); {Assigns the Filename}
         Reset(f); {Opens the file for reading}
-        Form3.Memo1.Lines.Add('Открыт файл : ' + Form3.OpenDialog1.FileName);
-        Form3.Memo1.Lines.Add('Результат обработки данных: ');
+        Form3.AddLogString('Открыт файл : ' + Form3.OpenDialog1.FileName);
+        Form3.AddLogString('Результат обработки данных: ');
         repeat
             Readln(f, s);
             CheckStringOper(s, log);
             if(log <> '') then
-                Form3.Memo1.Lines.Add(log);            
+                Form3.AddLogString(log);
         until(Eof(f));
         CloseFile(f);
     end;

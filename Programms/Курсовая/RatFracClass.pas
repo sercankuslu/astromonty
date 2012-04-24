@@ -41,11 +41,8 @@ type
         function Lt( Factor : TRationalFraction ):boolean; Overload; // <
         function Ne( Factor : TRationalFraction ):boolean; Overload; //<>
         function Ge( Factor : TRationalFraction ):boolean; Overload; //>=
-        function Le( Factor : TRationalFraction ):boolean; Overload; //<=
-
+        function Le( Factor : TRationalFraction ):boolean; Overload; //<=   
     end;
-var
-    RF, RF1, RF2 : TRationalFraction;
 implementation
 { TRationalFraction }
 //******************************************************************************

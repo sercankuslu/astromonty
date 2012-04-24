@@ -18,6 +18,8 @@ type
     OpenDialog1: TOpenDialog;
     procedure N2Click(Sender: TObject);
     procedure N4Click(Sender: TObject);
+    procedure AddLogString(Log:string);
+    procedure ClearLog();
   private
     { Private declarations }
   public
@@ -31,6 +33,16 @@ implementation
 
 {$R *.dfm}
   
+procedure TForm3.AddLogString(Log: string);
+begin
+    Memo1.Lines.Add(Log);
+end;
+
+procedure TForm3.ClearLog;
+begin
+    Memo1.Clear;
+end;
+
 procedure TForm3.N2Click(Sender: TObject);
 begin
     if(SaveDialog1.Execute) then
