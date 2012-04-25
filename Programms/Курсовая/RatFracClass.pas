@@ -155,20 +155,21 @@ end;
 //******************************************************************************
 function TRationalFraction.Nod( a, b : integer) : integer;
 var
-    m, n, r, k: integer;
+    m, n, r, res, k: integer;
 begin
     m := a;
     n := b;
-    r := 1;
+    r := 0;
+    res := 0;
     repeat
-    if m = 0 then begin r := r * n; break; end; // NOD(0,n) = n
-    if (n = 0) or (m = n) then begin r := r * m; break; end;// NOD(0,n) = n
-    if (m = 1) or (n = 1) then break;
+    if m = 0 then begin Nod := n Shl r; break; end; // NOD(0,n) = n
+    if (n = 0) or (m = n) then begin Nod := m Shl r; break; end;// NOD(0,n) = n
+    if (m = 1) or (n = 1) then begin Nod := 1 Shl r; break; end;
     if (m and 1 = 0) then
     begin
         if ( n and 1 = 0) then
         begin
-            r := r Shl 1;
+            r := r + 1;
             m := m Shr 1;
             n := n Shr 1;
             Continue;
@@ -199,7 +200,6 @@ begin
         end;
     end;
     until false;
-    Nod := r;
 end;
 function TRationalFraction.GetNumStr : string;
 begin
