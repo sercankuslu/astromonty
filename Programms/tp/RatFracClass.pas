@@ -203,17 +203,17 @@ begin
 end;
 function TRationalFraction.GetNumStr : string;
 begin
-    if(FDenominator  = 0) then GetNumStr := 'Ошибка' else
+    if FErrorFlag then GetNumStr := 'Ошибка' else
         GetNumStr := IntToStr(FNumerator);
 end;
 function TRationalFraction.GetDenomStr : string;
 begin
-    if(FDenominator  = 0) then GetDenomStr := 'Ошибка' else
+    if FErrorFlag then GetDenomStr := 'Ошибка' else
         GetDenomStr := IntToStr(FDenominator );
 end;
 function TRationalFraction.GetErrorStr : string;
 begin
-    if(FErrorFlag) then GetErrorStr := 'Деление на "0"' else
+    if FErrorFlag then GetErrorStr := 'Деление на "0"' else
         GetErrorStr := 'Дробь верна';
 end;
 //******************************************************************************
