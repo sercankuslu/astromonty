@@ -1,10 +1,10 @@
 object Form1: TForm1
-  Left = 431
-  Top = 292
+  Left = 449
+  Top = 144
   BorderStyle = bsSingle
   Caption = #1054#1073#1098#1077#1082#1090' "'#1056#1072#1094#1080#1086#1085#1072#1083#1100#1085#1072#1103' '#1076#1088#1086#1073#1100'"'
-  ClientHeight = 299
-  ClientWidth = 329
+  ClientHeight = 300
+  ClientWidth = 326
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,6 @@ object Form1: TForm1
   Position = poDesktopCenter
   Visible = True
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -47,160 +46,50 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
   end
-  object StatusBar1: TStatusBar
-    Left = 0
-    Top = 272
-    Width = 329
-    Height = 27
-    Panels = <
-      item
-        Width = 60
-      end
-      item
-        Width = 130
-      end
-      item
-        Width = 100
-      end>
-    SimplePanel = False
-  end
-  object Operand1: TGroupBox
+  object Functions1: TRadioGroup
     Left = 8
-    Top = 56
-    Width = 65
-    Height = 89
-    Caption = 'X'
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Arial'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    object Bevel1: TBevel
-      Left = 8
-      Top = 48
-      Width = 49
-      Height = 33
-      Shape = bsTopLine
-    end
-    object EnterNum: TEdit
-      Left = 16
-      Top = 24
-      Width = 33
-      Height = 23
-      Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
-      TabOrder = 0
-      Text = '1'
-      OnChange = OperatorSelectClick
-    end
-    object EnterDenom: TEdit
-      Left = 16
-      Top = 56
-      Width = 33
-      Height = 23
-      Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
-      TabOrder = 1
-      Text = '1'
-      OnChange = OperatorSelectClick
-    end
-  end
-  object GroupBox7: TGroupBox
-    Left = 8
-    Top = 8
+    Top = 152
     Width = 313
-    Height = 41
-    Caption = #1056#1077#1078#1080#1084' '#1088#1072#1073#1086#1090#1099
+    Height = 81
+    Caption = #1060#1091#1085#1082#1094#1080#1080
+    Columns = 5
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -12
     Font.Name = 'Arial'
     Font.Style = [fsBold]
+    ItemIndex = 0
+    Items.Strings = (
+      'F1(X)'
+      'F2(X)'
+      'F3(X)'
+      'F4(X)'
+      'F5(X)')
     ParentFont = False
-    TabOrder = 2
-    object SimpleBtn: TRadioButton
-      Left = 8
-      Top = 16
-      Width = 121
-      Height = 17
-      Caption = #1055#1088#1086#1089#1090#1099#1077' '#1086#1087#1077#1088#1072#1094#1080#1080
-      Checked = True
-      TabOrder = 0
-      TabStop = True
-      OnClick = SimpleBtnClick
-    end
-    object FormulsBtn: TRadioButton
-      Left = 168
-      Top = 16
-      Width = 137
-      Height = 17
-      Caption = #1042#1099#1095#1080#1089#1083#1077#1085#1080#1077' '#1092#1086#1088#1084#1091#1083
-      TabOrder = 1
-      OnClick = FormulsBtnClick
-    end
+    TabOrder = 11
+    Visible = False
+    OnClick = OperatorSelectClick
   end
-  object Operand2: TGroupBox
-    Left = 128
+  object F5: TGroupBox
+    Left = 80
     Top = 56
-    Width = 65
+    Width = 121
     Height = 89
-    Caption = 'X1'
+    Caption = 'F(X)'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 3
-    object Bevel26: TBevel
-      Left = 8
-      Top = 48
-      Width = 49
-      Height = 33
-      Shape = bsTopLine
-    end
-    object EnterNum2: TEdit
-      Left = 16
-      Top = 24
-      Width = 33
-      Height = 23
-      Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
-      TabOrder = 0
-      Text = '1'
-      OnChange = OperatorSelectClick
-    end
-    object EnterDenom2: TEdit
-      Left = 16
-      Top = 56
-      Width = 33
-      Height = 23
-      Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
-      TabOrder = 1
-      Text = '1'
-      OnChange = OperatorSelectClick
-    end
-  end
-  object ResultGroup: TGroupBox
-    Left = 240
-    Top = 56
-    Width = 81
-    Height = 89
-    Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Arial'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 4
-    object ResNum: TLabel
-      Left = 8
-      Top = 32
-      Width = 49
-      Height = 13
-      Alignment = taCenter
-      AutoSize = False
-      Caption = '1'
+    TabOrder = 7
+    Visible = False
+    object Label17: TLabel
+      Left = 48
+      Top = 40
+      Width = 6
+      Height = 14
+      Caption = '+'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -208,148 +97,79 @@ object Form1: TForm1
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object ResDenom: TLabel
-      Left = 8
-      Top = 56
-      Width = 49
-      Height = 13
-      Alignment = taCenter
-      AutoSize = False
-      Caption = '1'
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object ResDivider: TBevel
-      Left = 16
+    object Bevel7: TBevel
+      Left = 64
       Top = 48
       Width = 33
       Height = 1
       Shape = bsTopLine
     end
-    object CmpRes1: TLabel
-      Left = 8
-      Top = 40
-      Width = 6
-      Height = 14
+    object Label18: TLabel
+      Left = 64
+      Top = 32
+      Width = 33
+      Height = 13
       Alignment = taCenter
-      Caption = '1'
+      AutoSize = False
+      Caption = '5X'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
-      Visible = False
     end
-  end
-  object Operators: TGroupBox
-    Left = 8
-    Top = 152
-    Width = 313
-    Height = 81
-    Caption = #1054#1087#1077#1088#1072#1094#1080#1080
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Arial'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 5
-    object OperatorGt: TRadioButton
-      Left = 16
+    object Label19: TLabel
+      Left = 64
+      Top = 56
+      Width = 33
+      Height = 13
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '11'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label20: TLabel
+      Left = 8
+      Top = 32
+      Width = 33
+      Height = 13
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '3'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Bevel8: TBevel
+      Left = 8
       Top = 48
       Width = 33
-      Height = 17
-      Caption = '>'
-      TabOrder = 0
-      OnClick = OperatorSelectClick
+      Height = 1
+      Shape = bsTopLine
     end
-    object OperatorLt: TRadioButton
-      Left = 72
-      Top = 48
+    object Label21: TLabel
+      Left = 8
+      Top = 56
       Width = 33
-      Height = 17
-      Caption = '<'
-      TabOrder = 1
-      OnClick = OperatorSelectClick
-    end
-    object OperatorEq: TRadioButton
-      Left = 240
-      Top = 24
-      Width = 33
-      Height = 17
-      Caption = '='
-      TabOrder = 2
-      OnClick = OperatorSelectClick
-    end
-    object OperatorNe: TRadioButton
-      Left = 240
-      Top = 48
-      Width = 41
-      Height = 17
-      Caption = '<>'
-      TabOrder = 3
-      OnClick = OperatorSelectClick
-    end
-    object OperatorGe: TRadioButton
-      Left = 128
-      Top = 48
-      Width = 33
-      Height = 17
-      Caption = '>='
-      TabOrder = 4
-      OnClick = OperatorSelectClick
-    end
-    object OperatorLe: TRadioButton
-      Left = 184
-      Top = 48
-      Width = 33
-      Height = 17
-      Caption = '<='
-      TabOrder = 5
-      OnClick = OperatorSelectClick
-    end
-    object OperatorPlus: TRadioButton
-      Left = 16
-      Top = 24
-      Width = 33
-      Height = 17
-      Caption = '+'
-      Checked = True
-      TabOrder = 6
-      TabStop = True
-      OnClick = OperatorSelectClick
-    end
-    object OperatorDiv: TRadioButton
-      Left = 184
-      Top = 24
-      Width = 33
-      Height = 17
-      Caption = '/'
-      TabOrder = 7
-      OnClick = OperatorSelectClick
-    end
-    object OperatorMinus: TRadioButton
-      Left = 72
-      Top = 24
-      Width = 33
-      Height = 17
-      Caption = '-'
-      TabOrder = 8
-      OnClick = OperatorSelectClick
-    end
-    object OperatorMul: TRadioButton
-      Left = 128
-      Top = 24
-      Width = 33
-      Height = 17
-      Caption = '*'
-      TabOrder = 9
-      OnClick = OperatorSelectClick
+      Height = 13
+      Alignment = taCenter
+      AutoSize = False
+      Caption = 'X'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
     end
   end
   object F1: TGroupBox
@@ -364,7 +184,7 @@ object Form1: TForm1
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 3
     Visible = False
     object Label2: TLabel
       Left = 32
@@ -429,7 +249,7 @@ object Form1: TForm1
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 4
     Visible = False
     object Bevel3: TBevel
       Left = 32
@@ -481,7 +301,7 @@ object Form1: TForm1
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 8
+    TabOrder = 5
     Visible = False
     object Label5: TLabel
       Left = 32
@@ -572,7 +392,7 @@ object Form1: TForm1
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 9
+    TabOrder = 6
     Visible = False
     object Label12: TLabel
       Left = 48
@@ -662,168 +482,169 @@ object Form1: TForm1
       ParentFont = False
     end
   end
-  object F5: TGroupBox
-    Left = 80
+  object StatusBar1: TStatusBar
+    Left = 0
+    Top = 273
+    Width = 326
+    Height = 27
+    Panels = <
+      item
+        Width = 60
+      end
+      item
+        Width = 130
+      end
+      item
+        Width = 100
+      end>
+    SimplePanel = False
+  end
+  object Operand1: TGroupBox
+    Left = 8
     Top = 56
-    Width = 121
+    Width = 65
     Height = 89
-    Caption = 'F(X)'
+    Caption = 'X'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Arial'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 10
-    Visible = False
-    object Label17: TLabel
-      Left = 48
+    TabOrder = 0
+    object Bevel1: TBevel
+      Left = 8
+      Top = 48
+      Width = 49
+      Height = 33
+      Shape = bsTopLine
+    end
+    object EnterNum: TEdit
+      Left = 8
+      Top = 24
+      Width = 49
+      Height = 23
+      Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
+      TabOrder = 0
+      Text = '1'
+      OnChange = OperatorSelectClick
+    end
+    object EnterDenom: TEdit
+      Left = 8
+      Top = 56
+      Width = 49
+      Height = 23
+      Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
+      TabOrder = 1
+      Text = '1'
+      OnChange = OperatorSelectClick
+    end
+  end
+  object Operand2: TGroupBox
+    Left = 128
+    Top = 56
+    Width = 65
+    Height = 89
+    Caption = 'X1'
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 1
+    object Bevel26: TBevel
+      Left = 8
+      Top = 48
+      Width = 49
+      Height = 33
+      Shape = bsTopLine
+    end
+    object EnterNum2: TEdit
+      Left = 8
+      Top = 24
+      Width = 49
+      Height = 23
+      Hint = #1063#1080#1089#1083#1080#1090#1077#1083#1100
+      TabOrder = 0
+      Text = '1'
+      OnChange = OperatorSelectClick
+    end
+    object EnterDenom2: TEdit
+      Left = 8
+      Top = 56
+      Width = 49
+      Height = 23
+      Hint = #1047#1085#1072#1084#1077#1085#1072#1090#1077#1083#1100
+      TabOrder = 1
+      Text = '1'
+      OnChange = OperatorSelectClick
+    end
+  end
+  object ResultGroup: TGroupBox
+    Left = 240
+    Top = 56
+    Width = 81
+    Height = 89
+    Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 2
+    object ResNum: TLabel
+      Left = 8
+      Top = 32
+      Width = 49
+      Height = 13
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '1'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object ResDenom: TLabel
+      Left = 8
+      Top = 56
+      Width = 49
+      Height = 13
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '1'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object ResDivider: TBevel
+      Left = 16
+      Top = 48
+      Width = 33
+      Height = 1
+      Shape = bsTopLine
+    end
+    object CmpRes1: TLabel
+      Left = 8
       Top = 40
       Width = 6
       Height = 14
-      Caption = '+'
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object Bevel7: TBevel
-      Left = 64
-      Top = 48
-      Width = 33
-      Height = 1
-      Shape = bsTopLine
-    end
-    object Label18: TLabel
-      Left = 64
-      Top = 32
-      Width = 33
-      Height = 13
       Alignment = taCenter
-      AutoSize = False
-      Caption = '5X'
+      Caption = '1'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
-    end
-    object Label19: TLabel
-      Left = 64
-      Top = 56
-      Width = 33
-      Height = 13
-      Alignment = taCenter
-      AutoSize = False
-      Caption = '11'
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object Label20: TLabel
-      Left = 8
-      Top = 32
-      Width = 33
-      Height = 13
-      Alignment = taCenter
-      AutoSize = False
-      Caption = '3'
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object Bevel8: TBevel
-      Left = 8
-      Top = 48
-      Width = 33
-      Height = 1
-      Shape = bsTopLine
-    end
-    object Label21: TLabel
-      Left = 8
-      Top = 56
-      Width = 33
-      Height = 13
-      Alignment = taCenter
-      AutoSize = False
-      Caption = 'X'
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-  end
-  object Functions: TGroupBox
-    Left = 8
-    Top = 152
-    Width = 313
-    Height = 81
-    Caption = #1060#1091#1085#1082#1094#1080#1080
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Arial'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 11
-    Visible = False
-    object Funct5: TRadioButton
-      Left = 240
-      Top = 24
-      Width = 65
-      Height = 17
-      Caption = 'F5(X)'
-      TabOrder = 0
-      OnClick = FunctSelectClick
-    end
-    object Funct1: TRadioButton
-      Left = 16
-      Top = 24
-      Width = 65
-      Height = 17
-      Caption = 'F1(X)'
-      Checked = True
-      TabOrder = 1
-      TabStop = True
-      OnClick = FunctSelectClick
-    end
-    object Funct4: TRadioButton
-      Left = 128
-      Top = 48
-      Width = 65
-      Height = 17
-      Caption = 'F4(X)'
-      TabOrder = 2
-      OnClick = FunctSelectClick
-    end
-    object Funct2: TRadioButton
-      Left = 16
-      Top = 48
-      Width = 65
-      Height = 17
-      Caption = 'F2(X)'
-      TabOrder = 3
-      OnClick = FunctSelectClick
-    end
-    object Funct3: TRadioButton
-      Left = 128
-      Top = 24
-      Width = 65
-      Height = 17
-      Caption = 'F3(X)'
-      TabOrder = 4
-      OnClick = FunctSelectClick
+      Visible = False
     end
   end
   object BitBtn1: TBitBtn
@@ -832,8 +653,57 @@ object Form1: TForm1
     Width = 313
     Height = 25
     Caption = #1042#1099#1095#1080#1089#1083#1080#1090#1100
-    TabOrder = 12
+    TabOrder = 9
+    OnClick = Calculate
     Kind = bkIgnore
+  end
+  object Operators1: TRadioGroup
+    Left = 8
+    Top = 152
+    Width = 313
+    Height = 81
+    Caption = #1054#1087#1077#1088#1072#1094#1080#1080
+    Columns = 5
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ItemIndex = 0
+    Items.Strings = (
+      '+'
+      '-'
+      '*'
+      '/'
+      '='
+      '>'
+      '<'
+      '<>'
+      '>='
+      '<=')
+    ParentFont = False
+    TabOrder = 10
+    OnClick = OperatorSelectClick
+  end
+  object ModeSelect: TRadioGroup
+    Left = 8
+    Top = 0
+    Width = 313
+    Height = 49
+    Caption = #1056#1077#1078#1080#1084' '#1088#1072#1073#1086#1090#1099
+    Columns = 2
+    Font.Charset = RUSSIAN_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ItemIndex = 0
+    Items.Strings = (
+      #1055#1088#1086#1089#1090#1099#1077' '#1086#1087#1077#1088#1072#1094#1080#1080
+      #1042#1099#1095#1080#1089#1083#1077#1085#1080#1077' '#1092#1086#1088#1084#1091#1083)
+    ParentFont = False
+    TabOrder = 12
+    OnClick = ModeSelectClick
   end
   object MainMenu1: TMainMenu
     OwnerDraw = True

@@ -6,99 +6,86 @@ uses
   ToolWin, RatFracClass, AboutForm, LogForm;
 type
   TForm1 = class(TForm)
-    StatusBar1: TStatusBar;
-    Operand1: TGroupBox;
-    Bevel1: TBevel;
-    EnterNum: TEdit;
-    EnterDenom: TEdit;
-    MainMenu1: TMainMenu;
-    N2: TMenuItem;
-    GroupBox7: TGroupBox;
-    Operand2: TGroupBox;
-    Bevel26: TBevel;
-    EnterNum2: TEdit;
-    EnterDenom2: TEdit;
-    SimpleBtn: TRadioButton;
-    FormulsBtn: TRadioButton;
-    ResultGroup: TGroupBox;
-    ResNum: TLabel;
-    ResDenom: TLabel;
-    ResDivider: TBevel;
-    Operators: TGroupBox;
-    OperatorGt: TRadioButton;
-    OperatorLt: TRadioButton;
-    OperatorEq: TRadioButton;
-    OperatorNe: TRadioButton;
-    OperatorGe: TRadioButton;
-    OperatorLe: TRadioButton;
-    CmpRes1: TLabel;
-    Label1: TLabel;
+    MainMenu1:      TMainMenu;
+    N1:             TMenuItem;
+    N2:             TMenuItem;
+    N3:             TMenuItem;
+    N4:             TMenuItem;
+    N5:             TMenuItem;
+    N6:             TMenuItem;
+
+    StatusBar1:     TStatusBar;
+    BitBtn1:        TBitBtn;
+
+    F1:             TGroupBox;
+    F2:             TGroupBox;
+    F3:             TGroupBox;
+    F4:             TGroupBox;
+    F5:             TGroupBox;
+    Operand1:       TGroupBox;
+    Operand2:       TGroupBox;
+    ResultGroup:    TGroupBox;
+
+    ResDivider:     TBevel;
+    Bevel1:         TBevel;
+    Bevel26:        TBevel;
+
+    EnterNum:       TEdit;
+    EnterDenom:     TEdit;
+    EnterNum2:      TEdit;
+    EnterDenom2:    TEdit;
+
+    CmpRes1:        TLabel;
+    Label1:         TLabel;
+    ResNum:         TLabel;
+    ResDenom:       TLabel;
     OperatorSymbol: TLabel;
-    OperatorPlus: TRadioButton;
-    OperatorDiv: TRadioButton;
-    OperatorMinus: TRadioButton;
-    OperatorMul: TRadioButton;
-    F1: TGroupBox;
-    Label2: TLabel;
-    Bevel2: TBevel;
-    Label3: TLabel;
-    Label4: TLabel;
-    F2: TGroupBox;
-    Bevel3: TBevel;
-    Label6: TLabel;
-    Label7: TLabel;
-    F3: TGroupBox;
-    Label5: TLabel;
-    Bevel4: TBevel;
-    Label8: TLabel;
-    Label9: TLabel;
-    Label10: TLabel;
-    Label11: TLabel;
-    F4: TGroupBox;
-    Label12: TLabel;
-    Bevel5: TBevel;
-    Label13: TLabel;
-    Label14: TLabel;
-    Label15: TLabel;
-    Bevel6: TBevel;
-    Label16: TLabel;
-    F5: TGroupBox;
-    Label17: TLabel;
-    Bevel7: TBevel;
-    Label18: TLabel;
-    Label19: TLabel;
-    Label20: TLabel;
-    Bevel8: TBevel;
-    Label21: TLabel;
-    Functions: TGroupBox;
-    Funct5: TRadioButton;
-    Funct1: TRadioButton;
-    Funct4: TRadioButton;
-    Funct2: TRadioButton;
-    Funct3: TRadioButton;
-    BitBtn1: TBitBtn;
-    N1: TMenuItem;
-    N3: TMenuItem;
-    N4: TMenuItem;
-    N5: TMenuItem;
-    N6: TMenuItem;
-    procedure FormShow(Sender: TObject);
+
+    Bevel2:         TBevel;
+    Bevel3:         TBevel;
+    Bevel4:         TBevel;
+    Bevel5:         TBevel;
+    Bevel6:         TBevel;
+    Bevel7:         TBevel;
+    Bevel8:         TBevel;
+
+    Label2:         TLabel;
+    Label3:         TLabel;
+    Label4:         TLabel;
+    Label6:         TLabel;
+    Label7:         TLabel;
+    Label5:         TLabel;
+    Label8:         TLabel;
+    Label9:         TLabel;
+    Label10:        TLabel;
+    Label11:        TLabel;
+    Label12:        TLabel;
+    Label13:        TLabel;
+    Label14:        TLabel;
+    Label15:        TLabel;
+    Label16:        TLabel;
+    Label17:        TLabel;
+    Label18:        TLabel;
+    Label19:        TLabel;
+    Label20:        TLabel;
+    Label21:        TLabel;
+    Operators1:     TRadioGroup;
+    Functions1:     TRadioGroup;
+    ModeSelect:     TRadioGroup;
+
     procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure Calculate(Sender: TObject);
     procedure OperatorSelectClick(Sender: TObject);
-    procedure SimpleBtnClick(Sender: TObject);
-    procedure FormulsBtnClick(Sender: TObject);
-    procedure FunctSelectClick(Sender: TObject);
+    procedure ModeSelectClick(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
     function CheckStringOper(InStr : string; var LogStr:string) : boolean;
     function IntFromString(Line: string; var PosFrom: integer): integer;
     function SetFromString(Line: string; var PosFrom: integer; var Res1 : TRationalFraction): boolean;
     procedure N5Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
-    X, X1, Res : TRationalFraction;
-    Operation : short;
+    Operation : short;     // режим вычислений
     { Private declarations }
   public
     { Public declarations }
@@ -112,18 +99,20 @@ implementation
 {$R *.dfm}
 
 
-procedure TForm1.FormShow(Sender: TObject);
-begin
-    EnterNum.Text := '1';
-    EnterDenom.Text := '1';
-end;
-procedure TForm1.Button1Click(Sender: TObject);
+// Функция выполняет вычисления всех операций в
+// зависимости от переменной Operation
+// входные данные перечитываются из Элементов формы
+procedure TForm1.Calculate(Sender: TObject);
 var
     a, b : integer;
     CompResult : boolean;
-    N, Res1, Res2 : TRationalFraction;
+    X, X1, Res, N, Res1, Res2 : TRationalFraction;
 begin
     CompResult := false;
+    // создаём рабочие объекты 
+    Res := TRationalFraction.Create;
+    X := TRationalFraction.Create;
+    X1 := TRationalFraction.Create;
     // вводим данные с обработкой ошибок
     try
         a := StrToInt(EnterNum.Text);
@@ -136,7 +125,7 @@ begin
         end else X1.SetValue(1,1);
     except
         on Exception : EConvertError do
-        begin
+        begin // сообщаем об ошибке в панель статуса
             StatusBar1.Panels[0].Text := 'Ошибка:';
             StatusBar1.Panels[1].Text := 'при вводе числа';
             StatusBar1.Panels[2].Text := Exception.Message;
@@ -145,7 +134,7 @@ begin
         //ShowMessage(Exception.Message);
     end;
     if(X.ErrorFlag) then
-    begin
+    begin // сообщаем об ошибке в панель статуса
         StatusBar1.Panels[0].Text := 'Ошибка';
         StatusBar1.Panels[1].Text := 'в дроби X';
         StatusBar1.Panels[2].Text := X.ErrorStr;
@@ -155,7 +144,7 @@ begin
         exit;
     end;
     if(X1.ErrorFlag) then
-    begin
+    begin // сообщаем об ошибке в панель статуса
         StatusBar1.Panels[0].Text := 'Ошибка';
         StatusBar1.Panels[1].Text := 'в дроби X1';
         StatusBar1.Panels[2].Text := X1.ErrorStr;
@@ -261,13 +250,13 @@ begin
         ResNum.Caption := Res.StrNumerator;
         ResDenom.Caption := Res.StrDenominator;
         if(Res.ErrorFlag) then
-        begin
+        begin // сообщаем об ошибке в панель статуса
             StatusBar1.Panels[0].Text := 'Ошибка';
             StatusBar1.Panels[1].Text := 'Результат операции: ';
             StatusBar1.Panels[2].Text := Res.ErrorStr;
             exit;
         end else
-        begin
+        begin  // сообщаем об успехе в панель статуса
             StatusBar1.Panels[0].Text := 'Успешно';
             StatusBar1.Panels[1].Text := 'Результат операции: ';
             StatusBar1.Panels[2].Text := Res.ErrorStr;
@@ -280,173 +269,93 @@ begin
         else
             CmpRes1.Caption := 'Ложь';
     end;
-
+    // освобождаем ресурсы
+    X.Free;
+    X1.Free;
+    Res.Free;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-    X  := TRationalFraction.Create(1,1);
-    X1 := TRationalFraction.Create(1,1);
-    Res := TRationalFraction.Create(1,1);
     Operation := 0; // +
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-    Res.Free;
-    X.Free;
-    X1.Free;
-end;
-
+// функция-обработчик сообщений о выборе операции на форме
 procedure TForm1.OperatorSelectClick(Sender: TObject);
 var
     isCompare : bool;
 begin
     isCompare := false;
-    if(SimpleBtn.Checked) then
+    if (ModeSelect.ItemIndex = 0) then
     begin
-
-    if( OperatorPlus.Checked) then
-    begin
-        OperatorSymbol.Caption := '+';
-        isCompare := false;
-        Operation := 0;
-    end;
-    if( OperatorMinus.Checked) then
-    begin
-        OperatorSymbol.Caption := '-';
-        isCompare := false;
-        Operation := 1;
-    end;
-    if( OperatorMul.Checked) then
-    begin
-        OperatorSymbol.Caption := '*';
-        isCompare := false;
-        Operation := 2;
-    end;
-    if( OperatorDiv.Checked) then
-    begin
-        OperatorSymbol.Caption := '/';
-        isCompare := false;
-        Operation := 3;
-    end;
-    if( OperatorEq.Checked) then
-    begin
-        OperatorSymbol.Caption := '=';
-        isCompare := true;
-        Operation := 4;
-    end;
-    if( OperatorGt.Checked) then
-    begin
-        OperatorSymbol.Caption := '>';
-        isCompare := true;
-        Operation := 5;
-    end;
-    if( OperatorLt.Checked) then
-    begin
-        OperatorSymbol.Caption := '<';
-        isCompare := true;
-        Operation := 6;
-    end;
-    if( OperatorNe.Checked) then
-    begin
-        OperatorSymbol.Caption := '<>';
-        isCompare := true;
-        Operation := 7;
-    end;
-    if( OperatorGe.Checked) then
-    begin
-        OperatorSymbol.Caption := '>=';
-        isCompare := true;
-        Operation := 8;
-    end;
-    if( OperatorLe.Checked) then
-    begin
-        OperatorSymbol.Caption := '<=';
-        isCompare := true;
-        Operation := 9;
-    end;
-    if(isCompare) then
-    begin
-        CmpRes1.Visible := true;
-        ResDenom.Visible := false;
-        ResNum.Visible := false;
-        ResDivider.Visible := false;
+        OperatorSymbol.Caption := Operators1.Items.Strings[Operators1.ItemIndex];
+        Operation := Operators1.ItemIndex;
+        if(Operation >= 4) then
+        begin
+			CmpRes1.Visible := true;
+			ResDenom.Visible := false;
+			ResNum.Visible := false;
+			ResDivider.Visible := false;
+		end else
+		begin
+			CmpRes1.Visible := false;
+			ResDenom.Visible := true;
+			ResNum.Visible := true;
+			ResDivider.Visible := true;
+		end;
     end else
     begin
-        CmpRes1.Visible := false;
-        ResDenom.Visible := true;
-        ResNum.Visible := true;
-        ResDivider.Visible := true;
-    end;
-    end;
-    Button1Click(Sender);
+        Operation := Functions1.ItemIndex + 10;
+        F1.Visible := false;
+        F2.Visible := false;
+        F3.Visible := false;
+        F4.Visible := false;
+        F5.Visible := false;
+        case Functions1.ItemIndex of
+            0: F1.Visible := true;
+            1: F2.Visible := true;
+            2: F3.Visible := true;
+            3: F4.Visible := true;
+            4: F5.Visible := true;
+        end;
+	end;
+    Calculate(Sender);
  end;
-
-procedure TForm1.SimpleBtnClick(Sender: TObject);
+// функция - обработчик выбора режима работы(простые операции/функции)
+procedure TForm1.ModeSelectClick(Sender: TObject);
 begin
-    Operand2.Visible := true;
-    Operators.Visible := true;
-    Functions.Visible := false;    
-    OperatorSymbol.Visible := true;
-    Operation := 0;             // возвращаем на операцию '+'
-    OperatorPlus.Checked := true;
-    F1.Visible := false;
-    F2.Visible := false;
-    F3.Visible := false;
-    F4.Visible := false;
-    F5.Visible := false;
+    if ModeSelect.ItemIndex = 0 then
+    begin
+        Operand2.Visible := true;
+        Operators1.Visible := true;
+        Functions1.Visible := false;
+        OperatorSymbol.Visible := true;
+        Operation := 0;             // возвращаем на операцию '+'
+        Operators1.ItemIndex := 0;
+        F1.Visible := false;
+        F2.Visible := false;
+        F3.Visible := false;
+        F4.Visible := false;
+        F5.Visible := false;
+    end else
+    begin
+        Operand2.Visible := false;
+        Operators1.Visible := false;
+        Functions1.Visible := true;
+        OperatorSymbol.Visible := false;
+        Operation := 10;
+        Functions1.ItemIndex := 0;
+        ResNum.Visible := true;
+        Resdenom.Visible := true;
+        ResDivider.Visible := true;
+        CmpRes1.Visible := false;
+    end;
     OperatorSelectClick(Sender);
 end;
 
-procedure TForm1.FormulsBtnClick(Sender: TObject);
-begin
-    Operand2.Visible := false;
-    Operators.Visible := false;
-    Functions.Visible := true;
-    OperatorSymbol.Visible := false;
-    Operation := 10;
-    Funct1.Checked := true;
-    ResNum.Visible := true;
-    Resdenom.Visible := true;
-    ResDivider.Visible := true;
-    CmpRes1.Visible := false;
-    OperatorSelectClick(Sender);
-    FunctSelectClick(Sender);
-end;
-
-procedure TForm1.FunctSelectClick(Sender: TObject);
-
-begin
-
-    if(Funct1.Checked) then
-    begin
-        Operation:=10;
-        F1.Visible := true;
-    end else F1.Visible := false;
-    if(Funct2.Checked) then
-    begin
-        Operation:=11;
-        F2.Visible := true;
-     end else F2.Visible := false;
-    if(Funct3.Checked) then
-    begin
-        Operation:=12;
-        F3.Visible := true;
-    end else F3.Visible := false;
-    if(Funct4.Checked) then
-    begin
-        Operation:=13;
-        F4.Visible := true;
-    end else F4.Visible := false;
-    if(Funct5.Checked) then
-    begin
-        Operation:=14;
-        F5.Visible := true;
-    end else F5.Visible := false;
-    Button1Click(Sender);
-end;
-
+// функция выбирает математическую функцию для вычислений
+// (устанавливает значение переменной Operation)
+// и переключает видимость у элементов формы в зависимости от выбранной функции
 procedure TForm1.N2Click(Sender: TObject);
 begin
     Form2.ShowModal;
@@ -474,7 +383,7 @@ begin
         CloseFile(f);
     end;
 end;
-//******************************************************************************
+
 // функция возвращает результат проверки утверждения из строки s
 // символы после '#' игнорируются
 // формат строки:
@@ -569,7 +478,6 @@ begin
                 if InStr[i] = 'f' then br := false;
                 k:=7;  // ввод данных завершен
             end;
-            //else break;
         end;
     end;
     // вычисляем полученное уравнение
@@ -658,23 +566,24 @@ begin
     Result := false;
     l := 0;
     m := 0;
+    //пробуем прочитатьь первое значение
     try
         l := IntFromString(Line,PosFrom);
     except
         on Exception : EConvertError do
             Result :=  Result or true;
     end;
-
+    // читаем символ "/"
     c := Line[PosFrom];
     PosFrom:= PosFrom + 1;
-
+    //пробуем прочитатьь второе значение
     try
         m := IntFromString(Line,PosFrom);
     except
         on Exception : EConvertError do
             Result := Result or true;
     end;
-    if(Result) then m := 0; // заставляем обьект перейти в ошибочное состояние
+    if(Result) then m := 0; // если ошибка, то заставляем обьект перейти в ошибочное состояние
     if(c = '/') then
     begin
         Res1.SetValue(l,m);
@@ -719,9 +628,19 @@ Begin
     end;
     Result := 0; // число не найдено (ошибка)
 End;
+// выход из программы
 procedure TForm1.N5Click(Sender: TObject);
 begin
     Application.Terminate;
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+    EnterNum.Text := '1';
+    EnterDenom.Text := '1';
+    EnterNum2.Text := '1';
+    EnterDenom2.Text := '1';
+    OperatorSelectClick(Sender);
 end;
 
 end.
