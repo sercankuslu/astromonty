@@ -653,7 +653,7 @@ object Form1: TForm1
     Width = 313
     Height = 25
     Caption = #1042#1099#1095#1080#1089#1083#1080#1090#1100
-    TabOrder = 9
+    TabOrder = 8
     OnClick = Calculate
     Kind = bkIgnore
   end
@@ -682,7 +682,7 @@ object Form1: TForm1
       '>='
       '<=')
     ParentFont = False
-    TabOrder = 10
+    TabOrder = 9
     OnClick = OperatorSelectClick
   end
   object ModeSelect: TRadioGroup
@@ -699,7 +699,7 @@ object Form1: TForm1
     Font.Style = [fsBold]
     ItemIndex = 0
     Items.Strings = (
-      #1055#1088#1086#1089#1090#1099#1077' '#1086#1087#1077#1088#1072#1094#1080#1080
+      #1041#1080#1085#1072#1088#1085#1099#1077' '#1086#1087#1077#1088#1072#1094#1080#1080
       #1042#1099#1095#1080#1089#1083#1077#1085#1080#1077' '#1092#1086#1088#1084#1091#1083)
     ParentFont = False
     TabOrder = 12
