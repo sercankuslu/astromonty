@@ -28,6 +28,7 @@ type
     Label18: TLabel;
     Bevel1: TBevel;
     OK: TBitBtn;
+    Label19: TLabel;
   private
     { Private declarations }
   public
