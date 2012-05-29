@@ -292,17 +292,17 @@ begin
         Operation := Operators1.ItemIndex;
         if(Operation >= 4) then
         begin
-			CmpRes1.Visible := true;
-			ResDenom.Visible := false;
-			ResNum.Visible := false;
-			ResDivider.Visible := false;
-		end else
-		begin
-			CmpRes1.Visible := false;
-			ResDenom.Visible := true;
-			ResNum.Visible := true;
-			ResDivider.Visible := true;
-		end;
+            CmpRes1.Visible := true;
+            ResDenom.Visible := false;
+            ResNum.Visible := false;
+            ResDivider.Visible := false;
+        end else
+        begin
+            CmpRes1.Visible := false;
+            ResDenom.Visible := true;
+            ResNum.Visible := true;
+            ResDivider.Visible := true;
+        end;
     end else
     begin
         Operation := Functions1.ItemIndex + 10;
@@ -318,7 +318,7 @@ begin
             3: F4.Visible := true;
             4: F5.Visible := true;
         end;
-	end;
+        end;
     Calculate(Sender);
  end;
 // функция - обработчик выбора режима работы(простые операции/функции)
@@ -499,51 +499,50 @@ begin
     end;
     if(not Result) then
     Begin
-		// формируем строку с отчетом
-		LogStr := T1.StrNumerator + '/' + T1.StrDenominator + ' ' + Sym + ' '
-				+ T2.StrNumerator + '/' + T2.StrDenominator  + ' = ';
-		if( not eq) then  // операции + - * /
-		begin
-			b := Res1.Eq(T3);
-			LogStr := LogStr + #$9 + Res1.StrNumerator + '/' + Res1.StrDenominator +
-				#$9 + '(Ожидаем : ';
-			if(er) then
-			begin
-				LogStr := LogStr + 'Ошибка ) ';
-				if(Res1.ErrorFlag) then
-					LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
-				else
-					LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
-
-			end else
-			begin
-				LogStr := LogStr + T3.StrNumerator + '/' + T3.StrDenominator + ')';
-				if(b) then
-					LogStr:=LogStr + #$9 + #$9 + '- (Верно)' + #$9 + Comment
-				else
-					LogStr:=LogStr + #$9 + #$9 + '- (Ошибка)' + #$9 + Comment;
-			end;
-			Result := b;
-		end else
-		begin   // операции сравнения
-			if(b) then
-				LogStr := LogStr + #$9 + 'Истина '
-			else
-				LogStr := LogStr + #$9 + 'Ложь ';
-			LogStr := LogStr + #$9 + '(Ожидаем : ';
-			if(br) then
-			begin
-				LogStr := LogStr + 'Истина)';
-			end else
-			begin
-				LogStr := LogStr + 'Ложь)  ';
-			end;
-			if(b = br) then
-				LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
-			else
-				LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
-			Result := (b = br);
-		end;
+        // формируем строку с отчетом
+        LogStr := T1.StrNumerator + '/' + T1.StrDenominator + ' ' + Sym + ' '
+                        + T2.StrNumerator + '/' + T2.StrDenominator  + ' = ';
+        if( not eq) then  // операции + - * /
+        begin
+            b := Res1.Eq(T3);
+            LogStr := LogStr + #$9 + Res1.StrNumerator + '/' + Res1.StrDenominator +
+                    #$9 + '(Ожидаем : ';
+            if(er) then
+            begin
+                LogStr := LogStr + 'Ошибка ) ';
+                if(Res1.ErrorFlag) then
+                    LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
+                else
+                    LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
+            end else
+            begin
+                LogStr := LogStr + T3.StrNumerator + '/' + T3.StrDenominator + ')';
+                if(b) then
+                    LogStr:=LogStr + #$9 + #$9 + '- (Верно)' + #$9 + Comment
+                else
+                    LogStr:=LogStr + #$9 + #$9 + '- (Ошибка)' + #$9 + Comment;
+            end;
+            Result := b;
+        end else
+        begin   // операции сравнения
+            if(b) then
+                LogStr := LogStr + #$9 + 'Истина '
+            else
+                LogStr := LogStr + #$9 + 'Ложь ';
+            LogStr := LogStr + #$9 + '(Ожидаем : ';
+            if(br) then
+            begin
+                LogStr := LogStr + 'Истина)';
+            end else
+            begin
+                LogStr := LogStr + 'Ложь)  ';
+            end;
+            if(b = br) then
+                LogStr:=LogStr + #$9 + '- (Верно)' + #$9 + Comment
+            else
+                LogStr:=LogStr + #$9 + '- (Ошибка)' + #$9 + Comment;
+            Result := (b = br);
+        end;
     End else LogStr:= 'Ошибка разбора строки.';
     // освобождаем ресурсы
     T1.Free;

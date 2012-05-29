@@ -219,42 +219,42 @@ end;
 //******************************************************************************
 // Методы сравнения
 //******************************************************************************
-
+// Операнд равен
 function TRationalFraction.Eq(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Eq:=false else
         if FNumerator*Factor.FDenominator  = Factor.FNumerator*FDenominator  then Eq := true
         else Eq := false;
 end;
-
+// текущий объект больше или равен операнду
 function TRationalFraction.Ge(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Ge := false else
         if FNumerator*Factor.FDenominator  >= Factor.FNumerator*FDenominator  then Ge := true
         else Ge := false;
 end;
-
+//текущий объект больше операнда
 function TRationalFraction.Gt(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Gt:=false else
         if FNumerator*Factor.FDenominator  > Factor.FNumerator*FDenominator  then Gt := true
         else Gt := false;
 end;
-
+//текущий объект меньше или равен операнду
 function TRationalFraction.Le(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Le:=false else
         if FNumerator*Factor.FDenominator  <= Factor.FNumerator*FDenominator  then Le := true
         else Le := false;
 end;
-
+//текущий объект меньше операнда
 function TRationalFraction.Lt(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Lt:=false else
         if FNumerator*Factor.FDenominator  < Factor.FNumerator*FDenominator  then Lt := true
         else Lt := false;
 end;
-
+//текущий объект не равен операнду
 function TRationalFraction.Ne(Factor: TRationalFraction): boolean;
 begin
     if (FErrorFlag or Factor.FErrorFlag) then Ne:=false else
