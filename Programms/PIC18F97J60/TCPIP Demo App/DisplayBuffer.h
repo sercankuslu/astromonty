@@ -26,8 +26,8 @@ WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, E
 void SetPixelDB(WORD X, WORD Y, BOOL color);
 BYTE * GetAddr(WORD addr);
 BOOL GetPixelDB(WORD X, WORD Y);
-void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image);
-void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image);
+//void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE** Image, EFFECT Effect );
+void OutImageW(WORD X, WORD Y, WORD SX, WORD SY,  const rom WORD* Image, EFFECT Effect );
 void Line(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color);
 void DrawRectangle(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color);
 void FloodRectangle(WORD X, WORD Y, WORD X1, WORD Y1,BOOL color);

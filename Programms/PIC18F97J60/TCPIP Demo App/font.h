@@ -12,12 +12,16 @@ typedef enum FONT {
     ARIAL_B
 } FONT;
 
+#ifdef _WINDOWS
+#define rom 
+#endif
+
 #define ARIAL_B_MASK 0x03FF
 #define ARIAL_MASK 0x00FF
 #define SIZE_ARIAL_B 10
 #define SIZE_ARIAL 8
 
-int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont);
+int GetSymbolImage(BYTE symbol, const rom WORD** Image, WORD* ImageSize, FONT CFont);
 WORD* GetStringImage(BYTE* string, WORD* OutWordCount);
 
  

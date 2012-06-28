@@ -4,13 +4,14 @@
 WORD FindFrom(BYTE symbol, FONT CFont);
 WORD FindSymbol(BYTE symbol, FONT CFont);
 
+
 #ifndef _WINDOWS
 #include "GenericTypeDefs.h"
 #pragma romdata overlay FONT_SECTION =0x00AC00
-static rom 
-#else
-const
+
 #endif
+
+static rom
     WORD Arial_Data_L[] = {
       //0x0003,0x002,0x005,0x002,                                            // градус
     	0x2003,0x0000,0x000,0x0000,                       		 // пробел    
@@ -108,8 +109,11 @@ const
 	0x7C01,0x0FF,                                                    // |
         0x7D03,0x041,0x036,0x008,                                        // }
 	0x7E05,0x008,0x004,0x004,0x008,0x004,                            // ~
-	0xA005,0x03E,0x02B,0x02A,0x023,0x022,                            // Ё
-	0xB005,0x01C,0x02B,0x02A,0x02B,0x004,                            // ё
+        0xA406,0x01C,0x022,0x022,0x01C,0x022,0x020,                      // ¤
+        0xA705,0x01A,0x025,0x025,0x029,0x011,                            //§ дельта
+	0xA805,0x03E,0x02B,0x02A,0x023,0x022,                            // Ё
+        0xB003,0x002,0x005,0x002,                                         // ° 
+	0xB805,0x01C,0x02B,0x02A,0x02B,0x004,                            // ё
 	0xC004,0x03E,0x009,0x009,0x03E,                                  // А
 	0xC105,0x03F,0x025,0x025,0x025,0x019,                            // Б
 	0xC205,0x03F,0x025,0x025,0x025,0x01A,                            // В
@@ -245,7 +249,7 @@ const
      0x5D03,0x201,0x3FF,0x3FF,                                                   // ]     
      0x5E05,0x008,0x00E,0x003,0x00E,0x008,                                       // ^     
      0x5F06,0x200,0x200,0x200,0x200,0x200,0x200,                                 // _     
-     0x6005,0x006,0x00F,0x009,0x00F,0x006,                                       // `	  
+     0x6002,0x001,0x002,                                                         // `	  
      0x6105,0x068,0x0F4,0x094,0x0FC,0x0F8,                                       // a	  ==4
      0x6206,0x0FF,0x0FF,0x084,0x084,0x0FC,0x078,                                 // b     
      0x6305,0x078,0x0FC,0x084,0x0CC,0x048,                                       // c     
@@ -275,9 +279,12 @@ const
      0x7B04,0x020,0x1FE,0x3DF,0x201,                                             // {     
      0x7C01,0x3FF,                                                               // |     
      0x7D04,0x201,0x3DF,0x1FE,0x020,                                             // }     
-     0x7E05,0x010,0x008,0x008,0x010,0x008,                                       // ~     
-     0xA006,0x0FE,0x0FF,0x092,0x092,0x083,0x082,                                 // Ё     
-     0xB006,0x078,0x0FD,0x094,0x094,0x0DD,0x058,                                 // ё     
+     0x7E05,0x010,0x008,0x008,0x010,0x008,                                       // ~       
+     0xA40A,0x030,0x078,0x0CC,0x084,0x084,0x0CC,0x078,0x07C,0x0C4,0x080,         //¤ альфа
+     0xA707,0x030,0x07A,0x0CF,0x08D,0x089,0x0F9,0x071,                           //§ дельта
+     0xA806,0x0FE,0x0FF,0x092,0x092,0x083,0x082,                                 // Ё  
+     0xB005,0x006,0x00F,0x009,0x00F,0x006,                                       // °
+     0xB806,0x078,0x0FD,0x094,0x094,0x0DD,0x058,                                 // ё     
      0xC007,0x0E0,0x0FC,0x03F,0x023,0x03F,0x0FC,0x0E0,                           // А     ==6
      0xC107,0x0FF,0x0FF,0x089,0x089,0x089,0x0F9,0x070,                           // Б     
      0xC206,0x0FF,0x0FF,0x089,0x089,0x0FF,0x076,                                 // В     
@@ -360,7 +367,7 @@ static CACHE_TYPE Cache_B[] = {
     {0x50,0},
     {0x60,0},
     {0x70,0},
-    {0xA0,0},
+    {0xA4,0},
     {0xC0,0},
     {0xD0,0},
     {0xE0,0},
@@ -373,7 +380,7 @@ static CACHE_TYPE Cache_L[] = {
     {0x50,0},
     {0x60,0},
     {0x70,0},
-    {0xA0,0},
+    {0xA4,0},
     {0xC0,0},
     {0xD0,0},
     {0xE0,0},
@@ -428,7 +435,7 @@ WORD FindSymbol(BYTE symbol, FONT CFont)
     }
     return 0xFFFF;
 }
-int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
+int GetSymbolImage(BYTE symbol, const rom WORD** Image, WORD* ImageSize, FONT CFont)
 {
     WORD i;        
     WORD Begin =  0;
@@ -442,8 +449,7 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
             Cache_L[i].ImgPos = FindSymbol(Cache_L[i].Symbol, ARIAL_L);
         }
         FontInit = 1;
-    }
-    memset(Image,0,(*ImageSize));
+    }    
     i = FindSymbol(symbol, CFont);
     switch(CFont){
         case ARIAL_L: 
@@ -454,10 +460,7 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
                 (*ImageSize) = c.byte.LB;
                 return c.byte.LB;
             } 
-            for(i = 0; i< c.byte.LB;i++){
-                Image[i] = Arial_Data_L[Begin+i];
-            }
-            //memcpy(Image,&Arial_Data_L[Begin],Size*sizeof(WORD));
+            (*Image) = &Arial_Data_L[Begin];
         break;
          case ARIAL_B:
              if(i > Arial_Data_B_Size) return 0;
@@ -466,11 +469,8 @@ int GetSymbolImage(BYTE symbol, WORD* Image, WORD* ImageSize, FONT CFont)
              if((c.byte.LB>(*ImageSize))||(symbol!=c.byte.HB)){
                  (*ImageSize) = c.byte.LB;
                  return c.byte.LB;
-             } 
-             for(i = 0; i<c.byte.LB;i++){
-                 Image[i] = Arial_Data_B[Begin+i];
-             }   
-             //memcpy(Image,&Arial_Data_B[Begin],Size*2);
+             }              
+             (*Image) = &Arial_Data_B[Begin];
         break;
         default:
             Begin = 0;  

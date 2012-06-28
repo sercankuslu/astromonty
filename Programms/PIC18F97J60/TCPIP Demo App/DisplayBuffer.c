@@ -7,6 +7,10 @@
 #include "DisplayBuffer.h"
 #include "font.h"
 
+#ifdef _WINDOWS
+#define rom
+#endif
+
 #ifndef _WINDOWS
 #pragma udata DISPLAY0// =0x900
 static BYTE DisplayBuffer0[256];
@@ -117,43 +121,28 @@ void DisplayDraw(BYTE addr)
 
 WORD OutTextXY( WORD X,WORD Y,const char * Text,FONT CFont, EFFECT Effect )
 {          
-    WORD FontSize = 0;
-    WORD FontMask = 0xFFFF;
+    WORD FontSize = 0;   
     WORD XX = 0;
     char * ptr;
-    static WORD Image[13];
+    const rom WORD* Image;
     WORD count = 13;  
     WORD i = 0;
     ptr = (char*)Text;
     XX = X;
     while ( *ptr ){
         count = 13;
-        GetSymbolImage(*ptr++, Image, &count, CFont);		
+        GetSymbolImage(*ptr++, &Image, &count, CFont);		
         switch(CFont){
         case ARIAL_L: 
-            FontSize = SIZE_ARIAL;
-            FontMask = ARIAL_MASK;
+            FontSize = SIZE_ARIAL;            
             break;
         case ARIAL_B: 
-            FontSize = SIZE_ARIAL_B;
-            FontMask = ARIAL_B_MASK;
+            FontSize = SIZE_ARIAL_B;            
             break;
         default: ;
-        }
-        switch(Effect){
-            case NORMAL:
-                Image[count] = 0;
-                count++;
-                break;
-            case INVERT:
-                for(i = 0;i<count;i++)
-                    Image[i] = Image[i]^FontMask;                
-                Image[count] = FontMask;
-                count++;                
-                break;
-        }
-        OutImageW(XX,Y,count,FontSize,Image);
-        XX += count;
+        }        
+        OutImageW(XX,Y,count,FontSize, Image, Effect);
+        XX += count+1;
     }   
     return XX;
 }
@@ -163,15 +152,15 @@ WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, E
     WORD FontMask = 0xFFFF;
     WORD XX = 0;
     char * ptr;
-    static WORD Image[13];
-    WORD count = 13;  
+    const rom WORD* Image;
+    WORD count = 0;  
     WORD i = 0;
     ptr = (char*)Text;
     XX = X;
     if(SymbolCount == 0) return XX;
     while ( *ptr ){
         count = 13;
-        GetSymbolImage(*ptr++, Image, &count, CFont);		
+        GetSymbolImage(*ptr++, &Image, &count, CFont);		
         switch(CFont){
         case ARIAL_L: 
             FontSize = SIZE_ARIAL;
@@ -183,22 +172,9 @@ WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, E
             break;
         default: ;
         }
-        switch(Effect){
-            case NORMAL:
-                Image[count] = 0;
-                count++;
-                break;
-            case INVERT:
-                for(i = 0;i<count;i++)
-                {
-                    Image[i] = Image[i]^FontMask;
-                }
-                Image[count] = FontMask;
-                count++;                
-                break;
-        }
-        OutImageW(XX,Y,count,FontSize,Image);
-        XX += count;   
+        
+        OutImageW(XX,Y,count,FontSize, Image,Effect);
+        XX += count+1;   
         if(SymbolCount == 1) {
             break;
         }
@@ -217,6 +193,7 @@ WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, E
 // 4
 // ...
 // 0.0 в верхнем левом углу
+/*
 void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image)
 {
     WORD i;
@@ -246,7 +223,8 @@ void OutImage(WORD X, WORD Y, WORD SX, WORD SY, BYTE* Image)
         if(Row1!=NULL)(*Row1) = ((*Row1) & tmpMask.v[1])|tmpImage.v[1];
     }
 }
-void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
+*/
+void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, const rom WORD* Image, EFFECT Effect)
 {
     WORD i;
     WORD r0;
@@ -254,6 +232,7 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
     WORD r2;
     DWORD_VAL tmpImage;
     DWORD_VAL tmpMask;
+    WORD ImageMask = 0xFFFF;
     WORD tmpSY = SY;        
     BYTE* Row0;
     BYTE* Row1;    
@@ -263,6 +242,7 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
         tmpMask.Val = 0xFFFF;
     } else {
         tmpMask.Val = 0xFFFF >> (16 - tmpSY);
+        ImageMask = tmpMask.word.LW;
     }
     tmpMask.Val = ~(tmpMask.Val << (Y & 0x07));
 
@@ -275,7 +255,14 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, WORD* Image)
         Row0 = GetAddr(r0 + i);
         Row1 = GetAddr(r1 + i);
         Row2 = GetAddr(r2 + i); 
-        tmpImage.Val = Image[i];    
+        switch(Effect){
+        case NORMAL:
+            tmpImage.Val = Image[i];    
+            break;
+        case INVERT:
+            tmpImage.Val = Image[i]^ImageMask;
+            break;
+        }
         tmpImage.Val = tmpImage.Val << (Y & 0x07);
         if(Row0!=NULL)(*Row0) = ((*Row0) & tmpMask.v[0])|tmpImage.v[0];
         if(Row1!=NULL)(*Row1) = ((*Row1) & tmpMask.v[1])|tmpImage.v[1];

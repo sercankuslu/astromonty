@@ -134,8 +134,8 @@ far ALL_PARAMS Params;
 const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_FOLDER,    "Главное окно"},              
     {ITEM_FOLDER,    "Меню"},                      
-    {ITEM_ANGLE,     "А:"},                        
-    {ITEM_ANGLE,     "Д:"},                        
+    {ITEM_ANGLE,     "¤:"},                        
+    {ITEM_ANGLE,     "§:"},                        
     {ITEM_ANGLE,     "Г:"},                        
     {ITEM_FOLDER,    "Сеть"},                      
     {ITEM_MSG,       "Авто наведение"},            
@@ -169,15 +169,15 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_HEADER,    "Альфа"},         
     {ITEM_HEADER,    "Дельта"},        
     {ITEM_HEADER,    "Гамма"},         
-    {ITEM_ANGLE,     "А:"},            
-    {ITEM_ANGLE,     "Д:"},            
+    {ITEM_ANGLE,     "¤:"},            
+    {ITEM_ANGLE,     "§:"},            
     {ITEM_ANGLE,     "Г:"},            
     {ITEM_FOLDER,    "Наблюдение"},   
     {ITEM_COMBO,     "Тип:"},
     {ITEM_MSG,       "Азимутальная"}, 
     {ITEM_MSG,       "Экваториальная"}, 
-    {ITEM_VALUE,     "10`"}, 
-    {ITEM_VALUE,     "1`"}, 
+    {ITEM_VALUE,     "10°"}, 
+    {ITEM_VALUE,     "1°"}, 
     {ITEM_VALUE,     "10'"}, 
     {ITEM_VALUE,     "1'"}, 
     {ITEM_VALUE,     "10\""}, 
@@ -239,7 +239,7 @@ const rom MENUS Menus[] = {
     {IT_F_NET,       IT_IP_NTP},
     {IT_F_OBSERV,    IT_F_GOTO},    //Наблюдение
     {IT_F_OBSERV,    IT_F_MANUALMODE},
-    {IT_F_OBSERV,    IT_F_SPACEMODE},
+    //{IT_F_OBSERV,    IT_F_SPACEMODE},
     {IT_F_GOTO_MIROR,      IT_A_TARGETALPHA},     
     {IT_F_GOTO_MIROR,      IT_A_TARGETDELTA},
     {IT_F_GOTO_MIROR,      IT_A_TARGETGAMMA},
@@ -354,6 +354,8 @@ Params.Common.Flags.bits.NeedToRedrawTime = false;
 #endif
 
     if(!Init){
+        const char* TTT = "¤°";
+        printf ("%s", TTT);
         AppConfig.MyIPAddr.Val = 0x3701A8C0;
         AppConfig.MyMask.Val = 0x00FFFFFF;
         AppConfig.MyGateway.Val = 0x0101A8C0;
@@ -1198,12 +1200,12 @@ void XtoTimeString( char * Text, float X, BOOL hour )
         if(hour){
             /*Grad /= 15;*/
             sprintf (Text, "+%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
-        } else sprintf (Text, "+%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "+%0.2d°%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     } else {
         if(hour){
             /*Grad /= 15;*/
             sprintf (Text, "-%0.2dh%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
-        } else sprintf (Text, "-%0.2d`%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
+        } else sprintf (Text, "-%0.2d°%0.2d'%0.2d.%0.2d\"\0", Grad,Min,Sec,mSec);
     }
 
 }
@@ -1250,7 +1252,7 @@ void TextToTimeD(char* TmpValue, BOOL TmpIsHours, float * TmpDoValue)
 
     for(i = 0;i < (int)strlen((const char*)TmpValue);i++){
         switch(TmpValue[i]){
-            case '`':
+            case '°':
             case 'h':
             case '.':
             case '\'':
