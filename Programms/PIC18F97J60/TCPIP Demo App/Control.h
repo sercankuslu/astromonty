@@ -64,7 +64,8 @@ typedef struct NETWORK_SETTINGS
     DWORD Mask;
     DWORD Gate;
     DWORD DNS1;
-    DWORD DNS2;    
+    DWORD DNS2;  
+    DWORD Server;
     char  Name[16];    
     DWORD NTP;
     BYTE Status;
