@@ -1,0 +1,91 @@
+<HTML>
+<!-- Начинаем заголовок... -->
+<HEAD>
+<title>тест</title>
+</HEAD>
+
+<BODY>
+<table border="1" bordercolor="black">
+	<tr>		
+		<td>Наведение</td>		
+		<td align="center">A</td>
+		<td align="center">D</td>
+		<td align="center">F</td>		
+		<td align="center">N</td>
+	</tr>
+	<tr><td colspan="8">
+		<form action="test.html">
+			<table>
+				<tr>
+					<td>Альфа:</td>
+					<td><input name="alpha_h" type="number" size="5" maxlength="2" max="23" min="0" value="00">h</td>
+					<td><input name="alpha_m" type="number" size="5" maxlength="3" max="59" min="0" value="00">'</td>
+					<td><input name="alpha_s" type="number" size="5" maxlength="3" max="59" min="0" value="00">.</td>
+					<td><input name="alpha_ms" type="number" size="5" maxlength="3" max="100" min="0" value="00">"</td>
+				</tr>
+				<tr>
+					<td>Дельта:</td>
+					<td><input name="delta_h" type="number" size="5" maxlength="2" max="23" min="0" value="00">°</td>
+					<td><input name="delta_m" type="number" size="5" maxlength="3" max="59" min="0" value="00">'</td>
+					<td><input name="delta_s" type="number" size="5" maxlength="3" max="59" min="0" value="00">.</td>
+					<td><input name="delta_ms" type="number" size="5" maxlength="3" max="100" min="0" value="00">"</td>
+				</tr>
+				<tr>
+					<td>Гамма:</td>
+					<td><input name="gamma_h" type="number" size="5" maxlength="2" max="23" min="0" value="00">°</td>
+					<td><input name="gamma_m" type="number" size="5" maxlength="3" max="59" min="0" value="00">'</td>
+					<td><input name="gamma_s" type="number" size="5" maxlength="3" max="59" min="0" value="00">.</td>
+					<td><input name="gamma_ms" type="number" size="5" maxlength="3" max="100" min="0" value="00">"</td>
+				</tr>
+				<tr>
+					<td>Скорость</td>
+					<td colspan="2"><SELECT NAME="speed">
+						 <OPTION VALUE="one_gradus" SELECTED>1 гр/сек
+						 <OPTION VALUE="ten_gradus">10 гр/сек
+						 <OPTION VALUE="thety_gradus">30 гр/сек					
+					</SELECT></td>
+				</tr>
+				<tr>
+					<td>Ведение</td>
+					<td colspan="2"><SELECT NAME="guide">
+						 <OPTION VALUE="auto_guide" SELECTED>автоматическое
+						 <OPTION VALUE="on_guide">включено
+						 <OPTION VALUE="off_guide">выключено
+					</SELECT></td>
+				</tr>
+			</table>
+		<INPUT TYPE="submit" VALUE="    СТАРТ    ">
+		</FORM>
+	</td></tr>
+</table>
+
+<table border="1" bordercolor="black">
+	<tr>
+		<td width="150">Меню</td>
+		<td align="center" width="25">A</td>
+		<td align="center" width="25">D</td>
+		<td align="center" width="25">F</td>		
+		<td align="center" width="25">N</td>
+	</tr>
+	<tr><td colspan="8">		
+		<table>
+			<tr>
+				<td>Альфа:</td>
+				<td><b>+05h 33' 45.12"</b></td>
+			</tr>
+			<tr>
+				<td>Дельта:</td>
+				<td><b>+45° 33' 45.12"</b></td>
+			</tr>
+			<tr>
+				<td>Гамма:</td>
+				<td><b>-32° 53' 11.34"</b></td>
+			</tr>					
+		</table>			
+	</td></tr>
+	<tr>		
+		<td colspan="3" align="center" nowrap>Ведение включено</td>			
+		<td colspan="2" align="center">15:48</td>
+	</tr>
+</table>
+</HTML>
