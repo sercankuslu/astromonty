@@ -140,8 +140,8 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_FOLDER,    "Сеть"},                      
     {ITEM_MSG,       "Авто наведение"},            
     {ITEM_MSG,       "Ручное наведение"},          
-    {ITEM_FOLDER,    "Альфа"},                     
-    {ITEM_FOLDER,    "Дельта"},                    
+    {ITEM_FOLDER,    "¤"},                     
+    {ITEM_FOLDER,    "§"},                    
     {ITEM_FOLDER,    "Гамма"},                     
     {ITEM_FOLDER,    "Настройки"},                 
     {ITEM_FOLDER,    "Наблюдение"},                
@@ -160,14 +160,15 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_IP_ADDRES, "Gate:"},                     
     {ITEM_IP_ADDRES, "DNS1:"},                     
     {ITEM_IP_ADDRES, "DNS2:"},                     
-    {ITEM_IP_ADDRES, "NTP:"},                      
+    {ITEM_IP_ADDRES, "NTP:"},   
+    {ITEM_IP_ADDRES, "Srv:"}, 
     {ITEM_MSG,       "Ошибка"},                          
     {ITEM_MSG,       "Указанные координаты в данный момент времени находятся внезоны видимости"},     
     {ITEM_MSG,       "Нет подключения к серверу. Действие не доступно"},                              
     {ITEM_COMBO,     "Скорость:"},      
-    {ITEM_HEADER,    "Сеть"},          
-    {ITEM_HEADER,    "Альфа"},         
-    {ITEM_HEADER,    "Дельта"},        
+    {ITEM_HEADER,    "NET"},          
+    {ITEM_HEADER,    "¤"},         
+    {ITEM_HEADER,    "§"},        
     {ITEM_HEADER,    "Гамма"},         
     {ITEM_ANGLE,     "¤:"},            
     {ITEM_ANGLE,     "§:"},            
@@ -182,11 +183,12 @@ const rom MENU_ITEMS_ROM MenuItems[] = {
     {ITEM_VALUE,     "1'"}, 
     {ITEM_VALUE,     "10\""}, 
     {ITEM_VALUE,     "1\""}, 
+    
 };       
 enum {
     IT_F_DESKTOP, IT_F_MENU, IT_A_ALPHA, IT_A_DELTA, IT_A_GAMMA, IT_F_NET, IT_M_AUTOAIM, IT_M_MANUALAIM, IT_F_ALPHA, IT_F_DELTA, IT_F_GAMMA,
     IT_F_OPTIONS, IT_F_OBSERV, IT_F_GOTO_MIROR, IT_F_GOTO, IT_F_MANUALMODE, IT_F_SPACEMODE, IT_B_START, IT_B_CONTINUE, IT_F_MONTYOPTION,
-    IT_F_DISPLAY, IT_F_MONTYTYPE, IT_S_NETNAME, IT_IP_ADDRES, IT_IP_MASK, IT_IP_GATE, IT_IP_DNS1, IT_IP_DNS2, IT_IP_NTP,
+    IT_F_DISPLAY, IT_F_MONTYTYPE, IT_S_NETNAME, IT_IP_ADDRES, IT_IP_MASK, IT_IP_GATE, IT_IP_DNS1, IT_IP_DNS2, IT_IP_NTP, IT_IP_SERVER,
     IT_M_ERROR, IT_M_ANGLEERROR, IT_M_CONNECTERROR, IT_C_SPEED, IT_H_NET, IT_H_ALPHA, IT_H_DELTA, IT_H_GAMMA,
     IT_A_TARGETALPHA, IT_A_TARGETDELTA, IT_A_TARGETGAMMA, IT_F_OBSERVOPT, IT_C_MONTYTYPE, IT_M_AZIMUT, IT_M_EQUATOR,
     IT_V_1, IT_V_2, IT_V_3, IT_V_4, IT_V_5
@@ -202,6 +204,7 @@ static MENU_ITEMS_RAM MenuItemsM[] = {
     {IT_IP_GATE, VAL_IP_ADDRES, (void*)&Params.Local.Gate, &Params.Local.NetFlags},
     {IT_IP_DNS1, VAL_IP_ADDRES, (void*)&Params.Local.DNS1, &Params.Local.NetFlags},
     {IT_IP_DNS2, VAL_IP_ADDRES, (void*)&Params.Local.DNS2, &Params.Local.NetFlags},
+    {IT_IP_SERVER, VAL_IP_ADDRES, (void*)&Params.Local.Server, &Params.Local.NetFlags},
     {IT_IP_NTP, VAL_IP_ADDRES, (void*)&Params.Local.NTP, &Params.Local.NetFlags},
     {IT_C_SPEED, VAL_FLOAT, (void*)&Params.Alpha.Speed, &Params.Alpha.SpeedFlag},
     {IT_F_DESKTOP, VAL_NONE, (void*)NULL, &Params.MainMenuFlag},
@@ -236,6 +239,7 @@ const rom MENUS Menus[] = {
     {IT_F_NET,       IT_IP_GATE},
     {IT_F_NET,       IT_IP_DNS1},
     {IT_F_NET,       IT_IP_DNS2},
+    {IT_F_NET,       IT_IP_SERVER},    
     {IT_F_NET,       IT_IP_NTP},
     {IT_F_OBSERV,    IT_F_GOTO},    //Наблюдение
     {IT_F_OBSERV,    IT_F_MANUALMODE},
@@ -365,6 +369,7 @@ Params.Common.Flags.bits.NeedToRedrawTime = false;
         Params.Local.Gate = AppConfig.MyGateway.Val;
         Params.Local.DNS1 = AppConfig.PrimaryDNSServer.Val;
         Params.Local.DNS2 = AppConfig.SecondaryDNSServer.Val;
+        Params.Local.Server = 0x0B01A8C0;
         Params.Local.Status = 0;
         Params.Local.NetFlags = PF_ENABLE | PF_CAN_SELECTED;   
         
