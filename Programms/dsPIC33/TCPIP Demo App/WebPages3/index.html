@@ -3,8 +3,81 @@
   <head>
 	<meta charset="utf-8">	
 	<link rel="stylesheet" type="text/css" href="style/style1.css" />	
+	<script src="stars/Tycho2_DE.js" type="text/javascript"></script>
+	<script src="stars/Tycho2_RA.js" type="text/javascript"></script>
+	<!--<script src="stars/Tycho2_T1.js" type="text/javascript"></script>
+	<script src="stars/Tycho2_T2.js" type="text/javascript"></script>
+	<script src="stars/Tycho2_T3.js" type="text/javascript"></script>-->
+	<script src="stars/Tycho2_VT.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
+		function loadCanvas() {
+			var canvas = document.getElementById('my_canvas');
+			if(canvas.getContext) {
+				var ctx = canvas.getContext('2d');
+				var WSizeX = canvas.width;
+				var WSizeY = canvas.height;
+				var CoordX = 84.053;
+				var CoordY = -1.201;
+				var Scale = 500; // увеличить в 10 раз
+				
+				var ImgLeft  = CoordX + WSizeX/(2*Scale);
+				var ImgRight = CoordX - WSizeX/(2*Scale);
+				var ImgTop   = CoordY + WSizeY/(2*Scale);
+				var ImgBottom = CoordY - WSizeY/(2*Scale);
+				var i = 0;
+				var minMag = 9;
+				var maxMag = -5;
+				var ArrsLength = RA.length;			
+				
+				
+				for ( i = 0;i < ArrsLength; i++) {
+					if(VTmag[i]>minMag) continue;
+					if(VTmag[i]<maxMag) continue;
+					if(RA[i] < ImgRight) continue;
+					if(RA[i] > ImgLeft) continue;
+					if(DE[i] < ImgBottom) continue;
+					if(DE[i] > ImgTop) continue;
+					ctx.beginPath();
+					switch (VTmag[i]){
+						case -1.088: ctx.fillStyle = "blue"; // сириус
+						break;
+						case 0.283 : ctx.fillStyle = "cyan"; //Ригель
+						break;
+						case 0.769 : ctx.fillStyle = "red"; // бетельгейзе
+						break;
+						default :    ctx.fillStyle = "white";
+						break;
+					}					
+					ctx.arc((ImgLeft-RA[i])*Scale,(ImgTop - DE[i])*Scale,(10 - VTmag[i])/4,0,Math.PI*2,true);
+					ctx.fill();
+				};
+				
+				ctx.beginPath();
+				ctx.strokeStyle  = "green";
+				ctx.arc(WSizeX/2, WSizeY/2,30,0,Math.PI*2,true);
+				ctx.stroke();				
+				ctx.moveTo(WSizeX/2 + 30, WSizeY/2);
+				ctx.lineTo(WSizeX/2 + 5, WSizeY/2);
+				ctx.stroke();				
+				ctx.moveTo(WSizeX/2 - 5, WSizeY/2);
+				ctx.lineTo(WSizeX/2 - 30, WSizeY/2);
+				ctx.stroke();
+				ctx.moveTo(WSizeX/2, WSizeY/2 - 30);
+				ctx.lineTo(WSizeX/2, WSizeY/2 - 5);
+				ctx.stroke();
+				ctx.moveTo(WSizeX/2, WSizeY/2 + 5);
+				ctx.lineTo(WSizeX/2, WSizeY/2 + 30);
+				ctx.stroke();
+				
+			} else {
+				document.getElementById('my_canvas').style.display = 'none';
+				document.getElementById('no-canvas').style.display = 'block';
+			}
+		}
+		</script>
 </head>
-<body>
+<body onload="loadCanvas();">
 <div id="shadow-one"><div id="shadow-two"><div id="shadow-three"><div id="shadow-four">
 <div id="page">
 <div style="padding:0 0 5px 5px"><img src="mchp.gif" alt="Microchip" /></div>
@@ -44,8 +117,10 @@
 		<p>Potentiometer: <span id="pot0" style="font-weight:normal">?</span></p>
 	</div>
 </div>
-
-<h1>Welcome!</h1>
+	
+	<div style="width:600;margin-left:auto;margin-right:auto;">
+		<canvas id="my_canvas" width="580" height="580"></canvas>		
+	</div>
 <div class="spacer">&nbsp;</div>
 <div id="footer">Copyright &copy; 2010 Microchip Technology, Inc.</div>
 

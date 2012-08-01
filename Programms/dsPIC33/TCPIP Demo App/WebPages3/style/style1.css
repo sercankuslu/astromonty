@@ -6,7 +6,7 @@ body {
 }
 
 #shadow-one {
-	width: 760px;
+	width: 1024px;
 	border: 1px solid #555;
 	border-top: 0;
 	margin: 0px auto;
@@ -226,4 +226,12 @@ fieldset textarea {
 	.unk {
 		border-color: #cc6;
 		background: #ffd;
+	}
+canvas 
+	{
+		border: 1px solid #888;
+		-moz-border-radius: 10px;
+		-webkit-border-radius: 10px;
+		border-radius: 10px;
+		background-color: #000;
 	}
