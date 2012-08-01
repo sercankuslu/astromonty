@@ -104,7 +104,18 @@ body {
 	padding-top: 10px;
 	border-top: 1px dotted #666;
 }
-
+#leftboth {
+	width: 175px;
+	float: right;	
+}
+#target {
+	width: 175px;
+	float: right;
+	padding: 10px;
+	margin: 10px;
+	border: 1px dotted #666;
+	font-weight: bold;
+}
 #status {
 	width: 175px;
 	float: right;
@@ -127,6 +138,16 @@ body {
 #status .leds a {
 	color: #ddd;
 	cursor: pointer;
+}
+
+#target input  {
+	width: 100px;
+}
+#ReqTarget .targetRA input {
+	width: 40px;
+}
+#ReqTarget .targetDE input {
+	width: 40px;
 }
 
 #status .leds a:hover {
@@ -191,14 +212,6 @@ fieldset div label {
 	position: absolute;
 }
 
-fieldset input {
-	width: 250px;
-}
-
-fieldset input.sm {
-	width: auto;
-}
-
 fieldset textarea {
 	width: 250px;
 }
@@ -234,4 +247,5 @@ canvas
 		-webkit-border-radius: 10px;
 		border-radius: 10px;
 		background-color: #000;
+		cursor: crosshair ;
 	}
