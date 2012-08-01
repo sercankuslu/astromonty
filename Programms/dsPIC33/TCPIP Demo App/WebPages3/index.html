@@ -19,7 +19,7 @@
 				var WSizeY = canvas.height;
 				var CoordX = 84.053;
 				var CoordY = -1.201;
-				var Scale = 500; // увеличить в 10 раз
+				var Scale = 25; // увеличить в 10 раз
 				
 				var ImgLeft  = CoordX + WSizeX/(2*Scale);
 				var ImgRight = CoordX - WSizeX/(2*Scale);
@@ -68,6 +68,23 @@
 				ctx.stroke();
 				ctx.moveTo(WSizeX/2, WSizeY/2 + 5);
 				ctx.lineTo(WSizeX/2, WSizeY/2 + 30);
+				ctx.stroke();
+				
+				ctx.beginPath();
+				ctx.strokeStyle  = "yellow";
+				var CrossX = 100;
+				var CrossY = 100;
+				ctx.moveTo(CrossX + 30, CrossY);
+				ctx.lineTo(CrossX + 5, CrossY);
+				ctx.stroke();				
+				ctx.moveTo(CrossX - 5, CrossY);
+				ctx.lineTo(CrossX - 30, CrossY);
+				ctx.stroke();
+				ctx.moveTo(CrossX, CrossY - 30);
+				ctx.lineTo(CrossX, CrossY - 5);
+				ctx.stroke();
+				ctx.moveTo(CrossX, CrossY + 5);
+				ctx.lineTo(CrossX, CrossYs + 30);
 				ctx.stroke();
 				
 			} else {
