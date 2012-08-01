@@ -11,7 +11,13 @@
 	<script src="stars/Tycho2_VT.js" type="text/javascript"></script>
 	
 	<script type="text/javascript">
+		var CoordX = 84.053;
+		var CoordY = -1.201;
+		var Scale = 25; // увеличить в 10 раз
 		function loadCanvas() {
+			updateStars();
+		};
+		function updateStars() {
 			var canvas = document.getElementById('my_canvas');
 			if(canvas.getContext) {
 				var ctx = canvas.getContext('2d');
@@ -19,7 +25,7 @@
 				var WSizeY = canvas.height;
 				var CoordX = 84.053;
 				var CoordY = -1.201;
-				var Scale = 25; // увеличить в 10 раз
+				var Scale = 10; // увеличить в 10 раз
 				
 				var ImgLeft  = CoordX + WSizeX/(2*Scale);
 				var ImgRight = CoordX - WSizeX/(2*Scale);
@@ -28,8 +34,12 @@
 				var i = 0;
 				var minMag = 9;
 				var maxMag = -5;
-				var ArrsLength = RA.length;			
+				var ArrsLength = RA.length;
 				
+				ctx.beginPath();
+				ctx.fillStyle = "black";
+				ctx.fillRect(0, 0, WSizeX, WSizeY);
+				ctx.fill();
 				
 				for ( i = 0;i < ArrsLength; i++) {
 					if(VTmag[i]>minMag) continue;
@@ -52,7 +62,18 @@
 					ctx.arc((ImgLeft-RA[i])*Scale,(ImgTop - DE[i])*Scale,(10 - VTmag[i])/4,0,Math.PI*2,true);
 					ctx.fill();
 				};
-				
+			} else {
+				document.getElementById('my_canvas').style.display = 'none';
+				document.getElementById('no-canvas').style.display = 'block';
+			}
+			updateCross();
+		};
+		function updateCross(){
+		var canvas = document.getElementById('my_canvas');
+			if(canvas.getContext) {
+				var ctx = canvas.getContext('2d');
+				var WSizeX = canvas.width;
+				var WSizeY = canvas.height;
 				ctx.beginPath();
 				ctx.strokeStyle  = "green";
 				ctx.arc(WSizeX/2, WSizeY/2,30,0,Math.PI*2,true);
@@ -86,12 +107,11 @@
 				ctx.moveTo(CrossX, CrossY + 5);
 				ctx.lineTo(CrossX, CrossY + 30);
 				ctx.stroke();
-				
 			} else {
 				document.getElementById('my_canvas').style.display = 'none';
 				document.getElementById('no-canvas').style.display = 'block';
 			}
-		}
+		};
 		</script>
 </head>
 <body onload="loadCanvas();">
@@ -152,7 +172,7 @@
 					<input type="number" name="DE_m" value="00">
 					<input type="number" name="DE_s" value="00">
 				</span></p>
-				<p><input type="submit" value="RUN" ></p>
+				<p><input type="button" value="RUN" onclick="updateStars();"></p>
 			</form>
 		</div>
 	</div>	
