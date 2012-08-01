@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+	<meta charset="utf-8">	
+	<link rel="stylesheet" type="text/css" href="style/style1.css" />	
+</head>
+<body>
+<div id="shadow-one"><div id="shadow-two"><div id="shadow-three"><div id="shadow-four">
+<div id="page">
+<div style="padding:0 0 5px 5px"><img src="mchp.gif" alt="Microchip" /></div>
+
+<div id="title"><div class="right">TCP/IP Stack Demo Application</div><span id="hello">&nbsp;</span></div>
+<div id="menu">
+	<a href="index.html">Overview</a>
+	<a href="dynvars.htm">Dynamic Variables</a>
+	<a href="forms.htm">Form Processing</a>
+	<a href="auth.htm">Authentication</a>
+	<a href="cookies.htm">Cookies</a>
+	<a href="upload.htm">File Uploads</a>
+	<a href="email">Send E-mail</a>
+	<a href="dyndns">Dynamic DNS</a>
+	<a href="protect/config.htm">Network Configuration</a>
+	<a href="snmp/snmpconfig.htm">SNMP Configuration</a>
+</div>
+<div id="status">
+	<div id="loading" style="display:none">Error:<br />Connection to demo board was lost.</div>
+	<div id="display">
+		<span style="float:right;font-size:9px;font-weight:normal;padding-top:8px;text-indent:0px">(click to toggle)</span>
+		<p>LEDs:<br /><span class="leds">
+		<a id="led7" onclick="newAJAXCommand('leds.cgi?led=7');">&bull;</a>
+		<a id="led6" onclick="newAJAXCommand('leds.cgi?led=6');">&bull;</a>
+		<a id="led5" onclick="newAJAXCommand('leds.cgi?led=5');">&bull;</a>
+		<a id="led4" onclick="newAJAXCommand('leds.cgi?led=4');">&bull;</a>
+		<a id="led3" onclick="newAJAXCommand('leds.cgi?led=3');">&bull;</a>
+		<a id="led2" onclick="newAJAXCommand('leds.cgi?led=2');">&bull;</a>
+		<a id="led1" onclick="newAJAXCommand('leds.cgi?led=1');">&bull;</a>
+		<a id="led0">&bull;</a>
+		</span></p>
+		<p>Buttons:<br />
+		<span id="btn3">?</span> &nbsp;
+		<span id="btn2">?</span> &nbsp;
+		<span id="btn1">?</span> &nbsp;
+		<span id="btn0">?</span></p>
+		<p>Potentiometer: <span id="pot0" style="font-weight:normal">?</span></p>
+	</div>
+</div>
+
+<h1>Welcome!</h1>
+<div class="spacer">&nbsp;</div>
+<div id="footer">Copyright &copy; 2010 Microchip Technology, Inc.</div>
+
+</div></div></div></div></div>
+</body>
+</html>
