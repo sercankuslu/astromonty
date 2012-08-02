@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
   <head>
 	<meta charset="utf-8">	
@@ -13,36 +13,146 @@
 	<script type="text/javascript">
 		var CoordX = 84.053;
 		var CoordY = -1.201;
-		var Scale = 25; // ��������� � 10 ���
-		function loadCanvas() {
-			updateStars();
+		var Scale = 25; // увеличить в 10 раз
+		var Magnitude = 5; // величина звезд
+		var WSizeX = 0;
+		var WSizeY = 0;
+		
+		
+		function onMouseWheel(e) {
+			e = e || event;
+
+			if (!e.wheelDelta) {
+				e.wheelDelta = -40*e.detail; // Firefox
+			}
+			var info = document.getElementById('delta');
+			if(Scale<40){
+				Scale = +Scale + e.wheelDelta/120;
+			} else {
+				Scale = +Scale + e.wheelDelta/30;		
+			}
+			if(Scale < 4) {Scale = 4;};
+			if(Scale > 200) {Scale = 200;};
+			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+			updateScale(3);
+			//updateStars();
+		}
+
+		// текущие координаты телескопа(зелёный крестик)
+		var CurrentPosition = {
+			X : 84.053,
+			Y : -1.201,
 		};
+		// текущее положение просмотра
+		var ViewPosition = {
+			X : 84.053,
+			Y : -1.201,
+		};
+		// целевые координаты телескопа(желтый крестик)
+		var TargetPosition = {
+			X : 87.053,
+			Y : 4.201,
+		};
+		// функция возвращает координату X на экране по координате на небе(градусы) 
+		function RAToX(X){			
+			return (ViewPosition.X - X)*Scale + WSizeX/2;
+		};
+		function DEToY(Y){
+			return (ViewPosition.Y - Y)*Scale + WSizeY/2;
+		};
+		function XToRA(RA){
+			return (WSizeX/2 - RA)/Scale + ViewPosition.X
+		};
+		function YToDE(DE){
+			return (WSizeY/2 - DE)/Scale + ViewPosition.Y
+		};
+		function loadCanvas() {
+			var elem = document.getElementById('CanvasBox');
+
+			if (elem.addEventListener) {
+			  // IE9+, Opera, Chrome/Safari
+				elem.addEventListener ("mousewheel", onMouseWheel, false);
+			  // Firefox
+				elem.addEventListener ("DOMMouseScroll", onMouseWheel, false);
+			} else { // IE<9
+			  elem.attachEvent ("onmousewheel", onMouseWheel);
+			}
+			updateStars();
+		};	
+		function AngleToObj(A,h){
+			var tA = A;
+			if(h){
+				tA = A/15;
+			}		
+			var grad = Math.floor(tA);			
+			tA = (tA - grad)*60;
+			var min = Math.floor(tA);
+			var sec = ((tA - min)*60);
+			return {H:grad,M:min,S:sec};
+		}
+		function AngleToString(A,h){
+			var tA = A;
+			if(h){
+				tA = A/15;
+			}		
+			var grad = Math.floor(tA);			
+			tA = (tA - grad)*60;
+			var min = Math.floor(tA);
+			var sec = ((tA - min)*60);
+			return "" + grad + "°" + min + "'" + sec.toFixed(2) + '"';
+		};
+		function updateScale(id){
+			var range = document.getElementById('starScale');
+			var rangeN = document.getElementById('starScaleN');
+			if((range.value == rangeN.value) && (range.value == Scale)) return;
+			switch (id){
+			case 1:
+				Scale = +range.value;
+				rangeN.value = +range.value;				
+				break;
+			case 2:
+				Scale = +rangeN.value;
+				range.value = +rangeN.value;				
+				break;
+			case 3:
+				rangeN.value = +Scale;
+				range.value = +Scale;
+				break;
+			}
+			updateStars();
+		}
+		function updateMagn(id){
+			var Magn = document.getElementById('starMagn');
+			var MagnN = document.getElementById('starMagnN');
+			if(Magn.value == MagnN.value) return;
+			if(id==1){
+				Magnitude = Magn.value;
+				MagnN.value = Magn.value;				
+			} else {
+				Magnitude = MagnN.value;
+				Magn.value = MagnN.value;				
+			}
+			updateStars();
+		}
 		function updateStars() {
 			var canvas = document.getElementById('my_canvas');
 			if(canvas.getContext) {
 				var ctx = canvas.getContext('2d');
-				var WSizeX = canvas.width;
-				var WSizeY = canvas.height;
-				var CoordX = 84.053;
-				var CoordY = -1.201;
-				var Scale = 10; // ��������� � 10 ���
-				
-				var ImgLeft  = CoordX + WSizeX/(2*Scale);
-				var ImgRight = CoordX - WSizeX/(2*Scale);
-				var ImgTop   = CoordY + WSizeY/(2*Scale);
-				var ImgBottom = CoordY - WSizeY/(2*Scale);
+				WSizeX = canvas.width;
+				WSizeY = canvas.height;				
+				var ImgLeft  = ViewPosition.X + WSizeX/(2*Scale);
+				var ImgRight = ViewPosition.X - WSizeX/(2*Scale);
+				var ImgTop   = ViewPosition.Y + WSizeY/(2*Scale);
+				var ImgBottom = ViewPosition.Y - WSizeY/(2*Scale);
 				var i = 0;
-				var minMag = 9;
+				
 				var maxMag = -5;
 				var ArrsLength = RA.length;
+                ctx.clearRect(0, 0, WSizeX, WSizeY);
 				
-				ctx.beginPath();
-				ctx.fillStyle = "black";
-				ctx.fillRect(0, 0, WSizeX, WSizeY);
-				ctx.fill();
 				
 				for ( i = 0;i < ArrsLength; i++) {
-					if(VTmag[i]>minMag) continue;
+					if(VTmag[i]>Magnitude) break;
 					if(VTmag[i]<maxMag) continue;
 					if(RA[i] < ImgRight) continue;
 					if(RA[i] > ImgLeft) continue;
@@ -50,16 +160,16 @@
 					if(DE[i] > ImgTop) continue;
 					ctx.beginPath();
 					switch (VTmag[i]){
-						case -1.088: ctx.fillStyle = "blue"; // ������
+						case -1.088: ctx.fillStyle = "blue"; // сириус
 						break;
-						case 0.283 : ctx.fillStyle = "cyan"; //������
+						case 0.283 : ctx.fillStyle = "cyan"; //Ригель
 						break;
-						case 0.769 : ctx.fillStyle = "red"; // �����������
+						case 0.769 : ctx.fillStyle = "red"; // бетельгейзе
 						break;
 						default :    ctx.fillStyle = "white";
 						break;
 					}					
-					ctx.arc((ImgLeft-RA[i])*Scale,(ImgTop - DE[i])*Scale,(10 - VTmag[i])/4,0,Math.PI*2,true);
+					ctx.arc((ImgLeft-RA[i])*Scale,(ImgTop - DE[i])*Scale,(9 - VTmag[i])/4+0.5,0,Math.PI*2,true);
 					ctx.fill();
 				};
 			} else {
@@ -69,49 +179,99 @@
 			updateCross();
 		};
 		function updateCross(){
-		var canvas = document.getElementById('my_canvas');
+			var canvas = document.getElementById('my_canvas');
+			if(canvas.getContext) {
+				DrawCross(RAToX(CurrentPosition.X),DEToY(CurrentPosition.Y),"green",true);
+				DrawCross(RAToX(TargetPosition.X),DEToY(TargetPosition.Y),"yellow",false);
+			}
+		}
+		
+		function DrawCross(X,Y,color,wCircle){
+			var canvas = document.getElementById('my_canvas');
 			if(canvas.getContext) {
 				var ctx = canvas.getContext('2d');
-				var WSizeX = canvas.width;
-				var WSizeY = canvas.height;
 				ctx.beginPath();
-				ctx.strokeStyle  = "green";
-				ctx.arc(WSizeX/2, WSizeY/2,30,0,Math.PI*2,true);
+				ctx.strokeStyle  = color;
+				if(wCircle){
+					ctx.arc(X, Y,30,0,Math.PI*2,true);					
+					ctx.stroke();				
+				}
+				ctx.moveTo(X + 30, Y);
+				ctx.lineTo(X + 5, Y);
 				ctx.stroke();				
-				ctx.moveTo(WSizeX/2 + 30, WSizeY/2);
-				ctx.lineTo(WSizeX/2 + 5, WSizeY/2);
-				ctx.stroke();				
-				ctx.moveTo(WSizeX/2 - 5, WSizeY/2);
-				ctx.lineTo(WSizeX/2 - 30, WSizeY/2);
+				ctx.moveTo(X - 5, Y);
+				ctx.lineTo(X - 30, Y);
 				ctx.stroke();
-				ctx.moveTo(WSizeX/2, WSizeY/2 - 30);
-				ctx.lineTo(WSizeX/2, WSizeY/2 - 5);
+				ctx.moveTo(X, Y - 30);
+				ctx.lineTo(X, Y - 5);
 				ctx.stroke();
-				ctx.moveTo(WSizeX/2, WSizeY/2 + 5);
-				ctx.lineTo(WSizeX/2, WSizeY/2 + 30);
+				ctx.moveTo(X, Y + 5);
+				ctx.lineTo(X, Y + 30);
 				ctx.stroke();
-				
-				ctx.beginPath();
-				ctx.strokeStyle  = "yellow";
-				var CrossX = 105;
-				var CrossY = 105;
-				ctx.moveTo(CrossX + 30, CrossY);
-				ctx.lineTo(CrossX + 5, CrossY);
-				ctx.stroke();				
-				ctx.moveTo(CrossX - 5, CrossY);
-				ctx.lineTo(CrossX - 30, CrossY);
-				ctx.stroke();
-				ctx.moveTo(CrossX, CrossY - 30);
-				ctx.lineTo(CrossX, CrossY - 5);
-				ctx.stroke();
-				ctx.moveTo(CrossX, CrossY + 5);
-				ctx.lineTo(CrossX, CrossY + 30);
-				ctx.stroke();
-			} else {
-				document.getElementById('my_canvas').style.display = 'none';
-				document.getElementById('no-canvas').style.display = 'block';
 			}
-		};
+		}
+		function mousemoveCanv(e){
+			e = e || window.event;	
+			var canvas = document.getElementById('my_canvas');			
+			var pos = getPosition(canvas);
+			if (e.pageX == null && e.clientX != null ) { 
+				var html = document.documentElement;
+				var body = document.body;
+				var canvas = document.getElementById('my_canvas');
+				
+				e.pageX = e.clientX + (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
+				e.pageY = e.clientY + (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
+			}	
+			document.getElementById('outX').value = AngleToString(XToRA(e.pageX - pos.x),true);
+			document.getElementById('outY').value = AngleToString(YToDE(e.pageY - pos.y),false);
+		}
+		function getPosition(e){
+			var left = 0;
+			var top  = 0;
+
+			while (e.offsetParent){
+				left += e.offsetLeft;
+				top  += e.offsetTop;
+				e	 = e.offsetParent;
+			};
+
+			left += e.offsetLeft;
+			top  += e.offsetTop;
+
+			return {x:left, y:top};
+		}
+		function targetSelect(e){
+			e = e || window.event;	
+			var canvas = document.getElementById('my_canvas');			
+			var pos = getPosition(canvas);
+			if (e.pageX == null && e.clientX != null ) { 
+				var html = document.documentElement;
+				var body = document.body;
+				var canvas = document.getElementById('my_canvas');
+				
+				e.pageX = e.clientX + (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
+				e.pageY = e.clientY + (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
+			}
+			TargetPosition.X = XToRA(e.pageX - pos.x-0.5);
+			TargetPosition.Y = YToDE(e.pageY - pos.y-0.5);
+			var RAobj = AngleToObj(TargetPosition.X,true);
+			var DEobj = AngleToObj(TargetPosition.Y,false);
+			document.getElementById('RAh').value = RAobj.H;
+			document.getElementById('RAm').value = RAobj.M;
+			document.getElementById('RAs').value = RAobj.S.toFixed(2);
+			
+			document.getElementById('DEh').value = DEobj.H;
+			document.getElementById('DEm').value = DEobj.M;
+			document.getElementById('DEs').value = DEobj.S.toFixed(2);
+			updateStars();
+		}
+		function GoTo(){
+			CurrentPosition.X = TargetPosition.X;
+			CurrentPosition.Y = TargetPosition.Y;
+			ViewPosition.X = TargetPosition.X;
+			ViewPosition.Y = TargetPosition.Y;
+			updateStars();
+		}
 		</script>
 </head>
 <body onload="loadCanvas();">
@@ -133,52 +293,48 @@
 		<a href="snmp/snmpconfig.htm">SNMP Configuration</a>
 	</div>
 	<div id="leftboth">
-	<div id="status">
-		<div id="loading" style="display:none">Error:<br />Connection to demo board was lost.</div>
+	<div id="status">		
 		<div id="display">
-			<span style="float:right;font-size:9px;font-weight:normal;padding-top:8px;text-indent:0px">
-				(click to toggle)
-			</span>
-			<p>LEDs:<br /><span class="leds">
-			<a id="led7" onclick="newAJAXCommand('leds.cgi?led=7');">&bull;</a>
-			<a id="led6" onclick="newAJAXCommand('leds.cgi?led=6');">&bull;</a>
-			<a id="led5" onclick="newAJAXCommand('leds.cgi?led=5');">&bull;</a>
-			<a id="led4" onclick="newAJAXCommand('leds.cgi?led=4');">&bull;</a>
-			<a id="led3" onclick="newAJAXCommand('leds.cgi?led=3');">&bull;</a>
-			<a id="led2" onclick="newAJAXCommand('leds.cgi?led=2');">&bull;</a>
-			<a id="led1" onclick="newAJAXCommand('leds.cgi?led=1');">&bull;</a>
-			<a id="led0">&bull;</a>
-			</span></p>
-			<p>Buttons:<br />
-			<span id="btn3">?</span> &nbsp;
-			<span id="btn2">?</span> &nbsp;
-			<span id="btn1">?</span> &nbsp;
-			<span id="btn0">?</span></p>
-			<p>Potentiometer: <span id="pot0" style="font-weight:normal">?</span></p>
+			<!--<p><output id="outX">0</output></p>
+			<p><output id="outY">0</output></p>-->
 		</div>
 	</div>	
 	<div id="target">	
 		<div id="ReqTarget">
 			<form action="run.html">
-				<p>Alpha <br />
+				<p>Alpha  =  <output id="outX">0</output><br />
 				<span class="targetRA">					
-					<input type="number" name="RA_h" value="00">
-					<input type="number" name="RA_m" value="00">
-					<input type="number" name="RA_s" value="00">
+					<input type="number" name="RA_h" id="RAh" value="00">
+					<input type="number" name="RA_m" id="RAm" value="00">
+					<input type="number" name="RA_s" id="RAs" value="00">
 				</span></p>
-				<p>Delta <br />
+				<p>Delta  =  <output id="outY">0</output><br />
 				<span class="targetDE">					
-					<input type="number" name="DE_h" value="00">
-					<input type="number" name="DE_m" value="00">
-					<input type="number" name="DE_s" value="00">
+					<input type="number" name="DE_h" id="DEh" value="00">
+					<input type="number" name="DE_m" id="DEm" value="00">
+					<input type="number" name="DE_s" id="DEs" value="00">
 				</span></p>
-				<p><input type="button" value="RUN" onclick="updateStars();"></p>
+				<p><input type="button" value="RUN" onclick="GoTo();"></p>
 			</form>
 		</div>
 	</div>	
+	<div id="control">	
+		<div id="dControl">
+			<form>		
+				<p>Scale <br />
+					<input class="ControlScale" id="starScale" type="range" value="25" min="4" max="200" onchange="updateScale(1);" >
+					<input class="ControlScaleN" type="number" id="starScaleN" value="25" min="4" max="200" onchange="updateScale(2);">
+				</p>		
+				<p>Magnitude <br />
+					<input class="ControlScale" id="starMagn" type="range" value="5" min="0" max="9" onchange="updateMagn(1);" >
+					<input class="ControlScaleN" type="number" id="starMagnN" value="5" min="0" max="9" onchange="updateMagn(2);">
+				</p>				
+			</form>
+		</div>
 	</div>
-	<div style="width:600;margin-left:auto;margin-right:auto;">
-		<canvas id="my_canvas" width="580" height="580"></canvas>		
+	</div>
+	<div style="width:600;margin-left:auto;margin-right:auto;" id="CanvasBox">
+		<canvas id="my_canvas" width="580" height="580" onmousemove="mousemoveCanv(event)" onclick="targetSelect(event)"></canvas>		
 	</div>
 <div class="spacer">&nbsp;</div>
 <div id="footer">Copyright &copy; 2010 Microchip Technology, Inc.</div>
