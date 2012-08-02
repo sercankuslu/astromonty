@@ -116,6 +116,14 @@ body {
 	border: 1px dotted #666;
 	font-weight: bold;
 }
+#control {
+	width: 175px;
+	float: right;
+	padding: 10px;
+	margin: 10px;
+	border: 1px dotted #666;
+	font-weight: bold;
+}
 #status {
 	width: 175px;
 	float: right;
@@ -144,9 +152,18 @@ body {
 	width: 100px;
 }
 #ReqTarget .targetRA input {
-	width: 40px;
+	width: 50px;
+	font-weight: bold;
 }
 #ReqTarget .targetDE input {
+	width: 50px;
+	font-weight: bold;
+}
+
+#dControl .ControlScale {
+	width: 100px;
+}
+#dControl .ControlScaleN {
 	width: 40px;
 }
 
