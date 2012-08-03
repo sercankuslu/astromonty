@@ -152,11 +152,11 @@ body {
 	width: 100px;
 }
 #ReqTarget .targetRA input {
-	width: 50px;
+	width: 48px;
 	font-weight: bold;
 }
 #ReqTarget .targetDE input {
-	width: 50px;
+	width: 48px;
 	font-weight: bold;
 }
 
@@ -164,7 +164,7 @@ body {
 	width: 100px;
 }
 #dControl .ControlScaleN {
-	width: 40px;
+	width: 48px;
 }
 
 #status .leds a:hover {
