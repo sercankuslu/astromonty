@@ -95,7 +95,11 @@
 		function objToAngle(O,h){
 			var tA = 0;
 			tA = O.M + O.S/60;
-			tA = O.H + tA/60;
+			if(O.H>=0){
+				tA = O.H + tA/60;
+			} else {
+				tA = O.H - tA/60;
+			}
 			if(h) return tA*15;
 			return tA;
 		};
