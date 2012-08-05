@@ -150,12 +150,13 @@ body {
 
 #target input  {
 	width: 100px;
+	font-weight: bold;
 }
 #ReqTarget .targetRA input {
 	width: 48px;
 	font-weight: bold;
 }
-#ReqTarget .targetDE input {
+#ReqTarget .targetRA input {
 	width: 48px;
 	font-weight: bold;
 }
