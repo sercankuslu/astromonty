@@ -478,7 +478,7 @@ int main(void)
         FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
-	            LED0_IO ^= 1;
+	            LED0_IO = t;
 	            AdjustLocalRTCTime();            
 		}
         // This task performs normal stack task including checking

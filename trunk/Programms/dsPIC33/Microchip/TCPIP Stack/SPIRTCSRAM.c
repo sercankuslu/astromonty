@@ -119,6 +119,7 @@ static DWORD dwRTCSeconds = 0;
 static DWORD dwRTCLastUpdateTick = 0;
 // Time Struct
 static volatile RTC_TIME Time;
+static DWORD EPOCH2000 = (86400ul * (365ul * 30ul + 7ul));
 
 static BYTE bIsRTCTimeValid = 0;
 
@@ -761,15 +762,15 @@ DWORD GetTimeFromRTC()
             DM += 31;        
         }
     }
-    for(i=70;i < Y;i++){        
-		if((i & 0x03) == 0){
+    for(i=0;i < Y;i++){        
+		if((i % 4) == 0){
             DY+=366;                    
         } else {
             DY+=365;
         }
     }   
     DY = DY + DM + D - 1;
-    dwRTCSeconds = ((DY * 24 + h) * 60 + m)*60 + s;
+    dwRTCSeconds = ((DY * 24 + h) * 60 + m)*60 + s + EPOCH2000;
     //dwRTCLastUpdateTick = TickGet();
     return dwRTCSeconds;
 }
@@ -793,86 +794,84 @@ DWORD GetTimeFromRTC()
  ***************************************************************************/
 void SetTimeFromUTC(DWORD Seconds)
 {
-    BYTE Y = 70;
-    DWORD DY;
+    //01-Jan-2000 00:00:00
+    
+    DWORD Y = 0;
     BYTE M = 1;
     BYTE D = 1;
     BYTE d = 1;//день недели
     BYTE h = 0;
     BYTE m = 0;
     BYTE s = 0;
-    DWORD DM = 31;     
-    double s1; 
-    DWORD dd;
-    volatile DWORD Days;  
-    dwRTCSeconds = Seconds;
-    dwRTCLastUpdateTick = TickGet();
-    Days = Seconds/86400;
-    Seconds -= (DWORD)Days*86400;
-    s1 = Days/7;
-    dd = s1;
-    d = (Days - dd*7) + 5;
-    while(d>=7){d-=7;}
-    
-    dd  = Days/1461;
-    Days -= (dd * 1461); //
-    Y = dd*4 + 70;
-    DY = 365; //1970
-    while(Days >= DY){
-        if((Y & 0x03) == 0){
-            DY = 366; //366 дней           
-        } else {
-            DY = 365; //365 дней
-        }        
-        Y++;
-        Days -= DY;           
-    }   
-    M = 1;
-    while(Days>=DM){        
-        switch (M){        
-            case 4:case 6: case 9: case 11: 
-                DM = 30;
+    DWORD Days; 
+    DWORD Secs = Seconds - EPOCH2000;
+
+    // узнаем количество дней, прошедших с 2000 года
+    Days = Secs/86400;
+    Secs = Secs % 86400;
+    Y = Days / 365ul;
+    Days = Days % 365ul - (Y-1) / 4;
+    //if(Days> 60) Days -= 1; 
+    while((M<=12)&&(Days>31)){
+        switch(M){
+        case 1:case 3: case 5:case 7:
+        case 8:case 10: case 12:
+            if(Days > 31){
+                Days -= 31;
+                M++;
+            }
             break;
-            case 2:
-                DM = 28;
-                if((Y & 0x03) == 0){
-                    DM = 29;                    
+        case 2:
+            if(Y % 4 == 0){
+                if(Days > 29){
+                    Days -= 29;
+                    M++;
                 }
+            }else{
+                if(Days > 28){
+                    Days -= 28;
+                    M++;
+                }
+            }
             break;
-            default:
-            DM = 31;        
+        default:
+            if(Days > 30){
+                Days -= 30;
+                M++;
+            }
+            break;
         }
-        Days -= DM;       
-        M++;
-    }   
-    D = Days + 1;
-    
-    s1 = Seconds / 3600;
-    h = s1;
-    Seconds -= (DWORD)h * 3600;
-    
-    s1 = Seconds / 60;
-    m = s1;
-    Seconds -= (DWORD)m * 60;
-       
-    s = Seconds;    
+    }    
+
+    h = (BYTE)(Secs / 3600);
+    Secs = Secs % 3600;
+    m = (BYTE)(Secs / 60);
+    Secs = Secs % 60;
+    /*
+    Date->Sec = (BYTE)Secs;
+    Date->Min = m;
+    Date->Hour = h;
+    Date->DayOfWeak = 0;
+    Date->Day = (BYTE)Days;
+    Date->Month = M;
+    Date->Year = (WORD)Y + 70;
+ */
    
-    Time.b0.seconds.Sec10 = s/10;
-    Time.b0.seconds.Sec = s - Time.b0.seconds.Sec10*10;
-    Time.b1.minutes.Min10 = m/10;
-    Time.b1.minutes.Min = m - Time.b1.minutes.Min10*10;
-    Time.b2.hours.Hour10  = h/10;
-    Time.b2.hours.Hour  = h - Time.b2.hours.Hour10*10;
+   
+    Time.b0.seconds.Sec10 = s / 10;
+    Time.b0.seconds.Sec =   s % 10;
+    Time.b1.minutes.Min10 = m / 10;
+    Time.b1.minutes.Min =   m % 10;
+    Time.b2.hours.Hour10  = h / 10;
+    Time.b2.hours.Hour  =   h % 10;
     Time.b3.day.Day       = d;
-    Time.b4.date.Date10   = D/10;
-    Time.b4.date.Date   = D - Time.b4.date.Date10*10;
-    Time.b5.month.Month10 = M/10;
-    Time.b5.month.Month = M - Time.b5.month.Month10*10;
-    Time.b5.month.Century = Y/100;
-    Y-= Time.b5.month.Century*100;
-    Time.b6.years.Year10 = Y /10;
-    Y-= Time.b6.years.Year10*10;
-    Time.b6.years.Year = Y; 
+    Time.b4.date.Date10   = D / 10;
+    Time.b4.date.Date   = 	D % 10;
+    Time.b5.month.Month10 = M / 10;
+    Time.b5.month.Month =   M % 10;
+    Time.b5.month.Century = Y / 100;    
+    Time.b6.years.Year10 =  (Y % 100) / 10;
+    Time.b6.years.Year =    (Y % 100) % 10; 
     SPIRTCWriteTime();   
 }
      
