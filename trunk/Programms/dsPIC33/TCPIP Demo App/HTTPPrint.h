@@ -18,25 +18,11 @@ extern HTTP_STUB httpStubs[MAX_HTTP_CONNECTIONS];
 extern BYTE curHTTPID;
 
 void HTTPPrint(DWORD callbackID);
-void HTTPPrint_hellomsg(void);
-void HTTPPrint_uploadedmd5(void);
 
 void HTTPPrint(DWORD callbackID)
 {
 	switch(callbackID)
 	{
-        case 0x00000001:
-			HTTPPrint_hellomsg();
-			break;
-        case 0x00000002:
-			HTTPIncFile((ROM BYTE*)"footer.inc");
-			break;
-        case 0x0000001d:
-			HTTPPrint_uploadedmd5();
-			break;
-        case 0x00000033:
-			HTTPIncFile((ROM BYTE*)"header.inc");
-			break;
 		default:
 			// Output notification for undefined values
 			TCPPutROMArray(sktHTTP, (ROM BYTE*)"!DEF", 4);

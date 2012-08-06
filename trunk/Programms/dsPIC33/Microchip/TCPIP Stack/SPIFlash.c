@@ -102,7 +102,7 @@
 
 // Maximum speed of SPI Flash part in Hz
 // Should theoretically operate at 25MHz, but need to account for level-shifting delays
-#define SPIFLASH_MAX_SPI_FREQ       (16000000ul)
+#define SPIFLASH_MAX_SPI_FREQ       (10000000ul)
 
 #if defined (__18CXX)
     #define ClearSPIDoneFlag()  {SPIFLASH_SPI_IF = 0;}

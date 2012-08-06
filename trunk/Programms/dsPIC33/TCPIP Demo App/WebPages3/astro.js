@@ -26,8 +26,9 @@ var TargetPosition = {
 };
 var StarView;
 
-function onMouseDown(e){
-	this.BeginDrag = true;
+function onMouseDown(e){	
+	this.Drag = true;
+	this.Select = true;
 	e = e || window.event;	
 	var canvas = document.getElementById('my_canvas');			
 	var pos = getPosition(canvas);
@@ -41,6 +42,9 @@ function onMouseDown(e){
 	}	
 	MousePosition.X = e.pageX - pos.x-1;
 	MousePosition.Y = e.pageY - pos.y-1;
+}
+function onMouseUp(e){	
+	this.Drag = false;	
 }
 
 function onMouseWheel(e) {
@@ -84,6 +88,7 @@ function loadCanvas() {
 	StarView.updateStars = updateStars;
 	StarView.onmousemove = mousemoveCanv;
 	StarView.onclick = targetSelect;
+	StarView.onmouseup = onMouseUp;
 	var elem = document.getElementById('CanvasBox');
 	elem.ondragstart = function() {
 		return false;
@@ -253,7 +258,7 @@ function mousemoveCanv(e){
 		e.pageX = e.clientX + (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
 		e.pageY = e.clientY + (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
 	}
-	if(this.BeginDrag) this.Drag = true;
+	if(this.Drag) this.Select = false;
 	if(!this.Drag){
 		document.getElementById('outX').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
 		document.getElementById('outY').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
@@ -283,14 +288,7 @@ function getPosition(e){
 	return {x:left, y:top};
 }
 function targetSelect(e){
-	if(this.Drag) {
-		this.Drag = false;
-		this.BeginDrag = false;
-		return;
-	} else {
-		this.Drag = false;
-		this.BeginDrag = false;
-	}
+	if(!this.Select) return;	
 	e = e || window.event;	
 	var canvas = document.getElementById('my_canvas');
 	var pos = getPosition(canvas);
