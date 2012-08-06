@@ -479,7 +479,7 @@ int main(void)
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
 	            LED0_IO = t;
-	            AdjustLocalRTCTime();            
+	            //AdjustLocalRTCTime();            
 		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling

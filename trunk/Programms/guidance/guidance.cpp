@@ -348,7 +348,7 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     static bool bb = false;
     static KEYS_STR Key;
     ST_RESULT rv = STR_OK;  
-    static bool OnLine = false;
+    static bool OnLine = FALSE;
     static BYTE bfr[64] = "";
     static int length = 0;
 
@@ -364,11 +364,12 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
             //ExecuteCommands();
             GetItemRect(hDlg,&rect,IDC_STATIC);
             if(OnLine){
+                CheckDlgButton(hDlg, IDC_CHECK1, BST_CHECKED);
                 if(BerkleyClient() < 0) {
                     OnLine = FALSE;
-                    CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
-                } else CheckDlgButton(hDlg, IDC_CHECK1, BST_INDETERMINATE);
+                } 
             } else {
+                CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
                 rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
                 rv = RunServer(0, (BYTE*)bfr, sizeof(bfr), &length);            
             }
@@ -813,7 +814,7 @@ int BerkleyClient()
             // The sockaddr_in structure specifies the address family,
             // IP address, and port of the server to be connected to.
             clientService.sin_family = AF_INET;
-            clientService.sin_addr.s_addr = inet_addr( "192.168.1.33" );
+            clientService.sin_addr.s_addr = inet_addr( "192.168.1.21" );
             clientService.sin_port = htons( 9764 );
 
             //----------------------
