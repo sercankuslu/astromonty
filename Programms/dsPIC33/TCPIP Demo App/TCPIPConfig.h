@@ -239,7 +239,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(4732ul)
+	#define TCP_ETH_RAM_SIZE					(5150ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -285,7 +285,7 @@
 			//{TCP_PURPOSE_GENERIC_TCP_CLIENT, TCP_ETH_RAM, 125, 100},
 			//{TCP_PURPOSE_GENERIC_TCP_SERVER, TCP_ETH_RAM, 20, 20},
 			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
-			{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
+			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_TELNET, TCP_ETH_RAM, 200, 150},
 			//{TCP_PURPOSE_FTP_COMMAND, TCP_ETH_RAM, 100, 40},
@@ -293,15 +293,15 @@
 			//{TCP_PURPOSE_TCP_PERFORMANCE_TX, TCP_ETH_RAM, 200, 1},
 			//{TCP_PURPOSE_TCP_PERFORMANCE_RX, TCP_ETH_RAM, 40, 1500},
 			//{TCP_PURPOSE_UART_2_TCP_BRIDGE, TCP_ETH_RAM, 256, 256},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 400, 400},
-			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 400, 400},
-			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 400, 400},
-			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 400, 400},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
+			{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
+			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
 			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
 			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
 		};
 		#define END_OF_TCP_CONFIGURATION
@@ -325,7 +325,7 @@
  *   Berkeley Sockets are disabled.  Set this value as low as your application
  *   requires to avoid waisting RAM.
  */
-#define BSD_SOCKET_COUNT (5u)
+#define BSD_SOCKET_COUNT (1u)
 
 
 // =======================================================================
@@ -407,7 +407,7 @@
 	// connections to work.  If fewer sockets are available than this
 	// definition, then the the lesser of the two quantities will be the
 	// actual limit.
-	#define MAX_TELNET_CONNECTIONS	(2u)
+	#define MAX_TELNET_CONNECTIONS	(1u)
 
 	// Default local listening port for the Telnet server.  Port 23 is the
 	// protocol default.
