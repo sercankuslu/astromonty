@@ -41,19 +41,23 @@
 	<div id="leftboth">
 		<div id="status">		
 			<div id="display">
+				Local time:<br /><output id="LocalTime">0</output><br />
+				UTC:<br /><output id="UTCTime">0</output><br />
+				Star time:<br /><output id="StarTime">0</output>
+			</div>	
+		</div>
+		<div id="status">		
+			<div id="display">
 				Telescope coordinate:
 				<p>
 				α :<output id="TelX">5° 37' 58.32"</output><br />
-				δ :<output id="TelY">5° 37' 58.32"</output><br />
+				δ :<output id="TelY">5° 37' 58.32"</output>
 				</p>
 			</div>	
 		</div>
 		<div id="target">	
 			<div id="ReqTarget">
-				<!--Cursor coordinate: <br />
-					Alpha :<output id="outX">5°37'58.32"</output><br />
-					Delta :<output id="outY">5°37'58.32"</output><br /></p>-->
-				
+				Target coordinate
 				<form action="run.html">				
 					<p>α :
 					<span class="targetRA">
@@ -74,6 +78,7 @@
 		</div>	
 		<div id="control">	
 			<div id="dControl">
+				Controls
 				<form>		
 					<p>Scale <br />
 						<input class="ControlScale" id="starScale" type="range" value="25" min="4" max="1000" step="1" onchange="updateScale(1);" >

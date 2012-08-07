@@ -82,6 +82,30 @@ function XToRA(RA){
 function YToDE(DE){
 	return (WSizeY/2 - DE)/Scale + ViewPosition.Y
 };
+/* use a function for the exact format desired... */
+function ISODateString(d,UTC){
+function pad(n){return n<10 ? '0'+n : n}
+	if(UTC){
+		return d.getUTCFullYear()+'-'
+			  + pad(d.getUTCMonth()+1)+'-'
+			  + pad(d.getUTCDate())+' '
+			  + pad(d.getUTCHours())+':'
+			  + pad(d.getUTCMinutes())+':'
+			  + pad(d.getUTCSeconds());
+	} else {
+		return d.getFullYear()+'-'
+			  + pad(d.getMonth()+1)+'-'
+			  + pad(d.getDate())+' '
+			  + pad(d.getHours())+':'
+			  + pad(d.getMinutes())+':'
+			  + pad(d.getSeconds());
+	}
+}
+function UpdateTime(){
+	var now = new Date();
+	document.getElementById('UTCTime').value = ISODateString(now,true);
+	document.getElementById('LocalTime').value = ISODateString(now,false);
+}
 function loadCanvas() {
 	StarView = document.getElementById('my_canvas');
 	StarView.onmousedown = onMouseDown;
@@ -104,15 +128,31 @@ function loadCanvas() {
 	} else { // IE<9
 	  elem.attachEvent ("onmousewheel", onMouseWheel);
 	}
-	updatePM();
+	var timer = setInterval(UpdateTime, 1000);
 	StarView.updateStars();
-	UpdateSelPos();	
+	UpdateSelPos();
 	updateTargetForm();
-	loadScript("stars/Tycho2_5.js", StarView.updateStars, 0 );
-	loadScript("stars/Tycho2_6.js", StarView.updateStars, 0 );
-	loadScript("stars/Tycho2_7.js", StarView.updateStars, 0 );
-	loadScript("stars/Tycho2_8.js", StarView.updateStars, 0 );
-};	
+	//загрузка и коррекция координат каталога
+	correctCoordinate(Tycho2);
+	setTimeout(LoadData,1000);
+};
+
+function LoadData(){
+	loadScript("stars/Tycho2_5.js", function(){correctCoordinate(Tycho2_5);Tycho2 = Tycho2.concat(Tycho2_5);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_6.js", function(){correctCoordinate(Tycho2_6);Tycho2 = Tycho2.concat(Tycho2_6);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_71.js", function(){correctCoordinate(Tycho2_71);Tycho2 = Tycho2.concat(Tycho2_71);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_72.js", function(){correctCoordinate(Tycho2_72);Tycho2 = Tycho2.concat(Tycho2_72);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_73.js", function(){correctCoordinate(Tycho2_73);Tycho2 = Tycho2.concat(Tycho2_73);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_81.js", function(){correctCoordinate(Tycho2_81);Tycho2 = Tycho2.concat(Tycho2_81);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_82.js", function(){correctCoordinate(Tycho2_82);Tycho2 = Tycho2.concat(Tycho2_82);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_83.js", function(){correctCoordinate(Tycho2_83);Tycho2 = Tycho2.concat(Tycho2_83);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_84.js", function(){correctCoordinate(Tycho2_84);Tycho2 = Tycho2.concat(Tycho2_84);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_85.js", function(){correctCoordinate(Tycho2_85);Tycho2 = Tycho2.concat(Tycho2_85);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_86.js", function(){correctCoordinate(Tycho2_86);Tycho2 = Tycho2.concat(Tycho2_86);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_87.js", function(){correctCoordinate(Tycho2_87);Tycho2 = Tycho2.concat(Tycho2_87);StarView.updateStars();}, 0 );
+	loadScript("stars/Tycho2_88.js", function(){correctCoordinate(Tycho2_88);Tycho2 = Tycho2.concat(Tycho2_88);StarView.updateStars();}, 0 );
+}
+
 function AngleToObj(A,h){
 	var tA = A;
 	if(h){
@@ -227,40 +267,8 @@ function updateStars() {
 	var canvas = document.getElementById('my_canvas');
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');
-		ctx.clearRect(0, 0, WSizeX, WSizeY);		
-		try{
-			if(Tycho2) StarView.drawStars(Tycho2);
-		} catch(e) {
-			//alert("Tycho2");
-		};
-		if(Magnitude >4){
-			try{
-				if(Tycho2_5) StarView.drawStars(Tycho2_5);
-			} catch(e) {
-				//alert("Tycho2_5");
-			};
-		};
-		if(Magnitude >5){
-			try{
-				if(Tycho2_6) StarView.drawStars(Tycho2_6);
-			} catch(e) {
-				//alert("Tycho2_6");
-			};
-		};
-		if(Magnitude >6){
-			try{
-				if(Tycho2_7) StarView.drawStars(Tycho2_7);
-			} catch(e) {
-				//alert("Tycho2_7");
-			};
-		};
-		if(Magnitude >7){
-			try{
-				if(Tycho2_8) StarView.drawStars(Tycho2_8);
-			} catch(e) {
-				//alert("Tycho2_8");
-			};	
-		};
+		ctx.clearRect(0, 0, WSizeX, WSizeY);
+		if(Tycho2) StarView.drawStars(Tycho2);
 		StarView.updateCross();
 	}
 };
@@ -451,15 +459,16 @@ function updateTarget(id){
 	
 	StarView.updateStars();
 }
-function updatePM(){
-	var ArrsLength = Tycho2.length;
+
+function correctCoordinate(Catalog){
+	var ArrsLength = Catalog.length;
 	var now = new Date();
 	var j2000 = new Date(Date.UTC(2000, 0, 1, 11, 58, 55, 816));// 11:58:55,816 1 января 2000 года по UTC	
 	var ddd = now - j2000;
 	var YearsFromJ2000 = ddd/(3600000*24*365);
 	for (var i = 0;i < ArrsLength; i++) {
-		Tycho2[i][0] += Tycho2[i][6]/3600;
-		Tycho2[i][1] += Tycho2[i][7]/3600;
+		Catalog[i][0] += Catalog[i][6]/3600;
+		Catalog[i][1] += Catalog[i][7]/3600;
 	}
 }
 
