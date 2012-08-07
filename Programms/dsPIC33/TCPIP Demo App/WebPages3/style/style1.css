@@ -37,7 +37,7 @@ body {
 }
 
 #title {
-	background: #c00;
+	background: #00a;
 	padding: 4px;
 	font-weight: bold;
 	color: #fff;
@@ -53,14 +53,14 @@ body {
 
 #menu {
 	float: left;
-	width: 150px;
+	width: 140px;
 	padding-right: 20px;
 }
 
 #menu a {
-	width: 140px;
+	width: 130px;
 	display: block;
-	background: #c00;
+	background: #00a;
 	color: white;
 	padding: 8px;
 	font-weight: bold;
@@ -105,11 +105,11 @@ body {
 	border-top: 1px dotted #666;
 }
 #leftboth {
-	width: 175px;
+	width: 200px;
 	float: right;	
 }
 #target {
-	width: 175px;
+	width: 185px;
 	float: right;
 	padding: 10px;
 	margin: 10px;
@@ -117,7 +117,7 @@ body {
 	font-weight: bold;
 }
 #control {
-	width: 175px;
+	width: 185px;
 	float: right;
 	padding: 10px;
 	margin: 10px;
@@ -125,7 +125,7 @@ body {
 	font-weight: bold;
 }
 #status {
-	width: 175px;
+	width: 185px;
 	float: right;
 	padding: 10px;
 	margin: 10px;
@@ -133,31 +133,17 @@ body {
 	font-weight: bold;
 }
 
-#status p {
-	padding: 5px 0 5px 10px;
-	text-indent: -10px;
-	margin: 0;
-}
-
-#status .leds {
-	font-size: 14pt;
-}
-
-#status .leds a {
-	color: #ddd;
-	cursor: pointer;
-}
-
 #target input  {
 	width: 100px;
 	font-weight: bold;
 }
+
 #ReqTarget .targetRA input {
-	width: 48px;
+	width: 45px;
 	font-weight: bold;
 }
 #ReqTarget .targetRA input {
-	width: 48px;
+	width: 45px;
 	font-weight: bold;
 }
 
@@ -165,13 +151,10 @@ body {
 	width: 100px;
 }
 #dControl .ControlScaleN {
-	width: 48px;
+	width: 45px;
 }
 
-#status .leds a:hover {
-	color: #ddd;
-	text-decoration: none;
-}
+
 
 .examplebox {
 	margin:10px 40px 10px 40px;
@@ -260,10 +243,26 @@ fieldset textarea {
 	}
 canvas 
 	{
-		border: 1px solid #888;
+		border: 1px solid #888;		
+		margin-left:auto;			
 		-moz-border-radius: 10px;
 		-webkit-border-radius: 10px;
 		border-radius: 10px;
 		background-color: #000;
 		cursor: crosshair ;
 	}
+.tooltip {
+    position:absolute;
+    z-index:100; /* подсказка должна перекрывать другие элементы */
+    padding: 5px 10px;
+	width: 120px;
+    /* красивости... */
+	opacity: 0.6;
+    border: 1px solid #888; /*#b3c9ce;*/
+    border-radius: 4px;
+    text-align: left;
+    font: italic 14px/1.3 arial, sans-serif; 
+    color: #AFA;
+    background: #666;
+    box-shadow: 3px 3px 3px rgba(0,0,0,.3);
+  }

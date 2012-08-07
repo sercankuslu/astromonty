@@ -2,7 +2,7 @@
 var CoordX = 84.053;
 var CoordY = -1.201;
 var Scale = 25; // увеличить в 10 раз
-var Magnitude = 5; // величина звезд
+var Magnitude = 9; // величина звезд
 var WSizeX = 0;
 var WSizeY = 0;
 // текущие координаты телескопа(зелёный крестик)
@@ -86,9 +86,12 @@ function loadCanvas() {
 	StarView = document.getElementById('my_canvas');
 	StarView.onmousedown = onMouseDown;
 	StarView.updateStars = updateStars;
+	StarView.drawStars = drawStars;
+	StarView.DrawCross = DrawCross;
 	StarView.onmousemove = mousemoveCanv;
 	StarView.onclick = targetSelect;
 	StarView.onmouseup = onMouseUp;
+	StarView.updateCross = updateCross;
 	var elem = document.getElementById('CanvasBox');
 	elem.ondragstart = function() {
 		return false;
@@ -101,8 +104,14 @@ function loadCanvas() {
 	} else { // IE<9
 	  elem.attachEvent ("onmousewheel", onMouseWheel);
 	}
-	StarView.updateStars();
 	updatePM();
+	StarView.updateStars();
+	UpdateSelPos();	
+	updateTargetForm();
+	loadScript("stars/Tycho2_5.js", StarView.updateStars, 0 );
+	loadScript("stars/Tycho2_6.js", StarView.updateStars, 0 );
+	loadScript("stars/Tycho2_7.js", StarView.updateStars, 0 );
+	loadScript("stars/Tycho2_8.js", StarView.updateStars, 0 );
 };	
 function AngleToObj(A,h){
 	var tA = A;
@@ -128,14 +137,17 @@ function objToAngle(O,h){
 };
 function AngleToString(A,h){
 	var tA = A;
+	var s = "° ";
 	if(h){
 		tA = A/15;
+		s = "h "
 	}		
 	var grad = Math.floor(tA);
 	tA = (tA - grad)*60;
 	var min = Math.floor(tA);
 	var sec = ((tA - min)*60);
-	return "" + grad + "°" + min + "'" + sec.toFixed(2) + '"';
+	return "" + grad + s + min + "' " + sec.toFixed(2) + '"';
+	
 };
 function updateScale(id){
 	var range = document.getElementById('starScale');
@@ -170,7 +182,7 @@ function updateMagn(id){
 	}
 	StarView.updateStars();
 }
-function updateStars() {
+function drawStars(Catalog){
 	var canvas = this;
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');
@@ -183,19 +195,17 @@ function updateStars() {
 		var i = 0;
 		
 		var maxMag = -5;
-		var ArrsLength = Tycho2.length;
-		ctx.clearRect(0, 0, WSizeX, WSizeY);
-		
+		var ArrsLength = Catalog.length;
 		
 		for ( i = 0;i < ArrsLength; i++) {
-			if(Tycho2[i][2] > Magnitude) break;
-			if(Tycho2[i][2] < maxMag) continue;
-			if(Tycho2[i][0] < ImgRight) continue;
-			if(Tycho2[i][0] > ImgLeft) continue;
-			if(Tycho2[i][1] < ImgBottom) continue;
-			if(Tycho2[i][1] > ImgTop) continue;
+			if(Catalog[i][2] > Magnitude) break;
+			if(Catalog[i][2] < maxMag) continue;
+			if(Catalog[i][0] < ImgRight) continue;
+			if(Catalog[i][0] > ImgLeft) continue;
+			if(Catalog[i][1] < ImgBottom) continue;
+			if(Catalog[i][1] > ImgTop) continue;
 			ctx.beginPath();
-			switch (Tycho2[i][2]){
+			switch (Catalog[i][2]){
 				case -1.088: ctx.fillStyle = "blue"; // сириус
 				break;
 				case 0.283 : ctx.fillStyle = "cyan"; //Ригель
@@ -205,25 +215,65 @@ function updateStars() {
 				default :    ctx.fillStyle = "white";
 				break;
 			}					
-			ctx.arc((ImgLeft-Tycho2[i][0])*Scale,(ImgTop - Tycho2[i][1])*Scale,(9 - Tycho2[i][2])/4+0.5,0,Math.PI*2,true);
+			ctx.arc((ImgLeft-Catalog[i][0])*Scale,(ImgTop - Catalog[i][1])*Scale,(9 - Catalog[i][2])/4+0.5,0,Math.PI*2,true);
 			ctx.fill();
 		};
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
 	}
-	updateCross();
-};
-function updateCross(){
+}
+function updateStars() {
 	var canvas = document.getElementById('my_canvas');
 	if(canvas.getContext) {
-		DrawCross(RAToX(CurrentPosition.X),DEToY(CurrentPosition.Y),"green",true);
-		DrawCross(RAToX(TargetPosition.X),DEToY(TargetPosition.Y),"yellow",false);
+		var ctx = canvas.getContext('2d');
+		ctx.clearRect(0, 0, WSizeX, WSizeY);		
+		try{
+			if(Tycho2) StarView.drawStars(Tycho2);
+		} catch(e) {
+			//alert("Tycho2");
+		};
+		if(Magnitude >4){
+			try{
+				if(Tycho2_5) StarView.drawStars(Tycho2_5);
+			} catch(e) {
+				//alert("Tycho2_5");
+			};
+		};
+		if(Magnitude >5){
+			try{
+				if(Tycho2_6) StarView.drawStars(Tycho2_6);
+			} catch(e) {
+				//alert("Tycho2_6");
+			};
+		};
+		if(Magnitude >6){
+			try{
+				if(Tycho2_7) StarView.drawStars(Tycho2_7);
+			} catch(e) {
+				//alert("Tycho2_7");
+			};
+		};
+		if(Magnitude >7){
+			try{
+				if(Tycho2_8) StarView.drawStars(Tycho2_8);
+			} catch(e) {
+				//alert("Tycho2_8");
+			};	
+		};
+		StarView.updateCross();
+	}
+};
+function updateCross(){
+	var canvas = this;
+	if(canvas.getContext) {
+		this.DrawCross(RAToX(CurrentPosition.X),DEToY(CurrentPosition.Y),"green",true);
+		this.DrawCross(RAToX(TargetPosition.X),DEToY(TargetPosition.Y),"yellow",false);
 	}
 }
 
 function DrawCross(X,Y,color,wCircle){
-	var canvas = document.getElementById('my_canvas');
+	var canvas = this;
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');
 		ctx.beginPath();
@@ -260,8 +310,10 @@ function mousemoveCanv(e){
 	}
 	if(this.Drag) this.Select = false;
 	if(!this.Drag){
-		document.getElementById('outX').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
-		document.getElementById('outY').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
+		//document.getElementById('outX').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
+		//document.getElementById('outY').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
+		document.getElementById('outXt').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
+		document.getElementById('outYt').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
 	} else {
 		var dX = (e.pageX - pos.x -1) - MousePosition.X;
 		var dY = (e.pageY - pos.y -1) - MousePosition.Y; 
@@ -302,6 +354,10 @@ function targetSelect(e){
 	}
 	TargetPosition.X = XToRA(e.pageX - pos.x-1);
 	TargetPosition.Y = YToDE(e.pageY - pos.y-1);
+	updateTargetForm();
+	StarView.updateStars();
+}
+function updateTargetForm(){
 	var RAobj = AngleToObj(TargetPosition.X,true);
 	var DEobj = AngleToObj(TargetPosition.Y,false);
 	document.getElementById('RAh').value = RAobj.H;
@@ -311,14 +367,21 @@ function targetSelect(e){
 	document.getElementById('DEh').value = DEobj.H;
 	document.getElementById('DEm').value = DEobj.M;
 	document.getElementById('DEs').value = DEobj.S.toFixed(2);
-	StarView.updateStars();
 }
 function GoTo(){
 	CurrentPosition.X = TargetPosition.X;
 	CurrentPosition.Y = TargetPosition.Y;
-	ViewPosition.X = TargetPosition.X;
-	ViewPosition.Y = TargetPosition.Y;
 	StarView.updateStars();
+	UpdateSelPos();
+}
+function GoToView(){
+	ViewPosition.X = CurrentPosition.X;
+	ViewPosition.Y = CurrentPosition.Y;
+	StarView.updateStars();	
+}
+function UpdateSelPos(){
+	document.getElementById('TelX').value = AngleToString(CurrentPosition.X,true);
+	document.getElementById('TelY').value = AngleToString(CurrentPosition.Y,false);
 }
 //var ElementUpgraded = 0;
 function updateTarget(id){
@@ -398,4 +461,108 @@ function updatePM(){
 		Tycho2[i][0] += Tycho2[i][6]/3600;
 		Tycho2[i][1] += Tycho2[i][7]/3600;
 	}
+}
+
+
+
+function Tooltip(options) {
+
+  var offsetFromCursor = (options.offset === undefined) ? 10 : options.offset;
+  var tooltipElem;
+  var isEnabled = true;
+
+  var elem = options.elem;
+  var html = options.html;
+
+  elem.on({
+    mouseenter: onMouseEnter,
+    mouseleave: onMouseLeave,
+    mousemove: onMouseMove
+  });
+
+  function onMouseEnter(e) {
+    show(e.pageX, e.pageY);
+  }
+
+  function onMouseLeave() {
+    hide();    
+  }
+
+  function onMouseMove(e) {
+    show(e.pageX, e.pageY);    
+  }
+
+
+  function hide() {
+    getTooltipElem().remove();
+  };
+
+  function getTooltipElem() {
+    if (!tooltipElem) {
+      tooltipElem = $('<div/>', {
+        "class" : 'tooltip',
+        html: html
+      });
+    }
+    return tooltipElem;
+  }
+
+  function show(pageX, pageY) {
+    var tooltipElem = getTooltipElem();
+
+    if (!tooltipElem.is(':visible')) {
+      // первым делом - отобразить подсказку, чтобы можно было получить её размеры
+      tooltipElem.appendTo('body');
+    }
+
+    var scrollY = $(window).scrollTop();
+    var winBottom = scrollY + $(window).height();
+
+    var scrollX = $(window).scrollLeft();
+    var winRight  = scrollX + $(window).width();
+
+    var newLeft = pageX + offsetFromCursor;
+    var newTop = pageY + offsetFromCursor;
+
+    if (newLeft + tooltipElem.outerWidth() > winRight) { // если за правой границей окна
+      newLeft -= tooltipElem.outerWidth();
+      newLeft -= offsetFromCursor + 2; // немного левее, чтобы курсор был не над подсказкой
+    }
+
+    if (newTop + tooltipElem.outerHeight() > winBottom) { // если за нижней границей окна
+      newTop -= tooltipElem.outerHeight();
+      newTop -= offsetFromCursor + 2;  // немного выше
+    }
+
+    tooltipElem.css({
+      left: newLeft,
+      top: newTop
+    });
+  };
+}
+
+
+var loadScript = function(src, callback, appendTo) {
+    var script = document.createElement('script');
+
+    if (!appendTo) {
+        appendTo = document.getElementsByTagName('head')[0];
+    }
+
+    if (script.readyState && !script.onload) {
+        // IE, Opera
+        script.onreadystatechange = function() {
+            if (script.readyState == "loaded" || script.readyState == "complete") {
+                script.onreadystatechange = null;
+                callback();
+            }
+        }
+    }
+    else {
+        // Rest
+        script.onload = callback;
+    }
+
+    script.src = src;
+    appendTo.appendChild(script);
 }
