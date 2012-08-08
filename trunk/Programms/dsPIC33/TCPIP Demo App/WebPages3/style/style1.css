@@ -69,7 +69,7 @@ body {
 }
 
 #menu a:hover {
-	background: #d33;
+	background: #33d;
 }
 
 #content {
@@ -257,7 +257,7 @@ canvas
     padding: 5px 10px;
 	width: 120px;
     /* красивости... */
-	opacity: 0.6;
+	opacity: 0.9;
     border: 1px solid #888; /*#b3c9ce;*/
     border-radius: 4px;
     text-align: left;
