@@ -5,6 +5,7 @@ var Scale = 25; // увеличить в 10 раз
 var Magnitude = 9; // величина звезд
 var WSizeX = 0;
 var WSizeY = 0;
+var PI2 = Math.PI*2;
 // текущие координаты телескопа(зелёный крестик)
 var CurrentPosition = {
 	X : 84.053,
@@ -84,7 +85,7 @@ function YToDE(DE){
 };
 /* use a function for the exact format desired... */
 function ISODateString(d,UTC){
-function pad(n){return n<10 ? '0'+n : n}
+	function pad(n){return n<10 ? '0'+n : n}
 	if(UTC){
 		return d.getUTCFullYear()+'-'
 			  + pad(d.getUTCMonth()+1)+'-'
@@ -236,27 +237,41 @@ function drawStars(Catalog){
 		
 		var maxMag = -5;
 		var ArrsLength = Catalog.length;
+		var elem = {RA:0,DE:0,mag:0};
+		var Starsize;
 		
 		for ( i = 0;i < ArrsLength; i++) {
-			if(Catalog[i][2] > Magnitude) break;
-			if(Catalog[i][2] < maxMag) continue;
-			if(Catalog[i][0] < ImgRight) continue;
-			if(Catalog[i][0] > ImgLeft) continue;
-			if(Catalog[i][1] < ImgBottom) continue;
-			if(Catalog[i][1] > ImgTop) continue;
+			elem.RA = Catalog[i][0];
+			elem.DE = Catalog[i][1];
+			elem.mag = Catalog[i][2];
+			if(elem.mag > Magnitude) break;
+			if(elem.mag < maxMag) continue;
+			if(elem.RA < ImgRight) continue;
+			if(elem.RA > ImgLeft) continue;
+			if(elem.DE < ImgBottom) continue;
+			if(elem.DE > ImgTop) continue;
 			ctx.beginPath();
-			switch (Catalog[i][2]){
+			switch (elem.mag){
 				case -1.088: ctx.fillStyle = "blue"; // сириус
+							 ctx.strokeStyle = "blue";
 				break;
 				case 0.283 : ctx.fillStyle = "cyan"; //Ригель
+							 ctx.strokeStyle = "cyan"; 
 				break;
 				case 0.769 : ctx.fillStyle = "red"; // бетельгейзе
+					ctx.strokeStyle = "red";
 				break;
 				default :    ctx.fillStyle = "white";
+					ctx.strokeStyle = "white";
 				break;
-			}					
-			ctx.arc((ImgLeft-Catalog[i][0])*Scale,(ImgTop - Catalog[i][1])*Scale,(9 - Catalog[i][2])/4+0.5,0,Math.PI*2,true);
-			ctx.fill();
+			}
+			Starsize = (9 - elem.mag)*Scale/100+0.5;			
+			ctx.arc((ImgLeft-elem.RA)*Scale,(ImgTop - elem.DE)*Scale, Starsize,0,PI2,true);
+			//if(Starsize>0.5) {
+				ctx.fill();
+			//} else {
+				//ctx.stroke();
+			//}
 		};
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
@@ -469,6 +484,7 @@ function correctCoordinate(Catalog){
 	for (var i = 0;i < ArrsLength; i++) {
 		Catalog[i][0] += Catalog[i][6]/3600;
 		Catalog[i][1] += Catalog[i][7]/3600;
+		//Catalog[i][2] = (9 - Catalog[i][2])/4+0.5;
 	}
 }
 
@@ -575,3 +591,70 @@ var loadScript = function(src, callback, appendTo) {
     script.src = src;
     appendTo.appendChild(script);
 }
+
+//AJAX***********************************
+function ajaxSelect(id) {
+    var element = document.getElementById(id)
+
+    var onLoaded = function(data) {
+        var i=0
+        for(var key in data) {
+            var label = data[key]
+            element.options[i++] = new Option(label, key)
+        }
+    }
+    
+    var onLoadError = function(error) {
+        var msg = "Ошибка "+error.errcode
+        if (error.message) msg = msg + ' :'+error.message
+        alert(msg)
+    }
+    
+    var showLoading = function(on) {
+        element.disabled = on
+    }
+
+    var onSuccess = function(data) {
+        if (!data.errcode) {
+            onLoaded(data)
+            showLoading(false)        
+        } else {
+            showLoading(false)
+            onLoadError(data)            
+        }
+    }
+    
+    
+    var onAjaxError = function(xhr, status){
+        showLoading(false)
+        var errinfo = { errcode: status }
+        if (xhr.status != 200) {
+            // может быть статус 200, а ошибка
+            // из-за некорректного JSON
+            errinfo.message = xhr.statusText
+        } else {
+            errinfo.message = 'Некорректные данные с сервера'
+        }
+        onLoadError(errinfo)
+    }
+
+    
+    return {
+        load: function(url) {
+            showLoading(true)
+
+            while (element.firstChild) {
+                element.removeChild(element.firstChild)
+            }
+
+            $.ajax({ // для краткости - jQuery
+                url: url,
+                dataType: "json",
+                success: onSuccess,
+                error: onAjaxError,
+                cache: false
+            })
+        }
+    }
+}
+
