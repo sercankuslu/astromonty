@@ -151,7 +151,7 @@ void FanControl()
 	if(!Init){
 		TRISBbits.TRISB4 = 0;
 		Init = TRUE;
-		FanPeriod = TICK_SECOND/20;
+		FanPeriod = TICK_SECOND/40;
 		FanActive = FanPeriod * 2 / 3;
 		FanPassive = FanPeriod - FanActive;
 	}
@@ -476,7 +476,7 @@ int main(void)
             
         //}
         //TimerMonitor();
-        //FanControl();		
+        FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
 	            LED0_IO = t;
