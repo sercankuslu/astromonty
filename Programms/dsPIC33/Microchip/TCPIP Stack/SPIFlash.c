@@ -577,8 +577,7 @@ void _BeginWritePage()
 void SPIFlashPageWrite(BYTE* vData, WORD wLen)
 {
     volatile BYTE Dummy;
-    BYTE vSPIONSave;
-    WORD SendBuf;
+    BYTE vSPIONSave;    
     BOOL isStarted;
     #if defined(__18CXX)
     BYTE SPICON1Save;
