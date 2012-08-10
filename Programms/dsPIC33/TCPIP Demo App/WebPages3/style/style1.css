@@ -266,3 +266,13 @@ canvas
     background: #666;
     box-shadow: 3px 3px 3px rgba(0,0,0,.3);
   }
+ #StarCounter{
+	background: #FFF;
+	padding: 4px;
+	font-weight: lighter;
+	color: #CCC;
+	margin-bottom: 15px;
+	height: 16px;
+	text-align:center;
+	font-style: italic;
+ }

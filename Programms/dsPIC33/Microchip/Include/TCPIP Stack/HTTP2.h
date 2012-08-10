@@ -162,6 +162,7 @@
 		HTTP_JPG,			// File is JPG image (extension .jpg)
 		HTTP_JAVA,			// File is java (extension .java)
 		HTTP_WAV,			// File is audio (extension .wav)
+		HTTP_JS,			// File is audio (extension .wav)
 		HTTP_UNKNOWN		// File type is unknown
 	} HTTP_FILE_TYPE;
 

@@ -68,6 +68,8 @@
 		#else
 			#define MPFS_WRITE_PAGE_SIZE		(64u)	// Defines the size of a page in EEPROM
 		#endif
+	#else
+	    #define MPFS_WRITE_PAGE_SIZE		(256u)	// Defines the size of a page in EEPROM
 	#endif
 
 /****************************************************************************

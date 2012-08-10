@@ -87,6 +87,7 @@
 	    "jpg",          // HTTP_JPG
 	    "cla",          // HTTP_JAVA
 	    "wav",          // HTTP_WAV
+	    "js",           // HTTP_JS
 		"\0\0\0"		// HTTP_UNKNOWN
 	};
 	
@@ -104,6 +105,7 @@
 	    "image/jpeg",            // HTTP_JPG
 	    "application/java-vm",   // HTTP_JAVA
 	    "audio/x-wave",          // HTTP_WAV
+	    "text/javascript",       // HTTP_JS
 		""						 // HTTP_UNKNOWN
 	};
 		

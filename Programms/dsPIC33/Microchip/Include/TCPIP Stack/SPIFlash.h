@@ -59,6 +59,7 @@
 #define SPI_FLASH_SECTOR_SIZE		(262144ul)
 #define SPI_FLASH_PAGE_SIZE			(256ul)		// SST has no page boundary requirements
 
+#define SPI_FLASH_PAGE_MASK		(SPI_FLASH_PAGE_SIZE - 1)
 #define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 
 

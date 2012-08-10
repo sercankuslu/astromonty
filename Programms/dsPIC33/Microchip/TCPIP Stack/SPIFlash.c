@@ -92,6 +92,7 @@
     #define FLASH_PROPER_SPICON1  (0x001B | 0x0120)   // 1:1 primary prescale, 2:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC33F__) || defined(__PIC24H__)
     #define FLASH_PROPER_SPICON1  (0x000F | 0x0120)   // 1:1 primary prescale, 5:1 secondary prescale, CKE=1, MASTER mode
+    #define FLASH_16BIT_PROPER_SPICON1  (0x000F | 0x0520)   //16bit, 1:1 primary prescale, 5:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__dsPIC30F__)
     #define FLASH_PROPER_SPICON1  (0x0017 | 0x0120)   // 1:1 primary prescale, 3:1 secondary prescale, CKE=1, MASTER mode
 #elif defined(__PIC32MX__)
@@ -147,6 +148,7 @@ static union
 
 static void _SendCmd(BYTE cmd);
 static void _WaitWhileBusy(void);
+void SPIFlashPageWrite(BYTE* vData, WORD wLen);
 //static void _GetStatus(void);
 
 
@@ -510,7 +512,129 @@ void SPIFlashWrite(BYTE vData)
     SPIFLASH_SPICON1 = SPICON1Save;
     SPI_ON_BIT = vSPIONSave;
 }
+/*****************************************************************************
+  Function:
+    void SPIFlashWrite(BYTE vData)
 
+  Summary:
+    Writes a byte to the SPI Flash part.
+
+  Description:
+    This function writes a byte to the SPI Flash part.  If the current
+    address pointer indicates the beginning of a 4kB sector, the entire
+    sector will first be erased to allow writes to proceed.  If the current
+    address pointer indicates elsewhere, it will be assumed that the sector
+    has already been erased.  If this is not true, the chip will silently
+    ignore the write command.
+
+  Precondition:
+    SPIFlashInit and SPIFlashBeginWrite have been called, and the current
+    address is either the front of a 4kB sector or has already been erased.
+
+  Parameters:
+    vData - The byte to write to the next memory location.
+
+  Returns:
+    None
+
+  Remarks:
+    See Remarks in SPIFlashBeginWrite for important information about Flash
+    memory parts.
+  ***************************************************************************/
+void _BeginWritePage()
+{
+    //WORD wFirst;
+    //WORD wSecond;
+    volatile WORD Dummy;
+    
+    //wFirst = (WRITE << 8) | ((BYTE*)&dwWriteAddr)[2];
+    //wSecond = ((WORD*)&dwWriteAddr)[0];
+    
+    // Enable writing
+    _SendCmd(WREN);
+       
+    // Activate the chip select
+    SPIFLASH_CS_IO = 0;
+    ClearSPIDoneFlag();
+        
+    SPIFLASH_SSPBUF = WRITE;
+    WaitForDataByte();
+    Dummy = SPIFLASH_SSPBUF;
+
+    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
+    WaitForDataByte();
+    Dummy = SPIFLASH_SSPBUF;
+
+    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
+    WaitForDataByte();
+    Dummy = SPIFLASH_SSPBUF;
+
+    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
+    WaitForDataByte();
+    Dummy = SPIFLASH_SSPBUF;
+
+}
+void SPIFlashPageWrite(BYTE* vData, WORD wLen)
+{
+    volatile BYTE Dummy;
+    BYTE vSPIONSave;
+    WORD SendBuf;
+    BOOL isStarted;
+    #if defined(__18CXX)
+    BYTE SPICON1Save;
+    #elif defined(__C30__)
+    WORD SPICON1Save;
+    #else
+    DWORD SPICON1Save;
+    #endif
+
+    // Save SPI state (clock speed)
+    SPICON1Save = SPIFLASH_SPICON1;
+    vSPIONSave = SPI_ON_BIT;
+
+    // Configure SPI
+    SPI_ON_BIT = 0;
+    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
+    SPI_ON_BIT = 1;
+    
+    // Enable writing
+    _SendCmd(WREN);
+    
+    isStarted = FALSE;
+    while(wLen>0){
+        if((dwWriteAddr & SPI_FLASH_PAGE_MASK)==0 ){// сменить страницу            
+            if(isStarted){
+                // Deactivate chip select and wait for write to complete
+                SPIFLASH_CS_IO = 1;
+                _WaitWhileBusy();
+                isStarted = FALSE;
+            }
+            if((dwWriteAddr & SPI_FLASH_SECTOR_MASK)==0){ // стереть сектор                
+                SPIFlashEraseSector(dwWriteAddr);
+            }
+        }
+        if(!isStarted){
+            _WaitWhileBusy();
+            _BeginWritePage(); // отправили команду и адрес
+            isStarted = TRUE;
+        } 
+        if(isStarted){
+            SPIFLASH_SSPBUF = *vData++;
+            dwWriteAddr++;
+            wLen--;
+            WaitForDataByte();
+            Dummy = SPIFLASH_SSPBUF;
+        }
+    }
+    // Deactivate chip select and wait for write to complete
+    SPIFLASH_CS_IO = 1;
+    _WaitWhileBusy();
+
+    // Restore SPI state
+    SPI_ON_BIT = 0;
+    SPIFLASH_SPICON1 = SPICON1Save;
+    SPI_ON_BIT = vSPIONSave;
+}
 /*****************************************************************************
   Function:
     void SPIFlashWriteArray(BYTE* vData, WORD wLen)
@@ -559,7 +683,11 @@ void SPIFlashWriteArray(BYTE* vData, WORD wLen)
 	// Do nothing if no data to process
 	if(wLen == 0u)
 		return;
-
+    if(deviceCaps.bits.bPageProgram){
+        SPIFlashPageWrite(vData,wLen);
+        return;
+    }
+    
     // Save SPI state (clock speed)
     SPICON1Save = SPIFLASH_SPICON1;
     vSPIONSave = SPI_ON_BIT;
