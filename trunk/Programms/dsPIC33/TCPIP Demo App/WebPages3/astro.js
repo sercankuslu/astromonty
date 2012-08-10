@@ -135,23 +135,39 @@ function loadCanvas() {
 	updateTargetForm();
 	//загрузка и коррекция координат каталога
 	correctCoordinate(Tycho2);
-	setTimeout(LoadData,1000);
+	setTimeout(LoadData,200);
 };
-
+var NextCat=0;
 function LoadData(){
-	loadScript("stars/Tycho2_5.js", function(){correctCoordinate(Tycho2_5);Tycho2 = Tycho2.concat(Tycho2_5);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_6.js", function(){correctCoordinate(Tycho2_6);Tycho2 = Tycho2.concat(Tycho2_6);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_71.js", function(){correctCoordinate(Tycho2_71);Tycho2 = Tycho2.concat(Tycho2_71);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_72.js", function(){correctCoordinate(Tycho2_72);Tycho2 = Tycho2.concat(Tycho2_72);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_73.js", function(){correctCoordinate(Tycho2_73);Tycho2 = Tycho2.concat(Tycho2_73);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_81.js", function(){correctCoordinate(Tycho2_81);Tycho2 = Tycho2.concat(Tycho2_81);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_82.js", function(){correctCoordinate(Tycho2_82);Tycho2 = Tycho2.concat(Tycho2_82);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_83.js", function(){correctCoordinate(Tycho2_83);Tycho2 = Tycho2.concat(Tycho2_83);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_84.js", function(){correctCoordinate(Tycho2_84);Tycho2 = Tycho2.concat(Tycho2_84);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_85.js", function(){correctCoordinate(Tycho2_85);Tycho2 = Tycho2.concat(Tycho2_85);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_86.js", function(){correctCoordinate(Tycho2_86);Tycho2 = Tycho2.concat(Tycho2_86);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_87.js", function(){correctCoordinate(Tycho2_87);Tycho2 = Tycho2.concat(Tycho2_87);StarView.updateStars();}, 0 );
-	loadScript("stars/Tycho2_88.js", function(){correctCoordinate(Tycho2_88);Tycho2 = Tycho2.concat(Tycho2_88);StarView.updateStars();}, 0 );
+	switch(NextCat){
+	case 0: loadScript("stars/Tycho2_5.js", function(){correctCoordinate(Tycho2_5);Tycho2 = Tycho2.concat(Tycho2_5);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 1:	loadScript("stars/Tycho2_6.js", function(){correctCoordinate(Tycho2_6);Tycho2 = Tycho2.concat(Tycho2_6);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 2:	loadScript("stars/Tycho2_71.js", function(){correctCoordinate(Tycho2_71);Tycho2 = Tycho2.concat(Tycho2_71);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 3:	loadScript("stars/Tycho2_72.js", function(){correctCoordinate(Tycho2_72);Tycho2 = Tycho2.concat(Tycho2_72);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 4:	loadScript("stars/Tycho2_73.js", function(){correctCoordinate(Tycho2_73);Tycho2 = Tycho2.concat(Tycho2_73);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 5:	loadScript("stars/Tycho2_81.js", function(){correctCoordinate(Tycho2_81);Tycho2 = Tycho2.concat(Tycho2_81);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 6:	loadScript("stars/Tycho2_82.js", function(){correctCoordinate(Tycho2_82);Tycho2 = Tycho2.concat(Tycho2_82);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 7:	loadScript("stars/Tycho2_83.js", function(){correctCoordinate(Tycho2_83);Tycho2 = Tycho2.concat(Tycho2_83);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 8:	loadScript("stars/Tycho2_84.js", function(){correctCoordinate(Tycho2_84);Tycho2 = Tycho2.concat(Tycho2_84);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 9:	loadScript("stars/Tycho2_85.js", function(){correctCoordinate(Tycho2_85);Tycho2 = Tycho2.concat(Tycho2_85);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 10: loadScript("stars/Tycho2_86.js", function(){correctCoordinate(Tycho2_86);Tycho2 = Tycho2.concat(Tycho2_86);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 11: loadScript("stars/Tycho2_87.js", function(){correctCoordinate(Tycho2_87);Tycho2 = Tycho2.concat(Tycho2_87);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	case 12: loadScript("stars/Tycho2_88.js", function(){correctCoordinate(Tycho2_88);Tycho2 = Tycho2.concat(Tycho2_88);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
+		break;
+	}
+	NextCat++;
 }
 
 function AngleToObj(A,h){
@@ -283,8 +299,12 @@ function updateStars() {
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');
 		ctx.clearRect(0, 0, WSizeX, WSizeY);
-		if(Tycho2) StarView.drawStars(Tycho2);
+		if(Tycho2) {
+			StarView.drawStars(Tycho2);
+			document.getElementById('StarCount').value = Tycho2.length;
+		}
 		StarView.updateCross();
+		
 	}
 };
 function updateCross(){
