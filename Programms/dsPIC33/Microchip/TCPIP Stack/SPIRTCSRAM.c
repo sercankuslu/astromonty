@@ -1076,7 +1076,7 @@ void RTCGetFormatTime(BYTE* time){
      time[i++] = Time.b5.month.Month10 + '0';
      time[i++] = Time.b5.month.Month + '0';
      time[i++] = '.';     
-     if(Time.b5.month.Century == 0){
+     if(Time.b5.month.Century == 1){
          time[i++] = '1';
          time[i++] = '9';         
      } else {

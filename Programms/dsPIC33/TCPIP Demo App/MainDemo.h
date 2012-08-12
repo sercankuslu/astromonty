@@ -74,7 +74,7 @@ void GenericTCPServer(void);
 void BerkeleyTCPClientDemo(void);
 void BerkeleyTCPServerDemo(void);
 void BerkeleyUDPClientDemo(void);
-void AdjustLocalRTCTime(void);
+int AdjustLocalRTCTime(void);
 DWORD UTCGetTime(void);
 
 
