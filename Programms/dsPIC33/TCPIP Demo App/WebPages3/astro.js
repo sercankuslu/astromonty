@@ -456,8 +456,8 @@ function GoToView(){
 	StarView.updateStars();	
 }
 function UpdateSelPos(){
-	document.getElementById('TelX').value = AngleToString(CurrentPosition.X,true);
-	document.getElementById('TelY').value = AngleToString(CurrentPosition.Y,false);
+	//document.getElementById('TelX').value = AngleToString(CurrentPosition.X,true);
+	//document.getElementById('TelY').value = AngleToString(CurrentPosition.Y,false);
 }
 //var ElementUpgraded = 0;
 function updateTarget(id){
