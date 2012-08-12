@@ -16,7 +16,7 @@
 	<script src="stars/Tycho2_7.js" type="text/javascript"></script>
 	<script src="stars/Tycho2_8.js" type="text/javascript"></script>-->
 	<script src="astro.js" type="text/javascript"></script>	
-	<!--<script src="mchp.js" type="text/javascript"></script>	-->
+	<script src="mchp.js" type="text/javascript"></script>
 	
 
 </head>
@@ -40,37 +40,40 @@
 	</div>	
 	
 	<div id="leftboth">
-		<div id="status">		
+		<div id="status">
+			<div id="loading" style="display:none">Error:<br />Connection to demo board was lost.</div>
 			<div id="display">
-				Local time:<br /><output id="LocalTime">0</output><br />
+				<!--Local time:<br /><output id="LocalTime">0</output><br />-->
 				UTC:<br /><output id="UTCTime">0</output><br />
-				Star time:<br /><output id="StarTime">0</output>
+				<!--α :<output id="ang0">5° 37' 58.32"</output><br />
+				δ :<output id="ang1">5° 37' 58.32"</output>
+				Star time:<br /><output id="StarTime">0</output-->
 			</div>	
 		</div>
 		<div id="status">		
 			<div id="display">
 				Telescope coordinate:
 				<p>
-				α :<output id="TelX">5° 37' 58.32"</output><br />
-				δ :<output id="TelY">5° 37' 58.32"</output>
+				α :<output id="ang0">5° 37' 58.32"</output><br />
+				δ :<output id="ang1">5° 37' 58.32"</output>
 				</p>
 			</div>	
 		</div>
 		<div id="target">	
 			<div id="ReqTarget">
 				Target coordinate
-				<form action="run.html">				
+				<form action="run.html">
 					<p>α :
 					<span class="targetRA">
-						<input type="number" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">
-						<input type="number" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">
-						<input type="number" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);"> 
-					</span></p>
-					<p>δ : 
+						<input type="text" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">h
+						<input type="text" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">'
+						<input type="text" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);" style="width:40px;">" 
+					</span><br />
+					δ : 
 					<span class="targetRA">
-						<input type="number" name="DE_h" id="DEh" value="00" min="-90" max="90" onchange="updateTarget(2);">
-						<input type="number" name="DE_m" id="DEm" value="00" min="-1" max="60" onchange="updateTarget(2);">
-						<input type="number" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);">
+						<input type="text" name="DE_h" id="DEh" value="00" min="-90" max="90" onchange="updateTarget(2);">°
+						<input type="text" name="DE_m" id="DEm" value="00" min="-1" max="60" onchange="updateTarget(2);">'
+						<input type="text" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);"style="width:40px;">"
 					</span></p>
 					<input type="button" value="GoTo!" onclick="GoTo();">
 					<input type="button" value="View position" onclick="GoToView();">
@@ -87,25 +90,75 @@
 						Magnitude <br />
 						<input class="ControlScale" id="starMagn" type="range" value="9" min="0" max="9" step="0,1" onchange="updateMagn(1);" >
 						<input class="ControlScaleN" type="number" id="starMagnN" value="9" min="0" max="9" onchange="updateMagn(2);">
-					</p>				
+					</p>
 				</form>
 			</div>
 		</div>
 	</div>	
 	<div style="width:600;margin-left:auto;margin-right:auto;" id="CanvasBox">
-		<canvas id="my_canvas" width="580" height="580"></canvas>		
-	</div>	
-	<div id="StarCounter">The number of loaded stars = <output id="StarCount">0</output></div>
-<div class="spacer">&nbsp;</div>
+		<canvas id="my_canvas" width="580" height="580"></canvas>
+	</div>
+	<div style="overflow: auto;">
+		<div id="StarCounter"></div>
+		<div style="clear: both;"></div>
+	</div>
+	<div style="clear: both;"></div>
 <div id="footer">Copyright &copy; 2010 Microchip Technology, Inc.</div>
 
 </div></div></div></div></div>
-<script>
+<script type="text/javascript">
 	// подсказка с координатами
 	new Tooltip({
 		elem: $('#my_canvas'),
-		html: "α :<output id=\"outXt\">5°37'58.32\"</output><br />	δ :<output id=\"outYt\">5°37'58.32\"</output>"
+		html: "<output id=\"outXt\"></output><br />" + 
+		"<output id=\"outYt\"></output>" + 
+		"<div id=\"StarInfo\"> Found star:<br />"+
+		"<output id=\"outTYC\"></output><br />" + 
+		"<output id=\"outSa\"></output><br />" + 
+		"<output id=\"outSg\"></output></div>"
 	});
+	<!--
+// Parses the xmlResponse from status.xml and updates the status box
+function updateStatus(xmlData) {
+	var mainstat = document.getElementById('display').style.display;
+	var loadstat = document.getElementById('loading').style.display;
+
+	// Check if a timeout occurred
+	if(!xmlData)
+	{
+		mainstat = 'none';
+		loadstat = 'inline';
+		return;
+	}
+
+	// Make sure we're displaying the status display
+	mainstat = 'inline';
+	loadstat = 'none';
+
+	// Loop over all the LEDs
+	//for(i = 0; i < 8; i++)
+	//	document.getElementById('led' + i).style.color = (getXMLValue(xmlData, 'led' + i) == '1') ? '#090' : '#ddd';
+
+	// Loop over all the buttons
+	//for(i = 0; i < 4; i++)
+	//	document.getElementById('btn' + i).innerHTML = (getXMLValue(xmlData, 'btn' + i) == 'up') ? '&Lambda;' : 'V';
+		
+	for(i = 0; i < 2; i++){
+		var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
+		if(i==0) {
+			document.getElementById('ang' + i).innerHTML = AngleToString(angle,true);
+			CurrentPosition.X = angle;
+		} else if(i==1){
+			document.getElementById('ang' + i).innerHTML = AngleToString(angle,false);
+			CurrentPosition.Y = angle;
+		}
+	}
+	StarView.updateStars();
+	// Update the POT value
+	//document.getElementById('pot0').innerHTML = getXMLValue(xmlData, 'pot0');
+}
+setTimeout("newAJAXCommand('status.xml', updateStatus, true)",500);
+
 </script>
 </body>
 </html>

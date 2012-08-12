@@ -60,6 +60,7 @@
 #include "TCPIP Stack/TCPIP.h"
 #include "MainDemo.h"		// Needed for SaveAppConfig() prototype
 #include "TCPIP Stack/SPIRTCSRAM.h"
+#include "OCTimer.h"
 
 /****************************************************************************
   Section:
@@ -135,7 +136,7 @@ BYTE HTTPNeedsAuth(BYTE* cFile)
 	if(memcmppgm2ram(cFile, (ROM void*)"mpfsupload", 10) == 0)
 		return 0x00;
 	#endif
-
+	
 	// You can match additional strings here to password protect other files.
 	// You could switch this and exclude files from authentication.
 	// You could also always return 0x00 to require auth for all files.
@@ -1516,10 +1517,10 @@ void HTTPPrint_pot(void)
 	ADval = (WORD)ADC1BUF0;
 	//ADval *= (WORD)10;
 	//ADval /= (WORD)102;
-	//UTCTime = UTCGetTime();
-	UTCTime = RTCGetUTCSeconds();
-	//ultoa(UTCTime, (BYTE*)AN0String);
-	RTCGetFormatTime((BYTE*)AN0String);
+	//UTCTime = RTCGetUTCSeconds();
+	UTCTime = SNTPGetUTCSeconds();
+	ultoa(UTCTime, (BYTE*)AN0String);
+	//RTCGetFormatTime((BYTE*)AN0String);
     //uitoa(ADval, (BYTE*)AN0String);
 #endif
 
@@ -1894,5 +1895,10 @@ void HTTPPrint_status_fail(void)
 		TCPPutROMString(sktHTTP, (ROM BYTE*)"none");
 	lastFailure = FALSE;
 }
-
+void HTTPPrint_ang(WORD i)
+{
+	char buf[16];
+	sprintf(buf,"%f",GetAngle(i));
+	TCPPutString(sktHTTP,buf);
+}
 #endif

@@ -54,6 +54,7 @@ body {
 #menu {
 	float: left;
 	width: 140px;
+	height: 600px;
 	padding-right: 20px;
 }
 
@@ -139,12 +140,14 @@ body {
 }
 
 #ReqTarget .targetRA input {
-	width: 45px;
+	width: 25px;
 	font-weight: bold;
 }
-#ReqTarget .targetRA input {
-	width: 45px;
-	font-weight: bold;
+#RAs {
+	width:40px;
+}
+#DEs {
+	width:40px;
 }
 
 #dControl .ControlScale {
@@ -254,8 +257,8 @@ canvas
 .tooltip {
     position:absolute;
     z-index:100; /* подсказка должна перекрывать другие элементы */
-    padding: 5px 10px;
-	width: 120px;
+    padding: 5px 10px 2px 2px;
+	width: 130px;
     /* красивости... */
 	opacity: 0.9;
     border: 1px solid #888; /*#b3c9ce;*/
@@ -266,13 +269,15 @@ canvas
     background: #666;
     box-shadow: 3px 3px 3px rgba(0,0,0,.3);
   }
+ 
  #StarCounter{
-	background: #FFF;
-	padding: 4px;
-	font-weight: lighter;
-	color: #CCC;
-	margin-bottom: 15px;
-	height: 16px;
-	text-align:center;
-	font-style: italic;
- }
+	float:left;
+	height: 18px; 
+	margin: 1px;
+	background: #00a;
+	color: #AFA;
+	text-align: center;
+}
+#StarInfo {
+	display: none
+}
