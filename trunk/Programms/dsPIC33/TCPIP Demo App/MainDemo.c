@@ -151,7 +151,7 @@ void FanControl()
 	if(!Init){
 		TRISBbits.TRISB4 = 0;
 		Init = TRUE;
-		FanPeriod = TICK_SECOND/40;
+		FanPeriod = TICK_SECOND/10;
 		FanActive = FanPeriod * 2 / 3;
 		FanPassive = FanPeriod - FanActive;
 	}
@@ -258,7 +258,7 @@ int main(void)
     static DWORD t = 0;
    	static DWORD d = 0;
     static DWORD dwLastIP = 0;
-    
+    static int TimeAdjusted = 0;
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
@@ -429,19 +429,21 @@ int main(void)
 
 	
  	
-	//OCInit();
+	OCInit();
 	/*
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 20.0,  90.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 10.0,  90.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
     //Control(&rr1);
 	
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr2, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
-    
+    */
 	//Control(&rr2);
-	*/
+	//0.004166667
+	GoToCmd(&rr1, 0.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 0);
+	GoToCmd(&rr2, 0.0, 10.0 * Grad_to_Rad, 0);
 	
     //PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
@@ -464,8 +466,8 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        //Control(&rr1);
-	    //Control(&rr2);
+        Control(&rr1);
+	    Control(&rr2);
 		//Control(&rr3);
         // Blink LED0 (right most one) every second.
         
@@ -480,7 +482,10 @@ int main(void)
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
 	            LED0_IO = t;
-	            //AdjustLocalRTCTime();            
+	            if(!TimeAdjusted){
+	            	TimeAdjusted = AdjustLocalRTCTime(); 
+	            	LED2_IO = TimeAdjusted;           
+	            }
 		}
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
@@ -573,7 +578,7 @@ int main(void)
 	}
     }
 }
-void AdjustLocalRTCTime()
+int AdjustLocalRTCTime()
 {
     DWORD RTCSeconds;
     DWORD SNTPSeconds;
@@ -581,14 +586,15 @@ void AdjustLocalRTCTime()
     //имеет смысл только при работающем модуле SNTP
     if(SNTPIsTimeValid())
     {
-        RTCSeconds = RTCGetUTCSeconds();  
+        //RTCSeconds = RTCGetUTCSeconds();  
         SNTPSeconds = SNTPGetUTCSeconds();
-        if((RTCSeconds>SNTPSeconds+1)||(RTCSeconds<SNTPSeconds-1)){
+        //if((RTCSeconds>SNTPSeconds+2)||(RTCSeconds<SNTPSeconds-2)){
             SetTimeFromUTC(SNTPSeconds); 
-                     
-        }
+        //}
+        return 1;
     }    
 #endif
+	return 0;
 }
 
 DWORD UTCGetTime(void)
