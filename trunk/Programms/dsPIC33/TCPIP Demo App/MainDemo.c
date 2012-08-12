@@ -442,7 +442,7 @@ int main(void)
     */
 	//Control(&rr2);
 	//0.004166667
-	GoToCmd(&rr1, 0.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 0);
+	GoToCmd(&rr1, -0.004166667 * Grad_to_Rad, 15.0 * Grad_to_Rad, 0);
 	GoToCmd(&rr2, 0.0, 10.0 * Grad_to_Rad, 0);
 	
     //PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
