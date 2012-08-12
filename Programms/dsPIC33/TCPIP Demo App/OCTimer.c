@@ -1152,4 +1152,14 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     }
     return 0;
 }
-
+double GetAngle(WORD n){
+	switch(n){
+		case 0: return rr1.XPosition * rr1.dx;
+		break;
+		case 1: return rr2.XPosition * rr2.dx;
+		break;
+		case 2: return rr3.XPosition * rr3.dx;
+		break;
+		default: return 0.0;
+	}
+}

@@ -357,7 +357,7 @@
 	// Configure MPFS over HTTP updating
 	// Comment this line to disable updating via HTTP
 	#define HTTP_MPFS_UPLOAD		"mpfsupload"
-	//#define HTTP_MPFS_UPLOAD_REQUIRES_AUTH	// Require password for MPFS uploads
+	#define HTTP_MPFS_UPLOAD_REQUIRES_AUTH	// Require password for MPFS uploads
 		// Certain firewall and router combinations cause the MPFS2 Utility to fail
 		// when uploading.  If this happens, comment out this definition.
 

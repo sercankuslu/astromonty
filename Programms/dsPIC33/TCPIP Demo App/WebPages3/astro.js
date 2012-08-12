@@ -15,6 +15,11 @@ var MousePosition = {
 	X : 0,
 	Y : 0,
 };
+
+var MousePositionStar = {
+	X : 0,
+	Y : 0,
+};
 // текущее положение просмотра
 var ViewPosition = {
 	X : 84.053,
@@ -104,8 +109,10 @@ function ISODateString(d,UTC){
 }
 function UpdateTime(){
 	var now = new Date();
+	//var Utctime = new Date(1344782676000);
 	document.getElementById('UTCTime').value = ISODateString(now,true);
-	document.getElementById('LocalTime').value = ISODateString(now,false);
+	//document.getElementById('LocalTime').value = ISODateString(now,false);
+	//document.getElementById('StarTime').value = ISODateString(Utctime,true);
 }
 function loadCanvas() {
 	StarView = document.getElementById('my_canvas');
@@ -171,40 +178,35 @@ function LoadData(){
 }
 
 function AngleToObj(A,h){
-	var tA = A;
+	var tA = Math.abs(A);
 	if(h){
-		tA = A/15;
+		tA = tA/15;
 	}
+	var N = (A>=0)?1:-1;
 	var grad = Math.floor(tA);
 	tA = (tA - grad)*60;
 	var min = Math.floor(tA);
 	var sec = ((tA - min)*60);
-	return {H:grad,M:min,S:sec};
+	//grad = grad * N;
+	return {Sign:N,H:grad,M:min,S:sec};
 };
 function objToAngle(O,h){
 	var tA = 0;
 	tA = O.M + O.S/60;
-	if(O.H>=0){
-		tA = O.H + tA/60;
-	} else {
-		tA = O.H - tA/60;
-	}
-	if(h) return tA*15;
-	return tA;
+	var H = Math.abs(O.H);
+	tA = H + tA/60;
+	
+	if(h) return tA*15*O.Sign;
+	return tA*O.Sign;
 };
 function AngleToString(A,h){
-	var tA = A;
 	var s = "° ";
 	if(h){
-		tA = A/15;
 		s = "h "
-	}		
-	var grad = Math.floor(tA);
-	tA = (tA - grad)*60;
-	var min = Math.floor(tA);
-	var sec = ((tA - min)*60);
-	return "" + grad + s + min + "' " + sec.toFixed(2) + '"';
-	
+	}
+	var O = AngleToObj(A,h);
+	var sign = (O.Sign>0)?"+":"-";
+	return ""+ sign + O.H + s + O.M + "' " + O.S.toFixed(2) + '"';
 };
 function updateScale(id){
 	var range = document.getElementById('starScale');
@@ -281,7 +283,7 @@ function drawStars(Catalog){
 					ctx.strokeStyle = "white";
 				break;
 			}
-			Starsize = (9 - elem.mag)*Scale/100+0.5;			
+			Starsize = (9 - elem.mag)*Scale/100+0.5;
 			ctx.arc((ImgLeft-elem.RA)*Scale,(ImgTop - elem.DE)*Scale, Starsize,0,PI2,true);
 			//if(Starsize>0.5) {
 				ctx.fill();
@@ -301,7 +303,8 @@ function updateStars() {
 		ctx.clearRect(0, 0, WSizeX, WSizeY);
 		if(Tycho2) {
 			StarView.drawStars(Tycho2);
-			document.getElementById('StarCount').value = Tycho2.length;
+			document.getElementById('StarCounter').innerHTML = Tycho2.length + " stars are loaded.";
+			document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) + 'px';
 		}
 		StarView.updateCross();
 		
@@ -339,7 +342,9 @@ function DrawCross(X,Y,color,wCircle){
 		ctx.stroke();
 	}
 }
+var timerId;
 function mousemoveCanv(e){
+	clearTimeout(timerId);
 	e = e || window.event;	
 	var canvas = document.getElementById('my_canvas');			
 	var pos = getPosition(canvas);
@@ -353,10 +358,13 @@ function mousemoveCanv(e){
 	}
 	if(this.Drag) this.Select = false;
 	if(!this.Drag){
-		//document.getElementById('outX').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
-		//document.getElementById('outY').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
-		document.getElementById('outXt').value = AngleToString(XToRA(e.pageX - pos.x -1),true);
-		document.getElementById('outYt').value = AngleToString(YToDE(e.pageY - pos.y -1),false);
+		MousePositionStar.X = XToRA(e.pageX - pos.x -1);
+		MousePositionStar.Y = YToDE(e.pageY - pos.y -1);
+		document.getElementById('outXt').value = "α : " + AngleToString(MousePositionStar.X,true);
+		document.getElementById('outYt').value = "δ : " + AngleToString(MousePositionStar.Y,false);
+		// спрятать информацию о звезде, если двинули мышкой
+		document.getElementById('StarInfo').style.display = 'none'; 
+		timerId = setTimeout(ShowStarNumber,200);
 	} else {
 		var dX = (e.pageX - pos.x -1) - MousePosition.X;
 		var dY = (e.pageY - pos.y -1) - MousePosition.Y; 
@@ -367,6 +375,31 @@ function mousemoveCanv(e){
 		MousePosition.Y = e.pageY - pos.y -1;
 	}
 }
+//поиск в каталоге имени звезды
+function SelectStars(element,index,array){
+	if(	  (element[0] >= MousePositionStar.X - 0.0167)
+		&&(element[0] <= MousePositionStar.X + 0.0167)
+		&&(element[1] >= MousePositionStar.Y - 0.0167)
+		&&(element[1] <= MousePositionStar.Y + 0.0167)){
+		return true;
+		}
+}
+// Вывод в подсказку TYC номера звезды
+function ShowStarNumber(){
+	var TmpCat;
+	if(Tycho2) {
+		TmpCat = Tycho2.filter(SelectStars);
+		if(TmpCat[0]){
+			document.getElementById('outTYC').value = "TYC:" + TmpCat[0][3] + "-" + TmpCat[0][4] + "-" + TmpCat[0][5]; 
+			document.getElementById('outSa').value = "α : " + AngleToString(TmpCat[0][0],true);
+			document.getElementById('outSg').value = "δ : " + AngleToString(TmpCat[0][1],false);
+			document.getElementById('StarInfo').style.display = 'block';
+		} else {
+			document.getElementById('StarInfo').style.display = 'none';
+		}
+	}
+}
+
 function getPosition(e){
 	var left = 0;
 	var top  = 0;
@@ -406,8 +439,8 @@ function updateTargetForm(){
 	document.getElementById('RAh').value = RAobj.H;
 	document.getElementById('RAm').value = RAobj.M;
 	document.getElementById('RAs').value = RAobj.S.toFixed(2);
-	
-	document.getElementById('DEh').value = DEobj.H;
+	var sign = (DEobj.Sign>0)?"+":"-";
+	document.getElementById('DEh').value = "" + sign + DEobj.H;
 	document.getElementById('DEm').value = DEobj.M;
 	document.getElementById('DEs').value = DEobj.S.toFixed(2);
 }
@@ -428,12 +461,10 @@ function UpdateSelPos(){
 }
 //var ElementUpgraded = 0;
 function updateTarget(id){
-	var Aobj = {
-		H : 0,
-		M : 0,
-		S : 0,
-	};
-	Aobj.S = +document.getElementById('RAs').value;			
+	var Aobj = {};
+	var Bobj = {};
+	Aobj.Sign = 1;
+	Aobj.S = +document.getElementById('RAs').value;
 	Aobj.M = +document.getElementById('RAm').value;
 	Aobj.H = +document.getElementById('RAh').value;
 	if(Aobj.S >= 60) {
@@ -462,35 +493,35 @@ function updateTarget(id){
 	}
 	
 	TargetPosition.X = +objToAngle(Aobj, true);
-
-	Aobj.H = +document.getElementById('DEh').value;
-	Aobj.M = +document.getElementById('DEm').value;
-	Aobj.S = +document.getElementById('DEs').value;
-	if(Aobj.S >= 60) {
-		Aobj.S = Aobj.S - 60;
-		Aobj.M += 1;
-		document.getElementById('DEm').value = Aobj.M;
-		document.getElementById('DEs').value = Aobj.S.toFixed(2);
+	if(document.getElementById('DEh').value.indexOf("-")>=0) Bobj.Sign = -1; else Bobj.Sign = 1;
+	Bobj.H = +document.getElementById('DEh').value;
+	Bobj.M = +document.getElementById('DEm').value;
+	Bobj.S = +document.getElementById('DEs').value;
+	if(Bobj.S >= 60) {
+		Bobj.S = Bobj.S - 60;
+		Bobj.M += 1;
+		document.getElementById('DEm').value = Bobj.M;
+		document.getElementById('DEs').value = Bobj.S.toFixed(2);
 	}
-	if(Aobj.M >= 60) {
-		Aobj.M = Aobj.M - 60;
-		Aobj.H += 1;
-		document.getElementById('DEm').value = Aobj.M;
-		document.getElementById('DEh').value = Aobj.H;
+	if(Bobj.M >= 60) {
+		Bobj.M = Bobj.M - 60;
+		Bobj.H += 1;
+		document.getElementById('DEm').value = Bobj.M;
+		document.getElementById('DEh').value = Bobj.H;
 	}
-	if(Aobj.S <= -1) {
-		Aobj.S += 60;
-		Aobj.M -= 1;
-		document.getElementById('DEm').value = Aobj.M;
-		document.getElementById('DEs').value = Aobj.S.toFixed(2);
+	if(Bobj.S <= -1) {
+		Bobj.S += 60;
+		Bobj.M -= 1;
+		document.getElementById('DEm').value = Bobj.M;
+		document.getElementById('DEs').value = Bobj.S.toFixed(2);
 	}
-	if(Aobj.M <= -1) {
-		Aobj.M += 60;
-		Aobj.H -= 1;
-		document.getElementById('DEm').value = Aobj.M;
-		document.getElementById('DEh').value = Aobj.H;
+	if(Bobj.M <= -1) {
+		Bobj.M += 60;
+		Bobj.H -= 1;
+		document.getElementById('DEm').value = Bobj.M;
+		document.getElementById('DEh').value = Bobj.H;
 	}
-	TargetPosition.Y = +objToAngle(Aobj, false);
+	TargetPosition.Y = +objToAngle(Bobj, false);
 	
 	StarView.updateStars();
 }

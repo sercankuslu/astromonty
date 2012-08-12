@@ -4,13 +4,13 @@
 cookiename
 
 builddate
-led(7)
-led(6)
-led(5)
-led(4)
-led(3)
-led(2)
-led(1)
++led(7)
++led(6)
++led(5)
++led(4)
++led(3)
++led(2)
++led(1)
 lcdtext
 ledSelected(4,TRUE)
 ledSelected(4,FALSE)
@@ -21,12 +21,12 @@ ledSelected(2,FALSE)
 ledSelected(1,TRUE)
 ledSelected(1,FALSE)
 version
-led(0)
-btn(0)
-btn(1)
-btn(2)
-btn(3)
-pot
++led(0)
++btn(0)
++btn(1)
++btn(2)
++btn(3)
++pot
 +uploadedmd5
 status_ok
 ddns_status
@@ -72,3 +72,7 @@ write_comm(1)
 write_comm(2)
 smtps_en
 snmp_en
+ra(0)
++ang(0)
++ang(1)
++ang(2)

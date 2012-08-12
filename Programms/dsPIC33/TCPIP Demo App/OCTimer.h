@@ -326,5 +326,6 @@ int TimerMonitor();
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
+double GetAngle(WORD n);
 #endif //__OC_TIMER_H_
 
