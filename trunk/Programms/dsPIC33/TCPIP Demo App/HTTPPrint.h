@@ -20,8 +20,6 @@ extern BYTE curHTTPID;
 void HTTPPrint(DWORD callbackID);
 void HTTPPrint_hellomsg(void);
 void HTTPPrint_led(WORD);
-void HTTPPrint_btn(WORD);
-void HTTPPrint_pot(void);
 void HTTPPrint_uploadedmd5(void);
 void HTTPPrint_status_fail(void);
 void HTTPPrint_config_mac(void);
@@ -46,44 +44,11 @@ void HTTPPrint(DWORD callbackID)
         case 0x00000002:
 			HTTPIncFile((ROM BYTE*)"footer.inc");
 			break;
-        case 0x00000006:
-			HTTPPrint_led(7);
-			break;
-        case 0x00000007:
-			HTTPPrint_led(6);
-			break;
-        case 0x00000008:
-			HTTPPrint_led(5);
-			break;
-        case 0x00000009:
-			HTTPPrint_led(4);
-			break;
-        case 0x0000000a:
-			HTTPPrint_led(3);
-			break;
-        case 0x0000000b:
-			HTTPPrint_led(2);
-			break;
         case 0x0000000c:
 			HTTPPrint_led(1);
 			break;
         case 0x00000017:
 			HTTPPrint_led(0);
-			break;
-        case 0x00000018:
-			HTTPPrint_btn(0);
-			break;
-        case 0x00000019:
-			HTTPPrint_btn(1);
-			break;
-        case 0x0000001a:
-			HTTPPrint_btn(2);
-			break;
-        case 0x0000001b:
-			HTTPPrint_btn(3);
-			break;
-        case 0x0000001c:
-			HTTPPrint_pot();
 			break;
         case 0x0000001d:
 			HTTPPrint_uploadedmd5();

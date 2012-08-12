@@ -4,12 +4,12 @@
 cookiename
 
 builddate
-+led(7)
-+led(6)
-+led(5)
-+led(4)
-+led(3)
-+led(2)
+led(7)
+led(6)
+led(5)
+led(4)
+led(3)
+led(2)
 +led(1)
 lcdtext
 ledSelected(4,TRUE)
@@ -22,11 +22,11 @@ ledSelected(1,TRUE)
 ledSelected(1,FALSE)
 version
 +led(0)
-+btn(0)
-+btn(1)
-+btn(2)
-+btn(3)
-+pot
+btn(0)
+btn(1)
+btn(2)
+btn(3)
+pot
 +uploadedmd5
 status_ok
 ddns_status
