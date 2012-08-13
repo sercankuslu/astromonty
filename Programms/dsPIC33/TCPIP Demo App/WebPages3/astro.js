@@ -137,8 +137,7 @@ function loadCanvas() {
 	  elem.attachEvent ("onmousewheel", onMouseWheel);
 	}
 	var timer = setInterval(UpdateTime, 1000);
-	StarView.updateStars();
-	UpdateSelPos();
+	StarView.updateStars();	
 	updateTargetForm();
 	//загрузка и коррекция координат каталога
 	correctCoordinate(Tycho2);
@@ -146,37 +145,45 @@ function loadCanvas() {
 };
 var NextCat=0;
 function LoadData(){
-	switch(NextCat){
-	case 0: loadScript("stars/Tycho2_5.js", function(){correctCoordinate(Tycho2_5);Tycho2 = Tycho2.concat(Tycho2_5);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 1:	loadScript("stars/Tycho2_6.js", function(){correctCoordinate(Tycho2_6);Tycho2 = Tycho2.concat(Tycho2_6);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 2:	loadScript("stars/Tycho2_71.js", function(){correctCoordinate(Tycho2_71);Tycho2 = Tycho2.concat(Tycho2_71);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 3:	loadScript("stars/Tycho2_72.js", function(){correctCoordinate(Tycho2_72);Tycho2 = Tycho2.concat(Tycho2_72);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 4:	loadScript("stars/Tycho2_73.js", function(){correctCoordinate(Tycho2_73);Tycho2 = Tycho2.concat(Tycho2_73);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 5:	loadScript("stars/Tycho2_81.js", function(){correctCoordinate(Tycho2_81);Tycho2 = Tycho2.concat(Tycho2_81);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 6:	loadScript("stars/Tycho2_82.js", function(){correctCoordinate(Tycho2_82);Tycho2 = Tycho2.concat(Tycho2_82);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 7:	loadScript("stars/Tycho2_83.js", function(){correctCoordinate(Tycho2_83);Tycho2 = Tycho2.concat(Tycho2_83);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 8:	loadScript("stars/Tycho2_84.js", function(){correctCoordinate(Tycho2_84);Tycho2 = Tycho2.concat(Tycho2_84);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 9:	loadScript("stars/Tycho2_85.js", function(){correctCoordinate(Tycho2_85);Tycho2 = Tycho2.concat(Tycho2_85);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 10: loadScript("stars/Tycho2_86.js", function(){correctCoordinate(Tycho2_86);Tycho2 = Tycho2.concat(Tycho2_86);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 11: loadScript("stars/Tycho2_87.js", function(){correctCoordinate(Tycho2_87);Tycho2 = Tycho2.concat(Tycho2_87);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
-	case 12: loadScript("stars/Tycho2_88.js", function(){correctCoordinate(Tycho2_88);Tycho2 = Tycho2.concat(Tycho2_88);StarView.updateStars();setTimeout(LoadData,10);}, 0 );
-		break;
+	try{
+		switch(NextCat){
+		case 0: loadScript("stars/Tycho2_5.js", function(){scriptCallback(Tycho2_5);}, 0 );
+			break;
+		case 1:	loadScript("stars/Tycho2_6.js", function(){scriptCallback(Tycho2_6);}, 0 );
+			break;
+		case 2:	loadScript("stars/Tycho2_71.js", function(){scriptCallback(Tycho2_71);}, 0 );
+			break;
+		case 3:	loadScript("stars/Tycho2_72.js", function(){scriptCallback(Tycho2_72);}, 0 );
+			break;
+		case 4:	loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
+			break;
+		case 5:	loadScript("stars/Tycho2_81.js", function(){scriptCallback(Tycho2_81);}, 0 );
+			break;
+		case 6:	loadScript("stars/Tycho2_82.js", function(){scriptCallback(Tycho2_82);}, 0 );
+			break;
+		case 7:	loadScript("stars/Tycho2_83.js", function(){scriptCallback(Tycho2_83);}, 0 );
+			break;
+		case 8:	loadScript("stars/Tycho2_84.js", function(){scriptCallback(Tycho2_84);}, 0 );
+			break;
+		case 9:	loadScript("stars/Tycho2_85.js", function(){scriptCallback(Tycho2_85);}, 0 );
+			break;
+		case 10: loadScript("stars/Tycho2_86.js", function(){scriptCallback(Tycho2_86);}, 0 );
+			break;
+		case 11: loadScript("stars/Tycho2_87.js", function(){scriptCallback(Tycho2_87);}, 0 );
+			break;
+		case 12: loadScript("stars/Tycho2_88.js", function(){scriptCallback(Tycho2_88);}, 0 );
+			break;
+		}
+	} catch (e) {
 	}
 	NextCat++;
 }
-
+function scriptCallback(Catalog){
+	correctCoordinate(Catalog);
+	Tycho2 = Tycho2.concat(Catalog);
+	StarView.updateStars();
+	setTimeout(LoadData,10);
+}
 function AngleToObj(A,h){
 	var tA = Math.abs(A);
 	if(h){
@@ -445,19 +452,16 @@ function updateTargetForm(){
 	document.getElementById('DEs').value = DEobj.S.toFixed(2);
 }
 function GoTo(){
-	CurrentPosition.X = TargetPosition.X;
-	CurrentPosition.Y = TargetPosition.Y;
-	StarView.updateStars();
-	UpdateSelPos();
+	//CurrentPosition.X = TargetPosition.X;
+	//CurrentPosition.Y = TargetPosition.Y;
+	//StarView.updateStars();
+	//UpdateSelPos();
+	newAJAXCommand('index.htm',function(){}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);
 }
 function GoToView(){
 	ViewPosition.X = CurrentPosition.X;
 	ViewPosition.Y = CurrentPosition.Y;
 	StarView.updateStars();	
-}
-function UpdateSelPos(){
-	//document.getElementById('TelX').value = AngleToString(CurrentPosition.X,true);
-	//document.getElementById('TelY').value = AngleToString(CurrentPosition.Y,false);
 }
 //var ElementUpgraded = 0;
 function updateTarget(id){
@@ -643,69 +647,4 @@ var loadScript = function(src, callback, appendTo) {
     appendTo.appendChild(script);
 }
 
-//AJAX***********************************
-function ajaxSelect(id) {
-    var element = document.getElementById(id)
-
-    var onLoaded = function(data) {
-        var i=0
-        for(var key in data) {
-            var label = data[key]
-            element.options[i++] = new Option(label, key)
-        }
-    }
-    
-    var onLoadError = function(error) {
-        var msg = "Ошибка "+error.errcode
-        if (error.message) msg = msg + ' :'+error.message
-        alert(msg)
-    }
-    
-    var showLoading = function(on) {
-        element.disabled = on
-    }
-
-    var onSuccess = function(data) {
-        if (!data.errcode) {
-            onLoaded(data)
-            showLoading(false)        
-        } else {
-            showLoading(false)
-            onLoadError(data)            
-        }
-    }
-    
-    
-    var onAjaxError = function(xhr, status){
-        showLoading(false)
-        var errinfo = { errcode: status }
-        if (xhr.status != 200) {
-            // может быть статус 200, а ошибка
-            // из-за некорректного JSON
-            errinfo.message = xhr.statusText
-        } else {
-            errinfo.message = 'Некорректные данные с сервера'
-        }
-        onLoadError(errinfo)
-    }
-
-    
-    return {
-        load: function(url) {
-            showLoading(true)
-
-            while (element.firstChild) {
-                element.removeChild(element.firstChild)
-            }
-
-            $.ajax({ // для краткости - jQuery
-                url: url,
-                dataType: "json",
-                success: onSuccess,
-                error: onAjaxError,
-                cache: false
-            })
-        }
-    }
-}
 

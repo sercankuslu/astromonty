@@ -61,12 +61,16 @@
 #include "MainDemo.h"		// Needed for SaveAppConfig() prototype
 #include "TCPIP Stack/SPIRTCSRAM.h"
 #include "OCTimer.h"
+extern RR rr1;
+extern RR rr2;
+extern RR rr3;
 
 /****************************************************************************
   Section:
 	Function Prototypes and Memory Globalizers
   ***************************************************************************/
 #if defined(HTTP_USE_POST)
+    static HTTP_IO_RESULT HTTPPostAngle(void);
 	#if defined(USE_LCD)
 		static HTTP_IO_RESULT HTTPPostLCD(void);
 	#endif
@@ -283,6 +287,9 @@ HTTP_IO_RESULT HTTPExecutePost(void)
 	// Load the file name
 	// Make sure BYTE filename[] above is large enough for your longest name
 	MPFSGetFilename(curHTTP.file, filename, sizeof(filename));
+	
+	if(!strcmppgm2ram((char*)filename, "index.htm"))
+		return HTTPPostAngle();
 	
 #if defined(USE_LCD)
 	if(!memcmppgm2ram(filename, "forms.htm", 9))
@@ -611,6 +618,69 @@ ConfigFailure:
 
 	return HTTP_IO_DONE;
 }
+
+static HTTP_IO_RESULT HTTPPostAngle(void)
+{	
+	BYTE *ptr;
+	BYTE i;
+    float A1;
+    float A2;
+    float A3;
+	
+	if(curHTTP.byteCount > TCPIsGetReady(sktHTTP) + TCPGetRxFIFOFree(sktHTTP))
+		goto ConfigFailure;
+	
+	// Ensure that all data is waiting to be parsed.  If not, keep waiting for 
+	// all of it to arrive.
+	if(TCPIsGetReady(sktHTTP) < curHTTP.byteCount)
+		return HTTP_IO_NEED_DATA;
+	
+	
+	// Read all browser POST data
+	while(curHTTP.byteCount)
+	{
+		// Read a form field name
+		if(HTTPReadPostName(curHTTP.data, 6) != HTTP_READ_OK)
+			goto ConfigFailure;
+			
+		// Read a form field value
+		if(HTTPReadPostValue(curHTTP.data + 6, sizeof(curHTTP.data)-6-2) != HTTP_READ_OK)
+			goto ConfigFailure;
+			
+		// Parse the value that was read
+		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
+		{// 
+			if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
+    			GoToCmd(&rr1, 0.0, A1 * Grad_to_Rad, 0);
+			}else
+			goto ConfigFailure;
+		}
+		else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
+		{// 
+			if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
+    			GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, 0);
+			}else
+				goto ConfigFailure;
+		}
+		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
+		{
+			if(!sscanf((char*)(curHTTP.data+6),"%f", &A3))
+				goto ConfigFailure;
+		}
+		
+    }   		
+	curHTTP.httpStatus = HTTP_REDIRECT;	
+	
+	return HTTP_IO_DONE;
+
+
+ConfigFailure:
+	lastFailure = TRUE;	
+	curHTTP.httpStatus = HTTP_REDIRECT;		
+
+	return HTTP_IO_DONE;
+}
+
 
 #if defined(STACK_USE_SNMP_SERVER)
 static HTTP_IO_RESULT HTTPPostSNMPCommunity(void)
