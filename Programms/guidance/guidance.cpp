@@ -524,30 +524,30 @@ void Calc()
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    /*
+    
     OCInit(); 
     
-    rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
-    rr2.XPosition = 0;
-    rr3.XPosition = 0;
-    rr1.VMax = 10.0 * Grad_to_Rad;
-    rr1.LastCmdV = 0.0;
-    rr1.LastCmdX = 20.0 * Grad_to_Rad;
-    rr1.T.Val = 0;
-    rr1.TimeBeg = 0;
-    rr3.VMax = 10.0 * Grad_to_Rad;
-    rr3.LastCmdV = 0.0;
-    rr3.LastCmdX = 0.0;
-    rr3.T.Val = 0;
-    rr3.TimeBeg = 0;
+//     rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
+//     rr2.XPosition = 0;
+    //rr3.XPosition = 0;
+//     rr1.VMax = 10.0 * Grad_to_Rad;
+//     rr1.LastCmdV = 0.0;
+//     rr1.LastCmdX = 20.0 * Grad_to_Rad;
+//     rr1.T.Val = 0;
+//     rr1.TimeBeg = 0;
+//     rr3.VMax = 10.0 * Grad_to_Rad;
+//     rr3.LastCmdV = 0.0;
+//     rr3.LastCmdX = 0.0;
+//     rr3.T.Val = 0;
+//     rr3.TimeBeg = 0;
     //GoToCmd(&rr1, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0); 
-    GoToCmd(&rr1, 1.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
-    GoToCmd(&rr3, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
-    rr2.LastCmdV = 1.0 * Grad_to_Rad;
-    rr2.LastCmdX = 10.0 * Grad_to_Rad;
-    rr2.XPosition = rr2.LastCmdX/rr2.dx;
-    PushCmdToQueue(&rr2, ST_RUN, 1.0 * Grad_to_Rad,  180 * Grad_to_Rad, 1);
-    */
+    GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
+    GoToCmd(&rr2, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
+//     rr2.LastCmdV = 1.0 * Grad_to_Rad;
+//     rr2.LastCmdX = 10.0 * Grad_to_Rad;
+//     rr2.XPosition = rr2.LastCmdX/rr2.dx;
+    //PushCmdToQueue(&rr2, ST_RUN, 1.0 * Grad_to_Rad,  180 * Grad_to_Rad, 1);
+    
 /*
     PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 0.0 * Grad_to_Rad,  45.0 * Grad_to_Rad, 1);

@@ -2,10 +2,15 @@
 var CoordX = 84.053;
 var CoordY = -1.201;
 var Scale = 25; // увеличить в 10 раз
-var Magnitude = 9; // величина звезд
+var Magnitude = 6; // величина звезд
 var WSizeX = 0;
 var WSizeY = 0;
 var PI2 = Math.PI*2;
+var Time 
+var GeoPosition = {
+	Lon : 37.6028,
+	Lat : 55.791437,
+}
 // текущие координаты телескопа(зелёный крестик)
 var CurrentPosition = {
 	X : 84.053,
@@ -109,8 +114,14 @@ function ISODateString(d,UTC){
 }
 function UpdateTime(){
 	var now = new Date();
-	//var Utctime = new Date(1344782676000);
+	var E2012 = new Date(Date.UTC(2012, 0, 1));
+	var dt = now - E2012;
+	var days = Math.floor(dt/(3600*24*1000));
+	//var Utctime = new Date(1344782676000);	
+	var B = PI2*(days-81)/365;	
+	var T = 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
 	document.getElementById('UTCTime').value = ISODateString(now,true);
+	document.getElementById('EqEq').value = T.toFixed(2);
 	//document.getElementById('LocalTime').value = ISODateString(now,false);
 	//document.getElementById('StarTime').value = ISODateString(Utctime,true);
 }
@@ -125,6 +136,10 @@ function loadCanvas() {
 	StarView.onmouseup = onMouseUp;
 	StarView.updateCross = updateCross;
 	var elem = document.getElementById('CanvasBox');
+	document.getElementById('starScale').value = Scale;
+	document.getElementById('starScaleN').value = Scale;
+	document.getElementById('starMagn').value = Magnitude;
+	document.getElementById('starMagnN').value = Magnitude;
 	elem.ondragstart = function() {
 		return false;
 	};
@@ -298,6 +313,10 @@ function drawStars(Catalog){
 				//ctx.stroke();
 			//}
 		};
+		ctx.beginPath();
+		ctx.strokeStyle = "cyan";
+		ctx.arc((ImgLeft-GeoPosition.Lon)*Scale,(ImgTop - GeoPosition.Lat)*Scale, 90*Scale,0,PI2,true);
+		ctx.stroke();
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
@@ -456,7 +475,7 @@ function GoTo(){
 	//CurrentPosition.Y = TargetPosition.Y;
 	//StarView.updateStars();
 	//UpdateSelPos();
-	newAJAXCommand('index.htm',function(){}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);
+	newAJAXCommand('index.htm',function(){}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);	
 }
 function GoToView(){
 	ViewPosition.X = CurrentPosition.X;

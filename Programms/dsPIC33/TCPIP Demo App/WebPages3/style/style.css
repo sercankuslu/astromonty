@@ -1,3 +1,9 @@
+label  {
+	text-align: left;
+	font-weight: normal;
+	font-style: italic;	
+	color: #555;
+}
 body {
 	font-family: Verdana, Arial, sans-serif;
 	background: #5b5b5b;
@@ -280,4 +286,7 @@ canvas
 }
 #StarInfo {
 	display: none
+}
+#display output  {
+	margin-left: 15px;
 }
