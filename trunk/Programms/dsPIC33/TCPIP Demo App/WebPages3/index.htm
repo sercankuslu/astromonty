@@ -130,7 +130,7 @@ function updateStatus(xmlData) {
 	// Make sure we're displaying the status display
 	mainstat = 'inline';
 	loadstat = 'none';
-	
+	var needUpdateStar = false;
 	// 55.791437,37.6028	
 	for(i = 0; i < 2; i++){
 		var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
@@ -138,16 +138,18 @@ function updateStatus(xmlData) {
 			if(angle){
 				document.getElementById('ang' + i).innerHTML = AngleToString(angle,true);
 				CurrentPosition.X = angle;
+				needUpdateStar = true;
 			}
 		} else if(i==1){
 			if(angle){
 				document.getElementById('ang' + i).innerHTML = AngleToString(angle,false);
 				CurrentPosition.Y = angle;
+				needUpdateStar = true;
 			}
 		}
 	}
 	
-	StarView.updateStars();	
+	if(needUpdateStar) StarView.updateStars();	
 }
 setTimeout("newAJAXCommand('status.xml', updateStatus, true)",1000);
 
