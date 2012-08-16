@@ -44,7 +44,7 @@
 			<div id="loading" style="display:none">Error:<br />Connection to demo board was lost.</div>
 			<div id="display">
 				<label>UTC:</label><br /><output id="UTCTime">0</output><br />
-				<label>Eq. of Time:</label><br /><output id="EqEq">0</output><br />
+				<!--label>Eq. of Time:</label><br /><output id="EqEq">0</output><br /-->
 				<label>Latitude :</label><br /><output id="Lt">55° 47' 29.17"</output><br />
 				<label>Longitude:</label><br /><output id="Lg">37° 36' 10.08"</output><br />
 				<label>LST:</label><br /><output id="LST">0</output>
@@ -117,8 +117,7 @@
 // Parses the xmlResponse from status.xml and updates the status box
 function updateStatus(xmlData) {
 	var mainstat = document.getElementById('display').style.display;
-	var loadstat = document.getElementById('loading').style.display;
-
+	var loadstat = document.getElementById('loading').style.display;	
 	// Check if a timeout occurred
 	if(!xmlData)
 	{
@@ -131,20 +130,27 @@ function updateStatus(xmlData) {
 	mainstat = 'inline';
 	loadstat = 'none';
 	var needUpdateStar = false;
+	var correctAngle;
 	// 55.791437,37.6028	
 	for(i = 0; i < 2; i++){
 		var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
 		if(i==0) {
 			if(angle){
-				document.getElementById('ang' + i).innerHTML = AngleToString(angle,true);
-				CurrentPosition.X = angle;
+				correctAngle = angle + LocalStarTime*15;
+				document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
+				CurrentPosition.X = correctAngle;
 				needUpdateStar = true;
+			} else {
+				CurrentPosition.X = 10 + LocalStarTime*15;
 			}
 		} else if(i==1){
 			if(angle){
-				document.getElementById('ang' + i).innerHTML = AngleToString(angle,false);
-				CurrentPosition.Y = angle;
+				correctAngle = angle + GeoPosition.Lat;
+				document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,false);
+				CurrentPosition.Y = correctAngle
 				needUpdateStar = true;
+			} else {
+				CurrentPosition.Y = -1.201 + GeoPosition.Lat;
 			}
 		}
 	}
