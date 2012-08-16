@@ -144,7 +144,7 @@ function UpdateTime(){
 	var JD = JulDay (utDay, utMonth, utYear, UT);
 	var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
 	document.getElementById('LST').value =  LST;
-	//StarView.updateStars();
+	StarView.updateStars();
 }
 
 function loadCanvas() {
@@ -322,7 +322,7 @@ function drawStars(Catalog){
 			//if(1){
 			//{
 			var L = Math.acos(Math.sin(ViewYr)*Math.sin(DEr)+Math.cos(ViewYr)*Math.cos(DEr)*Math.cos(ViewXr-RAr));
-			if(L < Math.PI/3){
+			if(L < 1.3*Math.PI/(Scale)){
 				ctx.beginPath();
 				switch (elem.mag){
 					case -1.088: ctx.fillStyle = "blue"; // сириус
@@ -361,16 +361,7 @@ function drawStars(Catalog){
 				ctx.arc((WSizeXd2+D1.X)*Scale,(WSizeYd2-D1.Z)*Scale, Starsize,0,PI2,true);
 				ctx.fill();
 			}
-		};/*
-		ctx.beginPath();
-		ctx.strokeStyle = "cyan";
-		X = (ImgLeft - LocalStarTime*15)*Scale;
-		Y = (ImgTop - GeoPosition.Lat)*Scale;
-		drawVisibleCircle(ctx,X,Y);
-		X = (ImgLeft-LocalStarTime*15-360)*Scale;		
-		drawVisibleCircle(ctx,X,Y);
-		X = (ImgLeft-LocalStarTime*15+360)*Scale;
-		drawVisibleCircle(ctx,X,Y);*/
+		};
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
@@ -409,6 +400,8 @@ function updateCross(){
 	if(canvas.getContext) {
 		this.DrawCross(CurrentPosition.X,CurrentPosition.Y,"green",true);
 		this.DrawCross(TargetPosition.X,TargetPosition.Y,"yellow",false);
+		this.DrawCross(LocalStarTime*15,GeoPosition.Lat,"cyan",false);
+
 	}
 }
 
