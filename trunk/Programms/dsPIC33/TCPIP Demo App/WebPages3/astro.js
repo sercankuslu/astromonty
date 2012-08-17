@@ -1,18 +1,29 @@
 ﻿
 var CoordX = 84.053;
 var CoordY = -1.201;
-var Scale = 25; // увеличить в 10 раз
-var Magnitude = 5; // величина звезд
+var Scale = 2; // увеличить в 10 раз
+var Magnitude = 1; // величина звезд
 var WSizeX = 0;
 var WSizeY = 0;
 var WSizeXd2 = 0;
 var WSizeYd2 = 0;
 var timerId;
 var PI2 = Math.PI*2;
+var gradToRad = Math.PI/180;
+var radToGrad = 180/Math.PI;
 var LocalStarTime = 0;
 var ViewXr; 
 var ViewYr; 
-
+var DrawingStar = 0;
+var Net = [
+//X,Y,Z,X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3
+[{X:0,Y:0,Z:100},{X: 135,Y:0,Z:100}, {X: 135,Y:0,Z:-100}, {X:0,Y:0,Z:-100}],
+[{X:0,Y:0,Z:100},{X:-135,Y:0,Z:100}, {X:-135,Y:0,Z:-100}, {X:0,Y:0,Z:-100}],
+[{X:0,Y:0,Z:100},{X:0,Y:135,Z:100}, {X: 0,Y:135,Z:-100}, {X:0,Y:0,Z:-100}],
+[{X:0,Y:0,Z:100},{X:0,Y:-135,Z:100}, {X:0,Y:-135,Z:-100}, {X:0,Y:0,Z:-100}],
+[{X:100,Y:0,Z:0},{X:100,Y:135,Z:0}, {X:-100,Y:135,Z:0}, {X:-100,Y:0,Z:0}],
+[{X:100,Y:0,Z:0},{X:100,Y:-135,Z:0}, {X:-100,Y:-135,Z:0}, {X:-100,Y:0,Z:0}],
+];
 
 var GeoPosition = {
 	Lon : 37.6028,
@@ -32,10 +43,86 @@ var MousePositionStar = {
 	X : 0,
 	Y : 0,
 };
+function filterStars(element,index,array){
+	if((element[2] < Magnitude) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
+	return false;
+};
+
 // текущее положение просмотра
 var ViewPosition = {
 	X : 84.053,
 	Y : -1.201,
+	X1 : 0,
+	Y1 : 0,
+	Scale1 : 0,
+	ViewXr : 0,
+	ViewYr : 0,
+	SinViewXr: 0,
+	CosViewXr: 0,
+	SinViewYr: 0,
+	CosViewYr: 0,
+	Catalog:[],
+	SetPosition:function(X,Y){
+		this.X = X;
+		this.Y = Y;
+		if(this.X >=  360) this.X -= 360;
+		if(this.X <= -360) this.X += 360;		
+		this.ViewXr = X*gradToRad;
+		this.ViewYr = Y*gradToRad;
+		this.SinViewXr = Math.sin(this.ViewXr);
+		this.CosViewXr = Math.cos(this.ViewXr);
+		this.SinViewYr = Math.sin(this.ViewYr);
+		this.CosViewYr = Math.cos(this.ViewYr);
+		if((Math.abs(Scale - this.Scale1)>2)||(Math.abs(this.X1-this.X)>10/Scale) || (Math.abs(this.Y1-this.Y)>10/Scale)){
+			this.Catalog = Tycho2.filter(filterStars);
+			this.X1 = this.X;
+			this.Y1 = this.Y;
+			this.Scale1 = Scale;
+		}
+	},	
+	inRadius:function(RAr,DEr){
+		var L = Math.acos(this.SinViewYr*Math.sin(DEr)+this.CosViewYr*Math.cos(DEr)*Math.cos(this.ViewXr-RAr));
+		if(L < 2*Math.PI/Scale) {
+			return true; 
+		}else{ 
+			return false;
+		}
+	},
+	TranslateCoord:function(X,Y){
+		var DEr = Y*gradToRad;
+		var RAr = X*gradToRad;		
+		//if(this.inRadius(RAr,DEr)){
+			var D = this.ToDecart( RAr, DEr,100);
+			return this.Rotate(D);
+		//}
+		//return {X:0,Y:0,V:false};
+	},
+	Rotate:function(D){
+		var D1 = this.rotateDecartZ(D);			
+		D1 = this.rotateDecartX(D1);
+		return {X:(WSizeXd2+D1.X)*Scale,Y:(WSizeYd2-D1.Z)*Scale,V:true};
+	},	
+	ToDecart:function(a,d,S){
+		var CosD = Math.cos(d);
+		var x = S*CosD*Math.cos(a);
+		var y = S*CosD*Math.sin(a);
+		var z = S*Math.sin(d);
+		return {X:x,Y:y,Z:z};
+	},
+	rotateDecartZ:function(D){
+		return {
+			X:D.X*this.SinViewXr - D.Y*this.CosViewXr,
+			Y:D.X*this.CosViewXr + D.Y*this.SinViewXr,
+			Z:D.Z
+		};
+	},
+	rotateDecartX:function(D){
+		return {
+			X :  D.X,
+			Y :  D.Y*this.CosViewYr + D.Z*this.SinViewYr,
+			Z :  -D.Y*this.SinViewYr + D.Z*this.CosViewYr,
+		};
+	}
 };
 // целевые координаты телескопа(желтый крестик)
 var TargetPosition = {
@@ -83,7 +170,7 @@ function onMouseWheel(e) {
 	if(Scale > 1000) {Scale = 1000;};
 	e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 	updateScale(3);
-	//StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
 
 
@@ -144,7 +231,7 @@ function UpdateTime(){
 	var JD = JulDay (utDay, utMonth, utYear, UT);
 	var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
 	document.getElementById('LST').value =  LST;
-	StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
 
 function loadCanvas() {
@@ -165,6 +252,7 @@ function loadCanvas() {
 	elem.ondragstart = function() {
 		return false;
 	};
+	ViewPosition.SetPosition(CoordX,CoordY);
 	if (elem.addEventListener) {
 	  // IE9+, Opera, Chrome/Safari
 		elem.addEventListener ("mousewheel", onMouseWheel, false);
@@ -272,6 +360,7 @@ function updateScale(id){
 		range.value = +Scale;
 		break;
 	}
+	ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
 	StarView.updateStars();
 }
 function updateMagn(id){
@@ -285,9 +374,11 @@ function updateMagn(id){
 		Magnitude = MagnN.value;
 		Magn.value = MagnN.value;
 	}
-	StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
+//***************************************************************************************** drawStars
 function drawStars(Catalog){
+	DrawingStar = 1;
 	var canvas = this;
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');	
@@ -295,34 +386,21 @@ function drawStars(Catalog){
 		WSizeY = canvas.height;		
 		WSizeXd2 = canvas.width/(2*Scale);
 		WSizeYd2 = canvas.height/(2*Scale);
-		if(ViewPosition.X >= 360) ViewPosition.X -= 360;
-		if(ViewPosition.X <= -360) ViewPosition.X += 360;		
-		ViewXr = (ViewPosition.X)*Math.PI/180; 
-		ViewYr = ViewPosition.Y*Math.PI/180; 
 		var i = 0;
 		
 		var maxMag = -5;
 		var ArrsLength = Catalog.length;
 		var elem = {RA:0,DE:0,mag:0};
 		var Starsize;
-		var X;
-		var Y;
-		/*
-		Catalog[0][0] = ViewPosition.X;
-		Catalog[0][1] = ViewPosition.Y;
-		*/
+		
 		for ( i = 0;i < ArrsLength; i++) {
 			elem.RA = Catalog[i][0];
 			elem.DE = Catalog[i][1];
 			elem.mag = Catalog[i][2];
 			if(elem.mag > Magnitude) break;
 			if(elem.mag < maxMag) continue;
-			var RAr = elem.RA*Math.PI/180;
-			var DEr = elem.DE*Math.PI/180;
-			//if(1){
-			//{
-			var L = Math.acos(Math.sin(ViewYr)*Math.sin(DEr)+Math.cos(ViewYr)*Math.cos(DEr)*Math.cos(ViewXr-RAr));
-			if(L < 1.3*Math.PI/(Scale)){
+			var D = ViewPosition.TranslateCoord(elem.RA,elem.DE);
+			//if(D.V){
 				ctx.beginPath();
 				switch (elem.mag){
 					case -1.088: ctx.fillStyle = "blue"; // сириус
@@ -337,7 +415,8 @@ function drawStars(Catalog){
 					default :    ctx.fillStyle = "white";
 						ctx.strokeStyle = "white";
 					break;
-				}/*
+				}
+				// спец звезды
 				switch (Catalog[i][3]){
 					case 0:ctx.fillStyle = "red";
 						break;
@@ -353,20 +432,35 @@ function drawStars(Catalog){
 						break;
 					case 6:ctx.fillStyle = "white";
 						break;
-				}*/
-				var D = ToDecart(RAr, DEr,100);
-				var D1 = rotateDecart(D, 0, 0, Math.PI/2-ViewXr);			
-				D1 = rotateDecart(D1, -ViewYr,0,0);
+				}
 				Starsize = (9 - elem.mag)*Scale/50+0.5;
-				ctx.arc((WSizeXd2+D1.X)*Scale,(WSizeYd2-D1.Z)*Scale, Starsize,0,PI2,true);
+				ctx.arc(D.X,D.Y, Starsize,0,PI2,true);
 				ctx.fill();
-			}
+			//}
 		};
+		//context.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, endX, endY);
+		for ( i = 0;i < 6; i++){
+			drawNetwork(ctx,Net[i],"darkgreen");
+		}
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
 	}
+	DrawingStar = 0;
 }
+
+function drawNetwork(ctx,NetK,color){
+		ctx.beginPath();
+		var D1 = ViewPosition.Rotate(NetK[0]);
+		ctx.moveTo(D1.X,D1.Y);
+		D2 = ViewPosition.Rotate(NetK[1]);
+		D3 = ViewPosition.Rotate(NetK[2]);
+		D4 = ViewPosition.Rotate(NetK[3]);
+		ctx.bezierCurveTo(D2.X, D2.Y, D3.X, D3.Y, D4.X, D4.Y);
+		ctx.strokeStyle = color;
+		ctx.stroke();
+}
+
 function drawVisibleCircle(ctx,X,Y){
 	ctx.beginPath();
 	ctx.strokeStyle = "cyan";
@@ -386,7 +480,7 @@ function updateStars() {
 		var ctx = canvas.getContext('2d');
 		ctx.clearRect(0, 0, WSizeX, WSizeY);
 		if(Tycho2) {
-			StarView.drawStars(Tycho2);
+			StarView.drawStars(ViewPosition.Catalog);
 			//StarView.drawStars(Test);
 			document.getElementById('StarCounter').innerHTML = Tycho2.length + " stars are loaded.";
 			document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) + 'px';
@@ -405,24 +499,11 @@ function updateCross(){
 	}
 }
 
-// используя глобальные переменные, транслирует из сферических координат аб в XY
-function TranslateCoord(X,Y){
-		var DEr = Y*Math.PI/180;
-		var RAr = X*Math.PI/180;
-		var L = Math.acos(Math.sin(ViewYr)*Math.sin(DEr)+Math.cos(ViewYr)*Math.cos(DEr)*Math.cos(ViewXr-RAr));
-		if(L < Math.PI/3){
-			var D = ToDecart( RAr, DEr,100);
-			var D1 = rotateDecart(D, 0, 0, Math.PI/2-ViewXr);			
-			D1 = rotateDecart(D1, -ViewYr,0,0);
-			return {X:(WSizeXd2+D1.X)*Scale,Y:(WSizeYd2-D1.Z)*Scale,V:true};
-		}
-		return {X:0,Y:0,V:false};
-}
 function DrawCross(X,Y,color,wCircle){
 	var canvas = this;
 	if(canvas.getContext) {
-		var Coord = TranslateCoord(X,Y);
-		if(Coord.V){		
+		if(ViewPosition.inRadius(X*gradToRad,Y*gradToRad)){
+			var Coord = ViewPosition.TranslateCoord(X,Y);				
 			var ctx = canvas.getContext('2d');
 			ctx.beginPath();
 			ctx.strokeStyle  = color;
@@ -475,9 +556,8 @@ function mousemoveCanv(e){
 	} else {
 		var dX = (e.pageX - pos.x -1) - MousePosition.X;
 		var dY = (e.pageY - pos.y -1) - MousePosition.Y; 
-		ViewPosition.X += dX/Scale;
-		ViewPosition.Y += dY/Scale;
-		this.updateStars();
+		ViewPosition.SetPosition(ViewPosition.X+dX/Scale,ViewPosition.Y+dY/Scale);
+		if(!DrawingStar) this.updateStars();
 		MousePosition.X = e.pageX - pos.x -1;
 		MousePosition.Y = e.pageY - pos.y -1;
 	}
@@ -547,7 +627,7 @@ function targetSelect(e){
 	TargetPosition.X = XToRA(e.pageX - pos.x-1);
 	TargetPosition.Y = YToDE(e.pageY - pos.y-1);
 	updateTargetForm();
-	StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
 function updateTargetForm(){
 	var RAobj = AngleToObj(TargetPosition.X,true);
@@ -570,7 +650,7 @@ function GoTo(){
 function GoToView(){
 	ViewPosition.X = CurrentPosition.X;
 	ViewPosition.Y = CurrentPosition.Y;
-	StarView.updateStars();	
+	if(!DrawingStar) StarView.updateStars();	
 }
 //var ElementUpgraded = 0;
 function updateTarget(id){
@@ -636,7 +716,7 @@ function updateTarget(id){
 	}
 	TargetPosition.Y = +objToAngle(Bobj, false);
 	
-	StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
 
 function correctCoordinate(Catalog){
