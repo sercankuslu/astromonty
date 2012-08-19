@@ -24,6 +24,8 @@ static MOTOR_POSITION M3;
 __attribute__((far)) RR rr1;
 __attribute__((far)) RR rr2;
 __attribute__((far)) RR rr3;
+__attribute__((far)) RAMSaveConfig RRConfigRAM;
+//__attribute__((far)) APP_CONFIG AppConfig;
 #else
 RR rr1;
 RR rr2;
@@ -185,15 +187,15 @@ int OCInit(void)
 #endif //#ifdef __C30__
 
         TmrInit(2);
-        InitRR(&rr1);  
-        rr1.Index = 1;
+        rr1.Index = 0;
         rr1.TmrId = 2;
-        InitRR(&rr2);
-        rr2.Index = 2;
+        InitRR(&rr1); 
+        rr2.Index = 1;
         rr2.TmrId = 2;
-        InitRR(&rr3);
-        rr3.Index = 3;
+        InitRR(&rr2);
+        rr3.Index = 2;
         rr3.TmrId = 2;
+        InitRR(&rr3);
         M1.Val = 0; 
         M2.Val = 0; 
         M3.Val = 0; 
@@ -283,14 +285,14 @@ int TmrInit(BYTE Num)
 }
 
 int InitRR(RR * rr)
-{   
-    rr->Mass = 500.0f;
-    rr->Radius = 0.50f;
-    rr->Length = 3.0f;
-    rr->Reduction = 360.0f;
-    rr->StepPerTurn = 200;
-    rr->uStepPerStep = 16; //16    
-    rr->TimerStep = 0.0000002; // шаг таймера
+{   //AppConfig
+    rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
+    rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
+    rr->Length = AppConfig.RRConfig[rr->Index].Length;
+    rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
+    rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
+    rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16    
+    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
     rr->Vend = 0.0;
     rr->deltaX = 0.0;
     rr->DataCount = 0;
@@ -309,13 +311,13 @@ int InitRR(RR * rr)
     rr->CmdCount = 0;
     rr->CacheDir = 1;
     rr->RunDir = 1;
-    rr->XPosition = 0;
+    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
     rr->NextCacheCmd = 0;
     rr->NextWriteCmd = 0;
     rr->Interval = 32768;
     rr->LastCmdV = 0.0;
     rr->LastCmdX = 0.0;
-    rr->VMax = 10.0 * Grad_to_Rad;
+    rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
     CalculateParams(rr);
     
     return 0;    
@@ -324,12 +326,13 @@ void CalculateParams(RR * rr)
 {
     double I;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
-    rr->K = (-0.257809479)/I;
-    rr->B = 0.205858823 / I;
+    rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
+    rr->B = AppConfig.RRConfig[rr->Index].B / I;
     rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в радианах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));    
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
     rr->e = (DWORD)(0.000120 / rr->TimerStep); //70us
+    rr->LastCmdX = rr->XPosition*rr->dx;
 
 }
 int Run(RR * rr)
@@ -611,13 +614,13 @@ int Control(RR * rr)
         rr->T.Val = GetBigTmrValue(rr->TmrId);
 #ifdef __C30__
         switch(rr->Index){
-            case 1: 
+            case 0: 
                 IFS0bits.OC1IF = 1;	
                 break;
-            case 2: 
+            case 1: 
                 IFS0bits.OC2IF = 1;
                 break;
-            case 3: 
+            case 2: 
                 IFS1bits.OC3IF = 1;	
                 break;
         }        
@@ -697,28 +700,28 @@ int ProcessOC(RR * rr)
 int SetOC(BYTE oc, WORD LW)
 {
     switch (oc){
-    case 1:
+    case 0:
 #ifdef __C30__
         OC1CONbits.OCM = 0b000; // выключить модуль OC
         OC1RS = LW + 50; // записать значение OCxRS
 #endif // __C30__
         OC1R = LW;		// записать значение OCxR
         break;
-    case 2:
+    case 1:
 #ifdef __C30__
         OC2CONbits.OCM = 0b000; // выключить модуль OC
         OC2R = LW;		// записать значение OCxR
         OC2RS = LW + 50; // записать значение OCxRS
 #endif // __C30__
         break; 
-    case 3:
+    case 2:
 #ifdef __C30__
         OC3CONbits.OCM = 0b000; // выключить модуль OC
         OC3R = LW;		// записать значение OCxR
         OC3RS = LW + 50; // записать значение OCxRS
 #endif // __C30__
         break; 
-    case 4:
+    case 3:
 #ifdef __C30__
         OC4CONbits.OCM = 0b000; // выключить модуль OC
         OC4R = LW;		// записать значение OCxR
@@ -734,16 +737,16 @@ int EnableOC(BYTE oc)
 {
 #ifdef __C30__
     switch (oc){
-    case 1:
+    case 0:
         OC1CONbits.OCM = 0b100; // выключить модуль OC	   	
         break;
-    case 2:
+    case 1:
         OC2CONbits.OCM = 0b100; // выключить модуль OC	   	
         break; 
-    case 3:
+    case 2:
         OC3CONbits.OCM = 0b100; // выключить модуль OC	   	
         break; 
-    case 4:
+    case 3:
         OC4CONbits.OCM = 0b100; // выключить модуль OC	   	
         break; 
     default :
@@ -759,19 +762,19 @@ int DisableOC(BYTE oc)
 {
 #ifdef __C30__
     switch (oc){
-    case 1:
+    case 0:
         OC1CONbits.OCM = 0b000; // выключить модуль OC	
         IFS0bits.OC1IF = 0;     // Clear OC1 interrupt flag   	
         break;
-    case 2:
+    case 1:
         OC2CONbits.OCM = 0b000; // выключить модуль OC	 
         IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag  	
         break; 
-    case 3:
+    case 2:
         OC3CONbits.OCM = 0b000; // выключить модуль OC	  
         IFS1bits.OC3IF = 0; // Clear OC1 interrupt flag 	
         break; 
-    case 4:
+    case 3:
         OC4CONbits.OCM = 0b000; // выключить модуль OC	
         IFS1bits.OC4IF = 0; // Clear OC1 interrupt flag   	
         break; 
@@ -817,16 +820,16 @@ BOOL IsDisableOC(BYTE oc)
 {
 #ifdef __C30__
     switch (oc){
-    case 1:
+    case 0:
         if(OC1CONbits.OCM == 0b000) return 1; 
         break;
-    case 2:
+    case 1:
         if(OC2CONbits.OCM == 0b000) return 1;
         break; 
-    case 3:
+    case 2:
         if(OC3CONbits.OCM == 0b000) return 1;
         break; 
-    case 4:
+    case 3:
         if(OC4CONbits.OCM == 0b000) return 1;
         break; 
     default :
@@ -843,16 +846,16 @@ int SetDirection(BYTE oc, BYTE Dir)
 {
 #ifdef __C30__
     switch (oc){
-    case 1:
+    case 0:
         PORT1_DIR = Dir;
         break;
-    case 2:
+    case 1:
         PORT2_DIR = Dir;
         break; 
-    case 3:
+    case 2:
         PORT3_DIR = Dir;
         break; 
-    case 4:
+    case 3:
         PORT4_DIR = Dir;
         break; 
     default :

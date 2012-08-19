@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libmysql.lib"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\mysql\lib\debug;C:\mysql\lib"
 				DelayLoadDLLs="C:\mysql\lib\libmysql.dll"
 				GenerateDebugInformation="true"
