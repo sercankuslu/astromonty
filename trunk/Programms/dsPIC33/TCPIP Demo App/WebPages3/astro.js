@@ -393,8 +393,9 @@ function drawStars(Catalog){
 		var ArrsLength = Catalog.length;
 		var elem = {RA:0,DE:0,mag:0};
 		var Starsize;
-        DrawNetwork(ctx,"#003300");
+        //DrawNetwork(ctx,"#003300");
         // Звёзды
+        if(0)
 		for ( i = 0;i < ArrsLength; i++) {
 			elem.RA = Catalog[i][0];
 			elem.DE = Catalog[i][1];
@@ -440,6 +441,27 @@ function drawStars(Catalog){
 				ctx.fill();
 			//}
 		};
+        var N = CalculateNet();
+        var i =0;
+        var j = 0;
+        var D1;
+        var D2;
+        ctx.fillStyle = "#003300";
+        
+        for(j=0;j<17;j++){
+            for(i=0;i<24;i++){
+                if(i==0){
+                    D2 = ViewPosition.Rotate(N[j][23]);
+                }
+                D1 = ViewPosition.Rotate(N[j][i]);
+                ctx.beginPath();
+                ctx.strokeStyle = "#003300";
+                ctx.moveTo(D2.X,D2.Y);
+                ctx.lineTo(D1.X,D1.Y);
+                ctx.stroke();
+                D2 = D1;
+            }
+        }
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
@@ -448,20 +470,23 @@ function drawStars(Catalog){
 }
 // рисует сетку кривыми "#003300"
 function DrawNetwork(ctx,color){
+    var B = 400/3;//100/Math.cos((15/2)*gradToRad);
     // сетка вертикальная
     for ( i = 0;i < 24; i++){
+    
         NetN = [
             {X:0,Y:0,Z:100},
-            {X:135*Math.cos((i*15)*gradToRad),Y:135*Math.sin((i*15)*gradToRad),Z:100*Math.sin(60*gradToRad)},
-            {X:135*Math.cos((i*15)*gradToRad),Y:135*Math.sin((i*15)*gradToRad),Z:-100*Math.sin(60*gradToRad)},
+            {X:B*Math.cos((i*15)*gradToRad),Y:B*Math.sin((i*15)*gradToRad),Z:100*Math.sin(60*gradToRad)},
+            {X:B*Math.cos((i*15)*gradToRad),Y:B*Math.sin((i*15)*gradToRad),Z:-100*Math.sin(60*gradToRad)},
             {X:0,Y:0,Z:-100},
         ];            
         drawNetCurve(ctx,NetN,color);
     }// кольца
+    B = B = 400/3;//100/Math.cos((10/2)*gradToRad);
     for ( i = -9;i < 9; i++){
         var sini100 = 100*Math.sin(i*10*gradToRad);
         var cosi100 = 100*Math.cos(i*10*gradToRad);
-        var cosi135 = 135*Math.cos(i*10*gradToRad);
+        var cosi135 = B*Math.cos(i*10*gradToRad);
         NetN = [
             {X:cosi100,Y:0,Z:sini100},
             {X:cosi100,Y:cosi135,Z:sini100},
@@ -966,9 +991,42 @@ var Test = //RA,DE,VTmag,TYC1,TYC2,TYC3,pmRA,pmDE
 
 var RRR = {
     Net : [{X:0,Y:0,Z:0}],
+    //B= 100/Math.cos((15/2)*gradToRad);
     Calculate : function(){
-        
+        var i = 0;
+        var j = 0;
+        for(j=0;j<9;j++){
+            var R = 100*Math.cos(j*10*gradToRad); // радиус окружности
+            var Z = 100*Math.sin(j*10*gradToRad);
+            for(i=0;i<24;i++){
+                Net[j][i].X = R*Math.cos(i*15*gradToRad);
+                Net[j][i].Y = R*Math.sin(i*15*gradToRad);
+                Net[j][i].Z = Z;
+            }
+        }
+        return Net;
     }
 }
+
+ function CalculateNet(){
+        var i = 0;
+        var j = 0;
+        var Net = [ 
+            //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}],
+            //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}]
+        ];
+        for(j=0;j<17;j++){
+            Net.push([]);
+            var R = 100*Math.cos((j-8)*10*gradToRad); // радиус окружности
+            var Z = 100*Math.sin((j-8)*10*gradToRad);
+            for(i=0;i<24;i++){
+                Net[j].push({X:0,Y:0,Z:0});
+                Net[j][i].X = R*Math.cos(i*15*gradToRad);
+                Net[j][i].Y = R*Math.sin(i*15*gradToRad);
+                Net[j][i].Z = Z;
+            }
+        }
+        return Net;
+    }
 
 
