@@ -24,7 +24,9 @@ var Net = [
 [{X:100,Y:0,Z:0},{X:100,Y:135,Z:0}, {X:-100,Y:135,Z:0}, {X:-100,Y:0,Z:0}],
 [{X:100,Y:0,Z:0},{X:100,Y:-135,Z:0}, {X:-100,Y:-135,Z:0}, {X:-100,Y:0,Z:0}],
 ];
-
+var Net2 = [
+[{X:0,Y:0,Z:100},{X: 90,Y:0,Z:90}, {X: 100,Y:0,Z:0}],
+];
 var GeoPosition = {
 	Lon : 37.6028,
 	Lat : 55.791437,
@@ -308,7 +310,7 @@ function LoadData(){
 function scriptCallback(Catalog){
 	correctCoordinate(Catalog);
 	Tycho2 = Tycho2.concat(Catalog);
-	//StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 	setTimeout(LoadData,10);
 }
 function AngleToObj(A,h){
@@ -361,7 +363,7 @@ function updateScale(id){
 		break;
 	}
 	ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
-	StarView.updateStars();
+	if(!DrawingStar) StarView.updateStars();
 }
 function updateMagn(id){
 	var Magn = document.getElementById('starMagn');
@@ -378,7 +380,6 @@ function updateMagn(id){
 }
 //***************************************************************************************** drawStars
 function drawStars(Catalog){
-	DrawingStar = 1;
 	var canvas = this;
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');	
@@ -392,7 +393,8 @@ function drawStars(Catalog){
 		var ArrsLength = Catalog.length;
 		var elem = {RA:0,DE:0,mag:0};
 		var Starsize;
-		
+        DrawNetwork(ctx,"#003300");
+        // Звёзды
 		for ( i = 0;i < ArrsLength; i++) {
 			elem.RA = Catalog[i][0];
 			elem.DE = Catalog[i][1];
@@ -438,18 +440,46 @@ function drawStars(Catalog){
 				ctx.fill();
 			//}
 		};
-		//context.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, endX, endY);
-		for ( i = 0;i < 6; i++){
-			drawNetwork(ctx,Net[i],"darkgreen");
-		}
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
 	}
 	DrawingStar = 0;
 }
-
-function drawNetwork(ctx,NetK,color){
+// рисует сетку кривыми "#003300"
+function DrawNetwork(ctx,color){
+    // сетка вертикальная
+    for ( i = 0;i < 24; i++){
+        NetN = [
+            {X:0,Y:0,Z:100},
+            {X:135*Math.cos((i*15)*gradToRad),Y:135*Math.sin((i*15)*gradToRad),Z:100*Math.sin(60*gradToRad)},
+            {X:135*Math.cos((i*15)*gradToRad),Y:135*Math.sin((i*15)*gradToRad),Z:-100*Math.sin(60*gradToRad)},
+            {X:0,Y:0,Z:-100},
+        ];            
+        drawNetCurve(ctx,NetN,color);
+    }// кольца
+    for ( i = -9;i < 9; i++){
+        var sini100 = 100*Math.sin(i*10*gradToRad);
+        var cosi100 = 100*Math.cos(i*10*gradToRad);
+        var cosi135 = 135*Math.cos(i*10*gradToRad);
+        NetN = [
+            {X:cosi100,Y:0,Z:sini100},
+            {X:cosi100,Y:cosi135,Z:sini100},
+            {X:-cosi100,Y:cosi135,Z:sini100},
+            {X:-cosi100,Y:0,Z:sini100},
+        ];            
+        drawNetCurve(ctx,NetN,color);
+        NetN = [
+            {X:cosi100,Y:0,Z:sini100},
+            {X:cosi100,Y:-cosi135,Z:sini100},
+            {X:-cosi100,Y:-cosi135,Z:sini100},
+            {X:-cosi100,Y:0,Z:sini100},
+        ];            
+        drawNetCurve(ctx,NetN,color);
+    }
+};
+function drawNetCurve(ctx,NetK,color){
+    if(1){
 		ctx.beginPath();
 		var D1 = ViewPosition.Rotate(NetK[0]);
 		ctx.moveTo(D1.X,D1.Y);
@@ -459,6 +489,16 @@ function drawNetwork(ctx,NetK,color){
 		ctx.bezierCurveTo(D2.X, D2.Y, D3.X, D3.Y, D4.X, D4.Y);
 		ctx.strokeStyle = color;
 		ctx.stroke();
+    }else{
+        ctx.beginPath();
+		var D1 = ViewPosition.Rotate(NetK[0]);
+		ctx.moveTo(D1.X,D1.Y);
+		D2 = ViewPosition.Rotate(NetK[1]);
+		D3 = ViewPosition.Rotate(NetK[2]);
+		ctx.quadraticCurveTo(D2.X, D2.Y, D3.X, D3.Y);
+		ctx.strokeStyle = color;
+		ctx.stroke();
+    }
 }
 
 function drawVisibleCircle(ctx,X,Y){
@@ -475,6 +515,7 @@ function drawVisibleCircle(ctx,X,Y){
 	ctx.stroke();
 }
 function updateStars() {
+    DrawingStar = 1;
 	var canvas = document.getElementById('my_canvas');
 	if(canvas.getContext) {
 		var ctx = canvas.getContext('2d');
@@ -486,8 +527,8 @@ function updateStars() {
 			document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) + 'px';
 		}
 		StarView.updateCross();
-		
 	}
+    DrawingStar = 0;
 };
 function updateCross(){
 	var canvas = this;
@@ -495,7 +536,6 @@ function updateCross(){
 		this.DrawCross(CurrentPosition.X,CurrentPosition.Y,"green",true);
 		this.DrawCross(TargetPosition.X,TargetPosition.Y,"yellow",false);
 		this.DrawCross(LocalStarTime*15,GeoPosition.Lat,"cyan",false);
-
 	}
 }
 
@@ -916,10 +956,19 @@ function rotateDecart(D,xa,ya,za){
 }
 
 var Test = //RA,DE,VTmag,TYC1,TYC2,TYC3,pmRA,pmDE
-	[
-	[0,90,-3,1,1,1,0,0],
-	[0,-90,-3,2,1,1,0,0],
-	[0,0,-3,3,1,1,0,0],
-	[90,0,-3,4,1,1,0,0],
-	[180,0,-3,5,1,1,0,0],
-	[270,0,-3,6,1,1,0,0]];
+[
+[0,90,-3,1,1,1,0,0],
+[0,-90,-3,2,1,1,0,0],
+[0,0,-3,3,1,1,0,0],
+[90,0,-3,4,1,1,0,0],
+[180,0,-3,5,1,1,0,0],
+[270,0,-3,6,1,1,0,0]];
+
+var RRR = {
+    Net : [{X:0,Y:0,Z:0}],
+    Calculate : function(){
+        
+    }
+}
+
+

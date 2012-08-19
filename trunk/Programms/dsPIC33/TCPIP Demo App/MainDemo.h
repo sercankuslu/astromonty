@@ -65,6 +65,8 @@ void DoUARTConfig(void);
 	#define SaveAppConfig(a)
 #endif
 
+void SaveRRConfig();
+void LoadRRConfig();
 void SMTPDemo(void);
 void PingDemo(void);
 void SNMPTrapDemo(void);

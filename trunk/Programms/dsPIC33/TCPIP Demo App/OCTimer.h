@@ -193,6 +193,18 @@ typedef struct RR{
     BYTE Enable;                                        // признак включенности
 }RR;
 
+typedef struct __attribute__((__packed__))
+{
+	DWORD Timestamp;									// метка времени UTC
+    LONG XPosition;                  					// текущий номер шага TODO: поддержать переключение скоростей
+    WORD uStepPerStep;                                  // текущее количество микрошагов на шаг (16)
+}RRRAMSave;
+
+typedef struct __attribute__((__packed__))
+{
+	RRRAMSave RRSave[3];
+}RAMSaveConfig;
+
 #ifdef __C30__
 
 #define MS1_Tris TRISGbits.TRISG12 // выход MS1
