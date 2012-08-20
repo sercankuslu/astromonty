@@ -1,8 +1,8 @@
 ﻿
 var CoordX = 84.053;
 var CoordY = -1.201;
-var Scale = 2; // увеличить в 10 раз
-var Magnitude = 1; // величина звезд
+var Scale = 10; // увеличить в 10 раз
+var Magnitude = 6; // величина звезд
 var WSizeX = 0;
 var WSizeY = 0;
 var WSizeXd2 = 0;
@@ -15,6 +15,7 @@ var LocalStarTime = 0;
 var ViewXr; 
 var ViewYr; 
 var DrawingStar = 0;
+var Follow = false;
 var Net = [
 //X,Y,Z,X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3
 [{X:0,Y:0,Z:100},{X: 135,Y:0,Z:100}, {X: 135,Y:0,Z:-100}, {X:0,Y:0,Z:-100}],
@@ -57,12 +58,13 @@ var ViewPosition = {
 	X1 : 0,
 	Y1 : 0,
 	Scale1 : 0,
+	Magn1 : 0,
 	ViewXr : 0,
 	ViewYr : 0,
 	SinViewXr: 0,
 	CosViewXr: 0,
 	SinViewYr: 0,
-	CosViewYr: 0,
+	CosViewYr: 0,	
 	Catalog:[],
 	SetPosition:function(X,Y){
 		this.X = X;
@@ -75,11 +77,12 @@ var ViewPosition = {
 		this.CosViewXr = Math.cos(this.ViewXr);
 		this.SinViewYr = Math.sin(this.ViewYr);
 		this.CosViewYr = Math.cos(this.ViewYr);
-		if((Math.abs(Scale - this.Scale1)>2)||(Math.abs(this.X1-this.X)>10/Scale) || (Math.abs(this.Y1-this.Y)>10/Scale)){
+		if((Magnitude != this.Magn1)||(Math.abs(Scale - this.Scale1) > Scale)||(Math.abs(this.X1-this.X)>150/Scale) || (Math.abs(this.Y1-this.Y)>150/Scale)){
 			this.Catalog = Tycho2.filter(filterStars);
 			this.X1 = this.X;
 			this.Y1 = this.Y;
 			this.Scale1 = Scale;
+			this.Magn1 = Magnitude;
 		}
 	},	
 	inRadius:function(RAr,DEr){
@@ -101,8 +104,8 @@ var ViewPosition = {
 	},
 	Rotate:function(D){
 		var D1 = this.rotateDecartZ(D);			
-		D1 = this.rotateDecartX(D1);
-		return {X:(WSizeXd2+D1.X)*Scale,Y:(WSizeYd2-D1.Z)*Scale,V:true};
+		D1 = this.rotateDecartX(D1);		
+		return {X:(WSizeXd2+D1.X)*Scale,Y:(WSizeYd2-D1.Z)*Scale,V:D1.Y>0};
 	},	
 	ToDecart:function(a,d,S){
 		var CosD = Math.cos(d);
@@ -232,10 +235,17 @@ function UpdateTime(){
 	
 	var JD = JulDay (utDay, utMonth, utYear, UT);
 	var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
-	document.getElementById('LST').value =  LST;
+	document.getElementById('LST').value =  LST;	
+	if(Follow){
+		ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
+	} else {
+		ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
+	}
 	if(!DrawingStar) StarView.updateStars();
 }
-
+function enableFollow(){
+	Follow = document.getElementById('followbox').checked;
+}
 function loadCanvas() {
 	StarView = document.getElementById('my_canvas');
 	StarView.onmousedown = onMouseDown;
@@ -376,6 +386,7 @@ function updateMagn(id){
 		Magnitude = MagnN.value;
 		Magn.value = MagnN.value;
 	}
+	ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
 	if(!DrawingStar) StarView.updateStars();
 }
 //***************************************************************************************** drawStars
@@ -393,9 +404,9 @@ function drawStars(Catalog){
 		var ArrsLength = Catalog.length;
 		var elem = {RA:0,DE:0,mag:0};
 		var Starsize;
-        //DrawNetwork(ctx,"#003300");
+        DrawNetwork(ctx,"#006600");
         // Звёзды
-        if(0)
+        //if(0)
 		for ( i = 0;i < ArrsLength; i++) {
 			elem.RA = Catalog[i][0];
 			elem.DE = Catalog[i][1];
@@ -403,7 +414,7 @@ function drawStars(Catalog){
 			if(elem.mag > Magnitude) break;
 			if(elem.mag < maxMag) continue;
 			var D = ViewPosition.TranslateCoord(elem.RA,elem.DE);
-			//if(D.V){
+			if(D.V){
 				ctx.beginPath();
 				switch (elem.mag){
 					case -1.088: ctx.fillStyle = "blue"; // сириус
@@ -420,6 +431,7 @@ function drawStars(Catalog){
 					break;
 				}
 				// спец звезды
+				if(0)
 				switch (Catalog[i][3]){
 					case 0:ctx.fillStyle = "red";
 						break;
@@ -439,29 +451,9 @@ function drawStars(Catalog){
 				Starsize = (9 - elem.mag)*Scale/50+0.5;
 				ctx.arc(D.X,D.Y, Starsize,0,PI2,true);
 				ctx.fill();
-			//}
+			}
 		};
-        var N = CalculateNet();
-        var i =0;
-        var j = 0;
-        var D1;
-        var D2;
-        ctx.fillStyle = "#003300";
         
-        for(j=0;j<17;j++){
-            for(i=0;i<24;i++){
-                if(i==0){
-                    D2 = ViewPosition.Rotate(N[j][23]);
-                }
-                D1 = ViewPosition.Rotate(N[j][i]);
-                ctx.beginPath();
-                ctx.strokeStyle = "#003300";
-                ctx.moveTo(D2.X,D2.Y);
-                ctx.lineTo(D1.X,D1.Y);
-                ctx.stroke();
-                D2 = D1;
-            }
-        }
 	} else {
 		document.getElementById('my_canvas').style.display = 'none';
 		document.getElementById('no-canvas').style.display = 'block';
@@ -469,39 +461,43 @@ function drawStars(Catalog){
 	DrawingStar = 0;
 }
 // рисует сетку кривыми "#003300"
-function DrawNetwork(ctx,color){
-    var B = 400/3;//100/Math.cos((15/2)*gradToRad);
-    // сетка вертикальная
-    for ( i = 0;i < 24; i++){
-    
-        NetN = [
-            {X:0,Y:0,Z:100},
-            {X:B*Math.cos((i*15)*gradToRad),Y:B*Math.sin((i*15)*gradToRad),Z:100*Math.sin(60*gradToRad)},
-            {X:B*Math.cos((i*15)*gradToRad),Y:B*Math.sin((i*15)*gradToRad),Z:-100*Math.sin(60*gradToRad)},
-            {X:0,Y:0,Z:-100},
-        ];            
-        drawNetCurve(ctx,NetN,color);
-    }// кольца
-    B = B = 400/3;//100/Math.cos((10/2)*gradToRad);
-    for ( i = -9;i < 9; i++){
-        var sini100 = 100*Math.sin(i*10*gradToRad);
-        var cosi100 = 100*Math.cos(i*10*gradToRad);
-        var cosi135 = B*Math.cos(i*10*gradToRad);
-        NetN = [
-            {X:cosi100,Y:0,Z:sini100},
-            {X:cosi100,Y:cosi135,Z:sini100},
-            {X:-cosi100,Y:cosi135,Z:sini100},
-            {X:-cosi100,Y:0,Z:sini100},
-        ];            
-        drawNetCurve(ctx,NetN,color);
-        NetN = [
-            {X:cosi100,Y:0,Z:sini100},
-            {X:cosi100,Y:-cosi135,Z:sini100},
-            {X:-cosi100,Y:-cosi135,Z:sini100},
-            {X:-cosi100,Y:0,Z:sini100},
-        ];            
-        drawNetCurve(ctx,NetN,color);
-    }
+function DrawNetwork(ctx,color)
+{
+	var N = CalculateNet();
+	var i =0;
+	var j = 0;
+	var D1;
+	var D2;
+	var D3;
+	var D4;        
+	ctx.strokeStyle = color;
+	for(j=0;j<19;j++){
+		for(i=0;i<24;i++){					
+			N[j][i].D = ViewPosition.Rotate(N[j][i]);
+		}
+	}
+	for(j=0;j<18;j++){
+		for(i=0;i<24;i++){				
+			if(N[j][i].D.V){
+			ctx.beginPath();                                
+			if(i<23){ // горизонтальные
+				ctx.moveTo(N[j][i].D.X,N[j][i].D.Y);
+				ctx.lineTo(N[j][i+1].D.X,N[j][i+1].D.Y);
+			} else {
+				ctx.moveTo(N[j][i].D.X,N[j][i].D.Y);
+				ctx.lineTo(N[j][0].D.X,N[j][0].D.Y);
+			}				
+			ctx.stroke();
+			ctx.beginPath();                                
+			 // вертикальные
+			//if(j<18){
+				ctx.moveTo(N[j][i].D.X,N[j][i].D.Y);
+				ctx.lineTo(N[j+1][i].D.X,N[j+1][i].D.Y);
+			//}					
+			ctx.stroke();	
+			}
+		}
+	}    
 };
 function drawNetCurve(ctx,NetK,color){
     if(1){
@@ -568,26 +564,28 @@ function DrawCross(X,Y,color,wCircle){
 	var canvas = this;
 	if(canvas.getContext) {
 		if(ViewPosition.inRadius(X*gradToRad,Y*gradToRad)){
-			var Coord = ViewPosition.TranslateCoord(X,Y);				
-			var ctx = canvas.getContext('2d');
-			ctx.beginPath();
-			ctx.strokeStyle  = color;
-			if(wCircle){
-				ctx.arc(Coord.X, Coord.Y,30,0,Math.PI*2,true);
+			var Coord = ViewPosition.TranslateCoord(X,Y);
+			if(Coord.V){
+				var ctx = canvas.getContext('2d');
+				ctx.beginPath();
+				ctx.strokeStyle  = color;
+				if(wCircle){
+					ctx.arc(Coord.X, Coord.Y,30,0,Math.PI*2,true);
+					ctx.stroke();
+				}
+				ctx.moveTo(Coord.X + 30, Coord.Y);
+				ctx.lineTo(Coord.X + 5, Coord.Y);
+				ctx.stroke();
+				ctx.moveTo(Coord.X - 5, Coord.Y);
+				ctx.lineTo(Coord.X - 30, Coord.Y);
+				ctx.stroke();
+				ctx.moveTo(Coord.X, Coord.Y - 30);
+				ctx.lineTo(Coord.X, Coord.Y - 5);
+				ctx.stroke();
+				ctx.moveTo(Coord.X, Coord.Y + 5);
+				ctx.lineTo(Coord.X, Coord.Y + 30);
 				ctx.stroke();
 			}
-			ctx.moveTo(Coord.X + 30, Coord.Y);
-			ctx.lineTo(Coord.X + 5, Coord.Y);
-			ctx.stroke();
-			ctx.moveTo(Coord.X - 5, Coord.Y);
-			ctx.lineTo(Coord.X - 30, Coord.Y);
-			ctx.stroke();
-			ctx.moveTo(Coord.X, Coord.Y - 30);
-			ctx.lineTo(Coord.X, Coord.Y - 5);
-			ctx.stroke();
-			ctx.moveTo(Coord.X, Coord.Y + 5);
-			ctx.lineTo(Coord.X, Coord.Y + 30);
-			ctx.stroke();
 		}
 	}
 }
@@ -621,10 +619,12 @@ function mousemoveCanv(e){
 	} else {
 		var dX = (e.pageX - pos.x -1) - MousePosition.X;
 		var dY = (e.pageY - pos.y -1) - MousePosition.Y; 
-		ViewPosition.SetPosition(ViewPosition.X+dX/Scale,ViewPosition.Y+dY/Scale);
+		ViewPosition.SetPosition(ViewPosition.X+(dX/Scale)*(1+Math.sin(Math.abs(ViewPosition.Y*gradToRad))),ViewPosition.Y+dY/Scale);
 		if(!DrawingStar) this.updateStars();
 		MousePosition.X = e.pageX - pos.x -1;
 		MousePosition.Y = e.pageY - pos.y -1;
+		document.getElementById('followbox').checked = false;
+		Follow = false;
 	}
 	// спрятать информацию о звезде, если двинули мышкой
 	if(document.getElementById('StarInfo'))
@@ -713,8 +713,7 @@ function GoTo(){
 	newAJAXCommand('index.htm',function(){}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);	
 }
 function GoToView(){
-	ViewPosition.X = CurrentPosition.X;
-	ViewPosition.Y = CurrentPosition.Y;
+	ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
 	if(!DrawingStar) StarView.updateStars();	
 }
 //var ElementUpgraded = 0;
@@ -900,7 +899,7 @@ var loadScript = function(src, callback, appendTo) {
     script.src = src;
     appendTo.appendChild(script);
 }
-
+// Вычисление звездного времени
 function GM_Sidereal_Time (jd) {	
 	var t_eph, ut, MJD0, MJD;
 			
@@ -1012,20 +1011,20 @@ var RRR = {
         var i = 0;
         var j = 0;
         var Net = [ 
-            //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}],
+            [{X:0,Y:0,Z:100}],
             //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}]
         ];
-        for(j=0;j<17;j++){
+        for(j=0;j<19;j++){
             Net.push([]);
-            var R = 100*Math.cos((j-8)*10*gradToRad); // радиус окружности
-            var Z = 100*Math.sin((j-8)*10*gradToRad);
+            var R = 100*Math.cos((j-9)*10*gradToRad); // радиус окружности
+            var Z = 100*Math.sin((j-9)*10*gradToRad);
             for(i=0;i<24;i++){
-                Net[j].push({X:0,Y:0,Z:0});
+                Net[j].push({X:0,Y:0,Z:0,D:{X:0,Y:0}});
                 Net[j][i].X = R*Math.cos(i*15*gradToRad);
                 Net[j][i].Y = R*Math.sin(i*15*gradToRad);
                 Net[j][i].Z = Z;
             }
-        }
+        }		
         return Net;
     }
 

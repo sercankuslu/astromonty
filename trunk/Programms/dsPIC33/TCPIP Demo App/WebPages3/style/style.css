@@ -144,11 +144,16 @@ body {
 	width: 100px;
 	font-weight: bold;
 }
+#target .chbox {
+	width: 25px;
+	font-weight: bold;
+}
 
 #ReqTarget .targetRA input {
 	width: 25px;
 	font-weight: bold;
 }
+
 #RAs {
 	width:40px;
 }
