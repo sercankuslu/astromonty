@@ -416,6 +416,7 @@ function drawStars(Catalog){
 			var D = ViewPosition.TranslateCoord(elem.RA,elem.DE);
 			if(D.V){
 				ctx.beginPath();
+                if(0)
 				switch (elem.mag){
 					case -1.088: ctx.fillStyle = "blue"; // сириус
 								 ctx.strokeStyle = "blue";
@@ -448,7 +449,12 @@ function drawStars(Catalog){
 					case 6:ctx.fillStyle = "white";
 						break;
 				}
-				Starsize = (9 - elem.mag)*Scale/50+0.5;
+                var R = (9 - elem.mag);
+				Starsize = R*Scale/40+0.5;
+                var r = Math.floor(R*20+35);
+                var color = 'rgb(' + r + ',' + r + ',' + r + ');';
+                ctx.fillStyle = color;
+                ctx.strokeStyle = color;
 				ctx.arc(D.X,D.Y, Starsize,0,PI2,true);
 				ctx.fill();
 			}
