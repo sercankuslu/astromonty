@@ -111,11 +111,16 @@ var ViewPosition = {
         } else if(D.X<0){
             A = Math.atan(D.Y/D.X)+Math.PI;
         } else {
-            if(D.Y>0) A = Math.PI/2;
-            else if(D.Y<0) A = Math.PI*3/2;
-            else A = 0;
+            if(D.Y>0) {
+                A = Math.PI/2;
+            } else
+            if(D.Y<0) {
+                A = Math.PI*3/2;
+            } else 
+                A = 0;
         }
         A = A-Math.PI;
+        if(A<0) A+=PI2;
         return {a:A,d:d};        
     },
     Rotate:function(D){
@@ -661,8 +666,11 @@ function mousemoveCanv(e){
     OldMouse.Y = e.pageY;
     if(this.Drag) this.Select = false;
     if(!this.Drag){
-        MousePositionStar.X = XToRA(e.pageX - pos.x -1);
-        MousePositionStar.Y = YToDE(e.pageY - pos.y -1);
+        var D = {X:e.pageX - pos.x-1,Y:0,Z:e.pageY - pos.y-1};
+        var D1 = ViewPosition.unRotate(D);
+        var P = ViewPosition.decartToPolar(D1);   
+        MousePositionStar.X = P.a * radToGrad;
+        MousePositionStar.Y = P.d * radToGrad;
         document.getElementById('outXt').value = "α : " + AngleToString(MousePositionStar.X,true);
         document.getElementById('outYt').value = "δ : " + AngleToString(MousePositionStar.Y,false);
     } else {
@@ -682,8 +690,9 @@ function mousemoveCanv(e){
 }
 //поиск в каталоге имени звезды
 function SelectStars(element,index,array){
-    var length = 25/(Scale);
-    if(      (element[0] >= MousePositionStar.X - length)
+    var length = 0.83/(Scale); 
+    // на Scale == 1, 0.83 градуса
+    if(   (element[0] >= MousePositionStar.X - length)
         &&(element[0] <= MousePositionStar.X + length)
         &&(element[1] >= MousePositionStar.Y - length)
         &&(element[1] <= MousePositionStar.Y + length)){
@@ -694,7 +703,7 @@ function SelectStars(element,index,array){
 function ShowStarNumber(){
     var TmpCat;
     if(Tycho2) {
-        TmpCat = Tycho2.filter(SelectStars);
+        TmpCat = ViewPosition.Catalog.filter(SelectStars);
         if(TmpCat[0]){
             if(document.getElementById('StarInfo'))
                 document.getElementById('StarInfo').style.display = 'block';
