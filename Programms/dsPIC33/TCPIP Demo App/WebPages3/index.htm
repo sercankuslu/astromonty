@@ -57,7 +57,7 @@
 						<input type="text" name="DE_m" id="DEm" value="00" min="-1" max="60" onchange="updateTarget(2);">'
 						<input type="text" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);"style="width:40px;">"
 					</span></p>
-					<input type="button" value="GoTo!" onclick="GoTo();">
+					<input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
 					<input id="followbox" class="chbox" type="checkbox" onclick="enableFollow();">Follow
 					<input type="button" value="View position" onclick="GoToView();">
 					
@@ -118,33 +118,30 @@ function updateStatus(xmlData) {
 	// Make sure we're displaying the status display
 	mainstat = 'inline';
 	loadstat = 'none';
-	var needUpdateStar = false;
-	var correctAngle;
+	var needUpdateStar = false;	
 	// 55.791437,37.6028	
 	for(i = 0; i < 2; i++){
 		var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
 		if(i==0) {
-			if(angle){
-				correctAngle = angle + LocalStarTime*15;
-				document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
-				CurrentPosition.X = correctAngle;
+			if(angle){				
+				if(angle<0) angle += 360;
+				if(angle>=360) angle -= 360;
+				document.getElementById('ang' + i).innerHTML = AngleToString(angle,true);
+				CurrentPosition.X = angle;
 				needUpdateStar = true;
-			} else {
-				CurrentPosition.X = 10 + LocalStarTime*15;
-			}
+			} 
 		} else if(i==1){
-			if(angle){
-				correctAngle = angle + GeoPosition.Lat;
-				document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,false);
-				CurrentPosition.Y = correctAngle
+			if(angle){			
+				correctAngle = angle;
+				document.getElementById('ang' + i).innerHTML = AngleToString(angle,false);
+				CurrentPosition.Y = angle
 				needUpdateStar = true;
-			} else {
-				CurrentPosition.Y = -1.201 + GeoPosition.Lat;
-			}
+			} 
 		}
 	}
 	
-	if(needUpdateStar) StarView.updateStars();	
+	if(needUpdateStar)
+		if(!DrawingStar) StarView.updateStars();	
 }
 setTimeout("newAJAXCommand('status.xml', updateStatus, true)",1000);
 

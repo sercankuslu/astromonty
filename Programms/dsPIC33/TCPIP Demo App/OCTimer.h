@@ -72,6 +72,7 @@ typedef struct DateTimeStruct {
 } DateTime;
 #endif
 #define PI 3.1415926535897932384626433832795
+#define PI2 6.283185307179586476925286766559
 #define FREQ_STEP 20
 #define BUF_SIZE 128
 // половина BUF_SIZE
