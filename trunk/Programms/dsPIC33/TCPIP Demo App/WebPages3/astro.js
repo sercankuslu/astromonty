@@ -404,7 +404,7 @@ function drawStars(Catalog){
 		var ArrsLength = Catalog.length;
 		var elem = {RA:0,DE:0,mag:0};
 		var Starsize;
-        DrawNetwork(ctx,"#006600");
+        DrawNetwork(ctx,"#003300");
         // Звёзды
         //if(0)
 		for ( i = 0;i < ArrsLength; i++) {
