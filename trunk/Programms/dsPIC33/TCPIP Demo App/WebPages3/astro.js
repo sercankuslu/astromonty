@@ -16,18 +16,7 @@ var ViewXr;
 var ViewYr;
 var DrawingStar = 0;
 var Follow = false;
-var Net = [
-//X,Y,Z,X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3
-[{X:0,Y:0,Z:100},{X: 135,Y:0,Z:100}, {X: 135,Y:0,Z:-100}, {X:0,Y:0,Z:-100}],
-[{X:0,Y:0,Z:100},{X:-135,Y:0,Z:100}, {X:-135,Y:0,Z:-100}, {X:0,Y:0,Z:-100}],
-[{X:0,Y:0,Z:100},{X:0,Y:135,Z:100}, {X: 0,Y:135,Z:-100}, {X:0,Y:0,Z:-100}],
-[{X:0,Y:0,Z:100},{X:0,Y:-135,Z:100}, {X:0,Y:-135,Z:-100}, {X:0,Y:0,Z:-100}],
-[{X:100,Y:0,Z:0},{X:100,Y:135,Z:0}, {X:-100,Y:135,Z:0}, {X:-100,Y:0,Z:0}],
-[{X:100,Y:0,Z:0},{X:100,Y:-135,Z:0}, {X:-100,Y:-135,Z:0}, {X:-100,Y:0,Z:0}],
-];
-var Net2 = [
-[{X:0,Y:0,Z:100},{X: 90,Y:0,Z:90}, {X: 100,Y:0,Z:0}],
-];
+
 var GeoPosition = {
     Lon : 37.6028,
     Lat : 55.791437,
@@ -180,6 +169,12 @@ var ViewPosition = {
 var TargetPosition = {
     X : 87.053,
     Y : 4.201,
+	SetPosition:function(X,Y){
+        this.X = X;
+        this.Y = Y;
+        if(this.X >=  360) this.X -= 360;
+        if(this.X <= -360) this.X += 360;
+	}
 };
 var StarView;
 
@@ -327,8 +322,6 @@ function loadCanvas() {
     //загрузка и коррекция координат каталога
     correctCoordinate(Tycho2);
     setTimeout(LoadData,200);
-    var D = ToDecart(CurrentPosition.X,CurrentPosition.Y);
-    var D1 = rotateDecart(D, 40*Math.PI/180, 5*Math.PI/180,0);
 };
 var NextCat=0;
 function LoadData(){
@@ -747,13 +740,10 @@ function targetSelect(e){
         e.pageX = e.clientX + (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
         e.pageY = e.clientY + (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
     }
-    //TargetPosition.X = XToRA(e.pageX - pos.x-1);
-    //TargetPosition.Y = YToDE(e.pageY - pos.y-1);
     var D = {X:e.pageX - pos.x-1,Y:0,Z:e.pageY - pos.y-1};
     var D1 = ViewPosition.unRotate(D);
     var P = ViewPosition.decartToPolar(D1);   
-    TargetPosition.X = P.a * radToGrad;
-    TargetPosition.Y = P.d * radToGrad;
+	TargetPosition.SetPosition(P.a * radToGrad,P.d * radToGrad);
     updateTargetForm();
     if(!DrawingStar) StarView.updateStars();
 }
@@ -769,11 +759,8 @@ function updateTargetForm(){
     document.getElementById('DEs').value = DEobj.S.toFixed(2);
 }
 function GoTo(){
-    //CurrentPosition.X = TargetPosition.X;
-    //CurrentPosition.Y = TargetPosition.Y;
-    //StarView.updateStars();
-    //UpdateSelPos();
-    newAJAXCommand('index.htm',function(){}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);
+	document.getElementById('gotobutton').disabled = true;
+    newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);
 }
 function GoToView(){
     ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
@@ -812,7 +799,6 @@ function updateTarget(id){
         document.getElementById('RAh').value = Aobj.H;
     }
 
-    TargetPosition.X = +objToAngle(Aobj, true);
     if(document.getElementById('DEh').value.indexOf("-")>=0) Bobj.Sign = -1; else Bobj.Sign = 1;
     Bobj.H = +document.getElementById('DEh').value;
     Bobj.M = +document.getElementById('DEm').value;
@@ -841,8 +827,7 @@ function updateTarget(id){
         document.getElementById('DEm').value = Bobj.M;
         document.getElementById('DEh').value = Bobj.H;
     }
-    TargetPosition.Y = +objToAngle(Bobj, false);
-
+	TargetPosition.SetPosition(+objToAngle(Aobj, true),+objToAngle(Bobj, false));
     if(!DrawingStar) StarView.updateStars();
 }
 
