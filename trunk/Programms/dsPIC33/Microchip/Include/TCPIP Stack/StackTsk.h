@@ -99,8 +99,9 @@ typedef struct __attribute__((__packed__))
     double TimerStep;
     WORD StepPerTurn;                                   // количество шагов двигателя на оборот (200 - ДШИ-200)
     WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
-    LONG XMinPosition;                  				// минимальное значение номера шага
+    LONG XMinPosition;                  				// минимальное значение номера шага (положение датчика 0)
     LONG XMaxPosition;                  				// максимальное значение номера шага
+    LONG XZenitPosition;                                // номер шага в зените
     LONG XParkPosition;                  				// значение номера шага парковочной позиции
     double VMax;
 }RRFlashSave;
