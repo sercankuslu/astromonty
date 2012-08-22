@@ -971,11 +971,10 @@ function frac(X) {
 }
 
 function JulDay (d, m, y, u){
- if (y<1900) y=y+1900
- if (m<=2) {m=m+12; y=y-1}
- A = Math.floor(y/100);
- JD =  Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d - 13 -1524.5 + u/24.0;
- return JD
+    if (y<1900) y=y+1900
+    if (m<=2) {m=m+12; y=y-1}
+    JD =  Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d - 13 -1524.5 + u/24.0;
+    return JD;
 }
 function HoursMinutesSeconds(time) {
 
@@ -993,69 +992,7 @@ function HoursMinutesSeconds(time) {
 
 }
 
-
-// x = r*cos(a)cos(d)
-// y = r*cos(a)sin(d)
-// z = r*cos(a)
-
-function ToDecart(a,d,S){
-    var x = S*Math.cos(d)*Math.cos(a);
-    var y = S*Math.cos(d)*Math.sin(a);
-    var z = S*Math.sin(d);
-    return {X:x,Y:y,Z:z};
-}
-
-function rotateDecart(D,xa,ya,za){
-    var X;
-    var Y;
-    var Z;
-    if(xa!=0){
-        X =  D.X;
-        Y =  D.Y*Math.cos(xa) - D.Z*Math.cos(xa);
-        Z =  D.Y*Math.sin(xa) + D.Z*Math.cos(xa);
-    }
-    if(ya!=0){
-        X =  D.X*Math.cos(ya) + D.Z*Math.sin(ya);
-        Y =  D.Y;
-        Z = -D.X*Math.sin(ya) + D.Z*Math.cos(ya);
-    }
-    if(za!=0){
-        X =  D.X*Math.cos(za) - D.Y*Math.sin(za);
-        Y =  D.X*Math.sin(za) + D.Y*Math.cos(za);
-        Z =  D.Z;
-    }
-    return {X:X,Y:Y,Z:Z};
-}
-
-var Test = //RA,DE,VTmag,TYC1,TYC2,TYC3,pmRA,pmDE
-[
-[0,90,-3,1,1,1,0,0],
-[0,-90,-3,2,1,1,0,0],
-[0,0,-3,3,1,1,0,0],
-[90,0,-3,4,1,1,0,0],
-[180,0,-3,5,1,1,0,0],
-[270,0,-3,6,1,1,0,0]];
-
-var RRR = {
-    Net : [{X:0,Y:0,Z:0}],
-    //B= 100/Math.cos((15/2)*gradToRad);
-    Calculate : function(){
-        var i = 0;
-        var j = 0;
-        for(j=0;j<9;j++){
-            var R = 100*Math.cos(j*10*gradToRad); // радиус окружности
-            var Z = 100*Math.sin(j*10*gradToRad);
-            for(i=0;i<24;i++){
-                Net[j][i].X = R*Math.cos(i*15*gradToRad);
-                Net[j][i].Y = R*Math.sin(i*15*gradToRad);
-                Net[j][i].Z = Z;
-            }
-        }
-        return Net;
-    }
-}
-
- function CalculateNet(){
+function CalculateNet(){
         var i = 0;
         var j = 0;
         var Net = [

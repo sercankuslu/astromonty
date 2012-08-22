@@ -152,6 +152,10 @@ typedef struct RR{
     // параметры исполнения
     GD_STATE                RunState;                   // тип команды, выполняемой в данное время
     LONG                    XPosition;                  // текущий номер шага TODO: поддержать переключение скоростей
+    LONG                    XMinPosition;               // минимальное значение номера шага (положение датчика 0)
+    LONG                    XMaxPosition;               // максимальное значение номера шага
+    LONG                    XZenitPosition;             // номер шага в зените
+    LONG                    XParkPosition;              // значение номера шага парковочной позиции        
     BYTE                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
     DWORD_VAL               T;
     DWORD                   TimeBeg;
@@ -173,7 +177,7 @@ typedef struct RR{
 
     // параметры указывающие на момент окончания
     double                  Vend;                       // скорость завершения команды
-    double                  deltaX;                       // координата завершения команды
+    double                  deltaX;                     // координата завершения команды
 
     // служебные (оптимизация)
     
@@ -192,6 +196,7 @@ typedef struct RR{
     BYTE Index;                                         // номер канала
     BYTE TmrId;                                         // номер таймера
     BYTE Enable;                                        // признак включенности
+    
 }RR;
 
 typedef struct __attribute__((__packed__))
@@ -340,5 +345,7 @@ int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
+double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
+double LM_Sidereal_Time (double jd, double longitude);
 #endif //__OC_TIMER_H_
 
