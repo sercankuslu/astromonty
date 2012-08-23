@@ -1159,7 +1159,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     return 0;
 }
 double GetAngle(WORD n){
-double X = 0.0;
+    double X = 0.0;
     switch(n){
         case 0: X = rr1.XPosition * rr1.dx;
             if(X > PI2) X -= PI2;
@@ -1172,6 +1172,18 @@ double X = 0.0;
     }
     return X;
 }
+int GetStatus(WORD n){    
+    switch(n){
+        case 0: return (rr1.RunState == ST_STOP)?0:1;            
+        break;
+        case 1: return (rr2.RunState == ST_STOP)?0:1;
+        break;
+        case 2: return (rr3.RunState == ST_STOP)?0:1;
+        break;
+    }
+    return 3;
+}
+
 
 // Вычисление звездного времени
 double GM_Sidereal_Time (double jd) {

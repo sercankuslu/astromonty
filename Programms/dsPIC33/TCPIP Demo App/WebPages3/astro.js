@@ -16,9 +16,10 @@ var ViewXr;
 var ViewYr;
 var DrawingStar = 0;
 var Follow = false;
-
+var Loading = true;
 var GeoPosition = {
     Lon : 37.6028,
+    //Lon : 217.6028,
     Lat : 55.791437,
 }
 // текущие координаты телескопа(зелёный крестик)
@@ -34,6 +35,11 @@ var MousePosition = {
 var MousePositionStar = {
     X : 0,
     Y : 0,
+};
+var AbsolutePosition = {
+    a : 0,
+    d : 0,
+    visible : false
 };
 function filterStars(element,index,array){
     if((element[2] < Magnitude) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
@@ -89,7 +95,7 @@ var ViewPosition = {
         return this.Rotate(D);
     },
     decartToPolar:function(D){
-        var A;        
+        var A;
         var d = Math.asin(D.Z/100);
         if(D.X>0){
             if(D.Y>=0){
@@ -105,12 +111,12 @@ var ViewPosition = {
             } else
             if(D.Y<0) {
                 A = Math.PI*3/2;
-            } else 
+            } else
                 A = 0;
         }
         A = A-Math.PI;
         if(A<0) A+=PI2;
-        return {a:A,d:d};        
+        return {a:A,d:d};
     },
     Rotate:function(D){
         var D1 = this.rotateDecartZ(D);
@@ -118,15 +124,15 @@ var ViewPosition = {
         return {X:(WSizeXd2+D1.X)*Scale,Y:D1.Y,Z:(WSizeYd2-D1.Z)*Scale,V:D1.Y>0};
     },
     unRotate:function(D){
-        var X = D.X/Scale-WSizeXd2;                
+        var X = D.X/Scale-WSizeXd2;
         var Z = -D.Z/Scale+WSizeYd2;
         var R = 100*Math.cos(Math.asin(-Z/100));
         var A = Math.acos(X/R);
-        var Y = R*Math.sin(A);        
-        //if(Y<0) Y = -Y;            
+        var Y = R*Math.sin(A);
+        //if(Y<0) Y = -Y;
         D2 = {X:X,Y:Y,Z:Z};
         var D1 = this.rotateDecartMX(D2);
-        D2 = this.rotateDecartMZ(D1);        
+        D2 = this.rotateDecartMZ(D1);
         return {X:D2.X,Y:D2.Y,Z:D2.Z};
     },
     ToDecart:function(a,d,S){
@@ -169,12 +175,12 @@ var ViewPosition = {
 var TargetPosition = {
     X : 87.053,
     Y : 4.201,
-	SetPosition:function(X,Y){
+    SetPosition:function(X,Y){
         this.X = X;
         this.Y = Y;
         if(this.X >=  360) this.X -= 360;
         if(this.X <= -360) this.X += 360;
-	}
+    }
 };
 var StarView;
 
@@ -192,7 +198,7 @@ function onMouseDown(e){
         e.pageX = e.clientX + (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
         e.pageY = e.clientY + (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
     }
-    
+
     MousePosition.X = e.pageX - pos.x-1;
     MousePosition.Y = e.pageY - pos.y-1;
 }
@@ -214,7 +220,7 @@ function onMouseWheel(e) {
     } else {
         Scale = +Scale + e.wheelDelta/10;
     }
-    if(Scale < 4) {Scale = 4;};
+    if(Scale < 3) {Scale = 3;};
     if(Scale > 1000) {Scale = 1000;};
     e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     updateScale(3);
@@ -284,12 +290,14 @@ function UpdateTime(){
     } else {
         ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
     }
+    updateTargetCrosPos();
     if(!DrawingStar) StarView.updateStars();
 }
 function enableFollow(){
     Follow = document.getElementById('followbox').checked;
 }
 function loadCanvas() {
+    document.getElementById('gotobutton').disabled = true;
     StarView = document.getElementById('my_canvas');
     StarView.onmousedown = onMouseDown;
     StarView.updateStars = updateStars;
@@ -353,8 +361,12 @@ function LoadData(){
             break;
         case 12: loadScript("stars/Tycho2_88.js", function(){scriptCallback(Tycho2_88);}, 0 );
             break;
+        default : document.getElementById('gotobutton').disabled = false;
+                  Loading = false;
         }
     } catch (e) {
+        document.getElementById('gotobutton').disabled = false;
+        Loading = false;
     }
     NextCat++;
 }
@@ -413,22 +425,43 @@ function updateScale(id){
         range.value = +Scale;
         break;
     }
+    if(Scale < 20 && Magnitude>=8) {
+        Magnitude--;
+        updateMagn(3);
+    } else
+    if(Scale < 10 && Magnitude>=7) {
+        Magnitude--;
+        updateMagn(3);
+    } else
+    if(Scale > 10 && Magnitude <7) {
+        Magnitude++;
+        updateMagn(3);
+    } else
+    if(Scale > 20 && Magnitude <9) {
+        Magnitude++;
+        updateMagn(3);
+    }
     ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
     if(!DrawingStar) StarView.updateStars();
 }
 function updateMagn(id){
     var Magn = document.getElementById('starMagn');
     var MagnN = document.getElementById('starMagnN');
-    if(Magn.value == MagnN.value) return;
+    if(id!=3 && Magn.value == MagnN.value) return;
     if(id==1){
         Magnitude = Magn.value;
         MagnN.value = Magn.value;
-    } else {
+    } else if(id == 2){
         Magnitude = MagnN.value;
         Magn.value = MagnN.value;
+    } else {
+        Magn.value= Magnitude;
+        MagnN.value= Magnitude;
     }
-    ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
-    if(!DrawingStar) StarView.updateStars();
+    if(id!=3){
+        ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
+        if(!DrawingStar) StarView.updateStars();
+    }
 }
 //***************************************************************************************** drawStars
 function drawStars(Catalog){
@@ -591,7 +624,7 @@ function updateStars() {
         if(Tycho2) {
             StarView.drawStars(ViewPosition.Catalog);
             //StarView.drawStars(Test);
-            document.getElementById('StarCounter').innerHTML = Tycho2.length + " stars are loaded.";
+            document.getElementById('StarCounter').innerHTML = "Загружено " + Tycho2.length + " звёзд.";
             document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) + 'px';
         }
         StarView.updateCross();
@@ -661,7 +694,7 @@ function mousemoveCanv(e){
     if(!this.Drag){
         var D = {X:e.pageX - pos.x-1,Y:0,Z:e.pageY - pos.y-1};
         var D1 = ViewPosition.unRotate(D);
-        var P = ViewPosition.decartToPolar(D1);   
+        var P = ViewPosition.decartToPolar(D1);
         MousePositionStar.X = P.a * radToGrad;
         MousePositionStar.Y = P.d * radToGrad;
         document.getElementById('outXt').value = "α : " + AngleToString(MousePositionStar.X,true);
@@ -683,7 +716,7 @@ function mousemoveCanv(e){
 }
 //поиск в каталоге имени звезды
 function SelectStars(element,index,array){
-    var length = 0.83/(Scale); 
+    var length = 0.83/(Scale);
     // на Scale == 1, 0.83 градуса
     if(   (element[0] >= MousePositionStar.X - length)
         &&(element[0] <= MousePositionStar.X + length)
@@ -742,10 +775,32 @@ function targetSelect(e){
     }
     var D = {X:e.pageX - pos.x-1,Y:0,Z:e.pageY - pos.y-1};
     var D1 = ViewPosition.unRotate(D);
-    var P = ViewPosition.decartToPolar(D1);   
-	TargetPosition.SetPosition(P.a * radToGrad,P.d * radToGrad);
+    var P = ViewPosition.decartToPolar(D1);
+    TargetPosition.SetPosition(P.a * radToGrad,P.d * radToGrad);
     updateTargetForm();
+    updateTargetCrosPos();
     if(!DrawingStar) StarView.updateStars();
+}
+function updateTargetCrosPos(){
+    var aR = TargetPosition.X * gradToRad;
+    var dR = TargetPosition.Y * gradToRad;
+    var azR = LocalStarTime * 15 * gradToRad;
+    var dzR = GeoPosition.Lat * gradToRad;
+    var L = Math.acos(Math.sin(dzR)*Math.sin(dR)+Math.cos(dzR)*Math.cos(dR)*Math.cos(azR-aR));        
+    var angleA = 90 - LocalStarTime * 15 + TargetPosition.X;
+    var angleD = 90 - GeoPosition.Lat + TargetPosition.Y;
+    if(angleA < 0) angleA += 360;
+    if(angleA >= 360) angleA -= 360;
+    var Visible = (L <= Math.PI/2) && (angleA > 0 && angleA < 180) && (angleD > 0 && angleD < 180);
+    //document.getElementById('RealA').value = Visible?angleA.toFixed(2):"not visible";
+    //document.getElementById('RealD').value = Visible?angleD.toFixed(2):"not visible";   
+    var color = Visible?"#00DD00":"#FF0000";    
+    document.getElementById('VisRA').style.color = color;
+    document.getElementById('VisDE').style.color = color;    
+    AbsolutePosition.a = angleA;
+    AbsolutePosition.d = angleD;
+    AbsolutePosition.visible = Visible;
+    if(!Loading) document.getElementById('gotobutton').disabled = !Visible;
 }
 function updateTargetForm(){
     var RAobj = AngleToObj(TargetPosition.X,true);
@@ -759,8 +814,10 @@ function updateTargetForm(){
     document.getElementById('DEs').value = DEobj.S.toFixed(2);
 }
 function GoTo(){
-	document.getElementById('gotobutton').disabled = true;
-    newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"ang0=" + TargetPosition.X + "&ang1="+TargetPosition.Y);
+    if(AbsolutePosition.visible && !Loading){
+        document.getElementById('gotobutton').disabled = true;
+        newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"ang0="+AbsolutePosition.a + "&ang1="+AbsolutePosition.d);
+    }
 }
 function GoToView(){
     ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
@@ -827,7 +884,7 @@ function updateTarget(id){
         document.getElementById('DEm').value = Bobj.M;
         document.getElementById('DEh').value = Bobj.H;
     }
-	TargetPosition.SetPosition(+objToAngle(Aobj, true),+objToAngle(Bobj, false));
+    TargetPosition.SetPosition(+objToAngle(Aobj, true),+objToAngle(Bobj, false));
     if(!DrawingStar) StarView.updateStars();
 }
 
@@ -973,6 +1030,7 @@ function frac(X) {
 function JulDay (d, m, y, u){
     if (y<1900) y=y+1900
     if (m<=2) {m=m+12; y=y-1}
+    if (m<=2) {m=m+12; y=y-1}
     JD =  Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d - 13 -1524.5 + u/24.0;
     return JD;
 }
@@ -993,24 +1051,24 @@ function HoursMinutesSeconds(time) {
 }
 
 function CalculateNet(){
-        var i = 0;
-        var j = 0;
-        var Net = [
-            [{X:0,Y:0,Z:100}],
-            //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}]
-        ];
-        for(j=0;j<19;j++){
-            Net.push([]);
-            var R = 100*Math.cos((j-9)*10*gradToRad); // радиус окружности
-            var Z = 100*Math.sin((j-9)*10*gradToRad);
-            for(i=0;i<24;i++){
-                Net[j].push({X:0,Y:0,Z:0,D:{X:0,Y:0}});
-                Net[j][i].X = R*Math.cos(i*15*gradToRad);
-                Net[j][i].Y = R*Math.sin(i*15*gradToRad);
-                Net[j][i].Z = Z;
-            }
+    var i = 0;
+    var j = 0;
+    var Net = [
+        [{X:0,Y:0,Z:100}],
+        //[{X:0,Y:0,Z:0},{X:0,Y:0,Z:0}]
+    ];
+    for(j=0;j<19;j++){
+        Net.push([]);
+        var R = 100*Math.cos((j-9)*10*gradToRad); // радиус окружности
+        var Z = 100*Math.sin((j-9)*10*gradToRad);
+        for(i=0;i<24;i++){
+            Net[j].push({X:0,Y:0,Z:0,D:{X:0,Y:0}});
+            Net[j][i].X = R*Math.cos(i*15*gradToRad);
+            Net[j][i].Y = R*Math.sin(i*15*gradToRad);
+            Net[j][i].Z = Z;
         }
-        return Net;
     }
+    return Net;
+}
 
-
+// realangle = 90 - (LST - a) = 90 - LST + a;
