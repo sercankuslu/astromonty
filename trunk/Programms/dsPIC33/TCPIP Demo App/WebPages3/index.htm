@@ -45,14 +45,14 @@
             <div id="ReqTarget">
                 <label>Координаты цели</label><br />
                 <form method="post" action="index.htm" name="run">                    
-                    <output id="VisRA">&bull;</output>
+                    <output id="VisRA" style="margin-left: 15px;">&bull;</output>
                     <label>α :</label>
                     <span class="targetRA" id="tgRA">
                         <input type="text" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">h
                         <input type="text" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">'
                         <input type="text" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);" style="width:40px;">"
                     </span><br /> 
-                    <output id="VisDE">&bull;</output>
+                    <output id="VisDE" style="margin-left: 15px;">&bull;</output>
                     <label>δ : </label>
                     <span class="targetRA" id="tgDE">
                         <input type="text" name="DE_h" id="DEh" value="00" min="-90" max="90" onchange="updateTarget(2);">°
@@ -73,7 +73,7 @@
                     <label>Звездная величина</label> <br />
                     <input class="ControlScale" id="starMagn" type="range" value="9" min="0" max="9" step="0,1" onchange="updateMagn(1);" >
                     <input class="ControlScaleN" type="number" id="starMagnN" value="9" min="0" max="9" onchange="updateMagn(2);">
-                    <br /><input id="followbox" class="chbox" type="checkbox" onclick="enableFollow();">Следить за телескопом<br />
+                    <br /><input id="followbox" class="chbox" type="checkbox" onclick="enableFollow();"><span>Следить</span><br />
                 </form>
             </div>
         </div>
@@ -126,6 +126,8 @@ function updateStatus(xmlData) {
         if(i==0) {
             if(angle){
                 correctAngle = angle - 90 + LocalStarTime * 15;
+				if(correctAngle>=360) correctAngle-=360;
+				if(correctAngle<0) correctAngle+=360;
                 document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
                 CurrentPosition.X = correctAngle;
                 needUpdateStar = true;
@@ -141,7 +143,7 @@ function updateStatus(xmlData) {
     }
     for(i = 0; i < 2; i++ ){
         var angleRun = +getXMLValue(xmlData, 'angR' + i);
-        switch angleRun {
+        switch (angleRun) {
             case 0: color = "#FF0000"; break;
             case 1: color = "#00FF00"; break;
             default: color = "#777777"; break;

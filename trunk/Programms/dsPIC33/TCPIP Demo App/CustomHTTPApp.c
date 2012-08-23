@@ -621,8 +621,6 @@ ConfigFailure:
 
 static HTTP_IO_RESULT HTTPPostAngle(void)
 {	
-	BYTE *ptr;
-	BYTE i;
     float A1;
     float A2;
     float A3;
@@ -649,16 +647,16 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
 			
 		// Parse the value that was read
 		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
-		{// 
+		{// 0.004166667
 			if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
-    			GoToCmd(&rr1, 0.0, A1 * Grad_to_Rad, 0);
+    			GoToCmd(&rr1, 0.004166667 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
 			}else
 			goto ConfigFailure;
 		}
 		else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
 		{// 
 			if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
-    			GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, 0);
+    			GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
 			}else
 				goto ConfigFailure;
 		}
@@ -1969,12 +1967,12 @@ void HTTPPrint_ang(WORD i)
 {
 	char buf[16];
 	sprintf(buf,"%f",GetAngle(i));
-	TCPPutString(sktHTTP,buf);
+	TCPPutString(sktHTTP,(BYTE*)buf);
 }
 void HTTPPrint_angR(WORD i)
 {
     char buf[4];
 	sprintf(buf,"%d",GetStatus(i));
-	TCPPutString(sktHTTP,buf);
+	TCPPutString(sktHTTP,(BYTE*)buf);
 }
 #endif

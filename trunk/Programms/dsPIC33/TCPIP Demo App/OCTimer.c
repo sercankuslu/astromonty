@@ -1147,6 +1147,10 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
         //if(Trun < 0.0) Trun = -Trun;
         {
             double Xrun = rr->VMax * Trun;
+            if(rr->RunState == ST_RUN){
+	            rr->CacheCmdCounter = 0;
+	            rr->DataCount = 0;
+            }
             PushCmdToQueue(rr, ST_ACCELERATE, VendA, 180.0 * Grad_to_Rad, Direction);
             PushCmdToQueue(rr, ST_RUN, VendA,  Xrun, Direction);
             PushCmdToQueue(rr, ST_DECELERATE, VendD, 180.0 * Grad_to_Rad, Direction);
