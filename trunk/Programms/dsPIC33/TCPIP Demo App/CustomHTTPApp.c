@@ -1971,4 +1971,10 @@ void HTTPPrint_ang(WORD i)
 	sprintf(buf,"%f",GetAngle(i));
 	TCPPutString(sktHTTP,buf);
 }
+void HTTPPrint_angR(WORD i)
+{
+    char buf[4];
+	sprintf(buf,"%d",GetStatus(i));
+	TCPPutString(sktHTTP,buf);
+}
 #endif

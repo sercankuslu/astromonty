@@ -213,28 +213,28 @@ typedef struct __attribute__((__packed__))
 
 #ifdef __C30__
 
-#define MS1_Tris TRISGbits.TRISG12 // выход MS1
-#define MS2_Tris TRISGbits.TRISG13 // выход MS2
-#define SLEEP_Tris TRISGbits.TRISG14 // выход SLEEP
-#define RESET_Tris TRISGbits.TRISG15 // выход RESET
-#define MS1 LATGbits.LATG12 // выход MS1
-#define MS2 LATGbits.LATG13 // выход MS2
-#define SLEEP LATGbits.LATG14 // выход SLEEP
-#define RESET LATGbits.LATG15 // выход RESET
+#define MS1_Tris            TRISGbits.TRISG12   // выход MS1
+#define MS2_Tris            TRISGbits.TRISG13   // выход MS2
+#define SLEEP_Tris          TRISGbits.TRISG14   // выход SLEEP
+#define RESET_Tris          TRISGbits.TRISG15   // выход RESET
+#define MS1                 LATGbits.LATG12     // выход MS1
+#define MS2                 LATGbits.LATG13     // выход MS2
+#define SLEEP               LATGbits.LATG14     // выход SLEEP
+#define RESET               LATGbits.LATG15     // выход RESET
 
 //описание выводов port1
-#define PORT1_NULL_Tris TRISAbits.TRISA0 // вход NULL
-#define PORT1_POS_Tris TRISDbits.TRISD8 // вход POS
-#define PORT1_POS2_Tris TRISEbits.TRISE0 // вход POS2
-#define PORT1_NULL PORTAbits.RA0 // вход NULL
-#define PORT1_POS PORTDbits.RD8 // вход POS
-#define PORT1_POS2 PORTEbits.RE0 // вход POS2
-#define PORT1_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
-#define PORT1_DIR_Tris TRISBbits.TRISB8 // выход DIR
-#define PORT1_STEP_Tris TRISDbits.TRISD0 // выход STEP
-#define PORT1_ENABLE LATAbits.LATA9 // выход ENABLE
-#define PORT1_DIR LATBbits.LATB8 // выход DIR
-#define PORT1_STEP LATDbits.LATD0 // выход STEP
+#define PORT1_NULL_Tris     TRISAbits.TRISA0    // вход NULL
+#define PORT1_POS_Tris      TRISDbits.TRISD8    // вход POS
+#define PORT1_POS2_Tris     TRISEbits.TRISE0    // вход POS2
+#define PORT1_NULL          PORTAbits.RA0       // вход NULL
+#define PORT1_POS           PORTDbits.RD8       // вход POS
+#define PORT1_POS2          PORTEbits.RE0       // вход POS2
+#define PORT1_ENABLE_Tris   TRISAbits.TRISA9    // выход ENABLE
+#define PORT1_DIR_Tris      TRISBbits.TRISB8    // выход DIR
+#define PORT1_STEP_Tris     TRISDbits.TRISD0    // выход STEP
+#define PORT1_ENABLE        LATAbits.LATA9      // выход ENABLE
+#define PORT1_DIR           LATBbits.LATB8      // выход DIR
+#define PORT1_STEP          LATDbits.LATD0      // выход STEP
 
 //инициализация выводов port2
 #define PORT2_NULL_Tris TRISAbits.TRISA1 // вход NULL
@@ -345,6 +345,7 @@ int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
+int GetStatus(WORD n);
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
 double LM_Sidereal_Time (double jd, double longitude);
 #endif //__OC_TIMER_H_

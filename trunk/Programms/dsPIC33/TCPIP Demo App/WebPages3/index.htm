@@ -1,147 +1,155 @@
 ﻿<!DOCTYPE html>
 <html lang="ru">
   <head>
-	<meta charset="utf-8">	
-	<link rel="stylesheet" type="text/css" href="style/style.css" />	
-	<script src="jquery.js"></script>
-	<script src="stars/Tycho2.js" type="text/javascript"></script>
-	<script src="astro.js" type="text/javascript"></script>	
-	<script src="mchp.js" type="text/javascript"></script>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="style/style.css" />
+    <script src="jquery.js"></script>
+    <script src="stars/Tycho2.js" type="text/javascript"></script>
+    <script src="astro.js" type="text/javascript"></script>
+    <script src="mchp.js" type="text/javascript"></script>
 
 </head>
 <body onload="loadCanvas();">
-	<div id="shadow-one"><div id="shadow-two"><div id="shadow-three"><div id="shadow-four">
-	<div id="page">
-	<div style="padding:0 0 5px 5px"><img src="mchp.gif" alt="Microchip" /></div>
+    <div id="shadow-one"><div id="shadow-two"><div id="shadow-three"><div id="shadow-four">
+    <div id="page">
+    <div style="padding:0 0 5px 5px"><img src="mchp.gif" alt="Microchip" /></div>
 
-	<div id="title"><div class="right">TCP/IP Stack Demo Application</div><span id="hello">&nbsp;</span></div>
-	<div id="menu">
-		<a href="/index.htm">Overview</a>
-		<a href="/auth.htm">Authentication</a>
-		<a href="/cookies.htm">Cookies</a>
-		<a href="/upload.htm">File Uploads</a>
-		<a href="/protect/config.htm">Network Configuration</a>
-	</div>	
-	
-	<div id="leftboth">
-		<div id="status">
-			<div id="loading" style="display:none">Error:<br />Connection to demo board was lost.</div>
-			<div id="display">
-				<label>UTC:</label><br /><output id="UTCTime">0</output><br />
-				<!--label>Eq. of Time:</label><br /><output id="EqEq">0</output><br /-->
-				<label>Latitude :</label><br /><output id="Lt">55° 47' 29.17"</output><br />
-				<label>Longitude:</label><br /><output id="Lg">37° 36' 10.08"</output><br />
-				<label>LST:</label><br /><output id="LST">0</output>
-			</div>	
-		</div>
-		<div id="status">		
-			<div id="display">
-				<label>Telescope coordinate:</label><br />
-				<label>α :</label><output id="ang0">+5° 36' 12.72"</output><br />
-				<label>δ :</label><output id="ang1">-1° 12' 3.60"</output>
-			</div>	
-		</div>
-		<div id="target">	
-			<div id="ReqTarget">
-				<label>Target coordinate</label>
-				<form method="post" action="index.htm" name="run">
-					<p><label>α :</label>
-					<span class="targetRA">
-						<input type="text" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">h
-						<input type="text" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">'
-						<input type="text" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);" style="width:40px;">" 
-					</span><br />
-					<label>δ : </label>
-					<span class="targetRA">
-						<input type="text" name="DE_h" id="DEh" value="00" min="-90" max="90" onchange="updateTarget(2);">°
-						<input type="text" name="DE_m" id="DEm" value="00" min="-1" max="60" onchange="updateTarget(2);">'
-						<input type="text" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);"style="width:40px;">"
-					</span></p>
-					<input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
-					<input id="followbox" class="chbox" type="checkbox" onclick="enableFollow();">Follow
-					<input type="button" value="View position" onclick="GoToView();">
-					
-				</form>
-			</div>
-		</div>	
-		<div id="control">	
-			<div id="dControl">				
-				<form>		
-					<label>Scale</label> <br />
-					<input class="ControlScale" id="starScale" type="range" value="25" min="2" max="1000" step="1" onchange="updateScale(1);" >
-					<input class="ControlScaleN" type="number" id="starScaleN" value="25" min="2" max="1000" onchange="updateScale(2);">
-					<label>Magnitude</label> <br />
-					<input class="ControlScale" id="starMagn" type="range" value="9" min="0" max="9" step="0,1" onchange="updateMagn(1);" >
-					<input class="ControlScaleN" type="number" id="starMagnN" value="9" min="0" max="9" onchange="updateMagn(2);">
-				</form>
-			</div>
-		</div>
-	</div>	
-	<div style="width:600;margin-left:auto;margin-right:auto;" id="CanvasBox">
-		<canvas id="my_canvas" width="580" height="580"></canvas>
-	</div>
-	<div style="overflow: auto;">
-		<div id="StarCounter"></div>
-		<div style="clear: both;"></div>
-	</div>
+    <div id="title"><div class="right">Управление монтировкой</div><span id="hello">&nbsp;</span></div>
+    <div id="menu">
+        <a href="/index.htm">Обзор</a>
+        <a href="/auth.htm">Идентификация</a>
+        <!--a href="/cookies.htm">Cookies</a-->
+        <!--a href="/upload.htm">File Uploads</a-->
+        <a href="/protect/config.htm">Настройка сети</a>
+    </div>
+
+    <div id="leftboth">
+        <div id="status">
+            <div id="loading" style="display:none">Ошибка:<br />Подключение потеряно.</div>
+            <div id="display">
+                <label>UTC:</label><br /><output id="UTCTime">0</output><br />
+                <!--label>Eq. of Time:</label><br /><output id="EqEq">0</output><br /-->
+                <label>Широта :</label><br /><output id="Lt">55° 47' 29.17"</output><br />
+                <label>Долгота:</label><br /><output id="Lg">37° 36' 10.08"</output><br />
+                <label>LST:</label><br /><output id="LST">0</output>
+            </div>
+        </div>
+        <div id="status">
+            <div id="display">
+                <label>Координаты телескопа:</label><br />
+                <output id="angR0">&bull;</output><label> α :</label><output id="ang0">+5° 36' 12.72"</output><br />
+                <output id="angR1">&bull;</output><label> δ :</label><output id="ang1">-1° 12' 3.60"</output>
+            </div>
+        </div>
+        <div id="target">
+            <div id="ReqTarget">
+                <label>Координаты цели</label><br />
+                <form method="post" action="index.htm" name="run">                    
+                    <output id="VisRA">&bull;</output>
+                    <label>α :</label>
+                    <span class="targetRA" id="tgRA">
+                        <input type="text" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">h
+                        <input type="text" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">'
+                        <input type="text" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);" style="width:40px;">"
+                    </span><br /> 
+                    <output id="VisDE">&bull;</output>
+                    <label>δ : </label>
+                    <span class="targetRA" id="tgDE">
+                        <input type="text" name="DE_h" id="DEh" value="00" min="-90" max="90" onchange="updateTarget(2);">°
+                        <input type="text" name="DE_m" id="DEm" value="00" min="-1" max="60" onchange="updateTarget(2);">'
+                        <input type="text" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);"style="width:40px;">"
+                    </span><br />
+                    <input id="clock" class="chbox" type="checkbox" onclick="enableHM();" checked="true">Часовое ведение<br />
+                    <input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
+                </form>
+            </div>
+        </div>
+        <div id="control">
+            <div id="dControl">
+                <form>
+                    <label>Масштаб</label> <br />
+                    <input class="ControlScale" id="starScale" type="range" value="25" min="2" max="1000" step="1" onchange="updateScale(1);" >
+                    <input class="ControlScaleN" type="number" id="starScaleN" value="25" min="2" max="1000" onchange="updateScale(2);">
+                    <label>Звездная величина</label> <br />
+                    <input class="ControlScale" id="starMagn" type="range" value="9" min="0" max="9" step="0,1" onchange="updateMagn(1);" >
+                    <input class="ControlScaleN" type="number" id="starMagnN" value="9" min="0" max="9" onchange="updateMagn(2);">
+                    <br /><input id="followbox" class="chbox" type="checkbox" onclick="enableFollow();">Следить за телескопом<br />
+                </form>
+            </div>
+        </div>
+    </div>
+    <div style="width:600;margin-left:auto;margin-right:auto;" id="CanvasBox">
+        <canvas id="my_canvas" width="580" height="580"></canvas>
+    </div>
+    <div style="overflow: auto;">
+        <div id="StarCounter"></div>
+        <div style="clear: both;"></div>
+    </div>
     <!--X:<output id="X">55° 47' 29.17"</output>
     Y:<output id="Y">55° 47' 29.17"</output>
     Z:<output id="Z">55° 47' 29.17"</output>-->
-	<div style="clear: both;"></div>
+    <div style="clear: both;"></div>
 <div id="footer">Copyright &copy; 2010 Microchip Technology, Inc.</div>
 
 </div></div></div></div></div>
 <script type="text/javascript">
-	// подсказка с координатами
-	new Tooltip({
-		elem: $('#my_canvas'),
-		html: "<output id=\"outXt\"></output><br />" + 
-		"<output id=\"outYt\"></output>" + 
-		"<div id=\"StarInfo\"> Found star:<br />"+
-		"<output id=\"outTYC\"></output><br />" + 
-		"<output id=\"outSa\"></output><br />" + 
-		"<output id=\"outSg\"></output></div>"
-	});
-	<!--
+    // подсказка с координатами
+    new Tooltip({
+        elem: $('#my_canvas'),
+        html: "<output id=\"outXt\"></output><br />" +
+        "<output id=\"outYt\"></output>" +
+        "<div id=\"StarInfo\"> Found star:<br />"+
+        "<output id=\"outTYC\"></output><br />" +
+        "<output id=\"outSa\"></output><br />" +
+        "<output id=\"outSg\"></output></div>"
+    });
+    <!--
 // Parses the xmlResponse from status.xml and updates the status box
 function updateStatus(xmlData) {
-	var mainstat = document.getElementById('display').style.display;
-	var loadstat = document.getElementById('loading').style.display;	
-	// Check if a timeout occurred
-	if(!xmlData)
-	{
-		mainstat = 'none';
-		loadstat = 'inline';
-		return;
-	}
+    var mainstat = document.getElementById('display').style.display;
+    var loadstat = document.getElementById('loading').style.display;
+    // Check if a timeout occurred
+    if(!xmlData)
+    {
+        mainstat = 'none';
+        loadstat = 'inline';
+        return;
+    }
 
-	// Make sure we're displaying the status display
-	mainstat = 'inline';
-	loadstat = 'none';
-	var needUpdateStar = false;	
-	// 55.791437,37.6028	
-	for(i = 0; i < 2; i++){
-		var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
-		if(i==0) {
-			if(angle){				
-				if(angle<0) angle += 360;
-				if(angle>=360) angle -= 360;
-				document.getElementById('ang' + i).innerHTML = AngleToString(angle,true);
-				CurrentPosition.X = angle;
-				needUpdateStar = true;
-			} 
-		} else if(i==1){
-			if(angle){			
-				correctAngle = angle;
-				document.getElementById('ang' + i).innerHTML = AngleToString(angle,false);
-				CurrentPosition.Y = angle
-				needUpdateStar = true;
-			} 
-		}
-	}
-	
-	if(needUpdateStar)
-		if(!DrawingStar) StarView.updateStars();	
+    // Make sure we're displaying the status display
+    mainstat = 'inline';
+    loadstat = 'none';
+    var needUpdateStar = false;
+    // 55.791437,37.6028
+    for(i = 0; i < 2; i++){
+        var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
+        if(i==0) {
+            if(angle){
+                correctAngle = angle - 90 + LocalStarTime * 15;
+                document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
+                CurrentPosition.X = correctAngle;
+                needUpdateStar = true;
+            }
+        } else if(i==1){
+            if(angle){
+                correctAngle = angle - 90 + GeoPosition.Lat;
+                document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,false);
+                CurrentPosition.Y = correctAngle
+                needUpdateStar = true;
+            }
+        }
+    }
+    for(i = 0; i < 2; i++ ){
+        var angleRun = +getXMLValue(xmlData, 'angR' + i);
+        switch angleRun {
+            case 0: color = "#FF0000"; break;
+            case 1: color = "#00FF00"; break;
+            default: color = "#777777"; break;
+        }
+        document.getElementById('angR' + i).style.color = color;
+    }
+    if(needUpdateStar)
+        if(!DrawingStar) StarView.updateStars();
 }
 setTimeout("newAJAXCommand('status.xml', updateStatus, true)",1000);
 
