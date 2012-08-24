@@ -125,6 +125,21 @@ function updateStatus(xmlData) {
         var angle = +getXMLValue(xmlData, 'ang' + i)*180/Math.PI;
         if(i==0) {
             if(angle){
+                var now = new Date();
+                var utDay = now.getUTCDate();
+                var utMonth = now.getUTCMonth()+1;
+                var utYear = now.getUTCFullYear();
+                var utHours = now.getUTCHours();
+                var utMinutes = now.getUTCMinutes();
+                var utSeconds = now.getUTCSeconds();
+                var utmSeconds = now.getUTCMilliseconds();
+                if (utYear<1900) utYear=utYear+1900;
+
+                UT = utHours + (utMinutes + ( utSeconds + utmSeconds/1000)/60)/60;
+
+                var JD = JulDay (utDay, utMonth, utYear, UT);
+                var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
+
                 correctAngle = angle - 90 + LocalStarTime * 15;
 				if(correctAngle>=360) correctAngle-=360;
 				if(correctAngle<0) correctAngle+=360;

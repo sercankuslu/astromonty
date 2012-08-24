@@ -47,6 +47,7 @@ BOOL IsDisableOC(BYTE oc);
 int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak);
 int ProcessTimer(BYTE id, RR * rr);
 void CalculateParams(RR * rr);
+int BreakCurrentCmd(RR * rr);
 
 double frac(double X);
 double GM_Sidereal_Time (double jd);
@@ -1138,7 +1139,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
         CalculateBreakParam(rr, ST_ACCELERATE, Direction, rr->LastCmdV, &VendA, &Xa, &Ta, &Xbreak);
         VendD = VTarget;
         CalculateBreakParam(rr, ST_DECELERATE, Direction, VendA, &VendD, &Xd, &Td, &Xbreak);
-        T0 = ((double)(Tick - TickGet()))* 0.00000025;
+        //T0 = ((double)(Tick - TickGet()))* 0.00000025;
         if(Direction){
             Trun = -(XTarget - rr->LastCmdX - Xa - Xd + VTarget * (T0 + Ta + Td) ) /(VTarget - rr->VMax);
         } else {
@@ -1147,22 +1148,33 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
         //if(Trun < 0.0) Trun = -Trun;
         {
             double Xrun = rr->VMax * Trun;
-            if(rr->RunState == ST_RUN){
-	            rr->CacheCmdCounter = 0;
-	            rr->DataCount = 0;
-            }
-            PushCmdToQueue(rr, ST_ACCELERATE, VendA, 180.0 * Grad_to_Rad, Direction);
+            //BreakCurrentCmd(rr);
+            PushCmdToQueue(rr, ST_ACCELERATE, VendA, PI , Direction);
             PushCmdToQueue(rr, ST_RUN, VendA,  Xrun, Direction);
-            PushCmdToQueue(rr, ST_DECELERATE, VendD, 180.0 * Grad_to_Rad, Direction);
+            PushCmdToQueue(rr, ST_DECELERATE, VendD, PI, Direction);
             if(VTarget != 0.0){
-                PushCmdToQueue(rr, ST_RUN, VTarget,  180.0 * Grad_to_Rad, Direction);
+                PushCmdToQueue(rr, ST_RUN, VTarget,  PI, Direction);
             }
             PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
     }
     return 0;
 }
-double GetAngle(WORD n){
+int BreakCurrentCmd(RR * rr)
+{
+    if(rr->RunState == ST_RUN){
+        DisableOC(rr->Index);
+        rr->RunState = ST_STOP;
+        rr->NextWriteTo = rr->NextReadFrom + 1;
+        rr->DataCount = 0;
+        rr->LastCmdX = rr->XPosition * rr->dx;        
+        rr->DataCount = 0;
+        CacheNextCmd(rr);
+    }
+    return 0;
+}
+double GetAngle(WORD n)
+{
     double X = 0.0;
     switch(n){
         case 0: X = rr1.XPosition * rr1.dx;
