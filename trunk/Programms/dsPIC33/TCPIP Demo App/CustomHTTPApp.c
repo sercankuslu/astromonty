@@ -649,7 +649,7 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
 		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
 		{// 0.004166667
 			if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
-    			GoToCmd(&rr1, 0.004166667 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
+    			GoToCmd(&rr1, -0.1 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
 			}else
 			goto ConfigFailure;
 		}

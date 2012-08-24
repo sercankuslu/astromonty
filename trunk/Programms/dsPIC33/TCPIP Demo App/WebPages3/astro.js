@@ -278,9 +278,10 @@ function UpdateTime(){
     var utHours = now.getUTCHours();
     var utMinutes = now.getUTCMinutes();
     var utSeconds = now.getUTCSeconds();
+    var utmSeconds = now.getUTCMilliseconds();
     if (utYear<1900) utYear=utYear+1900;
 
-    UT = utHours + utMinutes/60 + utSeconds/3600;
+    UT = utHours + (utMinutes + ( utSeconds + utmSeconds/1000)/60)/60;
 
     var JD = JulDay (utDay, utMonth, utYear, UT);
     var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);

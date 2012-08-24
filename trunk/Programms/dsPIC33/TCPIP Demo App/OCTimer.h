@@ -201,7 +201,7 @@ typedef struct RR{
 
 typedef struct __attribute__((__packed__))
 {
-	DWORD Timestamp;									// метка времени UTC
+    DWORD Timestamp;									// метка времени UTC
     LONG XPosition;                  					// текущий номер шага TODO: поддержать переключение скоростей
     WORD uStepPerStep;                                  // текущее количество микрошагов на шаг (16)
 }RRRAMSave;
