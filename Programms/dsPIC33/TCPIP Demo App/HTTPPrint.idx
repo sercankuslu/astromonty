@@ -1,7 +1,7 @@
 ~inc:header.inc
 +hellomsg
 +inc:footer.inc
-cookiename
++cookiename
 
 builddate
 led(7)

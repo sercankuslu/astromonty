@@ -19,6 +19,7 @@ extern BYTE curHTTPID;
 
 void HTTPPrint(DWORD callbackID);
 void HTTPPrint_hellomsg(void);
+void HTTPPrint_cookiename(void);
 void HTTPPrint_led(WORD);
 void HTTPPrint_uploadedmd5(void);
 void HTTPPrint_status_fail(void);
@@ -44,6 +45,9 @@ void HTTPPrint(DWORD callbackID)
 			break;
         case 0x00000002:
 			HTTPIncFile((ROM BYTE*)"footer.inc");
+			break;
+        case 0x00000003:
+			HTTPPrint_cookiename();
 			break;
         case 0x0000000c:
 			HTTPPrint_led(1);

@@ -290,6 +290,7 @@ int TmrInit(BYTE Num)
 
 int InitRR(RR * rr)
 {   //AppConfig
+#ifdef __C30__
     rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
     rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
     rr->Length = AppConfig.RRConfig[rr->Index].Length;
@@ -297,6 +298,19 @@ int InitRR(RR * rr)
     rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
     rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
     rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
+    rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
+    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
+#else
+    rr->Mass = MY_DEFAULT_RR_PARA_Mass;
+    rr->Radius = MY_DEFAULT_RR_PARA_Radius;
+    rr->Length = MY_DEFAULT_RR_PARA_Length;
+    rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
+    rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
+    rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
+    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
+    rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
+    rr->XPosition = 0;
+#endif
     rr->Vend = 0.0;
     rr->deltaX = 0.0;
     rr->DataCount = 0;
@@ -315,13 +329,13 @@ int InitRR(RR * rr)
     rr->CmdCount = 0;
     rr->CacheDir = 1;
     rr->RunDir = 1;
-    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
+    
     rr->NextCacheCmd = 0;
     rr->NextWriteCmd = 0;
     rr->Interval = 32768;
     rr->LastCmdV = 0.0;
     rr->LastCmdX = 0.0;
-    rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
+    
     CalculateParams(rr);
 
     return 0;
@@ -330,8 +344,13 @@ void CalculateParams(RR * rr)
 {
     double I;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
+#ifdef __C30__
     rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
     rr->B = AppConfig.RRConfig[rr->Index].B / I;
+#else
+    rr->K = (MY_DEFAULT_RR_PARA_K)/I;
+    rr->B = MY_DEFAULT_RR_PARA_B / I;
+#endif
     rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в радианах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
@@ -682,9 +701,9 @@ int ProcessOC(RR * rr)
 
     SetOC(rr->Index, rr->T.word.LW);
     Timer = GetBigTmrValue(rr->TmrId);
-    if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){
+    if((Timer <= rr->T.Val)&&(Timer + 0x00010000 >= rr->T.Val)){
         EnableOC(rr->Index);
-    }
+    } 
 
     if(rr->RunDir > 0){
         rr->XPosition++;
@@ -1104,6 +1123,7 @@ int JDToGDate(double JD, DateTime * GDate )
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
     BYTE Direction = 1;
+	BYTE TargetDirection = 1;
     LONG Xbreak;
     double Xa = 180.0 * Grad_to_Rad;
     double Ta = 0.0;
@@ -1113,7 +1133,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     double Trun = 0.0;
     double VendA = 0.0;
     double VendD = 0.0;
-
+	BreakCurrentCmd(rr);
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
     //    => вычисляем сумму разгон+ торможение + движение по линейному закону
     // 2. меньше
@@ -1122,7 +1142,8 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     // TODO: если двигаемся, нужно остановиться
     // TODO: выяснить направление движения
     // TODO: определить модель привода ( догоняем цель или ждем )
-
+    VendD = VTarget;
+	
     if(rr->LastCmdX == XTarget) return 0;
     if(rr->LastCmdX < XTarget) {
         Direction = 1;
@@ -1137,7 +1158,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
         Xd = Xa;
         VendA = rr->VMax;
         CalculateBreakParam(rr, ST_ACCELERATE, Direction, rr->LastCmdV, &VendA, &Xa, &Ta, &Xbreak);
-        VendD = VTarget;
+        
         CalculateBreakParam(rr, ST_DECELERATE, Direction, VendA, &VendD, &Xd, &Td, &Xbreak);
         //T0 = ((double)(Tick - TickGet()))* 0.00000025;
         if(Direction){
@@ -1147,13 +1168,20 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
         }
         //if(Trun < 0.0) Trun = -Trun;
         {
-            double Xrun = rr->VMax * Trun;
-            //BreakCurrentCmd(rr);
+            double Xrun = rr->VMax * Trun;            
             PushCmdToQueue(rr, ST_ACCELERATE, VendA, PI , Direction);
             PushCmdToQueue(rr, ST_RUN, VendA,  Xrun, Direction);
-            PushCmdToQueue(rr, ST_DECELERATE, VendD, PI, Direction);
+            PushCmdToQueue(rr, ST_DECELERATE, 0.0, PI, Direction);
             if(VTarget != 0.0){
-                PushCmdToQueue(rr, ST_RUN, VTarget,  PI, Direction);
+	            if(VTarget>=0){
+					TargetDirection = 1;		
+				} else {
+					TargetDirection = 0;
+					VTarget = -VTarget;
+				}
+	            PushCmdToQueue(rr, ST_ACCELERATE, VTarget, PI , TargetDirection);
+                PushCmdToQueue(rr, ST_RUN, VTarget,  PI, TargetDirection);
+                PushCmdToQueue(rr, ST_DECELERATE, 0.0, PI, TargetDirection);
             }
             PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
@@ -1163,13 +1191,19 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 int BreakCurrentCmd(RR * rr)
 {
     if(rr->RunState == ST_RUN){
-        DisableOC(rr->Index);
-        rr->RunState = ST_STOP;
-        rr->NextWriteTo = rr->NextReadFrom + 1;
-        rr->DataCount = 0;
-        rr->LastCmdX = rr->XPosition * rr->dx;        
-        rr->DataCount = 0;
-        CacheNextCmd(rr);
+	    RRConfigRAM.RRSave[rr->Index].XPosition = rr->XPosition;
+	    InitRR(rr);
+		/*rr->CacheState = ST_STOP;
+		rr->RunState = ST_STOP;
+		rr->DataCount = 0; 
+		rr->NextWriteTo = 0;
+		rr->NextReadFrom = 0;
+		rr->NextCacheCmd = 0;
+		rr->NextWriteCmd = 0;
+		rr->LastCmdV = 0.0;
+        rr->LastCmdX = rr->XPosition * rr->dx;
+        rr->XCachePos = rr->XPosition;
+        */
     }
     return 0;
 }

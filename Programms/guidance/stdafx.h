@@ -129,6 +129,19 @@ typedef union WORD_VAL
 } WORD_VAL;
 #endif
 
+#define MY_DEFAULT_RR_PARA_K			(-0.257809479)
+#define MY_DEFAULT_RR_PARA_B			(0.205858823)
+#define MY_DEFAULT_RR_PARA_Mass			(500.0)
+#define MY_DEFAULT_RR_PARA_Radius		(0.5)
+#define MY_DEFAULT_RR_PARA_Length		(3.0)
+#define MY_DEFAULT_RR_PARA_Rdct			(360.0)
+#define MY_DEFAULT_RR_PARA_TimerStep	(0.0000002)
+#define MY_DEFAULT_RR_PARA_SPT			(200ul)
+#define MY_DEFAULT_RR_PARA_uSPS			(16ul)
+#define MY_DEFAULT_RR_PARA_XMinPos		(0ul)
+#define MY_DEFAULT_RR_PARA_XMaxPos		(576000ul)
+#define MY_DEFAULT_RR_PARA_XParkPos		(0ul)
+#define MY_DEFAULT_RR_PARA_VMax			(10.0)
 
 #if !defined _APP_CONFIG_TYPE
 #define _APP_CONFIG_TYPE
