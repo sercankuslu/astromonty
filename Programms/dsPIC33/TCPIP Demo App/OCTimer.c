@@ -99,17 +99,17 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
 {
     IFS1bits.U2RXIF = 0;
-    //Control(&rr1);
+    Control(&rr1);
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2TXInterrupt( void )
 {
     IFS1bits.U2TXIF = 0;
-    //Control(&rr2);
+    Control(&rr2);
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _U1RXInterrupt( void )
 {
     IFS0bits.U1RXIF = 0;
-    //Control(&rr3);
+    Control(&rr3);
 }
 #else
     WORD TMR2 = 0;
@@ -204,9 +204,9 @@ int OCInit(void)
         M2.Val = 0;
         M3.Val = 0;
 #ifdef __C30__
-        //IFS1bits.U2RXIF = 1;
-        //IFS1bits.U2TXIF = 1;
-        //IFS0bits.U1RXIF = 1;
+        IFS1bits.U2RXIF = 1;
+        IFS1bits.U2TXIF = 1;
+        IFS0bits.U1RXIF = 1;
 
         // инициализация OC1
         {
@@ -236,9 +236,9 @@ int OCInit(void)
         //IFS0bits.OC1IF = 1;
         //IFS0bits.OC2IF = 1;
         //IFS1bits.OC3IF = 1;
-        ProcessOC(&rr1);
-        ProcessOC(&rr2);
-        ProcessOC(&rr3);
+        //ProcessOC(&rr1);
+        //ProcessOC(&rr2);
+        //ProcessOC(&rr3);
         //Timer2Big.Val = 0;
         //TMR2 = 0;
         //T2CONbits.TON = 1;         // Start Timer
@@ -633,7 +633,12 @@ int Control(RR * rr)
         }
     } while ((rr->DataCount <= 1)&&(rr->CacheState != ST_STOP));
     // запуск
-    if((rr->RunState == ST_STOP)&&(rr->DataCount > 1)){
+    if((rr->RunState == ST_STOP)&&(rr->DataCount > BUF_SIZE/2)){
+	    if((rr->RunState!=ST_STOP)&&(rr->CacheState!=ST_STOP)&&(rr->DataCount<=1)){
+		    while(1){
+			    Nop();
+		    }
+	    }
         rr->T.Val = GetBigTmrValue(rr->TmrId);
 #ifdef __C30__
         switch(rr->Index){
@@ -663,7 +668,12 @@ int TimerMonitor()
 
 int ProcessOC(RR * rr)
 {
-    DWORD Timer = 0;
+    DWORD Timer = 0;    
+    if((rr->RunState!=ST_STOP)&&(rr->CacheState!=ST_STOP)&&(rr->DataCount<=1)){
+	    while(1){
+		    Nop();
+	    }
+    }
     if(rr->DataCount == 0) {
         rr->RunState = ST_STOP;
         DisableOC(rr->Index);
@@ -1132,8 +1142,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     double T0 = 0.0;
     double Trun = 0.0;
     double VendA = 0.0;
-    double VendD = 0.0;
-	BreakCurrentCmd(rr);
+    double VendD = 0.0;	
     // 1. больше, чем разгон до максимума + торможение до нужной скорости
     //    => вычисляем сумму разгон+ торможение + движение по линейному закону
     // 2. меньше
@@ -1145,6 +1154,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     VendD = VTarget;
 	
     if(rr->LastCmdX == XTarget) return 0;
+    BreakCurrentCmd(rr);
     if(rr->LastCmdX < XTarget) {
         Direction = 1;
         Xa = (XTarget - rr->LastCmdX)/2.0;
@@ -1185,7 +1195,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
             }
             PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
-    }
+    }    
     return 0;
 }
 int BreakCurrentCmd(RR * rr)
