@@ -16,7 +16,7 @@ var ViewXr;
 var ViewYr;
 var DrawingStar = 0;
 var Follow = false;
-var Loading = true;
+var Loading = false;
 var GeoPosition = {
     Lon : 37.6028,
     //Lon : 217.6028,
@@ -529,6 +529,7 @@ function drawStars(Catalog){
                 var r = Math.floor(R*15+90);
                 var color = 'rgb(' + r + ',' + r + ',' + r + ');';
                 ctx.fillStyle = color;
+				if(ctx.fillStyle == "#000000") ctx.fillStyle = "#FFFFFF";
                 ctx.strokeStyle = color;
                 ctx.arc(D.X,D.Z, Starsize,0,PI2,true);
                 ctx.fill();
@@ -819,6 +820,10 @@ function GoTo(){
         document.getElementById('gotobutton').disabled = true;
         newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"ang0="+AbsolutePosition.a + "&ang1="+AbsolutePosition.d);
     }
+}
+
+function Stop(){    
+    newAJAXCommand('index.htm',function(){}, false,"stop=1");
 }
 function GoToView(){
     ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);

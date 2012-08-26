@@ -223,7 +223,21 @@ void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
     Nop();
     Nop();
 }
-   
+void _ISR __attribute__((__no_auto_psv__)) _MathError(void)
+{
+    Nop();
+    Nop();
+}  
+void _ISR __attribute__((__no_auto_psv__)) _OscillatorFail(void)
+{
+    Nop();
+    Nop();
+}   
+void _ISR __attribute__((__no_auto_psv__)) _DMACError(void)
+{
+    Nop();
+    Nop();
+} 
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
 	static WORD T;

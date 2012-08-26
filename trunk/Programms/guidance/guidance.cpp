@@ -542,7 +542,7 @@ void Calc()
 //     rr3.TimeBeg = 0;
     //GoToCmd(&rr1, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0); 
     GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
-    GoToCmd(&rr2, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
+    //GoToCmd(&rr2, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
 //     rr2.LastCmdV = 1.0 * Grad_to_Rad;
 //     rr2.LastCmdX = 10.0 * Grad_to_Rad;
 //     rr2.XPosition = rr2.LastCmdX/rr2.dx;
@@ -570,7 +570,9 @@ void Calc()
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  0 * Grad_to_Rad, -1);
     PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
    */
-    
+    int k = 0;
+    k = 0;
+    int t = 0;
     if(rr1.CmdCount>0){
         Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
         for(DWORD i = 0; i < Buf1Size;i++){         
@@ -583,6 +585,15 @@ void Calc()
             if(rr1.RunState == ST_STOP) {
                 Buf1Size = i;
                 break;
+            }
+            if(rr1.RunState == ST_DECELERATE) {
+                k = 1;
+            }
+            if(rr1.RunState == ST_RUN) {                
+                if((rr1.XPosition>30000)&&(t==0)) {
+                    GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 12.0 * Grad_to_Rad, 0);
+                    t = 1;
+                }
             }
         }
     }
