@@ -115,7 +115,6 @@
 APP_CONFIG AppConfig;
 
 static unsigned short wOriginalAppConfigChecksum;	// Checksum of the ROM defaults for AppConfig
-static unsigned short wOriginalRRConfigChecksum;	// Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
 
@@ -141,37 +140,22 @@ void FanControl();
     static void WF_Connect(void);
 #endif
 
-void FanControl()
+void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
 {
-	static BOOL Up = 0;
-	static DWORD FanPeriod = 0;	
-	static DWORD FanActive = 0;
-	static DWORD FanPassive = 0;
-	static DWORD Current = 0;		
-	DWORD Time = TickGet();
-	static BOOL Init = FALSE;
-	if(!Init){
-		TRISBbits.TRISB4 = 0;
-		Init = TRUE;
-		FanPeriod = TICK_SECOND/10;
-		FanActive = FanPeriod * 2 / 3;
-		FanPassive = FanPeriod - FanActive;
-	}
-	
-	if(Up){
-		if(Time >= Current){
-			Current += FanPassive;
-			LATBbits.LATB4 = 0;
-			Up = 0;  
-		}
+	static BYTE Up = 0;	
+	//T7CONbits.TON = 0;
+	if(Up == 1){
+		LATBbits.LATB4 = 1;
+		Up = 0;
+		PR7 = 2000;
 	} else {
-		if(Time >= Current){
-			Current += FanActive;
-			LATBbits.LATB4 = 1;
-			Up = 1;  
-		}	
+		LATBbits.LATB4 = 0;
+		Up = 1;
+		PR7 = 1000;
 	}
-	
+	//T7CONbits.TON = 1;
+	//LATBbits.LATB4 ^= 1;
+	IFS3bits.T7IF = 0;
 }
 
 //
@@ -215,41 +199,52 @@ void HighVector(void){_asm goto HighISR _endasm}
 #elif defined(__C30__)
 void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
 {
-    Nop();
-	Nop();
+	while(1){
+	    Nop();
+		Nop();
+	}
 }
 void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 {
-    Nop();
-    Nop();
+	while(1){
+	    Nop();
+		Nop();
+	}
 }
 void _ISR __attribute__((__no_auto_psv__)) _MathError(void)
 {
-    Nop();
-    Nop();
+	while(1){
+	    Nop();
+		Nop();
+	}
 }  
 void _ISR __attribute__((__no_auto_psv__)) _OscillatorFail(void)
 {
-    Nop();
-    Nop();
+	while(1){
+	    Nop();
+		Nop();
+	}
 }   
 void _ISR __attribute__((__no_auto_psv__)) _DMACError(void)
 {
-    Nop();
-    Nop();
+	while(1){
+	    Nop();
+		Nop();
+	}
 } 
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {	
-	static WORD T;
-	static WORD T1;
-	T  = TMR8;
-	T1 = TMR9HLD;
-	TMR9HLD = 0x0000;
-	TMR8 = 0x0000;
-    TMR6 = 0x7FFF;
-	CPUSPEED.word.LW = T;
-	CPUSPEED.word.HW = T1;
-    IFS2bits.T6IF = 0; // Clear T3 interrupt flag
+	//static WORD T;
+	//static WORD T1;
+	//T  = TMR8;
+	//T1 = TMR9HLD;
+	//TMR9HLD = 0x0000;
+	//TMR8 = 0x0000;
+    //TMR6 = 0x7FFF;
+	//CPUSPEED.word.LW = T;
+	//CPUSPEED.word.HW = T1;
+    IFS2bits.T6IF = 0; // Clear T6 interrupt flag
+    TimerMonitor();
 }	
 #elif defined(__C32__)
 	void _general_exception_handler(unsigned cause, unsigned status)
@@ -278,8 +273,7 @@ int main(void)
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
-    TRISFbits.TRISF4 = 0;	
-    
+    TRISFbits.TRISF4 = 0;   
     
         
     // Initialize application specific hardware
@@ -327,7 +321,7 @@ int main(void)
  	}   
     InitializeBoard();
     // calculate CPU speed  
-    {
+    if(0){
 	    T6CON = 0x0002;
 	    T8CON = 0x0008;
 	    T9CON = 0x0000;
@@ -343,9 +337,28 @@ int main(void)
 	    T6CONbits.TON = 1;
 	    T8CONbits.TON = 1;	
     }
+    //вызов предпросчета двигателей
+    {
+	    T6CON = 0x0030;
+	    TMR6 = 0x0000;
+	    PR6 = 10;//512;
+		IFS2bits.T6IF = 0;
+	    IEC2bits.T6IE = 1;
+	    IPC11bits.T6IP = 5;	
+	    T6CONbits.TON = 1;
+	} 
+    //Вентиляторы    	
+    {
+	    TRISBbits.TRISB4 = 0;
+	    T7CON = 0x0030;
+	    TMR7 = 0x0000;
+	    PR7 = 16384;//512;
+		IFS3bits.T7IF = 0;
+	    IEC3bits.T7IE = 1;
+	    IPC12bits.T7IP = 4;	
+	    T7CONbits.TON = 1;
+	} 
     
-    
-	
 #if defined(USE_LCD)
     // Initialize and display the stack version on the LCD
     LCDInit();
@@ -482,8 +495,8 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        Control(&rr1);
-	    Control(&rr2);
+        //Control(&rr1);
+	    //Control(&rr2);
 		//Control(&rr3);
         // Blink LED0 (right most one) every second.
         
@@ -494,14 +507,14 @@ int main(void)
             
         //}
         //TimerMonitor();
-        FanControl();		
+        //FanControl();		
 		if(PORTAbits.RA13 != t){
 		    t = PORTAbits.RA13;
 	            LED0_IO = t;
-	            if(!TimeAdjusted){
-	            	TimeAdjusted = AdjustLocalRTCTime(); 
-	            	LED2_IO = TimeAdjusted;           
-	            }
+	            //if(!TimeAdjusted){
+	            //	TimeAdjusted = AdjustLocalRTCTime(); 
+	            //	LED2_IO = TimeAdjusted;           
+	            //}
 	            RRConfigRAM.RRSave[0].XPosition = rr1.XPosition;
 	            RRConfigRAM.RRSave[1].XPosition = rr2.XPosition;	            
 	           	RRConfigRAM.RRSave[2].XPosition = rr3.XPosition;
@@ -620,9 +633,9 @@ int AdjustLocalRTCTime()
 DWORD UTCGetTime(void)
 {
 #if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
-	if(RTCIsTimeValid()){
-		return RTCGetUTCSeconds();
-	} else
+	//if(RTCIsTimeValid()){
+	//	return RTCGetUTCSeconds();
+	//} else
     if(SNTPIsTimeValid()) {
         //получаем время из SNTP модуля
         return SNTPGetUTCSeconds();
