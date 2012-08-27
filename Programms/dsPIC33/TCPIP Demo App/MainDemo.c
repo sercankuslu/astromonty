@@ -295,28 +295,42 @@ int main(void)
 	//	res = RunClient(bfr, sizeof(bfr), &length);		
 	//	res = ProcessClients(0, bfr, &length);			
 	//}
+	
+    
 	if(0){
 		OCInit();
-	    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr1, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-		//Control(&rr1);
-	    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr2, ST_RUN, 18.0,  45.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
-		//Control(&rr2);
-		
-		
-	    PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
-	    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+		//вызов предпросчета двигателей
+    	{
+    	    T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
+    	    TMR6 = 0x0000;  //
+    	    PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
+    		IFS2bits.T6IF = 0;
+    	    IEC2bits.T6IE = 1;
+    	    IPC11bits.T6IP = 5;	
+    	    T6CONbits.TON = 1;
+    	} 
+//	    PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr1, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+//		//Control(&rr1);
+//	    PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr2, ST_RUN, 18.0,  45.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 	    
+//		//Control(&rr2);
+//		
+//		
+//	    PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
+//	    PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
+        GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, 90 * Grad_to_Rad, 0);
 		//Control(&rr3);
+		
 		while(1){
 			//TimerMonitor();
-			//Nop();
-			Control(&rr1);
-			Control(&rr2);
-			Control(&rr3);
+			Nop();
+			////Control(&rr1);
+			//Control(&rr2);
+			//Control(&rr3);
 		}
  	}   
     InitializeBoard();
@@ -337,27 +351,7 @@ int main(void)
 	    T6CONbits.TON = 1;
 	    T8CONbits.TON = 1;	
     }
-    //вызов предпросчета двигателей
-    {
-	    T6CON = 0x0030;
-	    TMR6 = 0x0000;
-	    PR6 = 10;//512;
-		IFS2bits.T6IF = 0;
-	    IEC2bits.T6IE = 1;
-	    IPC11bits.T6IP = 5;	
-	    T6CONbits.TON = 1;
-	} 
-    //Вентиляторы    	
-    {
-	    TRISBbits.TRISB4 = 0;
-	    T7CON = 0x0030;
-	    TMR7 = 0x0000;
-	    PR7 = 16384;//512;
-		IFS3bits.T7IF = 0;
-	    IEC3bits.T7IE = 1;
-	    IPC12bits.T7IP = 4;	
-	    T7CONbits.TON = 1;
-	} 
+    
     
 #if defined(USE_LCD)
     // Initialize and display the stack version on the LCD
@@ -459,6 +453,27 @@ int main(void)
 	
  	LoadRRConfig();
 	OCInit();
+	//вызов предпросчета двигателей
+	{
+	    T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
+	    TMR6 = 0x0000;  //
+	    PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
+		IFS2bits.T6IF = 0;
+	    IEC2bits.T6IE = 1;
+	    IPC11bits.T6IP = 5;	
+	    T6CONbits.TON = 1;
+	} 
+    //Вентиляторы    	
+    {
+	    TRISBbits.TRISB4 = 0;
+	    T7CON = 0x0030; //0.000000025*256 = 0.0000064
+	    TMR7 = 0x0000;
+	    PR7 = 16384;//512;
+		IFS3bits.T7IF = 0;
+	    IEC3bits.T7IE = 1;
+	    IPC12bits.T7IP = 4;	
+	    T7CONbits.TON = 1;
+	} 
 	/*
     PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_RUN, 10.0,  90.0 * Grad_to_Rad, 1);
