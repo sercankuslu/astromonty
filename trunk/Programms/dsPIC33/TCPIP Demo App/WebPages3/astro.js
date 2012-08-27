@@ -213,13 +213,8 @@ function onMouseWheel(e) {
         e.wheelDelta = -40*e.detail; // Firefox
     }
     var info = document.getElementById('delta');
-    if(Scale<40){
-        Scale = +Scale + e.wheelDelta/120;
-    } else if(Scale<300){
-        Scale = +Scale + e.wheelDelta/30;
-    } else {
-        Scale = +Scale + e.wheelDelta/10;
-    }
+	Scale += Math.floor(e.wheelDelta*Scale/1200);
+	
     if(Scale < 3) {Scale = 3;};
     if(Scale > 1000) {Scale = 1000;};
     e.preventDefault ? e.preventDefault() : (e.returnValue = false);
@@ -228,19 +223,6 @@ function onMouseWheel(e) {
 }
 
 
-// функция возвращает координату X на экране по координате на небе(градусы)
-function RAToX(X){
-    return (ViewPosition.X - X)*Scale + WSizeX/2;
-};
-function DEToY(Y){
-    return (ViewPosition.Y - Y)*Scale + WSizeY/2;
-};
-function XToRA(RA){
-    return (WSizeX/2 - RA)/Scale + ViewPosition.X
-};
-function YToDE(DE){
-    return (WSizeY/2 - DE)/Scale + ViewPosition.Y
-};
 /* use a function for the exact format desired... */
 function ISODateString(d,UTC){
     function pad(n){return n<10 ? '0'+n : n}
@@ -525,7 +507,7 @@ function drawStars(Catalog){
                         break;
                 }
                 var R = (9 - elem.mag);
-                Starsize = R/10+0.5;
+                Starsize = R*2/10+0.5;
                 var r = Math.floor(R*15+90);
                 var color = 'rgb(' + r + ',' + r + ',' + r + ');';
                 ctx.fillStyle = color;
