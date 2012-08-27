@@ -125,16 +125,16 @@ int OCInit(void)
         // MS1 = 0; MS2 = 1; 1/4
         // MS1 = 1; MS2 = 0; 1/2
         // MS1 = 0; MS2 = 0; 1/1
-        MS1         = 1;    // РІС‹С…РѕРґ MS1
-        MS2         = 1;     // РІС‹С…РѕРґ MS2
-        SLEEP       = 1;     // РІС‹С…РѕРґ SLEEP
-        RESET       = 1;     // РІС‹С…РѕРґ RESET
+        MS1         = 1;    // выход MS1
+        MS2         = 1;     // выход MS2
+        SLEEP       = 1;     // выход SLEEP
+        RESET       = 1;     // выход RESET
 
-        MS1_Tris    = 0;     // РІС‹С…РѕРґ MS1
-        MS2_Tris    = 0;     // РІС‹С…РѕРґ MS2
-        SLEEP_Tris  = 0;    // РІС‹С…РѕРґ SLEEP
-        RESET_Tris  = 0;    // РІС‹С…РѕРґ RESET
-        // РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїСЂРµСЂС‹РІР°РЅРёСЏ РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ Р±СѓС„РµСЂР°
+        MS1_Tris    = 0;     // выход MS1
+        MS2_Tris    = 0;     // выход MS2
+        SLEEP_Tris  = 0;    // выход SLEEP
+        RESET_Tris  = 0;    // выход RESET
+        // инициализация прерывания для заполнения буфера
 
         IFS1bits.U2RXIF = 0;
         IPC7bits.U2RXIP = 5;        // Priority level 6
@@ -148,45 +148,45 @@ int OCInit(void)
         IPC2bits.U1RXIP = 5;        // Priority level 6
         IEC0bits.U1RXIE = 1;
 
-        //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРѕСЂС‚Р°1
+        //Инициализация порта1
         {
-                PORT1_NULL_Tris   = 1; // РІС…РѕРґ NULL
-                PORT1_POS_Tris    = 1; // РІС…РѕРґ POS
-                PORT1_POS2_Tris   = 1; // РІС…РѕРґ POS2
+                PORT1_NULL_Tris   = 1; // вход NULL
+                PORT1_POS_Tris    = 1; // вход POS
+                PORT1_POS2_Tris   = 1; // вход POS2
 
-                PORT1_ENABLE       = 0;// РІС‹С…РѕРґ ENABLE
-                PORT1_DIR           = 0;// РІС‹С…РѕРґ DIR
-                PORT1_STEP           = 0;// РІС‹С…РѕРґ STEP
+                PORT1_ENABLE       = 0;// выход ENABLE
+                PORT1_DIR           = 0;// выход DIR
+                PORT1_STEP           = 0;// выход STEP
 
-                PORT1_ENABLE_Tris = 0;// РІС‹С…РѕРґ ENABLE
-                PORT1_DIR_Tris    = 0;// РІС‹С…РѕРґ DIR
-                PORT1_STEP_Tris   = 0;// РІС‹С…РѕРґ STEP
+                PORT1_ENABLE_Tris = 0;// выход ENABLE
+                PORT1_DIR_Tris    = 0;// выход DIR
+                PORT1_STEP_Tris   = 0;// выход STEP
         }
         {
-                PORT2_NULL_Tris   = 1; // РІС…РѕРґ NULL
-                PORT2_POS_Tris    = 1; // РІС…РѕРґ POS
-                PORT2_POS2_Tris   = 1; // РІС…РѕРґ POS2
+                PORT2_NULL_Tris   = 1; // вход NULL
+                PORT2_POS_Tris    = 1; // вход POS
+                PORT2_POS2_Tris   = 1; // вход POS2
 
-                PORT2_ENABLE       = 0;// РІС‹С…РѕРґ ENABLE
-                PORT2_DIR           = 0;// РІС‹С…РѕРґ DIR
-                PORT2_STEP           = 0;// РІС‹С…РѕРґ STEP
+                PORT2_ENABLE       = 0;// выход ENABLE
+                PORT2_DIR           = 0;// выход DIR
+                PORT2_STEP           = 0;// выход STEP
 
-                PORT2_ENABLE_Tris = 0;// РІС‹С…РѕРґ ENABLE
-                PORT2_DIR_Tris    = 0;// РІС‹С…РѕРґ DIR
-                PORT2_STEP_Tris   = 0;// РІС‹С…РѕРґ STEP
+                PORT2_ENABLE_Tris = 0;// выход ENABLE
+                PORT2_DIR_Tris    = 0;// выход DIR
+                PORT2_STEP_Tris   = 0;// выход STEP
         }
         {
-                PORT3_NULL_Tris   = 1; // РІС…РѕРґ NULL
-                PORT3_POS_Tris    = 1; // РІС…РѕРґ POS
-                PORT3_POS2_Tris   = 1; // РІС…РѕРґ POS2
+                PORT3_NULL_Tris   = 1; // вход NULL
+                PORT3_POS_Tris    = 1; // вход POS
+                PORT3_POS2_Tris   = 1; // вход POS2
 
-                PORT3_ENABLE       = 0;// РІС‹С…РѕРґ ENABLE
-                PORT3_DIR           = 0;// РІС‹С…РѕРґ DIR
-                PORT3_STEP           = 0;// РІС‹С…РѕРґ STEP
+                PORT3_ENABLE       = 0;// выход ENABLE
+                PORT3_DIR           = 0;// выход DIR
+                PORT3_STEP           = 0;// выход STEP
 
-                PORT3_ENABLE_Tris = 0;// РІС‹С…РѕРґ ENABLE
-                PORT3_DIR_Tris    = 0;// РІС‹С…РѕРґ DIR
-                PORT3_STEP_Tris   = 0;// РІС‹С…РѕРґ STEP
+                PORT3_ENABLE_Tris = 0;// выход ENABLE
+                PORT3_DIR_Tris    = 0;// выход DIR
+                PORT3_STEP_Tris   = 0;// выход STEP
         }
 #endif //#ifdef __C30__
 
@@ -208,29 +208,29 @@ int OCInit(void)
         IFS1bits.U2TXIF = 1;
         IFS0bits.U1RXIF = 1;
 
-        // РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ OC1
+        // инициализация OC1
         {
             OC1CONbits.OCM = 0b000;
-            OC1CONbits.OCTSEL = 0;      // РІС‹Р±СЂР°С‚СЊ Timer2
-            IPC0bits.OC1IP = 6;            // РІС‹Р±СЂР°С‚СЊ РїСЂРёРѕСЂРёС‚РµС‚ РїСЂРµСЂС‹РІР°РЅРёСЏ РґР»СЏ OC1
-            IFS0bits.OC1IF = 0;            // СЃР±СЂРѕСЃРёС‚СЊ С„Р»Р°Рі РїСЂРµСЂС‹РІР°РЅРёСЏ
-            IEC0bits.OC1IE = 1;            // СЂР°Р·СЂРµС€Р°РµРј РїСЂРµСЂС‹РІР°РЅРёСЏ РѕС‚ OC1
+            OC1CONbits.OCTSEL = 0;      // выбрать Timer2
+            IPC0bits.OC1IP = 6;            // выбрать приоритет прерывания для OC1
+            IFS0bits.OC1IF = 0;            // сбросить флаг прерывания
+            IEC0bits.OC1IE = 1;            // разрешаем прерывания от OC1
         }
-        // РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ OC2
+        // инициализация OC2
         {
             OC2CONbits.OCM = 0b000;
-            OC2CONbits.OCTSEL = 0;      // РІС‹Р±СЂР°С‚СЊ Timer2
-            IPC1bits.OC2IP = 6;            // РІС‹Р±СЂР°С‚СЊ РїСЂРёРѕСЂРёС‚РµС‚ РїСЂРµСЂС‹РІР°РЅРёСЏ РґР»СЏ OC2
-            IFS0bits.OC2IF = 0;            // СЃР±СЂРѕСЃРёС‚СЊ С„Р»Р°Рі РїСЂРµСЂС‹РІР°РЅРёСЏ
-            IEC0bits.OC2IE = 1;            // СЂР°Р·СЂРµС€Р°РµРј РїСЂРµСЂС‹РІР°РЅРёСЏ РѕС‚ OC2
+            OC2CONbits.OCTSEL = 0;      // выбрать Timer2
+            IPC1bits.OC2IP = 6;            // выбрать приоритет прерывания для OC2
+            IFS0bits.OC2IF = 0;            // сбросить флаг прерывания
+            IEC0bits.OC2IE = 1;            // разрешаем прерывания от OC2
         }
-        // РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ OC3
+        // инициализация OC3
         {
             OC3CONbits.OCM = 0b000;
-            OC3CONbits.OCTSEL = 0;      // РІС‹Р±СЂР°С‚СЊ Timer2
-            IPC6bits.OC3IP = 6;            // РІС‹Р±СЂР°С‚СЊ РїСЂРёРѕСЂРёС‚РµС‚ РїСЂРµСЂС‹РІР°РЅРёСЏ РґР»СЏ OC3
-            IFS1bits.OC3IF = 0;            // СЃР±СЂРѕСЃРёС‚СЊ С„Р»Р°Рі РїСЂРµСЂС‹РІР°РЅРёСЏ
-            IEC1bits.OC3IE = 1;            // СЂР°Р·СЂРµС€Р°РµРј РїСЂРµСЂС‹РІР°РЅРёСЏ РѕС‚ OC3
+            OC3CONbits.OCTSEL = 0;      // выбрать Timer2
+            IPC6bits.OC3IP = 6;            // выбрать приоритет прерывания для OC3
+            IFS1bits.OC3IF = 0;            // сбросить флаг прерывания
+            IEC1bits.OC3IE = 1;            // разрешаем прерывания от OC3
         }
 
         //IFS0bits.OC1IF = 1;
@@ -299,7 +299,7 @@ int InitRR(RR * rr)
     rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
     rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
     rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
-    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // С€Р°Рі С‚Р°Р№РјРµСЂР°
+    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
     rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
     rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
 #else
@@ -309,7 +309,7 @@ int InitRR(RR * rr)
     rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
     rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
     rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
-    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // С€Р°Рі С‚Р°Р№РјРµСЂР°
+    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
     rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
     rr->XPosition = 0;
 #endif
@@ -353,7 +353,7 @@ void CalculateParams(RR * rr)
     rr->K = (MY_DEFAULT_RR_PARA_K)/I;
     rr->B = MY_DEFAULT_RR_PARA_B / I;
 #endif
-    rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // С€Р°Рі РїРµСЂРµРјРµС‰РµРЅРёСЏ РІ СЂР°РґРёР°РЅР°С…
+    rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в радианах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
     rr->e = (DWORD)(0.000120 / rr->TimerStep); //70us
@@ -371,8 +371,8 @@ int Run(RR * rr)
     LONG m = 1;
     double X = 0.0;
 
-    // РѕРїС‚РёРјРёР·РёСЂРѕРІР°РЅРѕ 37 uSec (1431.5 С‚Р°РєС‚РѕРІ Р·Р° С€Р°Рі) РїСЂРё m=1
-    // 3.30546875 uSec  РїСЂРё m = 32 (132.21875 С‚Р°РєС‚РѕРІ РЅР° С€Р°Рі)
+    // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
+    // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
     if(BUF_SIZE - rr->DataCount >= 32){
         FreeData = 32;
     } else {
@@ -394,7 +394,7 @@ int Run(RR * rr)
             dT = T2 - rr->T1;
             rr->T1 = T2;
             rr->Interval = dT;
-            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = 0;
             rr->IntervalArray[rr->NextWriteTo].Count = 1;
@@ -415,7 +415,7 @@ int Run(RR * rr)
             dT = T2 - rr->T1;
             rr->T1 = T2;
             rr->Interval = (dT / m);
-            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = dT % m;
             rr->IntervalArray[rr->NextWriteTo].Count = m;
@@ -433,7 +433,7 @@ int Run(RR * rr)
     }
     return 0;
 }
-// СЂР°Р·РіРѕРЅ СЃ С‚РµРєСѓС‰РµР№ СЃРєРѕСЂРѕСЃС‚Рё РґРѕ С‚СЂРµР±СѓРµРјРѕР№
+// разгон с текущей скорости до требуемой
 int Acceleration(RR * rr)
 {
     DWORD FreeData;
@@ -444,8 +444,8 @@ int Acceleration(RR * rr)
     WORD i = 0;
     LONG m = 1;
 
-    // РѕРїС‚РёРјРёР·РёСЂРѕРІР°РЅРѕ 37 uSec (1431.5 С‚Р°РєС‚РѕРІ Р·Р° С€Р°Рі) РїСЂРё m=1
-    // 3.30546875 uSec  РїСЂРё m = 32 (132.21875 С‚Р°РєС‚РѕРІ РЅР° С€Р°Рі)
+    // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
+    // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
      if(BUF_SIZE - rr->DataCount >= 32){
          FreeData = 32;
      } else {
@@ -472,7 +472,7 @@ int Acceleration(RR * rr)
             dT = T2 - rr->T1;
             rr->T1 = T2;
             rr->Interval = dT;
-            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = 0;
             rr->IntervalArray[rr->NextWriteTo].Count = 1;
@@ -504,7 +504,7 @@ int Acceleration(RR * rr)
                 dT = T2 - rr->T1;
                 rr->T1 = T2;
                 rr->Interval =(dT / m);
-                //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+                //rr->IntervalArray[rr->NextWriteTo].FixedPoint = T2; // будущая точка
                 rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
                 rr->IntervalArray[rr->NextWriteTo].Correction = (dT % m);
                 rr->IntervalArray[rr->NextWriteTo].Count = m;
@@ -524,7 +524,7 @@ int Acceleration(RR * rr)
     return 0;
 }
 
-// С‚РѕСЂРјРѕР¶РµРЅРёРµ СЃ С‚РµРєСѓС‰РµР№ СЃРєРѕСЂРѕСЃС‚Рё РґРѕ С‚СЂРµР±СѓРµРјРѕР№
+// торможение с текущей скорости до требуемой
 int Deceleration(RR * rr)
 {
     LONG FreeData;
@@ -536,8 +536,8 @@ int Deceleration(RR * rr)
     LONG m = 1;
 
     //rr->Tb = rr->T1;
-    // РѕРїС‚РёРјРёР·РёСЂРѕРІР°РЅРѕ 37 uSec (1431.5 С‚Р°РєС‚РѕРІ Р·Р° С€Р°Рі) РїСЂРё m=1
-    // 3.30546875 uSec  РїСЂРё m = 32 (132.21875 С‚Р°РєС‚РѕРІ РЅР° С€Р°Рі)
+    // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
+    // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
     if(BUF_SIZE - rr->DataCount >= 32){
         FreeData = 32;
     } else {
@@ -564,7 +564,7 @@ int Deceleration(RR * rr)
             dT = rr->T1 - T2;
             rr->T1 = T2;
             rr->Interval = dT;
-            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = 0;
             rr->IntervalArray[rr->NextWriteTo].Count = 1;
@@ -594,7 +594,7 @@ int Deceleration(RR * rr)
             dT = rr->T1 - T2;
             rr->T1 = T2;
             rr->Interval = dT / m;
-            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // Р±СѓРґСѓС‰Р°СЏ С‚РѕС‡РєР°
+            //rr->IntervalArray[rr->NextWriteTo].FixedPoint = rr->Tb - T2; // будущая точка
             rr->IntervalArray[rr->NextWriteTo].Interval = rr->Interval;
             rr->IntervalArray[rr->NextWriteTo].Correction = dT % m;
             rr->IntervalArray[rr->NextWriteTo].Count = m;
@@ -634,7 +634,7 @@ int Control(RR * rr)
             }
         }
     } while ((rr->DataCount <= BUF_SIZE/2)&&(rr->CacheState != ST_STOP));
-    // Р·Р°РїСѓСЃРє
+    // запуск
     if((rr->RunState == ST_STOP)&&(rr->DataCount > BUF_SIZE/2)){
 	    if((rr->RunState!=ST_STOP)&&(rr->CacheState!=ST_STOP)&&(rr->DataCount<=1)){
 		    while(1){
@@ -681,26 +681,26 @@ int ProcessOC(RR * rr)
         DisableOC(rr->Index);
         return 0;
     }
-    // Р·Р°РґР°С‘Рј Р·РЅР°С‡РµРЅРёРµ РІСЂРµРјРµРЅРё РЅР°С‡Р°Р»Р° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
+    // задаём значение времени начала выполнения команды
     if(rr->RunState != rr->IntervalArray[rr->NextReadFrom].State){
         rr->RunState = rr->IntervalArray[rr->NextReadFrom].State;
         rr->TimeBeg = rr->T.Val;
     }
-    // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РЅР°РїСЂР°РІР»РµРЅРёРµ РІСЂР°С‰РµРЅРёСЏ
+    // устанавливаем направление вращения
     if(rr->RunDir != rr->IntervalArray[rr->NextReadFrom].Flags.Dir){
         rr->RunDir = rr->IntervalArray[rr->NextReadFrom].Flags.Dir;
         SetDirection(rr->Index,rr->RunDir);
     }
-    // РїСЂРёР±Р°РІР»СЏРµРј РёРЅС‚РµСЂРІР°Р»С‹ Рё РєРѕСЂСЂРµРєС‚РёСЂСѓРµРј
-    // TODO: РЎРґРµР»Р°С‚СЊ СЂР°РІРЅРѕРјРµСЂРЅРѕРµ СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ РєРѕСЂСЂРµРєС†РёРё
+    // прибавляем интервалы и корректируем
+    // TODO: Сделать равномерное распределение коррекции
     //if(rr->uStepPerStep != rr->IntervalArray[rr->NextWriteTo].Flags.uSteps){
-        // СЃРјРµРЅР° РјРёРєСЂРѕС€Р°РіР°.
+        // смена микрошага.
         // 16   * 1
         // 8    * 2     ( Interval << 1)
         // 4    * 4     ( Interval << 2)
         // 2    * 8     ( Interval << 3)
         // 1    * 16    ( Interval << 4)
-        // РїРѕРєР° С‡С‚Рѕ РЅР° С…РѕРґСѓ РјРµРЅСЏРµРј С‚РѕР»СЊРєРѕ СЃ 16 РЅР° 4
+        // пока что на ходу меняем только с 16 на 4
 
     {
         rr->T.Val += rr->IntervalArray[rr->NextReadFrom].Interval;
@@ -734,33 +734,38 @@ int ProcessOC(RR * rr)
 
 int SetOC(BYTE oc, WORD LW)
 {
+	WORD LWR = LW + 50;
+	if(LW == 0) // особенность работы OCR 
+		LW++;
+	if(LWR == 0)
+		LWR++;
     switch (oc){
     case 0:
 #ifdef __C30__
-        OC1CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
-        OC1RS = LW + 50; // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxRS
+        OC1CONbits.OCM = 0b000; // выключить модуль OC
+        OC1RS = LWR; // записать значение OCxRS
 #endif // __C30__
-        OC1R = LW;        // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxR
+        OC1R = LW;        // записать значение OCxR
         break;
     case 1:
 #ifdef __C30__
-        OC2CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
-        OC2R = LW;        // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxR
-        OC2RS = LW + 50; // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxRS
+        OC2CONbits.OCM = 0b000; // выключить модуль OC
+        OC2R = LW;        // записать значение OCxR
+        OC2RS = LWR; // записать значение OCxRS
 #endif // __C30__
         break;
     case 2:
 #ifdef __C30__
-        OC3CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
-        OC3R = LW;        // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxR
-        OC3RS = LW + 50; // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxRS
+        OC3CONbits.OCM = 0b000; // выключить модуль OC
+        OC3R = LW;        // записать значение OCxR
+        OC3RS = LWR; // записать значение OCxRS
 #endif // __C30__
         break;
     case 3:
 #ifdef __C30__
-        OC4CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
-        OC4R = LW;        // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxR
-        OC4RS = LW + 50; // Р·Р°РїРёСЃР°С‚СЊ Р·РЅР°С‡РµРЅРёРµ OCxRS
+        OC4CONbits.OCM = 0b000; // выключить модуль OC
+        OC4R = LW;        // записать значение OCxR
+        OC4RS = LWR; // записать значение OCxRS
 #endif // __C30__
         break;
     default :
@@ -773,16 +778,16 @@ int EnableOC(BYTE oc)
 #ifdef __C30__
     switch (oc){
     case 0:
-        OC1CONbits.OCM = 0b100; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC1CONbits.OCM = 0b100; // выключить модуль OC
         break;
     case 1:
-        OC2CONbits.OCM = 0b100; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC2CONbits.OCM = 0b100; // выключить модуль OC
         break;
     case 2:
-        OC3CONbits.OCM = 0b100; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC3CONbits.OCM = 0b100; // выключить модуль OC
         break;
     case 3:
-        OC4CONbits.OCM = 0b100; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC4CONbits.OCM = 0b100; // выключить модуль OC
         break;
     default :
     return -1;
@@ -798,19 +803,19 @@ int DisableOC(BYTE oc)
 #ifdef __C30__
     switch (oc){
     case 0:
-        OC1CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC1CONbits.OCM = 0b000; // выключить модуль OC
         IFS0bits.OC1IF = 0;     // Clear OC1 interrupt flag
         break;
     case 1:
-        OC2CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC2CONbits.OCM = 0b000; // выключить модуль OC
         IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag
         break;
     case 2:
-        OC3CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC3CONbits.OCM = 0b000; // выключить модуль OC
         IFS1bits.OC3IF = 0; // Clear OC1 interrupt flag
         break;
     case 3:
-        OC4CONbits.OCM = 0b000; // РІС‹РєР»СЋС‡РёС‚СЊ РјРѕРґСѓР»СЊ OC
+        OC4CONbits.OCM = 0b000; // выключить модуль OC
         IFS1bits.OC4IF = 0; // Clear OC1 interrupt flag
         break;
     default :
@@ -1018,7 +1023,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction,
                 dX = Xb - Xe;
             }
             if(Direction >0 ){
-                // РєРѕР»РёС‡РµСЃС‚РІРѕ СЂР°РґРёР°РЅ РЅР° РєРѕС‚РѕСЂРѕРµ СЃРґРІРёРЅСѓР»РёСЃСЊ
+                // количество радиан на которое сдвинулись
                 XmX = (*deltaX);
             } else {
                 XmX = (*deltaX);
@@ -1026,7 +1031,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction,
             dX2 = (LONG)(XmX/rr->dx);
 
             if (dX2 < dX) {
-                // РµСЃР»Рё РєРѕРѕСЂРґРёРЅР°С‚Р° РїРµСЂРµРјРµС‰РµРЅРёСЏ РјРµРЅСЊС€Рµ, С‡РµРј РєРѕРѕСЂРґРёРЅР°С‚Р° РїСЂРё Р·Р°РґР°РЅРЅРѕР№ СЃРєРѕСЂРѕСЃС‚Рё
+                // если координата перемещения меньше, чем координата при заданной скорости
                 (*Xbreak) = dX2;
                 if(State != ST_DECELERATE){
                     XX = Xb * rr->dx + XmX;
@@ -1038,7 +1043,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction,
                     T2 = ((XX + sqrt(D))*d);
                 }
                 OmKT = (1 - rr->K * T2);
-                (*Vend) = (rr->B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // РІС‹С‡РёСЃР»РёС‚СЊ СЃРєРѕСЂРѕСЃС‚СЊ  V = BT/(1-KT)  T =
+                (*Vend) = (rr->B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // вычислить скорость  V = BT/(1-KT)  T =
                 if (deltaT != NULL) {
                     if(T2 >= dTb)
                         *deltaT = (T2 - dTb);
@@ -1046,7 +1051,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction,
                         *deltaT = (dTb - T2);
                 }
             } else {
-                // РµСЃР»Рё РєРѕРѕСЂРґРёРЅР°С‚Р° РїРµСЂРµРјРµС‰РµРЅРёСЏ Р±РѕР»СЊС€Рµ, С‡РµРј РєРѕРѕСЂРґРёРЅР°С‚Р° РїСЂРё Р·Р°РґР°РЅРЅРѕР№ СЃРєРѕСЂРѕСЃС‚Рё
+                // если координата перемещения больше, чем координата при заданной скорости
                 if(Direction >0 ){
                     (*Xbreak) = dX;
                     (*deltaX) = dX * rr->dx;
@@ -1065,7 +1070,7 @@ int CalculateBreakParam(RR * rr, GD_STATE State, int Direction,
         case ST_RUN:
             {
                 if(Direction >0 ){
-                    // РєРѕР»РёС‡РµСЃС‚РІРѕ С€Р°РіРѕРІ РЅР° РєРѕС‚РѕСЂРѕРµ СЃРґРІРёРЅСѓР»РёСЃСЊ
+                    // количество шагов на которое сдвинулись
                     XmX = (*deltaX);
                 } else {
                     XmX = (*deltaX);
@@ -1145,14 +1150,14 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     double Trun = 0.0;
     double VendA = 0.0;
     double VendD = 0.0;	
-    // 1. Р±РѕР»СЊС€Рµ, С‡РµРј СЂР°Р·РіРѕРЅ РґРѕ РјР°РєСЃРёРјСѓРјР° + С‚РѕСЂРјРѕР¶РµРЅРёРµ РґРѕ РЅСѓР¶РЅРѕР№ СЃРєРѕСЂРѕСЃС‚Рё
-    //    => РІС‹С‡РёСЃР»СЏРµРј СЃСѓРјРјСѓ СЂР°Р·РіРѕРЅ+ С‚РѕСЂРјРѕР¶РµРЅРёРµ + РґРІРёР¶РµРЅРёРµ РїРѕ Р»РёРЅРµР№РЅРѕРјСѓ Р·Р°РєРѕРЅСѓ
-    // 2. РјРµРЅСЊС€Рµ
-    //    => РІС‹С‡РёСЃР»СЏРµРј РјР°РєСЃРёРјР°Р»СЊРЅСѓСЋ СЃРєРѕСЂРѕСЃС‚СЊ РґРѕ РєРѕС‚РѕСЂРѕР№ СѓСЃРїРµРµРј СЂР°Р·РѕРіРЅР°С‚СЊСЃСЏ
+    // 1. больше, чем разгон до максимума + торможение до нужной скорости
+    //    => вычисляем сумму разгон+ торможение + движение по линейному закону
+    // 2. меньше
+    //    => вычисляем максимальную скорость до которой успеем разогнаться
     //
-    // TODO: РµСЃР»Рё РґРІРёРіР°РµРјСЃСЏ, РЅСѓР¶РЅРѕ РѕСЃС‚Р°РЅРѕРІРёС‚СЊСЃСЏ
-    // TODO: РІС‹СЏСЃРЅРёС‚СЊ РЅР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
-    // TODO: РѕРїСЂРµРґРµР»РёС‚СЊ РјРѕРґРµР»СЊ РїСЂРёРІРѕРґР° ( РґРѕРіРѕРЅСЏРµРј С†РµР»СЊ РёР»Рё Р¶РґРµРј )
+    // TODO: если двигаемся, нужно остановиться
+    // TODO: выяснить направление движения
+    // TODO: определить модель привода ( догоняем цель или ждем )
     VendD = VTarget;
 	
     if(rr->LastCmdX == XTarget) return 0;
@@ -1247,7 +1252,7 @@ int GetStatus(WORD n){
 }
 
 
-// Р’С‹С‡РёСЃР»РµРЅРёРµ Р·РІРµР·РґРЅРѕРіРѕ РІСЂРµРјРµРЅРё
+// Вычисление звездного времени
 double GM_Sidereal_Time (double jd) {
     double t_eph = 0.0;
     double ut = 0.0;
@@ -1272,7 +1277,7 @@ double frac(double X) {
     if (X<0) X = X + 1.0;
     return X;
 }
-// РґРµРЅСЊ d, РјРµСЃСЏС† m, РіРѕРґ y, РІСЂРµРјСЏ РІ С‡Р°СЃР°С…  
+// день d, месяц m, год y, время в часах  
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s){
     double JD = 0.0;
     double UT = h + m/60 + s/3600;

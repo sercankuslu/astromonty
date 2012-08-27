@@ -170,7 +170,7 @@ void BerkeleyTCPServerDemo(void)
             }
             ClientsCnt++;
         }
-        if(ClientsCnt == 0) LED1_IO = 0;
+        //if(ClientsCnt == 0) LED1_IO = 0;
         break;
 
     default:

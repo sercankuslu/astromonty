@@ -156,7 +156,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
         }
         break;   
     case STS_CONNECTED:
-        LED1_IO = 1;
+        //LED1_IO = 1;
 
         switch(Command){
             case STC_REQEST_DATA:
