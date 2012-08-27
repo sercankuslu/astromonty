@@ -1,7 +1,7 @@
 ﻿~inc:header.inc~
 <script type="text/javascript">
-	document.body.onload = loadCanvas;
-	document.getElementById('hello').innerHTML = "~hellomsg~";
+    document.body.onload = loadCanvas;
+    document.getElementById('hello').innerHTML = "~hellomsg~";
 </script>
     <div id="leftboth">
         <div id="status">
@@ -24,14 +24,14 @@
         <div id="target">
             <div id="ReqTarget">
                 <label>Координаты цели</label><br />
-                <form method="post" action="index.htm" name="run">                    
+                <form method="post" action="index.htm" name="run">
                     <output id="VisRA" style="margin-left: 15px;">&bull;</output>
                     <label>α :</label>
                     <span class="targetRA" id="tgRA">
                         <input type="text" name="RA_h" id="RAh" value="00" min="-1" max="23" onchange="updateTarget(1);">h
                         <input type="text" name="RA_m" id="RAm" value="00" min="-1" max="60" onchange="updateTarget(1);">'
                         <input type="text" name="RA_s" id="RAs" value="00" min="-1" max="60" onchange="updateTarget(1);" style="width:40px;">"
-                    </span><br /> 
+                    </span><br />
                     <output id="VisDE" style="margin-left: 15px;">&bull;</output>
                     <label>δ : </label>
                     <span class="targetRA" id="tgDE">
@@ -41,7 +41,7 @@
                     </span><br />
                     <input id="clock" class="chbox" type="checkbox" onclick="enableHM();" checked="true">Часовое ведение<br />
                     <input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
-					<input id="stopbutton" type="button" value="Stop" onclick="Stop();">
+                    <input id="stopbutton" type="button" value="Stop" onclick="Stop();">
                 </form>
             </div>
         </div>
@@ -71,7 +71,7 @@
     Z:<output id="Z">55° 47' 29.17"</output>-->
     <div style="clear: both;"></div>
 <script type="text/javascript">
-	
+
     // подсказка с координатами
     new Tooltip({
         elem: $('#my_canvas'),
@@ -118,11 +118,11 @@ function updateStatus(xmlData) {
 
                 var JD = JulDay (utDay, utMonth, utYear, UT);
                 var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
-				document.getElementById('LST').value =  LST;
+                document.getElementById('LST').value =  LST;
 
                 correctAngle = angle - 90 + LocalStarTime * 15;
-				if(correctAngle>=360) correctAngle-=360;
-				if(correctAngle<0) correctAngle+=360;
+                if(correctAngle>=360) correctAngle-=360;
+                if(correctAngle<0) correctAngle+=360;
                 document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
                 CurrentPosition.X = correctAngle;
                 needUpdateStar = true;
@@ -145,11 +145,11 @@ function updateStatus(xmlData) {
         }
         document.getElementById('angR' + i).style.color = color;
     }
-	if(Follow){
+    if(Follow){
         ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
     } else {
         ViewPosition.SetPosition(ViewPosition.X,ViewPosition.Y);
-    }    
+    }
     if(needUpdateStar)
         if(!DrawingStar) StarView.updateStars();
 }

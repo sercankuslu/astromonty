@@ -190,7 +190,7 @@ int OCInit(void)
         }
 #endif //#ifdef __C30__
 
-        TmrInit(2);
+        //TmrInit(2);
         rr1.Index = 0;
         rr1.TmrId = 2;
         InitRR(&rr1);
@@ -290,6 +290,8 @@ int TmrInit(BYTE Num)
 
 int InitRR(RR * rr)
 {   //AppConfig
+    DisableOC(rr->Index);
+    TmrInit(rr->TmrId);
 #ifdef __C30__
     rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
     rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
@@ -631,7 +633,7 @@ int Control(RR * rr)
             break;
             }
         }
-    } while ((rr->DataCount <= 1)&&(rr->CacheState != ST_STOP));
+    } while ((rr->DataCount <= BUF_SIZE/2)&&(rr->CacheState != ST_STOP));
     // запуск
     if((rr->RunState == ST_STOP)&&(rr->DataCount > BUF_SIZE/2)){
 	    if((rr->RunState!=ST_STOP)&&(rr->CacheState!=ST_STOP)&&(rr->DataCount<=1)){
@@ -1200,7 +1202,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 }
 int BreakCurrentCmd(RR * rr)
 {
-    if(rr->RunState == ST_RUN){
+    if((rr->RunState == ST_RUN)||(rr->RunState == ST_STOP)){
 	    RRConfigRAM.RRSave[rr->Index].XPosition = rr->XPosition;
 	    InitRR(rr);
 		/*rr->CacheState = ST_STOP;
