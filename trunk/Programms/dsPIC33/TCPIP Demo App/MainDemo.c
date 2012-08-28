@@ -254,7 +254,31 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 	}
 #endif
 
-
+unsigned int BufferA[256] __attribute__((space(dma)));
+unsigned int BufferAS[256] __attribute__((space(dma)));
+// DMA Interrupt Handler
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
+{    
+    int i = 0;
+	for(i = 0; i <=255; i++){
+    	BufferA[i] = (int)i*200;
+	}
+	IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
+}
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
+{    
+    int i = 0;
+	for(i = 0; i <=255; i++){
+    	BufferAS[i] = (int)i*200+25;
+	}
+	IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
+}
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
+{
+    Nop();
+    Nop();
+    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
+}
 //
 // Main application entry point.
 //
@@ -296,6 +320,64 @@ int main(void)
 	//	res = ProcessClients(0, bfr, &length);			
 	//}
 	
+	if(1){
+    	{
+        	int i = 0;
+        	for(i = 0; i <=255; i++){
+            	BufferA[i] = (int)(i+1)*200;
+            	BufferAS[i] = (int)(i+1)*200+25;
+        	}
+        	// Initialize Output Compare Module in PWM mode
+            OC1CONbits.OCM = 0b000; // Disable Output Compare Module
+            OC1RS=125; // Write the duty cycle for the second PWM pulse
+            OC1CONbits.OCTSEL = 0;         // Select Timer 2 as output compare time base
+            OC1R= 100;                     // Load the Compare Register Value
+            OC1CONbits.OCM = 0b101;        // Select the Output Compare mode
+            IPC0bits.OC1IP = 6;            // выбрать приоритет прерывания для OC1
+            IFS0bits.OC1IF = 0;            // сбросить флаг прерывания
+            IEC0bits.OC1IE = 1;            // разрешаем прерывания от OC1            
+            
+            // Initialize Timer2
+            T2CONbits.TON = 0; // Disable Timer
+            T2CONbits.TCS = 0; // Select internal instruction cycle clock
+            T2CONbits.TGATE = 0; // Disable Gated Timer mode
+            T2CONbits.TCKPS = 0b00; // Select 1:1 Prescaler
+            TMR2 = 0x00; // Clear timer register
+            PR2 = 0xFFFF; // Load the period value
+            // Define a Buffer in DMA RAM to store duty cycle information
+            
+            // Setup and Enable DMA Channel
+            DMA0CONbits.AMODE = 0b00; // Register indirect with post increment
+            DMA0CONbits.MODE = 0b00; // Continuous, Ping-Pong mode Disabled
+            DMA0CONbits.DIR = 1; //  RAM to Peripheral
+            DMA0PAD = (int)&OC1R; // Address of the secondary output compare register
+            DMA0REQ = 0b0000010; // Select OC1 interrupt as DMA request source
+            DMA0CNT = 255; // Number of words to buffer.
+            DMA0STA = __builtin_dmaoffset(&BufferA);
+            IFS0bits.DMA0IF = 0; // Clear the DMA interrupt flag
+            IEC0bits.DMA0IE = 1; // Enable DMA interrupt
+            DMA0CONbits.CHEN = 1; // Enable DMA channel
+            
+            // Setup and Enable DMA Channel
+            DMA1CONbits.AMODE = 0b00; // Register indirect with post increment
+            DMA1CONbits.MODE = 0b00; // Continuous, Ping-Pong mode Disabled
+            DMA1CONbits.DIR = 1; //  RAM to Peripheral
+            DMA1PAD = (int)&OC1RS; // Address of the secondary output compare register
+            DMA1REQ = 0b0000010; // Select OC1 interrupt as DMA request source
+            DMA1CNT = 255; // Number of words to buffer.
+            DMA1STA = __builtin_dmaoffset(&BufferAS);
+            IFS0bits.DMA1IF = 0; // Clear the DMA interrupt flag
+            IEC0bits.DMA1IE = 1; // Enable DMA interrupt
+            DMA1CONbits.CHEN = 1; // Enable DMA channel
+            
+            // Enable Timer
+            T2CONbits.TON = 1; // Start Timer
+    	}
+    	while(1){
+   	    Nop();
+ 	    Nop();
+    	}
+	}
     
 	if(0){
 		OCInit();
