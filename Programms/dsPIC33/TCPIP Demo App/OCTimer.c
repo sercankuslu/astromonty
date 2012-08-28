@@ -53,6 +53,7 @@ double frac(double X);
 double GM_Sidereal_Time (double jd);
 
 #ifdef __C30__
+/*
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
@@ -61,7 +62,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
     else
         M1.Val--;
     ProcessOC(&rr1);
-}
+}*/
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
 {
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
