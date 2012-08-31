@@ -345,7 +345,7 @@ typedef struct
 
 #endif
 
-int OCInit(void);
+int OCSetup(void);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
 int ProcessOC(RR * rr);
 int Control(RR * rr);

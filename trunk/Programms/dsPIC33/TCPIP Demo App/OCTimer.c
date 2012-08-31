@@ -118,7 +118,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _U1RXInterrupt( void )
     WORD OC1R = 0;
 #endif
 
-int OCInit(void)
+int OCSetup(void)
 {
         //BYTE i;
 #ifdef __C30__

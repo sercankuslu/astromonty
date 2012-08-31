@@ -254,23 +254,46 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
     }
 #endif
 
-unsigned int BufferA[256] __attribute__((space(dma)));
-unsigned int BufferAS[256] __attribute__((space(dma)));
+unsigned int BufferA[128] __attribute__((space(dma)));
+unsigned int BufferAS[128] __attribute__((space(dma)));
+unsigned int BufferB[128] __attribute__((space(dma)));
+unsigned int BufferBS[128] __attribute__((space(dma)));
 // DMA Interrupt Handler
+
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
-{    
-    int i = 0;
-    for(i = 0; i <=255; i++){
-        BufferA[i] = (int)i*200;
+{
+    static int T = 256;
+    int i = 0;    
+    if(DMAGetPPState(DMA0)==1){
+        for(i = 0; i < 128; i++){
+            BufferA[i] = (int)(T+1)*200;
+            T++;
+        }
+    } else {
+        for(i = 0; i < 128; i++){
+            BufferB[i] = (int)(T+1)*200;
+            T++;
+        }
     }
+     
     IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
 {    
-    int i = 0;
-    for(i = 0; i <=255; i++){
-        BufferAS[i] = (int)i*200+25;
+    static int T = 256;
+    int i = 0;    
+    if(DMAGetPPState(DMA1)==1){
+        for(i = 0; i < 128; i++){
+            BufferAS[i] = (int)(T+1)*200+25;
+            T++;
+        }
+    } else {
+        for(i = 0; i < 128; i++){
+            BufferBS[i] = (int)(T+1)*200+25;
+            T++;
+        }
     }
+
     IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
@@ -287,8 +310,7 @@ void main(void)
 #else
 int main(void)
 #endif
-{
-    
+{  
         
     static DWORD t = 0;
        static DWORD d = 0;
@@ -322,50 +344,48 @@ int main(void)
     
     if(1){
         {
-            int i = 0;
-            for(i = 0; i <=255; i++){
+            int i = 0;            
+            for(i = 0; i < 128; i++){
                 BufferA[i] = (int)(i+1)*200;
                 BufferAS[i] = (int)(i+1)*200+25;
+                BufferB[i] = (int)(i+1+128)*200;
+                BufferBS[i] = (int)(i+1+128)*200+25;
             }
             // Initialize Output Compare Module in PWM mode
-            OC1CONbits.OCM = 0b000; // Disable Output Compare Module
-            OC1RS=125; // Write the duty cycle for the second PWM pulse
-            OC1CONbits.OCTSEL = 0;         // Select Timer 2 as output compare time base
-            OC1R= 100;                     // Load the Compare Register Value
-            OC1CONbits.OCM = 0b101;        // Select the Output Compare mode
-            IPC0bits.OC1IP = 6;            // выбрать приоритет прерывания для OC1
-            IFS0bits.OC1IF = 0;            // сбросить флаг прерывания
-            IEC0bits.OC1IE = 1;            // разрешаем прерывания от OC1            
+            OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+            OCSetValue(ID_OC1, 100, 125);
+            OCSetInt(ID_OC1, 6, TRUE);
+            OCSetMode(ID_OC1, CONT_PULSE);
             
             // Initialize Timer2
-            InitTimer(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-            SetTimerValue(T2, 0, 0xFFFF);
-            SetTimerInt(T2, 5, TRUE);
+            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_64, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerSetValue(T2, 0, 0xFFFF);
+            TimerSetInt(T2, 5, FALSE);
            
             // Setup and Enable DMA Channel
-            DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUOUS);
-            DMASelectDevice(DMA0, IRQ_OC1, &OC1R);
-            DMASelectBuffer(DMA0, __builtin_dmaoffset(&BufferA), 0, 255);
+            DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+            DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
+            DMASelectBuffer(DMA0, __builtin_dmaoffset(&BufferA), __builtin_dmaoffset(&BufferB), 127);
             DMASetInt(DMA0, 5, TRUE);
             DMASetState(DMA0, TRUE, FALSE);
             
-            DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUOUS);
-            DMASelectDevice(DMA1, IRQ_OC1, &OC1RS);
-            DMASelectBuffer(DMA1, __builtin_dmaoffset(&BufferAS), 0, 255);
+            DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+            DMASelectDevice(DMA1, IRQ_OC1, (int)&OC1RS);
+            DMASelectBuffer(DMA1, __builtin_dmaoffset(&BufferAS), __builtin_dmaoffset(&BufferBS), 127);
             DMASetInt(DMA1, 5, TRUE);
             DMASetState(DMA1, TRUE, FALSE);            
             
             // Enable Timer
-            SetTimerState(T2, TRUE);
+            TimerSetState(T2, TRUE);
         }
         while(1){
            Nop();
-         Nop();
+           Nop();
         }
     }
     
     if(0){
-        OCInit();
+        OCSetup();
         //вызов предпросчета двигателей
         {
             T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
@@ -519,7 +539,7 @@ int main(void)
 
     
      LoadRRConfig();
-    OCInit();
+    OCSetup();
     //вызов предпросчета двигателей
     {
         T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
