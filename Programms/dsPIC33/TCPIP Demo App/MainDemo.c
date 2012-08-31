@@ -313,9 +313,13 @@ int main(void)
 {  
         
     static DWORD t = 0;
-       static DWORD d = 0;
+    static DWORD d = 0;
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
+    // указатель на функцию
+    //int (*p)(void); // объ€вление
+    //p = OCSetup;    // присвоение
+    //p();			  // вызов
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
@@ -358,7 +362,7 @@ int main(void)
             OCSetMode(ID_OC1, CONT_PULSE);
             
             // Initialize Timer2
-            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_64, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T2, 0, 0xFFFF);
             TimerSetInt(T2, 5, FALSE);
            
