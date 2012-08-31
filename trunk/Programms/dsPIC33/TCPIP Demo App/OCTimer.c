@@ -12,6 +12,7 @@
 #endif
 
 #include "OCTimer.h"
+#include "device_control.h"
 
 #define abs(x) (x<0? -x : x)
 
@@ -210,33 +211,15 @@ int OCSetup(void)
         IFS0bits.U1RXIF = 1;
 
         // инициализация OC1
-        {
-            OC1CONbits.OCM = 0b000;
-            OC1CONbits.OCTSEL = 0;      // выбрать Timer2
-            IPC0bits.OC1IP = 6;            // выбрать приоритет прерывания для OC1
-            IFS0bits.OC1IF = 0;            // сбросить флаг прерывания
-            IEC0bits.OC1IE = 1;            // разрешаем прерывания от OC1
-        }
+        OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+        OCSetInt(ID_OC1, 6, TRUE);
         // инициализация OC2
-        {
-            OC2CONbits.OCM = 0b000;
-            OC2CONbits.OCTSEL = 0;      // выбрать Timer2
-            IPC1bits.OC2IP = 6;            // выбрать приоритет прерывания для OC2
-            IFS0bits.OC2IF = 0;            // сбросить флаг прерывания
-            IEC0bits.OC2IE = 1;            // разрешаем прерывания от OC2
-        }
+        OCInit(ID_OC2, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+	    OCSetInt(ID_OC2, 6, TRUE);
         // инициализация OC3
-        {
-            OC3CONbits.OCM = 0b000;
-            OC3CONbits.OCTSEL = 0;      // выбрать Timer2
-            IPC6bits.OC3IP = 6;            // выбрать приоритет прерывания для OC3
-            IFS1bits.OC3IF = 0;            // сбросить флаг прерывания
-            IEC1bits.OC3IE = 1;            // разрешаем прерывания от OC3
-        }
+	    OCInit(ID_OC3, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+        OCSetInt(ID_OC3, 6, TRUE);
 
-        //IFS0bits.OC1IF = 1;
-        //IFS0bits.OC2IF = 1;
-        //IFS1bits.OC3IF = 1;
         //ProcessOC(&rr1);
         //ProcessOC(&rr2);
         //ProcessOC(&rr3);
@@ -255,38 +238,11 @@ int OCSetup(void)
 */
 int TmrInit(BYTE Num)
 {
-        switch(Num){
-                case 2:
-                    #ifdef __C30__
-                    T2CONbits.TON = 0;         // Disable Timer
-                    T2CONbits.TCS = 0;         // Select internal instruction cycle clock
-                    T2CONbits.TGATE = 0;     // Disable Gated Timer mode
-                    T2CONbits.TCKPS = 0b01; // Select 8:1 Prescaler 200ns
-                    TMR2 = 0x00;             // Clear timer register
-                    PR2 = 0xFFFF;             // Load the period value
-                    IPC1bits.T2IP = 7;     // Set Timer2 Interrupt Priority Level
-                    IFS0bits.T2IF = 0;         // Clear Timer2 Interrupt Flag
-                    IEC0bits.T2IE = 1;         // Enable Timer2 interrupt
-                    T2CONbits.TON = 1;         // Start Timer
-                    #endif //#ifdef __C30__
-                    break;
-                case 3:
-                    #ifdef __C30__
-                    T3CONbits.TON = 0;         // Disable Timer
-                    T3CONbits.TCS = 0;         // Select internal instruction cycle clock
-                    T3CONbits.TGATE = 0;     // Disable Gated Timer mode
-                    T3CONbits.TCKPS = 0b01; // Select 8:1 Prescaler 200ns
-                    TMR3 = 0x00;             // Clear timer register
-                    PR3 = 0xFFFF;             // Load the period value
-                    IPC2bits.T3IP = 7;         // Set Timer3 Interrupt Priority Level
-                    IFS0bits.T3IF = 0;         // Clear Timer3 Interrupt Flag
-                    IEC0bits.T3IE = 1;         // Enable Timer3 interrupt
-                    T3CONbits.TON = 1;         // Start Timer
-                    #endif //#ifdef __C30__
-                    break;
-                default: return -1;
-        }
-        return 0;
+	TimerInit((TIMERS_ID)Num, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+	TimerSetValue((TIMERS_ID)Num, 0, 0xFFFF);
+	TimerSetInt((TIMERS_ID)Num, 7, FALSE);
+	TimerSetState((TIMERS_ID)Num, TRUE);
+    return 0;
 }
 
 int InitRR(RR * rr)
