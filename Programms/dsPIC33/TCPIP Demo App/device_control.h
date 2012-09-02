@@ -67,9 +67,21 @@ typedef enum _DMA_DEVICE_IRQ {
     IRQ_INT0 = 0, IRQ_IC1=1, IRQ_IC2=5, IRQ_OC1=2, IRQ_OC2=6, IRQ_TMR2=7, IRQ_TMR3=8, IRQ_SPI1=10, IRQ_SPI2=33, IRQ_UART1_RX, IRQ_UART1_TX, IRQ_UART2_RX, IRQ_UART2_TX, IRQ_ADC1, IRQ_ADC2
 } DMA_DEVICE_IRQ;
 
+typedef struct _DMAConfigType{
+	int (*fillingBufferAFunc)(WORD*, WORD);
+	int (*fillingBufferBFunc)(WORD*, WORD);
+	int BufA;
+	int BufB;
+	WORD Count;
+} DMAConfigType;
+
+
+
 int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
-int DMASelectBuffer(DMA_ID id, int DMAbufA, int DMAbufB, WORD Count);
+int DMASetBufferSize(DMA_ID id, WORD Count);
+int DMASetCallback(DMA_ID id, int (*fillingBufAFunc)(WORD*, WORD), int (*fillingBufBFunc)(WORD*, WORD));
+//int DMASelectBuffer(DMA_ID id, int DMAbufA, int DMAbufB, WORD Count);
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force);
 int DMAGetPPState(DMA_ID id);
 int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled);

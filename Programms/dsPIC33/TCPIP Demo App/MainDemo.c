@@ -254,48 +254,32 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
     }
 #endif
 
+/*
 unsigned int BufferA[128] __attribute__((space(dma)));
 unsigned int BufferAS[128] __attribute__((space(dma)));
 unsigned int BufferB[128] __attribute__((space(dma)));
 unsigned int BufferBS[128] __attribute__((space(dma)));
+*/
 // DMA Interrupt Handler
-
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
+void fillingBufferR(WORD * Buf, WORD Count)
 {
-    static int T = 256;
+    static int T = 0;
     int i = 0;    
-    if(DMAGetPPState(DMA0)==1){
-        for(i = 0; i < 128; i++){
-            BufferA[i] = (int)(T+1)*200;
-            T++;
-        }
-    } else {
-        for(i = 0; i < 128; i++){
-            BufferB[i] = (int)(T+1)*200;
-            T++;
-        }
+    for(i = 0; i < Count; i++){
+        Buf[i] = (int)(T+1)*200;
+        T++;
     }
-     
-    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
 }
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
-{    
-    static int T = 256;
+void fillingBufferRS(WORD * Buf, WORD Count)
+{
+    static int T = 0;
     int i = 0;    
-    if(DMAGetPPState(DMA1)==1){
-        for(i = 0; i < 128; i++){
-            BufferAS[i] = (int)(T+1)*200+25;
-            T++;
-        }
-    } else {
-        for(i = 0; i < 128; i++){
-            BufferBS[i] = (int)(T+1)*200+25;
-            T++;
-        }
+    for(i = 0; i < Count; i++){
+        Buf[i] = (int)(T+1)*200+25;
+        T++;
     }
+}
 
-    IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
-}
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {
     Nop();
@@ -348,13 +332,10 @@ int main(void)
     
     if(1){
         {
-            int i = 0;            
-            for(i = 0; i < 128; i++){
-                BufferA[i] = (int)(i+1)*200;
-                BufferAS[i] = (int)(i+1)*200+25;
-                BufferB[i] = (int)(i+1+128)*200;
-                BufferBS[i] = (int)(i+1+128)*200+25;
-            }
+	        //fillingBufferA(DMABuffer);
+        	//fillingBufferA(&DMABuffer[128]);
+			//fillingBufferB(&DMABuffer[256]);
+			//fillingBufferB(&DMABuffer[384]);
             // Initialize Output Compare Module in PWM mode
             OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
             OCSetValue(ID_OC1, 100, 125);
@@ -369,13 +350,15 @@ int main(void)
             // Setup and Enable DMA Channel
             DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
-            DMASelectBuffer(DMA0, __builtin_dmaoffset(&BufferA), __builtin_dmaoffset(&BufferB), 127);
+            DMASetBufferSize(DMA0, 128);
+            DMASetCallback(DMA0, fillingBufferR, fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
             DMASetState(DMA0, TRUE, FALSE);
             
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA1, IRQ_OC1, (int)&OC1RS);
-            DMASelectBuffer(DMA1, __builtin_dmaoffset(&BufferAS), __builtin_dmaoffset(&BufferBS), 127);
+            DMASetBufferSize(DMA1, 128);
+            DMASetCallback(DMA1, fillingBufferRS, fillingBufferRS);
             DMASetInt(DMA1, 5, TRUE);
             DMASetState(DMA1, TRUE, FALSE);            
             
