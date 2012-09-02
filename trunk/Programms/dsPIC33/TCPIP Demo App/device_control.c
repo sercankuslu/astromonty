@@ -158,6 +158,10 @@ int TimerSetState(TIMERS_ID id, BOOL enabled)
     }
     return 0;
 }
+// управл€ющие переменные
+DMAConfigType DMAConfig[8];
+unsigned int DMABuffer[1024] __attribute__((space(dma)));
+static int BufferBusySize = 0;
 
 int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
 {
@@ -168,6 +172,9 @@ int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_C
     Config |= ((WORD)nullw) << 11;
     Config |= ((WORD)addr)  << 4;
     Config |= ((WORD)mode)  << 0;
+   	DMAConfig[id].fillingBufferAFunc = NULL;
+	DMAConfig[id].fillingBufferBFunc = NULL;
+	DMAConfig[id].Count = 0;
 
     switch(id){
         case DMA0: DMA0CON = Config;
@@ -231,53 +238,74 @@ int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
     }
     return 0;
 }
-int DMASelectBuffer(DMA_ID id, int DMAbufA, int DMAbufB, WORD Count)
+int DMASetBufferSize(DMA_ID id, WORD Count)
 {
+	int A;
+	int B;
+	DMAConfig[id].Count = Count;
+	DMAConfig[id].BufA = (int)&DMABuffer + BufferBusySize*2;
+	A = __builtin_dmaoffset(DMABuffer) + BufferBusySize*2;
+	BufferBusySize += Count;
+	DMAConfig[id].BufB = (int)&DMABuffer + BufferBusySize*2;
+	B = __builtin_dmaoffset(DMABuffer) + BufferBusySize*2;	
+	BufferBusySize += Count;
      switch(id){
         case DMA0:
-            DMA0STA = DMAbufA;
-            DMA0STB = DMAbufB;
-            DMA0CNT = Count;
+            DMA0STA = A;
+            DMA0STB = B;
+            DMA0CNT = Count-1;
             break;
         case DMA1:
-            DMA1STA = DMAbufA;
-            DMA1STB = DMAbufB;
-            DMA1CNT = Count;
+            DMA1STA = A;
+            DMA1STB = B;
+            DMA1CNT = Count-1;
             break;
         case DMA2:
-            DMA2STA = DMAbufA;
-            DMA2STB = DMAbufB;
-            DMA2CNT = Count;
+            DMA2STA = A;
+            DMA2STB = B;
+            DMA2CNT = Count-1;
             break;
         case DMA3:
-            DMA3STA = DMAbufA;
-            DMA3STB = DMAbufB;
-            DMA3CNT = Count;
+            DMA3STA = A;
+            DMA3STB = B;
+            DMA3CNT = Count-1;
             break;
         case DMA4:
-            DMA4STA = DMAbufA;
-            DMA4STB = DMAbufB;
-            DMA4CNT = Count;
+            DMA4STA = A;
+            DMA4STB = B;
+            DMA4CNT = Count-1;
             break;
         case DMA5:
-            DMA5STA = DMAbufA;
-            DMA5STB = DMAbufB;
-            DMA5CNT = Count;
+            DMA5STA = A;
+            DMA5STB = B;
+            DMA5CNT = Count-1;
             break;
         case DMA6:
-            DMA6STA = DMAbufA;
-            DMA6STB = DMAbufB;
-            DMA6CNT = Count;
+            DMA6STA = A;
+            DMA6STB = B;
+            DMA6CNT = Count-1;
             break;
         case DMA7:
-            DMA7STA = DMAbufA;
-            DMA7STB = DMAbufB;
-            DMA7CNT = Count;
+            DMA7STA = A;
+            DMA7STB = B;
+            DMA7CNT = Count-1;
             break;
         default:
         return -1;
     }
     return 0;
+}
+int DMASetCallback(DMA_ID id, int (*fillingBufAFunc)(WORD*, WORD ), int (*fillingBufBFunc)(WORD*, WORD ))
+{
+	DMAConfig[id].fillingBufferAFunc = fillingBufAFunc;
+	DMAConfig[id].fillingBufferBFunc = fillingBufBFunc;
+	if(DMAConfig[id].fillingBufferAFunc){
+		DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	}
+	if(DMAConfig[id].fillingBufferBFunc){
+		DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	}
+	return 0;
 }
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force)
 {
@@ -393,6 +421,30 @@ int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled)
     }
     return 0;
 }
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
+{
+	if(DMAConfig[0].fillingBufferAFunc){
+	    if(DMAGetPPState(DMA0)==1){
+	    	DMAConfig[0].fillingBufferAFunc((WORD*)DMAConfig[0].BufA, DMAConfig[0].Count);
+	    } else {
+	        DMAConfig[0].fillingBufferBFunc((WORD*)DMAConfig[0].BufB, DMAConfig[0].Count);
+	    }
+	}     
+    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
+{    
+	if(DMAConfig[1].fillingBufferBFunc){
+	    if(DMAGetPPState(DMA1)==1){
+			DMAConfig[1].fillingBufferAFunc((WORD*)DMAConfig[1].BufA, DMAConfig[1].Count);
+	    } else {
+			DMAConfig[1].fillingBufferBFunc((WORD*)DMAConfig[1].BufB, DMAConfig[1].Count);
+	    }
+	}
+    IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
 int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
 {
     WORD Config = 0;
