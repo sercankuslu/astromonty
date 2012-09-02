@@ -279,12 +279,36 @@ void fillingBufferRS(WORD * Buf, WORD Count)
         T++;
     }
 }
+void fillingBufferR1(WORD * Buf, WORD Count)
+{
+    static int T = 0;
+    int i = 0;    
+    for(i = 0; i < Count; i++){
+        Buf[i] = (int)(T+1)*200;
+        T++;
+    }
+}
+void fillingBufferRS1(WORD * Buf, WORD Count)
+{
+    static int T = 0;
+    int i = 0;    
+    for(i = 0; i < Count; i++){
+        Buf[i] = (int)(T+1)*200+25;
+        T++;
+    }
+}
 
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
 {
     Nop();
     Nop();
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
+}
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
+{
+    Nop();
+    Nop();
+    IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag
 }
 //
 // Main application entry point.
@@ -332,11 +356,7 @@ int main(void)
     
     if(1){
         {
-	        //fillingBufferA(DMABuffer);
-        	//fillingBufferA(&DMABuffer[128]);
-			//fillingBufferB(&DMABuffer[256]);
-			//fillingBufferB(&DMABuffer[384]);
-            // Initialize Output Compare Module in PWM mode
+            // Initialize Output Compare Module in Contionous pulse mode
             OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
             OCSetValue(ID_OC1, 100, 125);
             OCSetInt(ID_OC1, 6, TRUE);
@@ -346,24 +366,50 @@ int main(void)
             TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T2, 0, 0xFFFF);
             TimerSetInt(T2, 5, FALSE);
+
+            // Initialize Timer3
+            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerSetValue(T3, 0, 0xFFFF);
+            TimerSetInt(T3, 5, FALSE);
            
             // Setup and Enable DMA Channel
             DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
-            DMASetBufferSize(DMA0, 128);
-            DMASetCallback(DMA0, fillingBufferR, fillingBufferR);
+            DMASetBufferSize(DMA0, 64);
+            DMASetCallback(DMA0, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
             DMASetState(DMA0, TRUE, FALSE);
             
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA1, IRQ_OC1, (int)&OC1RS);
-            DMASetBufferSize(DMA1, 128);
-            DMASetCallback(DMA1, fillingBufferRS, fillingBufferRS);
+            DMASetBufferSize(DMA1, 64);
+            DMASetCallback(DMA1, (ROM void*)fillingBufferRS, (ROM void*)fillingBufferRS);
             DMASetInt(DMA1, 5, TRUE);
             DMASetState(DMA1, TRUE, FALSE);            
             
+            // Initialize Output Compare Module in Contionous pulse mode
+            OCInit(ID_OC2, IDLE_DISABLE, OC_TMR3, OC_DISABLED);
+            OCSetValue(ID_OC2, 100, 125);
+            OCSetInt(ID_OC2, 6, TRUE);
+            OCSetMode(ID_OC2, CONT_PULSE);
+            
+            // Setup and Enable DMA Channel
+            DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+            DMASelectDevice(DMA2, IRQ_OC2, (int)&OC2R);
+            DMASetBufferSize(DMA2, 64);
+            DMASetCallback(DMA2, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
+            DMASetInt(DMA2, 5, TRUE);
+            DMASetState(DMA2, TRUE, FALSE);
+            
+            DMAInit(DMA3, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+            DMASelectDevice(DMA3, IRQ_OC2, (int)&OC2RS);
+            DMASetBufferSize(DMA3, 64);
+            DMASetCallback(DMA3, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
+            DMASetInt(DMA3, 5, TRUE);
+            DMASetState(DMA3, TRUE, FALSE);      
             // Enable Timer
             TimerSetState(T2, TRUE);
+            TimerSetState(T3, TRUE);
         }
         while(1){
            Nop();

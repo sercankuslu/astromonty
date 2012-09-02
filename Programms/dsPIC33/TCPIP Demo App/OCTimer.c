@@ -63,7 +63,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
     else
         M1.Val--;
     ProcessOC(&rr1);
-}*/
+}* /
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
 {
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
@@ -72,7 +72,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
     else
         M2.Val--;
     ProcessOC(&rr2);
-}
+}*/
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
 {
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
@@ -82,6 +82,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
         M3.Val--;
     ProcessOC(&rr3);
 }
+/*
 void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
 {
     IFS0bits.T2IF = 0; // Clear T2 interrupt flag
@@ -97,7 +98,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
     ProcessTimer(3, &rr1);
     ProcessTimer(3, &rr2);
     ProcessTimer(3, &rr3);
-}
+}*/
 void __attribute__((__interrupt__,__no_auto_psv__)) _U2RXInterrupt( void )
 {
     IFS1bits.U2RXIF = 0;

@@ -423,11 +423,12 @@ int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled)
 }
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
 {
-	if(DMAConfig[0].fillingBufferAFunc){
-	    if(DMAGetPPState(DMA0)==1){
-	    	DMAConfig[0].fillingBufferAFunc((WORD*)DMAConfig[0].BufA, DMAConfig[0].Count);
+	int id = DMA0;
+	if(DMAConfig[id].fillingBufferAFunc){
+	    if(DMAGetPPState(id)==1){
+	    	DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
 	    } else {
-	        DMAConfig[0].fillingBufferBFunc((WORD*)DMAConfig[0].BufB, DMAConfig[0].Count);
+	        DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
 	    }
 	}     
     IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
@@ -435,14 +436,93 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
 
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
 {    
-	if(DMAConfig[1].fillingBufferBFunc){
-	    if(DMAGetPPState(DMA1)==1){
-			DMAConfig[1].fillingBufferAFunc((WORD*)DMAConfig[1].BufA, DMAConfig[1].Count);
+	int id = DMA1;
+	if(DMAConfig[id].fillingBufferBFunc){
+	    if(DMAGetPPState(id)==1){
+			DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
 	    } else {
-			DMAConfig[1].fillingBufferBFunc((WORD*)DMAConfig[1].BufB, DMAConfig[1].Count);
+			DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
 	    }
 	}
     IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA2Interrupt(void)
+{
+	int id = DMA2;
+	if(DMAConfig[id].fillingBufferAFunc){
+	    if(DMAGetPPState(id)==1){
+	    	DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+	        DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}     
+    IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA3Interrupt(void)
+{    
+	int id = DMA3;
+	if(DMAConfig[id].fillingBufferBFunc){
+	    if(DMAGetPPState(id)==1){
+			DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+			DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}
+    IFS2bits.DMA3IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA4Interrupt(void)
+{
+	int id = DMA4;
+	if(DMAConfig[id].fillingBufferAFunc){
+	    if(DMAGetPPState(id)==1){
+	    	DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+	        DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}     
+    IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
+{    
+	int id = DMA5;
+	if(DMAConfig[id].fillingBufferBFunc){
+	    if(DMAGetPPState(id)==1){
+			DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+			DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}
+    IFS3bits.DMA5IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA6Interrupt(void)
+{
+	int id = DMA6;
+	if(DMAConfig[id].fillingBufferAFunc){
+	    if(DMAGetPPState(id)==1){
+	    	DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+	        DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}     
+    IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
+}
+
+void __attribute__((__interrupt__,__no_auto_psv__)) _DMA7Interrupt(void)
+{    
+	int id = DMA1;
+	if(DMAConfig[id].fillingBufferBFunc){
+	    if(DMAGetPPState(id)==1){
+			DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
+	    } else {
+			DMAConfig[id].fillingBufferBFunc((WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
+	    }
+	}
+    IFS4bits.DMA7IF = 0; // Clear the DMA0 Interrupt Flag
 }
 
 int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
