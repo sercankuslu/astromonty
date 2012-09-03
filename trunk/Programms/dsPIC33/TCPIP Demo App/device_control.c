@@ -1,6 +1,15 @@
 #include "device_control.h"
 #include "TCPIP Stack/TCPIP.h"
+
+//************************************************************************************************
+//
+//                              Timers
+//
+//************************************************************************************************
+TMRConfigType TMRConfig[9];
+//------------------------------------------------------------------------------------------------
 int TimerInit(TIMERS_ID id, TMR_CLOCK_SOURCE source, TMR_GATED_MODE gated, TMR_PRESCALER pre, SYS_IDLE idle, TMR_BIT_MODE bit, TMR1_SYNC sync)
+//------------------------------------------------------------------------------------------------
 {
     WORD Config = 0;
     Config |= ((WORD)idle)   << 13;
@@ -34,7 +43,9 @@ int TimerInit(TIMERS_ID id, TMR_CLOCK_SOURCE source, TMR_GATED_MODE gated, TMR_P
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int TimerSetInt(TIMERS_ID id, BYTE Level, BOOL enabled)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case T1:
@@ -87,7 +98,9 @@ int TimerSetInt(TIMERS_ID id, BYTE Level, BOOL enabled)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int TimerSetValue(TIMERS_ID id, WORD TmrValue, WORD PRValue)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case T1:
@@ -131,9 +144,10 @@ int TimerSetValue(TIMERS_ID id, WORD TmrValue, WORD PRValue)
     }
     return 0;
 }
-int TimerSetState(TIMERS_ID id, BOOL enabled)
+//------------------------------------------------------------------------------------------------
+void TimerSetState(TIMERS_ID id, BOOL enabled)
+//------------------------------------------------------------------------------------------------
 {
-
     switch(id){
         case T1: T1CONbits.TON = enabled;
             break;
@@ -152,18 +166,121 @@ int TimerSetState(TIMERS_ID id, BOOL enabled)
         case T8: T8CONbits.TON = enabled;
             break;
         case T9: T9CONbits.TON = enabled;
-            break;
-        default:
-        return -1;
+            break;        
     }
-    return 0;
 }
+//------------------------------------------------------------------------------------------------
+int TimerSetCallback(TIMERS_ID id, int (*CallbackFunc)(void))
+//------------------------------------------------------------------------------------------------
+{
+    TMRConfig[id].CallbackFunc = CallbackFunc;
+	return 0;
+}
+/*
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T1Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T1;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS0bits.T1IF = 0; // Clear T1 interrupt flag
+}
+*/
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T2;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS0bits.T2IF = 0; // Clear T2 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T3;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS0bits.T3IF = 0; // Clear T3 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T4Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T4;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS1bits.T4IF = 0; // Clear T4 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T5Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T5;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS1bits.T5IF = 0; // Clear T5 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T6;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS2bits.T6IF = 0; // Clear T6 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T7;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS3bits.T7IF = 0; // Clear T7 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T8Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T8;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS3bits.T8IF = 0; // Clear T8 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _T9Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = T9;
+    if(TMRConfig[id].CallbackFunc){
+        TMRConfig[id].CallbackFunc();
+    }
+    IFS3bits.T9IF = 0; // Clear T9 interrupt flag
+}
+//************************************************************************************************
+//
+//                              Direct Memory Access (DMA)
+//
+//************************************************************************************************
+
 // управл€ющие переменные
 DMAConfigType DMAConfig[8];
 unsigned int DMABuffer[1024] __attribute__((space(dma)));
 static int BufferBusySize = 0;
-
+//------------------------------------------------------------------------------------------------
 int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
+//------------------------------------------------------------------------------------------------
 {
     WORD Config = 0;
     Config |= ((WORD)size)  << 14;
@@ -198,7 +315,9 @@ int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_C
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case DMA0:
@@ -238,7 +357,9 @@ int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int DMASetBufferSize(DMA_ID id, WORD Count)
+//------------------------------------------------------------------------------------------------
 {
 	int A;
 	int B;
@@ -295,11 +416,19 @@ int DMASetBufferSize(DMA_ID id, WORD Count)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int DMASetCallback(DMA_ID id, int (*fillingBufAFunc)(WORD*, WORD ), int (*fillingBufBFunc)(WORD*, WORD ))
+//------------------------------------------------------------------------------------------------
 {
 	DMAConfig[id].fillingBufferAFunc = fillingBufAFunc;
-	DMAConfig[id].fillingBufferBFunc = fillingBufBFunc;
-	if(DMAConfig[id].fillingBufferAFunc){
+	DMAConfig[id].fillingBufferBFunc = fillingBufBFunc;	
+	return 0;
+}
+//------------------------------------------------------------------------------------------------
+int DMAPrepBuffer(DMA_ID id)
+//------------------------------------------------------------------------------------------------
+{    
+    if(DMAConfig[id].fillingBufferAFunc){
 		DMAConfig[id].fillingBufferAFunc((WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
 	}
 	if(DMAConfig[id].fillingBufferBFunc){
@@ -307,7 +436,9 @@ int DMASetCallback(DMA_ID id, int (*fillingBufAFunc)(WORD*, WORD ), int (*fillin
 	}
 	return 0;
 }
+//------------------------------------------------------------------------------------------------
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case DMA0:
@@ -347,7 +478,9 @@ int DMASetState(DMA_ID id, BOOL enabled, BOOL force)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int DMAGetPPState(DMA_ID id)
+//------------------------------------------------------------------------------------------------
 {
     int state = 0;
     switch(id){
@@ -372,8 +505,9 @@ int DMAGetPPState(DMA_ID id)
     }
     return state;
 }
-
+//------------------------------------------------------------------------------------------------
 int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled)
+//------------------------------------------------------------------------------------------------
 {
      switch(id){
         case DMA0:
@@ -421,7 +555,33 @@ int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled)
     }
     return 0;
 }
+int DMAForceTransfer(DMA_ID id)
+{
+    switch(id){
+        case DMA0: DMA0REQbits.FORCE = 1;
+            break;
+        case DMA1: DMA1REQbits.FORCE = 1;
+            break;
+        case DMA2: DMA2REQbits.FORCE = 1;
+            break;
+        case DMA3: DMA3REQbits.FORCE = 1;
+            break;
+        case DMA4: DMA4REQbits.FORCE = 1;
+            break;
+        case DMA5: DMA5REQbits.FORCE = 1;
+            break;
+        case DMA6: DMA6REQbits.FORCE = 1;
+            break;
+        case DMA7: DMA7REQbits.FORCE = 1;
+            break;
+        default:
+        return -1;
+    }
+    return 0;
+}
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {
 	int id = DMA0;
 	if(DMAConfig[id].fillingBufferAFunc){
@@ -433,8 +593,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
 	}     
     IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {    
 	int id = DMA1;
 	if(DMAConfig[id].fillingBufferBFunc){
@@ -446,8 +607,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
 	}
     IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA2Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {
 	int id = DMA2;
 	if(DMAConfig[id].fillingBufferAFunc){
@@ -459,8 +621,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA2Interrupt(void)
 	}     
     IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA3Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {    
 	int id = DMA3;
 	if(DMAConfig[id].fillingBufferBFunc){
@@ -472,8 +635,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA3Interrupt(void)
 	}
     IFS2bits.DMA3IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA4Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {
 	int id = DMA4;
 	if(DMAConfig[id].fillingBufferAFunc){
@@ -485,8 +649,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA4Interrupt(void)
 	}     
     IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
+//------------------------------------------------------------------------------------------------
 {    
 	int id = DMA5;
 	if(DMAConfig[id].fillingBufferBFunc){
@@ -498,8 +663,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _Interrupt61(void)//_DMA5Int
 	}
     IFS3bits.DMA5IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA6Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {
 	int id = DMA6;
 	if(DMAConfig[id].fillingBufferAFunc){
@@ -511,8 +677,9 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA6Interrupt(void)
 	}     
     IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//------------------------------------------------------------------------------------------------
 void __attribute__((__interrupt__,__no_auto_psv__)) _DMA7Interrupt(void)
+//------------------------------------------------------------------------------------------------
 {    
 	int id = DMA1;
 	if(DMAConfig[id].fillingBufferBFunc){
@@ -524,8 +691,15 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA7Interrupt(void)
 	}
     IFS4bits.DMA7IF = 0; // Clear the DMA0 Interrupt Flag
 }
-
+//************************************************************************************************
+//
+//                              Output Compare
+//
+//************************************************************************************************
+OCConfigType OCConfig[8];
+//------------------------------------------------------------------------------------------------
 int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
+//------------------------------------------------------------------------------------------------
 {
     WORD Config = 0;
     Config |= ((WORD)idle)  << 13;
@@ -553,7 +727,9 @@ int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int OCSetValue(OC_ID id, WORD ocr, WORD ocrs)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case ID_OC1:
@@ -593,7 +769,9 @@ int OCSetValue(OC_ID id, WORD ocr, WORD ocrs)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 int OCSetInt(OC_ID id, BYTE Level, BOOL enabled)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case ID_OC1:
@@ -641,8 +819,9 @@ int OCSetInt(OC_ID id, BYTE Level, BOOL enabled)
     }
     return 0;
 }
-
-int OCSetMode(OC_ID id,OC_WORK_MODE ocm)
+//------------------------------------------------------------------------------------------------
+int OCSetMode(OC_ID id, OC_WORK_MODE ocm)
+//------------------------------------------------------------------------------------------------
 {
     switch(id){
         case ID_OC1: OC1CONbits.OCM = (BYTE)ocm;
@@ -666,6 +845,93 @@ int OCSetMode(OC_ID id,OC_WORK_MODE ocm)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
+int OCSetCallback(OC_ID id, int (*CallbackFunc)(void))
+//------------------------------------------------------------------------------------------------
+{
+	OCConfig[id].CallbackFunc = CallbackFunc;
+	return 0;
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC1;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC2;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC3;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC4Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC4;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS1bits.OC4IF = 0; // Clear OC4 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC5Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC5;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS2bits.OC5IF = 0; // Clear OC5 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC6Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC6;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS2bits.OC6IF = 0; // Clear OC6 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC7Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC7;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS2bits.OC7IF = 0; // Clear OC7 interrupt flag
+}
+//------------------------------------------------------------------------------------------------
+void __attribute__((__interrupt__,__no_auto_psv__)) _OC8Interrupt( void )
+//------------------------------------------------------------------------------------------------
+{
+    int id = ID_OC8;
+    if(OCConfig[id].CallbackFunc){
+        OCConfig[id].CallbackFunc();
+    }
+    IFS2bits.OC8IF = 0; // Clear OC8 interrupt flag
+}
 
-
-
+//________________________________________________________________________________________________
+__END__

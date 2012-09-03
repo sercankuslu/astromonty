@@ -37,18 +37,14 @@ DWORD TickGet()
 }
 #endif
 int InitRR(RR * rr);
-int TmrInit(BYTE Num);
 int CacheNextCmd(RR * rr);
 DWORD GetBigTmrValue(BYTE id);
-int DisableOC(BYTE oc);
 int SetDirection(BYTE oc, BYTE Dir);
-int SetOC(BYTE oc, WORD LW);
-int EnableOC(BYTE oc);
-BOOL IsDisableOC(BYTE oc);
 int CalculateBreakParam(RR * rr, GD_STATE State, int Direction, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak);
 int ProcessTimer(BYTE id, RR * rr);
 void CalculateParams(RR * rr);
 int BreakCurrentCmd(RR * rr);
+BOOL IsDisableOC(BYTE oc);
 
 double frac(double X);
 double GM_Sidereal_Time (double jd);
@@ -72,7 +68,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
     else
         M2.Val--;
     ProcessOC(&rr2);
-}*/
+}* /
 void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
 {
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
@@ -82,7 +78,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
         M3.Val--;
     ProcessOC(&rr3);
 }
-/*
+/ *
 void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
 {
     IFS0bits.T2IF = 0; // Clear T2 interrupt flag
@@ -210,17 +206,73 @@ int OCSetup(void)
         IFS1bits.U2RXIF = 1;
         IFS1bits.U2TXIF = 1;
         IFS0bits.U1RXIF = 1;
-
-        // инициализация OC1
-        OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+/*
+        // инициализация OC1        
         OCSetInt(ID_OC1, 6, TRUE);
-        // инициализация OC2
-        OCInit(ID_OC2, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+        OCSetCallback(ID_OC1, NULL);
+        OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+        
+        // инициализация OC2        
 	    OCSetInt(ID_OC2, 6, TRUE);
+	    OCSetCallback(ID_OC2, NULL);
+	    OCInit(ID_OC2, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+        
         // инициализация OC3
-	    OCInit(ID_OC3, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
         OCSetInt(ID_OC3, 6, TRUE);
+        OCSetCallback(ID_OC3, NULL);
+	    OCInit(ID_OC3, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+	    
+        // Initialize Timer2
+        TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+        TimerSetValue(T2, 0, 0xFFFF);
+        OCSetCallback(T2, NULL);
+        TimerSetInt(T2, 5, FALSE);
 
+        // Initialize Timer3
+        TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+        TimerSetValue(T3, 0, 0xFFFF);
+        OCSetCallback(T3, NULL);
+        TimerSetInt(T3, 5, FALSE);
+
+        // Setup and Enable DMA Channel
+        DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
+        DMASetBufferSize(DMA0, 64);
+        DMASetCallback(DMA0, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
+        DMASetInt(DMA0, 5, TRUE);
+        DMAPrepBuffer(DMA0);
+        DMASetState(DMA0, TRUE, FALSE);
+        
+        DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMASelectDevice(DMA1, IRQ_OC1, (int)&OC1RS);
+        DMASetBufferSize(DMA1, 64);
+        DMASetCallback(DMA1, (ROM void*)fillingBufferRS, (ROM void*)fillingBufferRS);
+        DMASetInt(DMA1, 5, TRUE);
+        DMAPrepBuffer(DMA1);
+        DMASetState(DMA1, TRUE, FALSE); 
+        
+        DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMASelectDevice(DMA2, IRQ_OC2, (int)&OC2R);
+        DMASetBufferSize(DMA2, 64);
+        DMASetCallback(DMA2, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
+        DMASetInt(DMA2, 5, TRUE);
+        DMAPrepBuffer(DMA2);
+        DMASetState(DMA2, TRUE, FALSE);
+        
+        DMAInit(DMA3, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMASelectDevice(DMA3, IRQ_OC2, (int)&OC2RS);
+        DMASetBufferSize(DMA3, 64);
+        DMASetCallback(DMA3, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
+        DMASetInt(DMA3, 5, TRUE);
+        DMAPrepBuffer(DMA3);
+        DMASetState(DMA3, TRUE, FALSE);      
+      
+        T2CONbits.TON = 1;
+        T3CONbits.TON = 1;
+        
+        
+        */
+        
         //ProcessOC(&rr1);
         //ProcessOC(&rr2);
         //ProcessOC(&rr3);
@@ -231,25 +283,9 @@ int OCSetup(void)
 
     return 0;
 }
-/*
-11 = 1:256
-10 = 1:64
-01 = 1:8
-00 = 1:1
-*/
-int TmrInit(BYTE Num)
-{
-	TimerInit((TIMERS_ID)Num, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-	TimerSetValue((TIMERS_ID)Num, 0, 0xFFFF);
-	TimerSetInt((TIMERS_ID)Num, 7, FALSE);
-	TimerSetState((TIMERS_ID)Num, TRUE);
-    return 0;
-}
 
 int InitRR(RR * rr)
 {   //AppConfig
-    DisableOC(rr->Index);
-    TmrInit(rr->TmrId);
 #ifdef __C30__
     rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
     rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
@@ -600,7 +636,7 @@ int Control(RR * rr)
 		    }
 	    }
         rr->T.Val = GetBigTmrValue(rr->TmrId);
-#ifdef __C30__
+#ifdef __C30__ //TODO: лажа-с
         switch(rr->Index){
             case 0:
                 IFS0bits.OC1IF = 1;
@@ -636,7 +672,7 @@ int ProcessOC(RR * rr)
     }
     if(rr->DataCount == 0) {
         rr->RunState = ST_STOP;
-        DisableOC(rr->Index);
+        OCSetMode(rr->Index, OC_DISABLED);
         return 0;
     }
     // задаём значение времени начала выполнения команды
@@ -669,10 +705,10 @@ int ProcessOC(RR * rr)
         rr->IntervalArray[rr->NextReadFrom].Count--;
     }
 
-    SetOC(rr->Index, rr->T.word.LW);
+    //SetOC(rr->Index, rr->T.word.LW);
     Timer = GetBigTmrValue(rr->TmrId);
     if((Timer <= rr->T.Val)&&(Timer + 0x00010000 >= rr->T.Val)){
-        EnableOC(rr->Index);
+        OCSetMode(rr->Index, DELAYED_ONE_SHOT);
     } 
 
     if(rr->RunDir > 0){
@@ -690,100 +726,6 @@ int ProcessOC(RR * rr)
     return 0;
 }
 
-int SetOC(BYTE oc, WORD LW)
-{
-	WORD LWR = LW + 50;
-	if(LW == 0) // особенность работы OCR 
-		LW++;
-	if(LWR == 0)
-		LWR++;
-    switch (oc){
-    case 0:
-#ifdef __C30__
-        OC1CONbits.OCM = 0b000; // выключить модуль OC
-        OC1RS = LWR; // записать значение OCxRS
-#endif // __C30__
-        OC1R = LW;        // записать значение OCxR
-        break;
-    case 1:
-#ifdef __C30__
-        OC2CONbits.OCM = 0b000; // выключить модуль OC
-        OC2R = LW;        // записать значение OCxR
-        OC2RS = LWR; // записать значение OCxRS
-#endif // __C30__
-        break;
-    case 2:
-#ifdef __C30__
-        OC3CONbits.OCM = 0b000; // выключить модуль OC
-        OC3R = LW;        // записать значение OCxR
-        OC3RS = LWR; // записать значение OCxRS
-#endif // __C30__
-        break;
-    case 3:
-#ifdef __C30__
-        OC4CONbits.OCM = 0b000; // выключить модуль OC
-        OC4R = LW;        // записать значение OCxR
-        OC4RS = LWR; // записать значение OCxRS
-#endif // __C30__
-        break;
-    default :
-        return -1;
-    }
-    return 0;
-}
-int EnableOC(BYTE oc)
-{
-#ifdef __C30__
-    switch (oc){
-    case 0:
-        OC1CONbits.OCM = 0b100; // выключить модуль OC
-        break;
-    case 1:
-        OC2CONbits.OCM = 0b100; // выключить модуль OC
-        break;
-    case 2:
-        OC3CONbits.OCM = 0b100; // выключить модуль OC
-        break;
-    case 3:
-        OC4CONbits.OCM = 0b100; // выключить модуль OC
-        break;
-    default :
-    return -1;
-    }
-    return 0;
-#else
-    return oc;
-#endif
-
-}
-int DisableOC(BYTE oc)
-{
-#ifdef __C30__
-    switch (oc){
-    case 0:
-        OC1CONbits.OCM = 0b000; // выключить модуль OC
-        IFS0bits.OC1IF = 0;     // Clear OC1 interrupt flag
-        break;
-    case 1:
-        OC2CONbits.OCM = 0b000; // выключить модуль OC
-        IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag
-        break;
-    case 2:
-        OC3CONbits.OCM = 0b000; // выключить модуль OC
-        IFS1bits.OC3IF = 0; // Clear OC1 interrupt flag
-        break;
-    case 3:
-        OC4CONbits.OCM = 0b000; // выключить модуль OC
-        IFS1bits.OC4IF = 0; // Clear OC1 interrupt flag
-        break;
-    default :
-    return -1;
-    }
-    return 0;
-#else
-    return oc;
-#endif
-}
 
 DWORD GetBigTmrValue(BYTE id)
 {
@@ -806,7 +748,7 @@ int ProcessTimer(BYTE id, RR * rr)
         if(IsDisableOC(rr->Index)){
             if(rr->RunState != ST_STOP){
                 if((Timer <= rr->T.Val)&&(Timer + 0x00010020 >= rr->T.Val)){
-                    EnableOC(rr->Index);
+                    OCSetMode(rr->Index, DELAYED_ONE_SHOT);
                 }
             }
         }
