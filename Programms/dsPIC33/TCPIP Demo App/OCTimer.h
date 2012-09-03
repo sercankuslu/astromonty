@@ -6,26 +6,6 @@
 #include "GenericTypeDefs.h"
 #endif
 
-
-
-#define OCM_MODULE_DISABLED         0x00 //000 Module Disabled Controlled by GPIO register Ч
-#define OCM_ONE_SHOT_LOW            0x01 //001 Active-Low One-Shot 0 OCx rising edge
-#define OCM_ONE_SHOT_HIGH           0x02 //010 Active-High One-Shot 1 OCx falling edge
-#define OCM_TOGGLE                  0x03 //011 Toggle Current output is maintained OCx rising and falling edge
-// используем
-#define OCM_DELAYED_ONE_SHOT        0x04 //100 Delayed One-Shot 0 OCx falling edge
-#define OCM_CONTINUOUS_PULSE        0x05 //101 Continuous Pulse 0 OCx falling edge
-
-#define OCM_PWM_WO_FAULT            0x06 //110 PWM without Fault Protection С0Т, if OCxR is zero С1Т, if OCxR is non-zero No interrupt
-#define OCM_PWM_W_FAULT             0x07 //111 PWM with Fault Protection С0Т, if OCxR is zero С1Т, if OCxR is non-zero OCFA falling edge for OC1 to OC4
-
-// описание значений флага
-#define OCT_USE_TMR3                0x01 // 0 - используетс€ таймер 2; 1 - таймер 3
-#define OCT_USE_PERIOD_BUFFER       0x02 // 1 - используем буффер периода. 0 - в буфере периода только 1 значение
-#define OCT_USE_PULSE_BUFFER        0x04 // 1 - используем буффер пульса. 0 - в буфере пульса только 1 значение
-#define OCT_USE_STEPS_LEFT          0x08 // 1 - используем StepsLeft(). 0 - ѕродолжающеес€ движение до достижени€ максимального значени€
-#define OCT_IS_USE                  0x80 // Ётот таймер используетс€
-
 typedef union MOTOR_POSITION{
     BYTE Val;
     struct __16

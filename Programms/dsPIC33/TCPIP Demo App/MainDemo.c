@@ -139,7 +139,7 @@ void FanControl();
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
-
+/*
 void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
 {
     static BYTE Up = 0;    
@@ -157,7 +157,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
     //LATBbits.LATB4 ^= 1;
     IFS3bits.T7IF = 0;
 }
-
+*/
 //
 // PIC18 Interrupt Service Routines
 // 
@@ -231,7 +231,7 @@ void _ISR __attribute__((__no_auto_psv__)) _DMACError(void)
         Nop();
         Nop();
     }
-} 
+} /*
 void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
 {    
     //static WORD T;
@@ -245,7 +245,8 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
     //CPUSPEED.word.HW = T1;
     IFS2bits.T6IF = 0; // Clear T6 interrupt flag
     TimerMonitor();
-}    
+}   
+*/ 
 #elif defined(__C32__)
     void _general_exception_handler(unsigned cause, unsigned status)
     {
@@ -298,18 +299,6 @@ void fillingBufferRS1(WORD * Buf, WORD Count)
     }
 }
 
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
-{
-    Nop();
-    Nop();
-    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
-}
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
-{
-    Nop();
-    Nop();
-    IFS0bits.OC2IF = 0; // Clear OC1 interrupt flag
-}
 //
 // Main application entry point.
 //
@@ -360,16 +349,19 @@ int main(void)
             OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
             OCSetValue(ID_OC1, 100, 125);
             OCSetInt(ID_OC1, 6, TRUE);
+            OCSetCallback(ID_OC1, NULL);
             OCSetMode(ID_OC1, CONT_PULSE);
             
             // Initialize Timer2
             TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T2, 0, 0xFFFF);
+            OCSetCallback(T2, NULL);
             TimerSetInt(T2, 5, FALSE);
 
             // Initialize Timer3
-            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T3, 0, 0xFFFF);
+            OCSetCallback(T3, NULL);
             TimerSetInt(T3, 5, FALSE);
            
             // Setup and Enable DMA Channel
@@ -378,6 +370,7 @@ int main(void)
             DMASetBufferSize(DMA0, 64);
             DMASetCallback(DMA0, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
+            DMAPrepBuffer(DMA0);
             DMASetState(DMA0, TRUE, FALSE);
             
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
@@ -385,12 +378,14 @@ int main(void)
             DMASetBufferSize(DMA1, 64);
             DMASetCallback(DMA1, (ROM void*)fillingBufferRS, (ROM void*)fillingBufferRS);
             DMASetInt(DMA1, 5, TRUE);
+            DMAPrepBuffer(DMA1);
             DMASetState(DMA1, TRUE, FALSE);            
             
             // Initialize Output Compare Module in Contionous pulse mode
             OCInit(ID_OC2, IDLE_DISABLE, OC_TMR3, OC_DISABLED);
             OCSetValue(ID_OC2, 100, 125);
             OCSetInt(ID_OC2, 6, TRUE);
+            OCSetCallback(ID_OC2, NULL);            
             OCSetMode(ID_OC2, CONT_PULSE);
             
             // Setup and Enable DMA Channel
@@ -399,6 +394,7 @@ int main(void)
             DMASetBufferSize(DMA2, 64);
             DMASetCallback(DMA2, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
             DMASetInt(DMA2, 5, TRUE);
+            DMAPrepBuffer(DMA2);
             DMASetState(DMA2, TRUE, FALSE);
             
             DMAInit(DMA3, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
@@ -406,10 +402,19 @@ int main(void)
             DMASetBufferSize(DMA3, 64);
             DMASetCallback(DMA3, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
             DMASetInt(DMA3, 5, TRUE);
+            DMAPrepBuffer(DMA3);
             DMASetState(DMA3, TRUE, FALSE);      
             // Enable Timer
-            TimerSetState(T2, TRUE);
-            TimerSetState(T3, TRUE);
+            //TimerSetState(T2, TRUE);
+            //TimerSetState(T3, TRUE);
+            T2CONbits.TON = 1;
+            T3CONbits.TON = 1;
+            /*
+            DMAForceTransfer(DMA0);
+            DMAForceTransfer(DMA1);
+            DMAForceTransfer(DMA2);
+            DMAForceTransfer(DMA3);
+            */
         }
         while(1){
            Nop();
