@@ -99,7 +99,7 @@
 #define GetInstructionClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Might need changing if using Doze modes.
 #define GetPeripheralClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Divisor may be different if using a PIC32 since it's configurable.
 
-
+#define VER_1
 // Hardware I/O pin mappings
 
 // LEDs
@@ -469,7 +469,7 @@
 //#define SPIRAM_SPICON2			(SPI2CON2)
 //#define SPIRAM_SPISTAT			(SPI2STAT)
 //#define SPIRAM_SPISTATbits		(SPI2STATbits)
-
+#ifdef VER_1 //исходная
 #define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
 #define SPIFLASH_CS_IO			(LATFbits.LATF5)
 #define SPIFLASH_SCK_TRIS		(TRISGbits.TRISG6)
@@ -477,6 +477,36 @@
 #define SPIFLASH_SDI_IO			(PORTGbits.RG7)
 #define SPIFLASH_SDO_TRIS		(TRISGbits.TRISG8)
 #define SPIFLASH_SPI_IF			(IFS2bits.SPI1IF)
+#define SPIFLASH_SSPBUF			(SPI2BUF)
+#define SPIFLASH_SPICON1		(SPI2CON1)
+#define SPIFLASH_SPICON1bits	(SPI2CON1bits)
+#define SPIFLASH_SPICON2		(SPI2CON2)
+#define SPIFLASH_SPISTAT		(SPI2STAT)
+#define SPIFLASH_SPISTATbits	(SPI2STATbits)
+
+#define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
+#define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
+#define SPIRTCSRAM_SCK_TRIS		(TRISGbits.TRISG6)
+#define SPIRTCSRAM_SDI_TRIS		(TRISGbits.TRISG7)
+#define SPIRTCSRAM_SDI_IO		(PORTGbits.RG7)
+#define SPIRTCSRAM_SDO_TRIS		(TRISGbits.TRISG8)
+#define SPIRTCSRAM_SPI_IF		(IFS2bits.SPI2IF)
+#define SPIRTCSRAM_SSPBUF		(SPI2BUF)
+#define SPIRTCSRAM_SPICON1		(SPI2CON1)
+#define SPIRTCSRAM_SPICON1bits	(SPI2CON1bits)
+#define SPIRTCSRAM_SPICON2		(SPI2CON2)
+#define SPIRTCSRAM_SPISTAT		(SPI2STAT)
+#define SPIRTCSRAM_SPISTATbits	(SPI2STATbits)
+#endif
+
+#ifdef VER_2
+#define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
+#define SPIFLASH_CS_IO			(LATFbits.LATF5)
+#define SPIFLASH_SCK_TRIS		(TRISFbits.TRISF6)
+#define SPIFLASH_SDI_TRIS		(TRISFbits.TRISF7)
+#define SPIFLASH_SDI_IO			(PORTFbits.RF7)
+#define SPIFLASH_SDO_TRIS		(TRISFbits.TRISG8)
+#define SPIFLASH_SPI_IF			(IFS1bits.SPI1IF)
 #define SPIFLASH_SSPBUF			(SPI1BUF)
 #define SPIFLASH_SPICON1		(SPI1CON1)
 #define SPIFLASH_SPICON1bits	(SPI1CON1bits)
@@ -486,18 +516,18 @@
 
 #define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
 #define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
-#define SPIRTCSRAM_SCK_TRIS		(TRISGbits.TRISG6)
-#define SPIRTCSRAM_SDI_TRIS		(TRISGbits.TRISG7)
-#define SPIRTCSRAM_SDI_IO		(PORTGbits.RG7)
-#define SPIRTCSRAM_SDO_TRIS		(TRISGbits.TRISG8)
-#define SPIRTCSRAM_SPI_IF		(IFS2bits.SPI1IF)
+#define SPIRTCSRAM_SCK_TRIS		(TRISFbits.TRISF6)
+#define SPIRTCSRAM_SDI_TRIS		(TRISFbits.TRISF7)
+#define SPIRTCSRAM_SDI_IO		(PORTFbits.RF7)
+#define SPIRTCSRAM_SDO_TRIS		(TRISFbits.TRISF8)
+#define SPIRTCSRAM_SPI_IF		(IFS1bits.SPI1IF)
 #define SPIRTCSRAM_SSPBUF		(SPI1BUF)
 #define SPIRTCSRAM_SPICON1		(SPI1CON1)
 #define SPIRTCSRAM_SPICON1bits	(SPI1CON1bits)
 #define SPIRTCSRAM_SPICON2		(SPI1CON2)
 #define SPIRTCSRAM_SPISTAT		(SPI1STAT)
 #define SPIRTCSRAM_SPISTATbits	(SPI1STATbits)
-
+#endif
 ////----------------------------
 //// MRF24WB0M WiFi I/O pins
 ////----------------------------
