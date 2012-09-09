@@ -343,7 +343,7 @@ int main(void)
     //    res = ProcessClients(0, bfr, &length);            
     //}
     
-    if(1){
+    if(0){
         {
             // Initialize Output Compare Module in Contionous pulse mode
             OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
@@ -575,19 +575,20 @@ int main(void)
     mDNSMulticastFilterRegister();            
     #endif
 
-    
-     LoadRRConfig();
-    OCSetup();
-    //вызов предпросчета двигателей
-    {
-        T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
-        TMR6 = 0x0000;  //
-        PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
-        IFS2bits.T6IF = 0;
-        IEC2bits.T6IE = 1;
-        IPC11bits.T6IP = 5;    
-        T6CONbits.TON = 1;
-    } 
+    if(0){
+	    LoadRRConfig();
+	    OCSetup();
+	    //вызов предпросчета двигателей
+	    {
+	        T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
+	        TMR6 = 0x0000;  //
+	        PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
+	        IFS2bits.T6IF = 0;
+	        IEC2bits.T6IE = 1;
+	        IPC11bits.T6IP = 5;    
+	        T6CONbits.TON = 1;
+	    } 
+    }
     //Вентиляторы        
     {
         TRISBbits.TRISB4 = 0;
