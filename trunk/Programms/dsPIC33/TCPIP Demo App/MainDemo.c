@@ -265,10 +265,13 @@ unsigned int BufferBS[128] __attribute__((space(dma)));
 void fillingBufferR(WORD * Buf, WORD Count)
 {
     static int T = 0;
-    int i = 0;    
+    int i = 0; 
+    WORD Interval;
     for(i = 0; i < Count; i++){
-        Buf[i] = (int)(T+1)*200;
-        T++;
+        Interval = (T++ + 1)*256;
+        Buf[i] = (int)Interval;
+        i++;
+        Buf[i] = (int)Interval+128;
     }
 }
 void fillingBufferRS(WORD * Buf, WORD Count)
@@ -283,10 +286,13 @@ void fillingBufferRS(WORD * Buf, WORD Count)
 void fillingBufferR1(WORD * Buf, WORD Count)
 {
     static int T = 0;
-    int i = 0;    
+    int i = 0; 
+    WORD Interval;
     for(i = 0; i < Count; i++){
-        Buf[i] = (int)(T+1)*200;
-        T++;
+        Interval = (T++ + 1)*256;
+        Buf[i] = (int)Interval;
+        i++;
+        Buf[i] = (int)Interval+128;
     }
 }
 void fillingBufferRS1(WORD * Buf, WORD Count)
@@ -350,7 +356,7 @@ int main(void)
             OCSetValue(ID_OC1, 100, 125);
             OCSetInt(ID_OC1, 6, TRUE);
             OCSetCallback(ID_OC1, NULL);
-            OCSetMode(ID_OC1, CONT_PULSE);
+            OCSetMode(ID_OC1, TOGGLE);
             
             // Initialize Timer2
             TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
@@ -367,16 +373,16 @@ int main(void)
             // Setup and Enable DMA Channel
             DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
-            DMASetBufferSize(DMA0, 64);
+            DMASetBufferSize(DMA0, 128);
             DMASetCallback(DMA0, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
             DMAPrepBuffer(DMA0);
             DMASetState(DMA0, TRUE, FALSE);
             
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA1, IRQ_OC1, (int)&OC1RS);
-            DMASetBufferSize(DMA1, 64);
-            DMASetCallback(DMA1, (ROM void*)fillingBufferRS, (ROM void*)fillingBufferRS);
+            DMASelectDevice(DMA1, IRQ_OC1, (int)&OC2R);
+            DMASetBufferSize(DMA1, 128);
+            DMASetCallback(DMA1, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
             DMASetInt(DMA1, 5, TRUE);
             DMAPrepBuffer(DMA1);
             DMASetState(DMA1, TRUE, FALSE);            
@@ -387,7 +393,7 @@ int main(void)
             OCSetInt(ID_OC2, 6, TRUE);
             OCSetCallback(ID_OC2, NULL);            
             OCSetMode(ID_OC2, CONT_PULSE);
-            
+            /*
             // Setup and Enable DMA Channel
             DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA2, IRQ_OC2, (int)&OC2R);
@@ -404,6 +410,7 @@ int main(void)
             DMASetInt(DMA3, 5, TRUE);
             DMAPrepBuffer(DMA3);
             DMASetState(DMA3, TRUE, FALSE);      
+            */
             // Enable Timer
             //TimerSetState(T2, TRUE);
             //TimerSetState(T3, TRUE);
