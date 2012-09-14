@@ -151,7 +151,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         B1 = B.b1.Step;
     }
 
-    OCInit();
+    OCSetup();
     // Цикл основного сообщения:
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -497,7 +497,6 @@ void Calc()
     
     DisplayInit();
 
-    BYTE Buf[100] = "";
     ST_COMMANDS Cmd = STC_REQEST_DATA;
     ST_FLAGS Flag = STF_OK;
     ST_RESULT rv;
@@ -524,9 +523,18 @@ void Calc()
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    
-    OCInit(); 
-    
+    WORD Buf[256];
+    WORD BufSize = 256;
+
+    OCSetup(); 
+    PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+    for(;;){
+        Control(&rr1, Buf, BufSize);
+        if(rr1.CacheState==ST_STOP) break;
+    }
 //     rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
 //     rr2.XPosition = 0;
     //rr3.XPosition = 0;
@@ -541,7 +549,7 @@ void Calc()
 //     rr3.T.Val = 0;
 //     rr3.TimeBeg = 0;
     //GoToCmd(&rr1, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0); 
-    GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
+    //GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
     //GoToCmd(&rr2, 0.0 * Grad_to_Rad, 20.0 * Grad_to_Rad, 0);
 //     rr2.LastCmdV = 1.0 * Grad_to_Rad;
 //     rr2.LastCmdX = 10.0 * Grad_to_Rad;
@@ -576,7 +584,7 @@ void Calc()
     if(rr1.CmdCount>0){
         Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
         for(DWORD i = 0; i < Buf1Size;i++){         
-            Control(&rr1);
+            //Control(&rr1);
             ProcessOC(&rr1);
             DrawT1Buffer[i].Value = rr1.T.Val;
             DrawT1Buffer[i].Pos = rr1.XPosition;
@@ -600,7 +608,7 @@ void Calc()
     if(rr2.CmdCount>0){
         Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
         for(DWORD i = 0; i < Buf2Size;i++){         
-            Control(&rr2);
+            //Control(&rr2);
             ProcessOC(&rr2);
             DrawT2Buffer[i].Value = rr2.T.Val;
             DrawT2Buffer[i].State = rr2.RunState;
@@ -614,7 +622,7 @@ void Calc()
     if(rr3.CmdCount>0){
         Buf3Size = sizeof(DrawT3Buffer)/sizeof(DrawT3Buffer[0]);
         for(DWORD i = 0; i < Buf3Size;i++){         
-            Control(&rr3);
+            //Control(&rr3);
             ProcessOC(&rr3);
             DrawT3Buffer[i].Value = rr3.T.Val;
             DrawT3Buffer[i].State = rr3.RunState;
