@@ -154,7 +154,6 @@ typedef struct RR{
     double                  a;  
     double                  c;
     DWORD                   T1;                         // значение времени, полученное в предыдущем вызове Accelerate/Deccelerate
-    DWORD                   Tb;                         // время начала для кэша decelerate
 
     // параметры указывающие на момент окончания
     double                  Vend;                       // скорость завершения команды
@@ -327,9 +326,7 @@ typedef struct
 
 int OCSetup(void);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
-int ProcessOC(RR * rr);
-int Control(RR * rr);
-int TimerMonitor();
+void Control(void * _This, WORD* Buf, WORD BufSize);
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);

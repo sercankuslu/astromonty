@@ -42,7 +42,7 @@ extern DWORD_VAL CPUSPEED;
    AppConfigType AppConfig;
 
 #endif
-   static BOOL ClientConnected = FALSE;
+   //static BOOL ClientConnected = FALSE;
    //static BOOL ServerConnected = FALSE;
 
 #ifndef __18CXX
@@ -325,20 +325,20 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
     
     if(*pbDataLength < 0){
         ST_STATE = ST_REQUEST_CONNECT;
-        ClientConnected = FALSE;
+        //ClientConnected = FALSE;
         return STR_NEED_DISCONNECT;
     }
     if(*pbDataLength > 0){        
         res = CheckBlob(pbBlob, bBlobLen);
         if(res != STR_OK) {
             ST_STATE = ST_REQUEST_CONNECT;
-            ClientConnected = FALSE;
+            //ClientConnected = FALSE;
             return STR_NEED_DISCONNECT;
         }
         res = FindAttribute(pbBlob, bBlobLen, STA_COMMAND, &Len, &Answer);
         if(res != STR_OK){
             ST_STATE = ST_REQUEST_CONNECT;
-            ClientConnected = FALSE;       
+            //ClientConnected = FALSE;       
             return STR_COMMAND_UNKNOWN;
         }
         if(Len == sizeof(BYTE)){
@@ -578,7 +578,7 @@ ST_RESULT  RunClient(BYTE* pbBlob, int bBlobLen, int *pbDataLength)
             Params.Local.StatusFlag |= PF_IS_MODIFIED;
         Params.Local.Status = 1;
     } else {
-        ClientConnected = 0;
+        //ClientConnected = 0;
         if(Params.Local.Status)
             Params.Local.StatusFlag |= PF_IS_MODIFIED;
         Params.Local.Status = 0;    

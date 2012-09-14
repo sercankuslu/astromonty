@@ -262,7 +262,7 @@ unsigned int BufferB[128] __attribute__((space(dma)));
 unsigned int BufferBS[128] __attribute__((space(dma)));
 */
 // DMA Interrupt Handler
-void fillingBufferR(WORD * Buf, WORD Count)
+void fillingBufferR(void* _This, WORD * Buf, WORD Count)
 {
     static int T = 0;
     int i = 0; 
@@ -274,7 +274,7 @@ void fillingBufferR(WORD * Buf, WORD Count)
         Buf[i] = (int)Interval+128;
     }
 }
-void fillingBufferRS(WORD * Buf, WORD Count)
+void fillingBufferRS(void* _This, WORD * Buf, WORD Count)
 {
     static int T = 0;
     int i = 0;    
@@ -283,7 +283,7 @@ void fillingBufferRS(WORD * Buf, WORD Count)
         T++;
     }
 }
-void fillingBufferR1(WORD * Buf, WORD Count)
+void fillingBufferR1(void* _This, WORD * Buf, WORD Count)
 {
     static int T = 0;
     int i = 0; 
@@ -295,7 +295,7 @@ void fillingBufferR1(WORD * Buf, WORD Count)
         Buf[i] = (int)Interval+128;
     }
 }
-void fillingBufferRS1(WORD * Buf, WORD Count)
+void fillingBufferRS1(void* _This, WORD * Buf, WORD Count)
 {
     static int T = 0;
     int i = 0;    
@@ -374,7 +374,7 @@ int main(void)
             DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
             DMASetBufferSize(DMA0, 128);
-            DMASetCallback(DMA0, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
+            DMASetCallback(DMA0, NULL, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
             DMAPrepBuffer(DMA0);
             DMASetState(DMA0, TRUE, FALSE);
@@ -382,7 +382,7 @@ int main(void)
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA1, IRQ_OC1, (int)&OC2R);
             DMASetBufferSize(DMA1, 128);
-            DMASetCallback(DMA1, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
+            DMASetCallback(DMA1, NULL, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
             DMASetInt(DMA1, 5, TRUE);
             DMAPrepBuffer(DMA1);
             DMASetState(DMA1, TRUE, FALSE);            
@@ -398,7 +398,7 @@ int main(void)
             DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA2, IRQ_OC2, (int)&OC2R);
             DMASetBufferSize(DMA2, 64);
-            DMASetCallback(DMA2, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
+            DMASetCallback(DMA2, NULL, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
             DMASetInt(DMA2, 5, TRUE);
             DMAPrepBuffer(DMA2);
             DMASetState(DMA2, TRUE, FALSE);
@@ -406,7 +406,7 @@ int main(void)
             DMAInit(DMA3, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA3, IRQ_OC2, (int)&OC2RS);
             DMASetBufferSize(DMA3, 64);
-            DMASetCallback(DMA3, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
+            DMASetCallback(DMA3, NULL, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
             DMASetInt(DMA3, 5, TRUE);
             DMAPrepBuffer(DMA3);
             DMASetState(DMA3, TRUE, FALSE);      

@@ -1,6 +1,8 @@
 #ifndef __DEVICE_CONTROL_H_
 #define __DEVICE_CONTROL_H_
+#ifdef __C30__
 #include "GenericTypeDefs.h"
+#endif 
 
 // Таймеры
 typedef enum _TIMERS_ID{
@@ -73,11 +75,12 @@ typedef enum _DMA_DEVICE_IRQ {
 } DMA_DEVICE_IRQ;
 
 typedef struct _DMAConfigType{
-	int (*fillingBufferAFunc)(WORD*, WORD);
-	int (*fillingBufferBFunc)(WORD*, WORD);
+	int (*fillingBufferAFunc)(void*, WORD*, WORD);
+	int (*fillingBufferBFunc)(void*, WORD*, WORD);
 	int BufA;
 	int BufB;
 	WORD Count;
+	void* _This;
 } DMAConfigType;
 
 
@@ -85,7 +88,7 @@ typedef struct _DMAConfigType{
 int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
 int DMASetBufferSize(DMA_ID id, WORD Count);
-int DMASetCallback(DMA_ID id, int (*fillingBufAFunc)(WORD*, WORD), int (*fillingBufBFunc)(WORD*, WORD));
+int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, WORD*, WORD), int (*fillingBufBFunc)(void*, WORD*, WORD));
 int DMAPrepBuffer(DMA_ID id);
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force);
 int DMAGetPPState(DMA_ID id);
