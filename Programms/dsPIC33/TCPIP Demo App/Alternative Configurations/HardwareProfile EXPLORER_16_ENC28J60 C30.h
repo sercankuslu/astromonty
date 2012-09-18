@@ -99,7 +99,7 @@
 #define GetInstructionClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Might need changing if using Doze modes.
 #define GetPeripheralClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Divisor may be different if using a PIC32 since it's configurable.
 
-#define VER_1
+#define VER_2
 // Hardware I/O pin mappings
 
 // LEDs
@@ -505,7 +505,7 @@
 #define SPIFLASH_SCK_TRIS		(TRISFbits.TRISF6)
 #define SPIFLASH_SDI_TRIS		(TRISFbits.TRISF7)
 #define SPIFLASH_SDI_IO			(PORTFbits.RF7)
-#define SPIFLASH_SDO_TRIS		(TRISFbits.TRISG8)
+#define SPIFLASH_SDO_TRIS		(TRISFbits.TRISF8)
 #define SPIFLASH_SPI_IF			(IFS1bits.SPI1IF)
 #define SPIFLASH_SSPBUF			(SPI1BUF)
 #define SPIFLASH_SPICON1		(SPI1CON1)
