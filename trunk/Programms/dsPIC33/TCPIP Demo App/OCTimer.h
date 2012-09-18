@@ -66,22 +66,25 @@ typedef struct DateTimeStruct {
 
 // параметры 
 
-typedef enum GD_STATE {     // состояния
+typedef enum GD_STATE { // состояния
     ST_STOP,            // остановлен
     ST_ACCELERATE,      // разгоняется
     ST_RUN,             // движется с постоянной скоростью
     ST_DECELERATE,      // тормозит
-    ST_SLOW_RUN,         // движется с постоянной скоростью медленно
-    //ST_BUFFER_FREE    // сигнализирует об нехватке буфера ( проскок )
+    ST_SET_TIMER,       // установка таймера
+    ST_SET_DIRECTION,   // установка направления вращения
+    ST_SET_STEP,        // установка количества микрошагов
+    ST_EMERGENCY_STOP,  // аварийная остановка
 }GD_STATE;
 
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
 typedef struct CMD_QUEUE{
     GD_STATE    State;      // команда
-    BYTE        Direction;  // направление движения в команде
-    double      Vend;       // скорость, которая будет достигнута
-    double      deltaX;     // расстояние, которое будет пройдено после выполнения команды
-    DWORD       RunStep;    //  количество шагов на выполнение команды
+    void*       Value;      // значение параметра
+    //BYTE        Direction;  // направление движения в команде
+    //double      Vend;       // скорость, которая будет достигнута
+    //double      deltaX;     // расстояние, которое будет пройдено после выполнения команды
+    DWORD       RunStep;    // количество шагов на выполнение команды
 }Cmd_Queue;
 typedef struct  ARR_FLAGS
 {

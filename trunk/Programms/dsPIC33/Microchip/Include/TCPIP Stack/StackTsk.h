@@ -104,6 +104,7 @@ typedef struct __attribute__((__packed__))
     LONG XZenitPosition;                                // номер шага в зените
     LONG XParkPosition;                  				// значение номера шага парковочной позиции
     double VMax;
+    WORD Control;
 }RRFlashSave;
 
 // Application-dependent structure used to contain address information

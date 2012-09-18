@@ -1442,6 +1442,7 @@ static void InitAppConfig(void)
             AppConfig.RRConfig[i].XMaxPosition = MY_DEFAULT_RR_PARA_XMaxPos;
             AppConfig.RRConfig[i].XParkPosition = MY_DEFAULT_RR_PARA_XParkPos;
             AppConfig.RRConfig[i].VMax = MY_DEFAULT_RR_PARA_VMax;
+            AppConfig.RRConfig[i].Control = 1;
         }
     
         // SNMP Community String configuration

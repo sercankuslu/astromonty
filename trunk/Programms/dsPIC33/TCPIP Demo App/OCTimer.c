@@ -229,27 +229,30 @@ int OCSetup(void)
 
 int InitRR(RR * rr)
 {   //AppConfig
-#ifndef __C30__
-    rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
-    rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
-    rr->Length = AppConfig.RRConfig[rr->Index].Length;
-    rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
-    rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
-    rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
-    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
-    //rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
-    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
-#else
-    rr->Mass = MY_DEFAULT_RR_PARA_Mass;
-    rr->Radius = MY_DEFAULT_RR_PARA_Radius;
-    rr->Length = MY_DEFAULT_RR_PARA_Length;
-    rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
-    rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
-    rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
-    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
-    //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
-    rr->XPosition = 0;
+#ifdef __C30__
+	if(AppConfig.RRConfig[rr->Index].Control){
+	    rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
+	    rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
+	    rr->Length = AppConfig.RRConfig[rr->Index].Length;
+	    rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
+	    rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
+	    rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
+	    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
+	    //rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
+	    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
+	} else 
 #endif
+	{
+	    rr->Mass = MY_DEFAULT_RR_PARA_Mass;
+	    rr->Radius = MY_DEFAULT_RR_PARA_Radius;
+	    rr->Length = MY_DEFAULT_RR_PARA_Length;
+	    rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
+	    rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
+	    rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
+	    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
+	    //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
+	    rr->XPosition = 0;
+	}
     rr->Vend = 0.0;
     rr->deltaX = 0.0;
     //rr->DataCount = 0;
@@ -281,7 +284,7 @@ void CalculateParams(RR * rr)
 {
     double I;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
-#ifndef __C30__
+#ifdef __C30__
     rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
     rr->B = AppConfig.RRConfig[rr->Index].B / I;
 #else
@@ -326,12 +329,12 @@ rr->T                           счетчик интервалов
  **/
 WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
 {
-    DWORD FreeData;
+    WORD FreeData;
     DWORD dT = 0;
     LONG Corr = 0;
     WORD i = 0;
     WORD j = 0;
-    LONG m = 1;
+    WORD m = 1;
     BYTE m1 = 0;    
     double dx_div_Ts = rr->dx / rr->TimerStep;
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
@@ -341,7 +344,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     // если CacheCmdCounter >= Count => FreeData = Count
 
     if(rr->CacheCmdCounter < count) {
-        FreeData = rr->CacheCmdCounter;        
+        FreeData = (WORD)rr->CacheCmdCounter;        
     } else {
         FreeData = count;
     }
@@ -366,8 +369,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->CacheSpeed = dx_div_Ts / rr->Interval;
                     break;
                 case ST_RUN:
-                case ST_SLOW_RUN:
-                    rr->Interval = (DWORD) dx_div_Ts / rr->CacheSpeed;
+                    rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
                     break;
                 default:
                     return 0;
@@ -375,7 +377,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
             }
             rr->T.Val += rr->Interval;
             buf[i].R = rr->T.word.LW;
-            buf[i].RS = rr->T.word.LW + rr->Interval / 2;
+            buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             
         } else { // вычисляем по нескольку шагов- времени мало
             // если m + i  <  FreeData => m = m
@@ -397,7 +399,6 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->CacheSpeed = dx_div_Ts * m / dT;
                     break;
                 case ST_RUN:
-                case ST_SLOW_RUN:
                     dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
                     break;
                 default:
@@ -413,7 +414,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     Corr--;
                 }
                 buf[i+j].R  = rr->T.word.LW;
-                buf[i+j].RS = rr->T.word.LW + rr->Interval / 2;
+                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             }            
             
         }
@@ -527,6 +528,7 @@ int SetDirection(BYTE oc, BYTE Dir)
     8 медленное движение без ограничения (до максимального значения)
     9 экстренная остановка
    10 смена шага
+   11 смена направления (только при полной остановке)
     
 требование к диспетчеру команд:
     1. очередная смена команды
@@ -538,36 +540,70 @@ int SetDirection(BYTE oc, BYTE Dir)
         например: ST_ACCELERATE можно прервать ST_RUN или ST_DECELERATE и все необходимые переменные будут иметь правильные значения
 
 приоритет команд:
-А. низкий приоритет    ( прерывается при появлении любой команды в очереди, 
-                    не имеет торможения в конце т.к. торможение добавляется автоматически при прерывании)
-    1 медленное ускорение 
-    2 медленное торможение
-    3 медленное движение
-    4 медленное движение без ограничения (до максимального значения)
+А. низкий приоритет    (прерывается командами с высоким и обычным приоритетом)
+    1. движение без ограничения (до максимального значения)
 
-Б. обычный приоритет   (прерывается только экстренным торможением)
+Б. обычный приоритет   (прерывается только командами с высоким приоритетом)
     1. ускорение
     2. торможение
     3. движение
+    4. остановка
+
+    5. смена направления
+    6. смена таймера
 
 В. высокий приоритет
     1. экстренная остановка
-    2. остановка
-    3. смена шага
+    2. смена шага
     
-*/
-int ProcessCmd(RR * rr)
-{
 
-    switch(rr->CacheState){
-        //case ST_STOP:
-        //case ST_RUN:
-        //case ST_ACCELERATE:
-        //case ST_DECELERATE:
+1.  Сканируем очередь 
+2.  Если есть команда с высоким приоритетом, начинаем выполнять её. 
+    при этом удаляем все предыдущие команды из очереди.
+3.  Выполняем команды с одинаковым приоритетом в порядке очереди.
+
+выполнение команды
+1.  выполняем предварительные вычисления (CalculateBreakParam)
+2.  
+
+*/
+int PushCmd(RR* rr, GD_STATE cmd, void * Value)
+{
+    int Dir = 0;
+    switch(cmd){
+        case ST_STOP:
+            break;
+        case ST_SET_DIRECTION:
+            Dir = *(int*)Value;
+            if(Dir>0){
+                rr->CacheDir = 0;
+            }
+            break;
+        default:
+            break;
     }
     return 0;
 }
 
+int ProcessCmd(RR * rr)
+{
+     static BYTE T = 2;
+     static int Dir = 1;
+     static BYTE Step = 8;
+     static double Speed = 10.0 * Grad_to_Rad;
+     static double Angle = 52.0 * Grad_to_Rad;
+     PushCmd(rr, ST_ACCELERATE, (void*)&Speed);
+     PushCmd(rr, ST_DECELERATE, (void*)&Speed);
+     PushCmd(rr, ST_RUN, (void*)&Angle);
+     PushCmd(rr, ST_SET_TIMER, (void*)&T);
+     PushCmd(rr, ST_SET_DIRECTION, (void*)&Dir);
+     PushCmd(rr, ST_SET_STEP, (void*)&Step);
+     PushCmd(rr, ST_EMERGENCY_STOP, NULL);
+     PushCmd(rr, ST_STOP, NULL);
+
+    
+    return 0;
+}
 
 
 
@@ -587,9 +623,9 @@ int CacheNextCmd(RR * rr)
         //double D;
         //double X;
         rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
-        rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
-        rr->deltaX  = rr->CmdQueue[rr->NextCacheCmd].deltaX;
-        rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;
+        //rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
+        //rr->deltaX  = rr->CmdQueue[rr->NextCacheCmd].deltaX;
+        //rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;
         rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
         switch(rr->CacheState){
             case ST_ACCELERATE:
@@ -603,7 +639,6 @@ int CacheNextCmd(RR * rr)
                 };*/
                 break;
             case ST_RUN:
-            case ST_SLOW_RUN:
                 rr->XCachePos = 0;
                 rr->T1 = 0;
                 break;
@@ -611,10 +646,10 @@ int CacheNextCmd(RR * rr)
         }
         rr->CmdCount--;
         rr->CmdQueue[rr->NextCacheCmd].State = ST_STOP;
-        rr->CmdQueue[rr->NextCacheCmd].Vend = 0.0;
-        rr->CmdQueue[rr->NextCacheCmd].deltaX = 0.0;
-        rr->CmdQueue[rr->NextCacheCmd].Direction = 1;
-        rr->CmdQueue[rr->NextCacheCmd].RunStep = 0;
+        //rr->CmdQueue[rr->NextCacheCmd].Vend = 0.0;
+        //rr->CmdQueue[rr->NextCacheCmd].deltaX = 0.0;
+        //rr->CmdQueue[rr->NextCacheCmd].Direction = 1;
+        //rr->CmdQueue[rr->NextCacheCmd].RunStep = 0;
         rr->NextCacheCmd++;
         if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;
     } else {
@@ -625,16 +660,16 @@ int CacheNextCmd(RR * rr)
 
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double deltaX, int Direction )
 {
-    LONG Xbreak;
+    //LONG Xbreak;
     if(rr->CmdCount < CQ_SIZE){
         rr->CmdQueue[rr->NextWriteCmd].State = State;
-        rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-        rr->CmdQueue[rr->NextWriteCmd].deltaX = deltaX;
-        if(Direction > 0)
-            rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
-        else
-            rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
-         rr->CmdQueue[rr->NextWriteCmd].RunStep = 32000;
+        //rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
+        //rr->CmdQueue[rr->NextWriteCmd].deltaX = deltaX;
+        //if(Direction > 0)
+            //rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
+        //else
+          //  rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
+         //rr->CmdQueue[rr->NextWriteCmd].RunStep = 32000;
         /*
         CalculateBreakParam(rr->K, rr->B, rr->dx, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV,
             &rr->CmdQueue[rr->NextWriteCmd].Vend,
@@ -742,7 +777,6 @@ int CalculateBreakParam(double K, double B, double dx, GD_STATE State, int Direc
             }
             break;
         case ST_RUN:
-        case ST_SLOW_RUN:
             {
                 if(Direction >0 ){
                     // количество шагов на которое сдвинулись
@@ -815,7 +849,7 @@ int JDToGDate(double JD, DateTime * GDate )
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
     BYTE Direction = 1;
-	BYTE TargetDirection = 1;
+    BYTE TargetDirection = 1;
     LONG Xbreak;
     double Xa = 180.0 * Grad_to_Rad;
     double Ta = 0.0;
