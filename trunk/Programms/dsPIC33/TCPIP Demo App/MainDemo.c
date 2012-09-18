@@ -348,7 +348,22 @@ int main(void)
     //    res = RunClient(bfr, sizeof(bfr), &length);        
     //    res = ProcessClients(0, bfr, &length);            
     //}
-    
+    if(1){
+        WORD Buf[256];
+        WORD BufSize = 256;
+        OCSetup(); 
+        PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+        PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
+        PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+        PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+        for(;;){
+            if(Control(&rr1, Buf, BufSize))
+                break;
+        }
+        while(1){
+            Nop();
+        }
+    }
     if(0){
         {
             // Initialize Output Compare Module in Contionous pulse mode

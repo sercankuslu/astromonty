@@ -100,56 +100,25 @@ typedef struct ARR_TYPE {
 
 typedef struct RR{
 
-    // Время
-    // IntervalArray
-    // |      NextWriteTo
-    // |      |      NextReadFrom
-    // |      |      |
-    // v      v      v
-    // 0======-------=========
-    //
-    // окончание предыдущей операции ( исходные параметры операции)
-    // | промежуточное состояние
-    // | | Конец операции
-    // | | |
-    // v v v
-    // -------========--------
-    //                    
-    //  
-    ARR_TYPE                IntervalArray[BUF_SIZE];    // массив отсчетов времени (кольцевой буффер)
-    BYTE                    NextReadFrom;               // индекс массива времени. указывает на первый значащий элемент
-    BYTE                    NextWriteTo;                // индекс массива времени. указывает на первый свободный элемент
-    BYTE                    DataCount;                  // количество данных в массиве.
-
-    // команды        
+    // очередь команды        
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
     BYTE                    NextCacheCmd;               // указатель на начало очереди
     BYTE                    NextWriteCmd;               // указатель на конец очереди
     BYTE                    CmdCount;                   // количество команд в очереди
-    double                  LastCmdV;                   // скорость после последней команды в очереди
-    double                  LastCmdX;                   // положение после последней команды в очереди
-    double                  VMax;                       // максимальная скорость
 
     // параметры исполнения
     GD_STATE                RunState;                   // тип команды, выполняемой в данное время
     LONG                    XPosition;                  // текущий номер шага TODO: поддержать переключение скоростей
-    LONG                    XMinPosition;               // минимальное значение номера шага (положение датчика 0)
-    LONG                    XMaxPosition;               // максимальное значение номера шага
-    LONG                    XZenitPosition;             // номер шага в зените
-    LONG                    XParkPosition;              // значение номера шага парковочной позиции        
     BYTE                    RunDir;                     // направление вращения при движении ( зависит значение вывода Dir )    
     DWORD_VAL               T;
-    DWORD                   TimeBeg;
-    DWORD                   CorrectionRate;
 
     // параметры предпросчета
-    LONG                    XCachePos;                  // текущее положение в просчете
     GD_STATE                CacheState;                 // тип команды, кешируемой в данное время
+    LONG                    XCachePos;                  // текущее положение в просчете
     BYTE                    CacheDir;                   // направление вращения при просчете
     DWORD                   CacheCmdCounter;            // количество шагов до окончания команды
     LONG                    Interval;                   // текущее значение интервала(число со знаком)
     LONG                    XaccBeg;                    // параметры функции ускорения
-    //double                  dX_acc_dec_pos;             // текущее положение в просчете в радианах
     double                  d;                          // константы для минимизации вычислений
     double                  a;  
     double                  c;
@@ -159,13 +128,18 @@ typedef struct RR{
     double                  Vend;                       // скорость завершения команды
     double                  deltaX;                     // координата завершения команды
 
+    LONG                    XMinPosition;               // минимальное значение номера шага (положение датчика 0)
+    LONG                    XMaxPosition;               // максимальное значение номера шага
+    LONG                    XZenitPosition;             // номер шага в зените
+    LONG                    XParkPosition;              // значение номера шага парковочной позиции        
+
     // служебные (оптимизация)
     
-    // константы
-    DWORD  e;                                           // если интервал меньше этого значения, переходим на быстрые вычисления
+    // параметры математики
+    DWORD  e;                                           // количество периодов таймера, необходимое для однократного вычисления
     double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощьности двигателя от скорости вращения
-    double B;                                           // B - константа, мощьность двигателя в Hm скорость в радианах в сек 
-    double TimerStep;                                   // шаг таймера в секундах (200ns)
+    double B;                                           // B - константа, мощъность двигателя в Hm скорость в радианах в сек 
+    double TimerStep;                                   // шаг таймера в секундах (25ns)
     double dx;                                          // шаг угла в радианах
     double Mass;                                        // масса монтировки
     double Radius;                                      // радиус оси/трубы телескопа
@@ -179,10 +153,10 @@ typedef struct RR{
     
 }RR;
 
+
+typedef  struct 
 #ifdef __C30__
-typedef  struct __attribute__((__packed__))
-#else
-typedef struct
+__attribute__((__packed__))
 #endif 
 {
     DWORD Timestamp;									// метка времени UTC
@@ -190,13 +164,13 @@ typedef struct
     WORD uStepPerStep;                                  // текущее количество микрошагов на шаг (16)
 }RRRAMSave;
 
-#ifdef __C30__
-typedef  struct __attribute__((__packed__))
-#else
+
 typedef struct
+#ifdef __C30__
+__attribute__((__packed__))
 #endif 
 {
-	RRRAMSave RRSave[3];
+    RRRAMSave RRSave[3];
 }RAMSaveConfig;
 
 #ifdef __C30__
@@ -326,7 +300,7 @@ typedef struct
 
 int OCSetup(void);
 int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
-void Control(void * _This, WORD* Buf, WORD BufSize);
+int Control(void * _This, WORD* Buf, WORD BufSize);
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
