@@ -670,8 +670,8 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
 		{
 			if(sscanf((char*)(curHTTP.data+6),"%d", &command)){
 				if(command == 1){
-					BreakCurrentCmd(&rr1);
-					BreakCurrentCmd(&rr2);	
+					//BreakCurrentCmd(&rr1);
+					//BreakCurrentCmd(&rr2);	
 					//BreakCurrentCmd(&rr3);
 				}
 			}else

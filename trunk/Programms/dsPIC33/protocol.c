@@ -8,7 +8,7 @@ extern ALL_PARAMS Params;
 #endif
 
 #ifdef USE_PROTOCOL_CLIENT
-#define MAX_CONNECTIONS 1
+#define MAX_CONNECTIONS 5
 #endif
 #ifdef USE_PROTOCOL_SERVER
 #define MAX_CONNECTIONS 5

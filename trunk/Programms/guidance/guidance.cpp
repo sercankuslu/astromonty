@@ -532,8 +532,8 @@ void Calc()
     PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
     for(;;){
-        Control(&rr1, Buf, BufSize);
-        if(rr1.CacheState==ST_STOP) break;
+        if(Control(&rr1, Buf, BufSize))
+            break;
     }
 //     rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
 //     rr2.XPosition = 0;
@@ -585,7 +585,7 @@ void Calc()
         Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
         for(DWORD i = 0; i < Buf1Size;i++){         
             //Control(&rr1);
-            ProcessOC(&rr1);
+            //ProcessOC(&rr1);
             DrawT1Buffer[i].Value = rr1.T.Val;
             DrawT1Buffer[i].Pos = rr1.XPosition;
             DrawT1Buffer[i].State = rr1.RunState;
@@ -609,7 +609,7 @@ void Calc()
         Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
         for(DWORD i = 0; i < Buf2Size;i++){         
             //Control(&rr2);
-            ProcessOC(&rr2);
+            //ProcessOC(&rr2);
             DrawT2Buffer[i].Value = rr2.T.Val;
             DrawT2Buffer[i].State = rr2.RunState;
             DrawT2Buffer[i].Pos = rr2.XPosition;
@@ -623,7 +623,7 @@ void Calc()
         Buf3Size = sizeof(DrawT3Buffer)/sizeof(DrawT3Buffer[0]);
         for(DWORD i = 0; i < Buf3Size;i++){         
             //Control(&rr3);
-            ProcessOC(&rr3);
+            //ProcessOC(&rr3);
             DrawT3Buffer[i].Value = rr3.T.Val;
             DrawT3Buffer[i].State = rr3.RunState;
             DrawT3Buffer[i].Pos = rr3.XPosition;
