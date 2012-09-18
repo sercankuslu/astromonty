@@ -126,7 +126,6 @@ WORD OutTextXY( WORD X,WORD Y,const char * Text,FONT CFont, EFFECT Effect )
     char * ptr;
     const rom WORD* Image;
     WORD count = 13;  
-    WORD i = 0;
     ptr = (char*)Text;
     XX = X;
     while ( *ptr ){
@@ -154,7 +153,6 @@ WORD OutTextXYx( WORD X,WORD Y,const char * Text, BYTE SymbolCount,FONT CFont, E
     char * ptr;
     const rom WORD* Image;
     WORD count = 0;  
-    WORD i = 0;
     ptr = (char*)Text;
     XX = X;
     if(SymbolCount == 0) return XX;
@@ -262,6 +260,8 @@ void OutImageW(WORD X, WORD Y, WORD SX, WORD SY, const rom WORD* Image, EFFECT E
         case INVERT:
             tmpImage.Val = Image[i]^ImageMask;
             break;
+        default:
+            tmpImage.Val = 0;
         }
         tmpImage.Val = tmpImage.Val << (Y & 0x07);
         if(Row0!=NULL)(*Row0) = ((*Row0) & tmpMask.v[0])|tmpImage.v[0];

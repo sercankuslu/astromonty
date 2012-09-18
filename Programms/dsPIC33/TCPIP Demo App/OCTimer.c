@@ -229,7 +229,7 @@ int OCSetup(void)
 
 int InitRR(RR * rr)
 {   //AppConfig
-#ifdef __C30__
+#ifndef __C30__
     rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
     rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
     rr->Length = AppConfig.RRConfig[rr->Index].Length;
@@ -281,7 +281,7 @@ void CalculateParams(RR * rr)
 {
     double I;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
-#ifdef __C30__
+#ifndef __C30__
     rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
     rr->B = AppConfig.RRConfig[rr->Index].B / I;
 #else
@@ -311,8 +311,20 @@ DWORD GetInterval(DWORD T, double Xb, double dx, double a, double d)
     }
     return 0;
 }
-
-WORD CalculateMove(RR * rr, WORD* buf, WORD count)
+/*
+Используем:
+rr->CacheCmdCounter             счетчик оставшихся шагов в команде
+rr->dx                          ширина шага
+rr->a                           вспомогательная констата
+rr->d
+rr->e                           интервал в шагах таймера времени, необходимого для однократного вычисления
+rr->TimerStep                   интервал таймера в секундах
+rr->T1                          предыдущее значение функции ускорения
+rr->XaccBeg                     координата функции ускорения
+rr->Interval                    интервал
+rr->T                           счетчик интервалов
+ **/
+WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
 {
     DWORD FreeData;
     DWORD dT = 0;
@@ -320,7 +332,8 @@ WORD CalculateMove(RR * rr, WORD* buf, WORD count)
     WORD i = 0;
     WORD j = 0;
     LONG m = 1;
-    BYTE m1 = 0;
+    BYTE m1 = 0;    
+    double dx_div_Ts = rr->dx / rr->TimerStep;
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
     // 3.30546875 uSec  при m = 32 (132.21875 тактов на шаг)
 
@@ -337,49 +350,33 @@ WORD CalculateMove(RR * rr, WORD* buf, WORD count)
         while(rr->Interval < rr->e >> m1){
             m1++;
         }
-        m = 1 << (m1);
-        /*
-        if(rr->Interval >= rr->e){ //6400
-            m = 1;
-        } else if(rr->Interval >= rr->e/2){ //3200
-            m = 2;
-        } else if(rr->Interval >= rr->e/4){ //1600
-            m = 4;
-        } else if(rr->Interval >= rr->e/8){ //800
-            m = 8;
-        } else if(rr->Interval >= rr->e/16){ //400
-            m = 16;
-        } else if(rr->Interval >= rr->e/32){ //200
-            m = 32;
-        } else if(rr->Interval >= rr->e/64){ //100
-            m = 64;
-        } else if(rr->Interval >= rr->e/128) {//50
-            m = 128;
-        } else if(rr->Interval >= rr->e/256) {//25
-            m = 256;
-        } */
+        m = 1 << (m1);        
         if(m == 1){ // вычисляем по одному шагу- времени много            
             switch(rr->CacheState){
                 case ST_ACCELERATE:
                     rr->XaccBeg++;
                     rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 += rr->Interval;
+                    rr->CacheSpeed = dx_div_Ts / rr->Interval;
                     break;
                 case ST_DECELERATE:
                     rr->XaccBeg--;
                     rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 -= rr->Interval;
+                    rr->CacheSpeed = dx_div_Ts / rr->Interval;
                     break;
                 case ST_RUN:
                 case ST_SLOW_RUN:
-                    rr->Interval = (DWORD)(rr->dx / (rr->Vend * rr->TimerStep));
+                    rr->Interval = (DWORD) dx_div_Ts / rr->CacheSpeed;
                     break;
                 default:
                     return 0;
                     break;
             }
             rr->T.Val += rr->Interval;
-            buf[i] = rr->T.word.LW;
+            buf[i].R = rr->T.word.LW;
+            buf[i].RS = rr->T.word.LW + rr->Interval / 2;
+            
         } else { // вычисляем по нескольку шагов- времени мало
             // если m + i  <  FreeData => m = m
             // если m + i  >= FreeData => m = FreeData - i;
@@ -391,15 +388,17 @@ WORD CalculateMove(RR * rr, WORD* buf, WORD count)
                     rr->XaccBeg += m;
                     dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 += dT;
+                    rr->CacheSpeed = dx_div_Ts * m / dT;
                     break;
                 case ST_DECELERATE:
                     rr->XaccBeg -= m;
                     dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 -= dT;
+                    rr->CacheSpeed = dx_div_Ts * m / dT;
                     break;
                 case ST_RUN:
                 case ST_SLOW_RUN:
-                    dT = (DWORD)(m * rr->dx / (rr->Vend * rr->TimerStep));
+                    dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
                     break;
                 default:
                     return 0;
@@ -413,17 +412,20 @@ WORD CalculateMove(RR * rr, WORD* buf, WORD count)
                     rr->T.Val += 1;
                     Corr--;
                 }
-                buf[j + i] = rr->T.word.LW;
-            }
+                buf[i+j].R  = rr->T.word.LW;
+                buf[i+j].RS = rr->T.word.LW + rr->Interval / 2;
+            }            
+            
         }
+        /*
         if(rr->CacheDir > 0){
             rr->XCachePos += m;
         } else {
             rr->XCachePos -= m;
-        }          
+        } */         
         rr->CacheCmdCounter -= m;
         i += m;
-    }
+    }    
     return FreeData;
 }
 // Функция для вызова через DMASetCallback 
@@ -434,7 +436,7 @@ int Control(void * _This, WORD* Buf, WORD BufSize)
     WORD j = 0;
     for(i = 0; (i < BufSize)&&(rr->CacheState != ST_STOP);){
         if(j == BufSize) j = 0;
-        j += CalculateMove(rr, (WORD*)&Buf[j], BufSize - j);
+        j += CalculateMove(rr, (BUF_TYPE*)&Buf[j], (BufSize - j)/2);
 
         if(rr->CacheCmdCounter <= 0){
             CacheNextCmd(rr);
@@ -529,9 +531,11 @@ int SetDirection(BYTE oc, BYTE Dir)
 требование к диспетчеру команд:
     1. очередная смена команды
     2. прерывание команд с низким приоритетом командами с высоким приоритетом
-    2. принудительная смена команды на торможение
-    3. принудительная остановка
-    4. при любом прерывании команд очередь очищается
+    3. принудительная смена команды на торможение
+    4. принудительная остановка
+    5. при любом прерывании команд очередь очищается
+    6. все команды должны быть совместимы. т.е. незавершенную команду можно прервать любой другой, подходящей по смыслу.
+        например: ST_ACCELERATE можно прервать ST_RUN или ST_DECELERATE и все необходимые переменные будут иметь правильные значения
 
 приоритет команд:
 А. низкий приоритет    ( прерывается при появлении любой команды в очереди, 
@@ -552,6 +556,31 @@ int SetDirection(BYTE oc, BYTE Dir)
     3. смена шага
     
 */
+int ProcessCmd(RR * rr)
+{
+
+    switch(rr->CacheState){
+        //case ST_STOP:
+        //case ST_RUN:
+        //case ST_ACCELERATE:
+        //case ST_DECELERATE:
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int CacheNextCmd(RR * rr)
 {
     if(rr->CmdCount > 0){
@@ -605,7 +634,8 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double deltaX, int Dire
             rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
         else
             rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
-
+         rr->CmdQueue[rr->NextWriteCmd].RunStep = 32000;
+        /*
         CalculateBreakParam(rr->K, rr->B, rr->dx, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV,
             &rr->CmdQueue[rr->NextWriteCmd].Vend,
             &rr->CmdQueue[rr->NextWriteCmd].deltaX,NULL, &Xbreak);
@@ -615,7 +645,7 @@ int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double deltaX, int Dire
             rr->LastCmdX += rr->CmdQueue[rr->NextWriteCmd].deltaX;
         else
             rr->LastCmdX -= rr->CmdQueue[rr->NextWriteCmd].deltaX;
-
+        */
         rr->NextWriteCmd++;
         if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
         rr->CmdCount++;
@@ -804,7 +834,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     // TODO: выяснить направление движения
     // TODO: определить модель привода ( догоняем цель или ждем )
     VendD = VTarget;
-	
+    /*	
     if(rr->LastCmdX == XTarget) return 0;
     //BreakCurrentCmd(rr);
     if(rr->LastCmdX < XTarget) {
@@ -847,7 +877,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
             }
             PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
-    }    
+    }   */ 
     return 0;
 }
 
