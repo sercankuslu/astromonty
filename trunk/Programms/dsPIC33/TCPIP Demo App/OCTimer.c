@@ -567,15 +567,25 @@ int SetDirection(BYTE oc, BYTE Dir)
 2.  
 
 */
-int PushCmd(RR* rr, GD_STATE cmd, void * Value)
+typedef union _STATE_VALUE{
+    double Speed;
+    double Angle;
+    int Dir;
+    BYTE Timer;
+    BYTE Step;
+}STATE_VALUE;
+
+int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
 {
     int Dir = 0;
     switch(cmd){
         case ST_STOP:
             break;
         case ST_SET_DIRECTION:
-            Dir = *(int*)Value;
-            if(Dir>0){
+            Dir = Value.Dir;
+            if(Dir>0){//TODO: в команде, естественно
+                rr->CacheDir = 1;
+            } else {
                 rr->CacheDir = 0;
             }
             break;
@@ -587,21 +597,21 @@ int PushCmd(RR* rr, GD_STATE cmd, void * Value)
 
 int ProcessCmd(RR * rr)
 {
-     static BYTE T = 2;
-     static int Dir = 1;
-     static BYTE Step = 8;
-     static double Speed = 10.0 * Grad_to_Rad;
-     static double Angle = 52.0 * Grad_to_Rad;
-     PushCmd(rr, ST_ACCELERATE, (void*)&Speed);
-     PushCmd(rr, ST_DECELERATE, (void*)&Speed);
-     PushCmd(rr, ST_RUN, (void*)&Angle);
-     PushCmd(rr, ST_SET_TIMER, (void*)&T);
-     PushCmd(rr, ST_SET_DIRECTION, (void*)&Dir);
-     PushCmd(rr, ST_SET_STEP, (void*)&Step);
-     PushCmd(rr, ST_EMERGENCY_STOP, NULL);
-     PushCmd(rr, ST_STOP, NULL);
-
-    
+    STATE_VALUE Value;    
+    Value.Speed = 10.0 * Grad_to_Rad;
+    PushCmd(rr, ST_ACCELERATE, Value);
+    Value.Speed = 1.0 * Grad_to_Rad;
+    PushCmd(rr, ST_DECELERATE, Value);
+    Value.Angle = 52.0 * Grad_to_Rad;
+    PushCmd(rr, ST_RUN, Value);
+    Value.Timer = 2;
+    PushCmd(rr, ST_SET_TIMER, Value);
+    Value.Dir = 1;
+    PushCmd(rr, ST_SET_DIRECTION, Value);
+    Value.Step = 8;
+    PushCmd(rr, ST_SET_STEP, Value);
+    PushCmd(rr, ST_EMERGENCY_STOP, NULL);
+    PushCmd(rr, ST_STOP, NULL);    
     return 0;
 }
 
