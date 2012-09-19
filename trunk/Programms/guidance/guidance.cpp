@@ -527,14 +527,18 @@ void Calc()
     WORD BufSize = 256;
 
     OCSetup(); 
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
-    for(;;){
-        if(Control(&rr1, Buf, BufSize))
-            break;
-    }
+    rr1.MaxSpeed = 10.0 * Grad_to_Rad;
+    rr1.MinAngle = 0;
+    rr1.MaxAngle = 180.0 * Grad_to_Rad;
+    ProcessCmd(&rr1);
+    //PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+    //PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
+    //for(;;){
+    //    if(Control(&rr1, Buf, BufSize))
+    //        break;
+    // }
 //     rr1.XPosition = 10.0 * Grad_to_Rad / rr1.dx;
 //     rr2.XPosition = 0;
     //rr3.XPosition = 0;

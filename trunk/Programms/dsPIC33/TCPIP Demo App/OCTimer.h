@@ -64,6 +64,15 @@ typedef struct DateTimeStruct {
 #define Grad_to_Rad 0.017453292519943295
 #define Rad_to_Grad 57.295779513082323
 
+typedef union _STATE_VALUE{
+    double Speed;
+    double Angle;
+    int Dir;
+    BYTE Timer;
+    BYTE Step;
+    void* Null;
+}STATE_VALUE;
+
 // параметры 
 
 typedef enum GD_STATE { // состояния
@@ -80,26 +89,12 @@ typedef enum GD_STATE { // состояния
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
 typedef struct CMD_QUEUE{
     GD_STATE    State;      // команда
-    void*       Value;      // значение параметра
+    STATE_VALUE Value;      // значение параметра
     //BYTE        Direction;  // направление движения в команде
     //double      Vend;       // скорость, которая будет достигнута
     //double      deltaX;     // расстояние, которое будет пройдено после выполнения команды
-    DWORD       RunStep;    // количество шагов на выполнение команды
+    //DWORD       RunStep;    // количество шагов на выполнение команды
 }Cmd_Queue;
-typedef struct  ARR_FLAGS
-{
-    BYTE uSteps : 7;
-    BYTE Dir : 1;
-}ARR_FLAGS;
-
-typedef struct ARR_TYPE {
-    //DWORD FixedPoint;   // опорная точка
-    DWORD       Interval;     // Интервал от предыдущей опорной точки
-    DWORD       Count;        // Количество интервалов
-    DWORD       Correction;   // остаток от деления полного интервала на Count
-    GD_STATE    State;  
-    ARR_FLAGS   Flags;
-} ARR_TYPE;
 
 typedef struct RR{
 
@@ -122,7 +117,7 @@ typedef struct RR{
     BYTE                    CacheDir;                   // направление вращения при просчете
     DWORD                   CacheCmdCounter;            // количество шагов до окончания команды
     DWORD                   Interval;                   // текущее значение интервала (число со знаком) почему?
-    DWORD                    XaccBeg;                   // параметры функции ускорения
+    DWORD                   XaccBeg;                   // параметры функции ускорения
     double                  d;                          // константы для минимизации вычислений
     double                  a;  
     double                  c;
@@ -136,6 +131,9 @@ typedef struct RR{
     LONG                    XMaxPosition;               // максимальное значение номера шага
     LONG                    XZenitPosition;             // номер шага в зените
     LONG                    XParkPosition;              // значение номера шага парковочной позиции        
+    double                  MaxSpeed;
+    double                  MaxAngle;
+    double                  MinAngle;
 
     // служебные (оптимизация)
     
@@ -317,5 +315,6 @@ double GetAngle(WORD n);
 int GetStatus(WORD n);
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
 double LM_Sidereal_Time (double jd, double longitude);
+int ProcessCmd(RR * rr);
 #endif //__OC_TIMER_H_
 
