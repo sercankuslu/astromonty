@@ -285,11 +285,15 @@ void CalculateParams(RR * rr)
     double I;
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
 #ifdef __C30__
-    rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
-    rr->B = AppConfig.RRConfig[rr->Index].B / I;
+    if(AppConfig.RRConfig[rr->Index].Control){
+        rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
+        rr->B = AppConfig.RRConfig[rr->Index].B / I;
+    else
 #else
-    rr->K = (MY_DEFAULT_RR_PARA_K)/I;
-    rr->B = MY_DEFAULT_RR_PARA_B / I;
+    {
+        rr->K = (MY_DEFAULT_RR_PARA_K)/I;
+        rr->B = MY_DEFAULT_RR_PARA_B / I;
+    }
 #endif
     rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в радианах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
@@ -360,13 +364,11 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->XaccBeg++;
                     rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 += rr->Interval;
-                    rr->CacheSpeed = dx_div_Ts / rr->Interval;
                     break;
                 case ST_DECELERATE:
                     rr->XaccBeg--;
                     rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 -= rr->Interval;
-                    rr->CacheSpeed = dx_div_Ts / rr->Interval;
                     break;
                 case ST_RUN:
                     rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
@@ -390,13 +392,11 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->XaccBeg += m;
                     dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 += dT;
-                    rr->CacheSpeed = dx_div_Ts * m / dT;
                     break;
                 case ST_DECELERATE:
                     rr->XaccBeg -= m;
                     dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
                     rr->T1 -= dT;
-                    rr->CacheSpeed = dx_div_Ts * m / dT;
                     break;
                 case ST_RUN:
                     dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
@@ -418,15 +418,13 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
             }            
             
         }
-        /*
-        if(rr->CacheDir > 0){
-            rr->XCachePos += m;
-        } else {
-            rr->XCachePos -= m;
-        } */         
         rr->CacheCmdCounter -= m;
         i += m;
-    }    
+    } 
+    {   // вычисление скорости
+        double OmKT = (1 - rr->K * rr->T1);
+        rr->CacheSpeed = (rr->B * rr->T1*( 1.0 + OmKT))/(OmKT * OmKT); // V = BT/(1-KT)
+    }
     return FreeData;
 }
 // Функция для вызова через DMASetCallback 
@@ -538,6 +536,8 @@ int SetDirection(BYTE oc, BYTE Dir)
     5. при любом прерывании команд очередь очищается
     6. все команды должны быть совместимы. т.е. незавершенную команду можно прервать любой другой, подходящей по смыслу.
         например: ST_ACCELERATE можно прервать ST_RUN или ST_DECELERATE и все необходимые переменные будут иметь правильные значения
+    7. при невысоких скоростях уменьшить размер буфера (при переключении на tmr3 сделать размер буфера = 16 циклов)
+    8. при высоких скоростях установить большой размер буфера (при переключении на tmr2 сделать размер буфера = 128 циклов)
 
 приоритет команд:
 А. низкий приоритет    (прерывается командами с высоким и обычным приоритетом)
@@ -567,31 +567,71 @@ int SetDirection(BYTE oc, BYTE Dir)
 2.  
 
 */
-typedef union _STATE_VALUE{
-    double Speed;
-    double Angle;
-    int Dir;
-    BYTE Timer;
-    BYTE Step;
-}STATE_VALUE;
-
+// проверить параметры 
+// поставить команду в очередь
+// возврат: 
+// 0: команда успешно поставлена в очередь
+// 1: очередь переполнена. повторить позже
+// 2: некорректные параметры команды
+// 3: неизвестная команда
 int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
 {
-    int Dir = 0;
-    switch(cmd){
-        case ST_STOP:
-            break;
-        case ST_SET_DIRECTION:
-            Dir = Value.Dir;
-            if(Dir>0){//TODO: в команде, естественно
-                rr->CacheDir = 1;
-            } else {
-                rr->CacheDir = 0;
-            }
-            break;
-        default:
-            break;
-    }
+    if(rr->CmdCount < CQ_SIZE){
+        switch(cmd){
+            case ST_STOP:
+                if(Value.Null == NULL){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value.Null = NULL;
+                } else return 2;
+                break;
+            case ST_ACCELERATE:
+            case ST_DECELERATE:
+                if((Value.Speed >= -rr->MaxSpeed )&&(Value.Speed <= rr->MaxSpeed)){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                } else return 2;
+                break;
+            case ST_RUN: // TODO: функцию сделать которая выяснит предельные углы
+                if((Value.Angle >= rr->MinAngle )&&(Value.Angle <= rr->MaxAngle)){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                } else return 2;
+                break;
+            case ST_SET_DIRECTION:
+                if((Value.Dir>=-1)&&(Value.Dir<=1)){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                } else return 2;
+                break;
+            case ST_SET_TIMER:
+                if((Value.Timer == 2 )||(Value.Timer == 3)){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                } else return 2;
+                break;
+            case ST_SET_STEP:
+                if((Value.Step == 1 )||(Value.Step == 2)||(Value.Step == 4 )||(Value.Step == 8)||(Value.Step == 16 )||(Value.Step == 32)){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                } else return 2;
+                break;
+            case ST_EMERGENCY_STOP:
+                if(Value.Null == NULL){
+                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
+                    rr->CmdQueue[rr->NextWriteCmd].Value.Null = NULL;
+                } else return 2;
+                break;
+            default:
+                return 3;
+                break;
+        }
+    
+        rr->CmdCount++;
+        rr->NextWriteCmd++;
+        if(rr->NextWriteCmd >= CQ_SIZE){
+            rr->NextWriteCmd -= CQ_SIZE;
+        }
+    } else return 1;
     return 0;
 }
 
@@ -610,8 +650,15 @@ int ProcessCmd(RR * rr)
     PushCmd(rr, ST_SET_DIRECTION, Value);
     Value.Step = 8;
     PushCmd(rr, ST_SET_STEP, Value);
-    PushCmd(rr, ST_EMERGENCY_STOP, NULL);
-    PushCmd(rr, ST_STOP, NULL);    
+    Value.Null = NULL;
+    PushCmd(rr, ST_EMERGENCY_STOP, Value);
+    PushCmd(rr, ST_STOP, Value);   
+    Value.Speed = 10.0 * Grad_to_Rad;
+    PushCmd(rr, ST_ACCELERATE, Value);
+    Value.Speed = 1.0 * Grad_to_Rad;
+    PushCmd(rr, ST_DECELERATE, Value);
+    Value.Angle = 52.0 * Grad_to_Rad;
+    PushCmd(rr, ST_RUN, Value);
     return 0;
 }
 
@@ -636,7 +683,7 @@ int CacheNextCmd(RR * rr)
         //rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
         //rr->deltaX  = rr->CmdQueue[rr->NextCacheCmd].deltaX;
         //rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;
-        rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
+        //rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
         switch(rr->CacheState){
             case ST_ACCELERATE:
             case ST_DECELERATE:/*
