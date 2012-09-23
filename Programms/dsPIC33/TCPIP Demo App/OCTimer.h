@@ -306,15 +306,16 @@ __attribute__((__packed__))
 #endif
 
 int OCSetup(void);
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double Xend, int Direction );
+int ProcessCmd(RR * rr);
 int Control(void * _This, WORD* Buf, WORD BufSize);
-int GDateToJD(DateTime GDate, int * JDN, double * JD);
-int JDToGDate(double JD, DateTime * GDate );
-int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
+//int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
 int GetStatus(WORD n);
+/*
+int GDateToJD(DateTime GDate, int * JDN, double * JD);
+int JDToGDate(double JD, DateTime * GDate );
+*/
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
 double LM_Sidereal_Time (double jd, double longitude);
-int ProcessCmd(RR * rr);
 #endif //__OC_TIMER_H_
 

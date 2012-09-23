@@ -39,13 +39,10 @@ DWORD TickGet()
 #endif
 int InitRR(RR * rr);
 int CacheNextCmd(RR * rr);
-DWORD GetBigTmrValue(BYTE id);
 int SetDirection(BYTE oc, BYTE Dir);
-int CalculateBreakParam(double K, double B, double dx, GD_STATE State, int Direction, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak);
+int CalculateBreakParam(RR * rr, GD_STATE State, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak);
 void CalculateParams(RR * rr);
-BOOL IsDisableOC(BYTE oc);
-DWORD GetInterval(DWORD T, double Xb, double dx, double a, double d);
-WORD Acceleration(RR * rr, WORD* buf, WORD count);
+DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
 
 double frac(double X);
 double GM_Sidereal_Time (double jd);
@@ -230,29 +227,29 @@ int OCSetup(void)
 int InitRR(RR * rr)
 {   //AppConfig
 #ifdef __C30__
-	if(AppConfig.RRConfig[rr->Index].Control){
-	    rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
-	    rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
-	    rr->Length = AppConfig.RRConfig[rr->Index].Length;
-	    rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
-	    rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
-	    rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
-	    rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
-	    //rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
-	    rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
-	} else 
+    if(AppConfig.RRConfig[rr->Index].Control){
+        rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
+        rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
+        rr->Length = AppConfig.RRConfig[rr->Index].Length;
+        rr->Reduction = AppConfig.RRConfig[rr->Index].Reduction;
+        rr->StepPerTurn = AppConfig.RRConfig[rr->Index].StepPerTurn;
+        rr->uStepPerStep = AppConfig.RRConfig[rr->Index].uStepPerStep; //16
+        rr->TimerStep = AppConfig.RRConfig[rr->Index].TimerStep;//0.0000002; // шаг таймера
+        //rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
+        rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
+    } else 
 #endif
-	{
-	    rr->Mass = MY_DEFAULT_RR_PARA_Mass;
-	    rr->Radius = MY_DEFAULT_RR_PARA_Radius;
-	    rr->Length = MY_DEFAULT_RR_PARA_Length;
-	    rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
-	    rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
-	    rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
-	    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
-	    //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
-	    rr->XPosition = 0;
-	}
+    {
+        rr->Mass = MY_DEFAULT_RR_PARA_Mass;
+        rr->Radius = MY_DEFAULT_RR_PARA_Radius;
+        rr->Length = MY_DEFAULT_RR_PARA_Length;
+        rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
+        rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
+        rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
+        rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
+        //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
+        rr->XPosition = 0;
+    }
     rr->Vend = 0.0;
     rr->deltaX = 0.0;
     //rr->DataCount = 0;
@@ -283,28 +280,55 @@ int InitRR(RR * rr)
 void CalculateParams(RR * rr)
 {
     double I;
+    
     I = ((rr->Mass*rr->Radius*rr->Radius/4) + (rr->Mass*rr->Length*rr->Length/12))/rr->Reduction;
 #ifdef __C30__
     if(AppConfig.RRConfig[rr->Index].Control){
-        rr->K = (AppConfig.RRConfig[rr->Index].K)/I;
+        rr->K = AppConfig.RRConfig[rr->Index].K / I;
         rr->B = AppConfig.RRConfig[rr->Index].B / I;
-    else
-#else
-    {
-        rr->K = (MY_DEFAULT_RR_PARA_K)/I;
-        rr->B = MY_DEFAULT_RR_PARA_B / I;
-    }
+    } else
 #endif
-    rr->dx = 2.0 * PI /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в радианах
+    {
+        // данные TODO: надо бы их в AppConfig.RRConfig[rr->Index] добавить
+        double F1 = 100;
+        double F2 = 1000;
+        double P1 = 0.76;
+        double P2 = 0.46;
+        // предварительные вычисления. здесь характеристики двигателей.
+        double V1 = F1/rr->StepPerTurn; // скорость в оборотах в секунду 
+        double V2 = F2/rr->StepPerTurn;
+        double A1 = (P1/I)*Rad_to_Grad;
+        double A2 = (P2/I)*Rad_to_Grad;
+        // получение констант
+        rr->K = (A2 - A1)/(2 *(V2 - V1)); // размерность 1/сек
+        rr->B = (A1 - V1 * rr->K*2)/2;      // размерность 1/сек^2
+    }
+    rr->dx = 360.0 /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в градусах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
-    rr->e = (DWORD)(0.000160 / rr->TimerStep); //120us
+    rr->e = (DWORD)(0.000160 / rr->TimerStep); //160us
 }
 
-DWORD GetInterval(DWORD T, double Xb, double dx, double a, double d)
+// вычисление скорости ( только для ускорения или торможения )
+// V = BT(2-KT)/(1-KT)^2 => V = U(BTU+1), U = 1/(1+KT)
+// T                          значение функции ускорения T=(-Kx+sqrt((Kx)^2+4Bx))/2B оптимиз: 
+//                            T = d(x+sqrt(x(x+a)), d = -k/2BTs, a = 4B/K^2; Ts - TimerStep
+double GetSpeed(double T, double K, double B)
+{
+    double U = 1.0/(1.0 - K * T);
+    return (U *(B * T * U + 1.0));
+}
+// Вычисление интервала между значением T и значением функции, вычесленной на основании X
+// T                        предыдущее значение функции ускорения T=(-Kx+sqrt((Kx)^2+4Bx))/2B оптимиз: 
+//                          T = d(x+sqrt(x(x+a)), d = -k/2BTs, a = 4B/K^2; Ts - TimerStep
+// Xa                       текущее значение координаты X в алгоритме ускорения
+// dx                       шаг двигателя в радианах
+// a                        константа
+// d                        константа
+DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
 {
     double D;
-    double X = Xb * dx;
+    double X = Xa * dx;
     DWORD R = 0;
     D = X *(X + a);
     if(D >= 0.0){
@@ -319,18 +343,21 @@ DWORD GetInterval(DWORD T, double Xb, double dx, double a, double d)
     return 0;
 }
 /*
+Вычисление и заполнение буфера одной командой. (ST_ACCELERATE,ST_DECELERATE,ST_RUN)
 Используем:
+rr->CacheState                  текущая команда
 rr->CacheCmdCounter             счетчик оставшихся шагов в команде
 rr->dx                          ширина шага
-rr->a                           вспомогательная констата
-rr->d
-rr->e                           интервал в шагах таймера времени, необходимого для однократного вычисления
+rr->a                           вспомогательная констата 4B/k^2
+rr->d                           вспомогательная констата -k/2BTs
+rr->e                           период времени, необходимого для однократного вычисления(в шагах таймера)
 rr->TimerStep                   интервал таймера в секундах
-rr->T1                          предыдущее значение функции ускорения
-rr->XaccBeg                     координата функции ускорения
+rr->T1                          предыдущее значение T(времени) функции ускорения
+rr->XaccBeg                     координата X функции ускорения
 rr->Interval                    интервал
 rr->T                           счетчик интервалов
- **/
+rr->CacheSpeed                  скорость
+*/
 WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
 {
     WORD FreeData;
@@ -421,9 +448,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
         rr->CacheCmdCounter -= m;
         i += m;
     } 
-    {   // вычисление скорости
-        double OmKT = (1 - rr->K * rr->T1);
-        rr->CacheSpeed = (rr->B * rr->T1*( 1.0 + OmKT))/(OmKT * OmKT); // V = BT/(1-KT)
+    {   // вычисление скорости        
+        rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
     }
     return FreeData;
 }
@@ -446,73 +472,6 @@ int Control(void * _This, WORD* Buf, WORD BufSize)
     return 0;
 }
 
-
-
-
-DWORD GetBigTmrValue(BYTE id)
-{
-    switch (id){
-    case 2:
-        Timer2Big.word.LW = TMR2;
-        return Timer2Big.Val;
-    case 3:
-        Timer3Big.word.LW = TMR3;
-        return Timer3Big.Val;
-    default:
-        return 0;
-    }
-}
-
-BOOL IsDisableOC(BYTE oc)
-{
-#ifdef __C30__
-    switch (oc){
-    case 0:
-        if(OC1CONbits.OCM == 0b000) return 1;
-        break;
-    case 1:
-        if(OC2CONbits.OCM == 0b000) return 1;
-        break;
-    case 2:
-        if(OC3CONbits.OCM == 0b000) return 1;
-        break;
-    case 3:
-        if(OC4CONbits.OCM == 0b000) return 1;
-        break;
-    default :
-    return 0;
-    }
-    return 0;
-#else
-    return oc;
-#endif
-
-}
-
-int SetDirection(BYTE oc, BYTE Dir)
-{
-#ifdef __C30__
-    switch (oc){
-    case 0:
-        PORT1_DIR = Dir;
-        break;
-    case 1:
-        PORT2_DIR = Dir;
-        break;
-    case 2:
-        PORT3_DIR = Dir;
-        break;
-    case 3:
-        PORT4_DIR = Dir;
-        break;
-    default :
-    return 0;
-    }
-    return 0;
-#else
-    return oc + Dir;
-#endif
-}
 
 /*
 перечень команд
@@ -637,7 +596,17 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
 
 int ProcessCmd(RR * rr)
 {
-    STATE_VALUE Value;    
+    STATE_VALUE Value;   
+    double Vend = 10.0;
+    double Vbeg = 0.0;
+    double DeltaX = 5.0;
+    double DeltaT = 0;
+    LONG XBreak = 0;
+    CalculateBreakParam(rr, ST_ACCELERATE, Vbeg, &Vend, &DeltaX, &DeltaT, &XBreak);
+    Vbeg = 10.0;
+    Vend = 0.0;
+    DeltaX = 5.0;
+    CalculateBreakParam(rr, ST_DECELERATE, Vbeg, &Vend, &DeltaX, &DeltaT, &XBreak);
     Value.Speed = 10.0 * Grad_to_Rad;
     PushCmd(rr, ST_ACCELERATE, Value);
     Value.Speed = 1.0 * Grad_to_Rad;
@@ -714,138 +683,74 @@ int CacheNextCmd(RR * rr)
     }
     return 0;
 }
-
-int PushCmdToQueue(RR * rr, GD_STATE State, double Vend, double deltaX, int Direction )
+void GetAlgParams(double V, double K, double B, double dx, double * T, LONG * X)
 {
-    //LONG Xbreak;
-    if(rr->CmdCount < CQ_SIZE){
-        rr->CmdQueue[rr->NextWriteCmd].State = State;
-        //rr->CmdQueue[rr->NextWriteCmd].Vend = Vend;
-        //rr->CmdQueue[rr->NextWriteCmd].deltaX = deltaX;
-        //if(Direction > 0)
-            //rr->CmdQueue[rr->NextWriteCmd].Direction = 1;
-        //else
-          //  rr->CmdQueue[rr->NextWriteCmd].Direction = 0;
-         //rr->CmdQueue[rr->NextWriteCmd].RunStep = 32000;
-        /*
-        CalculateBreakParam(rr->K, rr->B, rr->dx, State, rr->CmdQueue[rr->NextWriteCmd].Direction, rr->LastCmdV,
-            &rr->CmdQueue[rr->NextWriteCmd].Vend,
-            &rr->CmdQueue[rr->NextWriteCmd].deltaX,NULL, &Xbreak);
-        rr->CmdQueue[rr->NextWriteCmd].RunStep = Xbreak;
-        rr->LastCmdV = rr->CmdQueue[rr->NextWriteCmd].Vend;
-        if(Direction > 0)
-            rr->LastCmdX += rr->CmdQueue[rr->NextWriteCmd].deltaX;
-        else
-            rr->LastCmdX -= rr->CmdQueue[rr->NextWriteCmd].deltaX;
-        */
-        rr->NextWriteCmd++;
-        if(rr->NextWriteCmd >= CQ_SIZE)rr->NextWriteCmd -= CQ_SIZE;
-        rr->CmdCount++;
-    } else return -1;
-    if((rr->CmdCount>0)&&(rr->CacheState == ST_STOP)){
-        CacheNextCmd(rr);
-    }
-    return 0;
-}
+    double VKpB = 0.0;
+    double D = 0.0;
 
-int CalculateBreakParam(double K, double B, double dx, GD_STATE State, int Direction,
+    VKpB = V * K + B;
+    D = B * VKpB;
+    (*T) = ((VKpB - sqrt(D))/(K * VKpB));
+    (*X) = (LONG)((B * (*T) * (*T)) / ((1 - K * (*T))*dx));
+}
+// используем
+// rr->K
+// rr->B
+// rr->dx
+// rr->a
+// rr->d
+int CalculateBreakParam(RR * rr, GD_STATE State,
                         double Vbeg, double * Vend,
                         double * deltaX, double * deltaT, LONG * Xbreak)
 {
-    double VKpB = 0.0;
     double dTb = 0.0;
     double dTe = 0.0;
     LONG Xe;
     LONG Xb;
     LONG dX;
     LONG dX2;
-    double XX = 0.0;
-    double D = 0.0;
-    double d = - K/(2.0 * B);
-    double a = 4.0 * B/(K * K);
+    DWORD XX = 0;
     double T2 = 0.0;
-    double OmKT = 0.0;
-    double XmX = 0.0;
-    //rr->d
 
     switch (State) {
         case ST_ACCELERATE:
         case ST_DECELERATE:
             if(Vbeg!=0.0){
-                VKpB = Vbeg * K + B;
-                D = B * VKpB;
-                dTb = ((VKpB - sqrt(D))/(K * VKpB));
-                Xb = (LONG)((B * dTb * dTb) / ((1 - K * dTb)*dx));
+                GetAlgParams(Vbeg, rr->K, rr->B, rr->dx, &dTb, &Xb);
             } else Xb = 0;
             if(*Vend != 0.0){
-                VKpB = (*Vend) * K + B;
-                D = B * VKpB;
-                dTe = ((VKpB - sqrt(D))/(K * VKpB));
-                Xe = (LONG)((B * dTe * dTe) / ((1 - K * dTe)*dx));
-            } else Xe = 0;
-            if(State != ST_DECELERATE){
-                dX = Xe - Xb;
-            } else {
-                dX = Xb - Xe;
-            }
-            if(Direction >0 ){
-                // количество радиан на которое сдвинулись
-                XmX = (*deltaX);
-            } else {
-                XmX = (*deltaX);
-            }
-            dX2 = (LONG)(XmX/dx);
+                GetAlgParams(*Vend, rr->K, rr->B, rr->dx, &dTe, &Xe);
+            } else Xe = 0;            
+            dX = abs((Xe - Xb));
+            dX2 = (LONG)(abs((*deltaX)/rr->dx));
 
             if (dX2 < dX) {
                 // если координата перемещения меньше, чем координата при заданной скорости
                 (*Xbreak) = dX2;
                 if(State != ST_DECELERATE){
-                    XX = Xb * dx + XmX;
+                    XX = Xb + dX2;
                 } else {
-                    XX = Xb * dx - XmX;
+                    XX = Xb - dX2;
                 }
-                D = XX *(XX + a);
-                if(D >= 0.0){
-                    T2 = ((XX + sqrt(D))*d);
-                }
-                OmKT = (1 - K * T2);
-                (*Vend) = (B * T2*( 1.0 + OmKT))/(OmKT * OmKT); // вычислить скорость  V = BT/(1-KT)  T =
+                T2 = (double)(GetInterval(0, XX, rr->dx, rr->a, rr->d) * rr->TimerStep);
+                (*Vend) = GetSpeed(T2 , rr->K, rr->B);     
+
                 if (deltaT != NULL) {
-                    if(T2 >= dTb)
-                        *deltaT = (T2 - dTb);
-                    else
-                        *deltaT = (dTb - T2);
+                    (*deltaT) = abs((T2 - dTb));
                 }
             } else {
-                // если координата перемещения больше, чем координата при заданной скорости
-                if(Direction >0 ){
-                    (*Xbreak) = dX;
-                    (*deltaX) = dX * dx;
-                } else {
-                    (*Xbreak) = dX;
-                    (*deltaX) = dX * dx;
-                }
+                (*Xbreak) = dX;
+                (*deltaX) = dX * rr->dx;
                 if (deltaT != NULL) {
-                    if(dTe >= dTb)
-                        *deltaT = dTe - dTb;
-                    else
-                        *deltaT = dTb - dTe;
+                    (*deltaT) = abs((dTe - dTb));
                 }
             }
             break;
-        case ST_RUN:
-            {
-                if(Direction >0 ){
-                    // количество шагов на которое сдвинулись
-                    XmX = (*deltaX);
-                } else {
-                    XmX = (*deltaX);
-                }
-                (*Xbreak) = (LONG)(XmX / dx);
-                (*Vend) = Vbeg;
-                if (deltaT != NULL) {
-                    *deltaT = XmX/Vbeg;
-                }
+        case ST_RUN: 
+            (*Xbreak) = (LONG)(abs((*deltaX)) / rr->dx);
+            (*Vend) = Vbeg;
+            if (deltaT != NULL) {
+                *deltaT = abs((*deltaX))/Vbeg;
             }
             break;
 
@@ -862,47 +767,7 @@ int CalculateBreakParam(double K, double B, double dx, GD_STATE State, int Direc
     return 0;
 }
 
-int GDateToJD(DateTime GDate, int * JDN, double * JD)
-{
-    double  a;
-    double  y;
-    double  m;
-
-    a = (14-GDate.Month)/12;
-    y = GDate.Year + 4800 - a;
-    m = GDate.Month + 12 * a - 3;
-    (*JDN) = (int)(GDate.Day + (int)((153*m + 2)/5) + (int)(365 * y) + (int)(y / 4)-(int)(y / 100)+(int)(y / 400) - 32045);
-    (*JD) = (double)(*JDN) + (double)(((double)GDate.Hour - 12.0)/24.0) + (double)((double)GDate.Min/1440.0) + (double)((double)GDate.Sec/86400.0);
-    return 0;
-}
-
-int JDToGDate(double JD, DateTime * GDate )
-{
-    int a;
-    double b;
-    double c;
-    double d;
-    double e;
-    double m;
-    double s;
-
-    a = (int)(JD) + 32044;
-    b = (4.0*a + 3.0)/146097.0;
-    c = a - 146097.0*b/4.0;
-    d = (4.0*c+3.0)/1461.0;
-    e = c - 1461.0 * d / 4.0;
-    m = (5.0* e + 2.0)/153.0;
-    s = JD - (int)(JD);
-
-    GDate->Day = (BYTE)(e - (int)((153.0 * m + 2.0)/5.0) + 1);
-    GDate->Month = (BYTE)(m + 3 - 12 * (int)(m / 10.0));
-    GDate->Year = (WORD)(100 * b + d - 4800 + (m/10));
-    GDate->Hour = (BYTE)(s * 24 + 12);
-    GDate->Min = (BYTE)((s * 24 + 12 - GDate->Hour) * 60);
-    GDate->Sec = (BYTE)(((s * 24 + 12 - GDate->Hour) * 60 - GDate->Min) * 60);
-    return 0;
-}
-
+/*
 int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
 {
     BYTE Direction = 1;
@@ -925,7 +790,7 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     // TODO: выяснить направление движения
     // TODO: определить модель привода ( догоняем цель или ждем )
     VendD = VTarget;
-    /*	
+    / *	
     if(rr->LastCmdX == XTarget) return 0;
     //BreakCurrentCmd(rr);
     if(rr->LastCmdX < XTarget) {
@@ -968,10 +833,10 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
             }
             PushCmdToQueue(rr, ST_STOP, 0.0, 0.0, Direction);
         }
-    }   */ 
+    }   * / 
     return 0;
-}
-
+}*/
+// информационные функции для Web интерфейса
 double GetAngle(WORD n)
 {
     double X = 0.0;
@@ -1034,4 +899,45 @@ double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s){
     JD =  floor(365.25 * (Y + 4716)) + floor(30.6001 * (M + 1)) + D - 13 - 1524.5 + UT/24.0;
     return JD;
 }
+/*
+int GDateToJD(DateTime GDate, int * JDN, double * JD)
+{
+    double  a;
+    double  y;
+    double  m;
 
+    a = (14-GDate.Month)/12;
+    y = GDate.Year + 4800 - a;
+    m = GDate.Month + 12 * a - 3;
+    (*JDN) = (int)(GDate.Day + (int)((153*m + 2)/5) + (int)(365 * y) + (int)(y / 4)-(int)(y / 100)+(int)(y / 400) - 32045);
+    (*JD) = (double)(*JDN) + (double)(((double)GDate.Hour - 12.0)/24.0) + (double)((double)GDate.Min/1440.0) + (double)((double)GDate.Sec/86400.0);
+    return 0;
+}
+
+int JDToGDate(double JD, DateTime * GDate )
+{
+    int a;
+    double b;
+    double c;
+    double d;
+    double e;
+    double m;
+    double s;
+
+    a = (int)(JD) + 32044;
+    b = (4.0*a + 3.0)/146097.0;
+    c = a - 146097.0*b/4.0;
+    d = (4.0*c+3.0)/1461.0;
+    e = c - 1461.0 * d / 4.0;
+    m = (5.0* e + 2.0)/153.0;
+    s = JD - (int)(JD);
+
+    GDate->Day = (BYTE)(e - (int)((153.0 * m + 2.0)/5.0) + 1);
+    GDate->Month = (BYTE)(m + 3 - 12 * (int)(m / 10.0));
+    GDate->Year = (WORD)(100 * b + d - 4800 + (m/10));
+    GDate->Hour = (BYTE)(s * 24 + 12);
+    GDate->Min = (BYTE)((s * 24 + 12 - GDate->Hour) * 60);
+    GDate->Sec = (BYTE)(((s * 24 + 12 - GDate->Hour) * 60 - GDate->Min) * 60);
+    return 0;
+}
+*/

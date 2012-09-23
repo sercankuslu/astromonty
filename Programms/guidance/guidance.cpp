@@ -603,7 +603,7 @@ void Calc()
             }
             if(rr1.RunState == ST_RUN) {                
                 if((rr1.XPosition>30000)&&(t==0)) {
-                    GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 12.0 * Grad_to_Rad, 0);
+                    //GoToCmd(&rr1, 0.0004166667 * Grad_to_Rad, 12.0 * Grad_to_Rad, 0);
                     t = 1;
                 }
             }

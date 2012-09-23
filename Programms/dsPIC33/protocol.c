@@ -250,7 +250,7 @@ ST_RESULT RunServer(BYTE bConnectionID, BYTE* pbBlob, int pbBlobSize, int* pbBlo
                             Speed = *((float*)Value);
                             break;
                         case STA_START:
-                            GoToCmd(rr, Speed, Target, 0); 
+                            //GoToCmd(rr, Speed, Target, 0); 
                             break;
                         default: break;
                         }                        
