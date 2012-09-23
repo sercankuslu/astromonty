@@ -351,7 +351,13 @@ int main(void)
     if(1){
         WORD Buf[256];
         WORD BufSize = 256;
-        OCSetup(); 
+        double k=1.23;
+        volatile double B;
+        B = exp(k);
+        if(B > 0.0){
+	        OCSetup();
+        }
+         
         PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
         PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
         PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
