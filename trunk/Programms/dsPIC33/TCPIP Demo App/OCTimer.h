@@ -79,6 +79,7 @@ typedef enum GD_STATE { // состояния
     ST_STOP,            // остановлен
     ST_ACCELERATE,      // разгоняется
     ST_RUN,             // движется с постоянной скоростью
+    ST_CONTINOUS,       // сопровождение
     ST_DECELERATE,      // тормозит
     ST_SET_TIMER,       // установка таймера
     ST_SET_DIRECTION,   // установка направления вращения
@@ -157,8 +158,8 @@ typedef struct RR{
 }RR;
 
 typedef struct {
-    WORD R;
-    WORD RS;
+    DWORD R;
+    DWORD RS;
 } BUF_TYPE;
 
 typedef  struct 
@@ -308,6 +309,7 @@ __attribute__((__packed__))
 int OCSetup(void);
 int ProcessCmd(RR * rr);
 int Control(void * _This, WORD* Buf, WORD BufSize);
+WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count);
 //int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
 int GetStatus(WORD n);

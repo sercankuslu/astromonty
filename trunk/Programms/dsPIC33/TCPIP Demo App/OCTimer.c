@@ -93,9 +93,9 @@ int OCSetup(void)
                 PORT1_POS_Tris    = 1; // вход POS
                 PORT1_POS2_Tris   = 1; // вход POS2
 
-                PORT1_ENABLE       = 0;// выход ENABLE
-                PORT1_DIR           = 0;// выход DIR
-                PORT1_STEP           = 0;// выход STEP
+                PORT1_ENABLE      = 0;// выход ENABLE
+                PORT1_DIR         = 0;// выход DIR
+                PORT1_STEP        = 0;// выход STEP
 
                 PORT1_ENABLE_Tris = 0;// выход ENABLE
                 PORT1_DIR_Tris    = 0;// выход DIR
@@ -106,9 +106,9 @@ int OCSetup(void)
                 PORT2_POS_Tris    = 1; // вход POS
                 PORT2_POS2_Tris   = 1; // вход POS2
 
-                PORT2_ENABLE       = 0;// выход ENABLE
-                PORT2_DIR           = 0;// выход DIR
-                PORT2_STEP           = 0;// выход STEP
+                PORT2_ENABLE      = 0;// выход ENABLE
+                PORT2_DIR         = 0;// выход DIR
+                PORT2_STEP        = 0;// выход STEP
 
                 PORT2_ENABLE_Tris = 0;// выход ENABLE
                 PORT2_DIR_Tris    = 0;// выход DIR
@@ -119,9 +119,9 @@ int OCSetup(void)
                 PORT3_POS_Tris    = 1; // вход POS
                 PORT3_POS2_Tris   = 1; // вход POS2
 
-                PORT3_ENABLE       = 0;// выход ENABLE
-                PORT3_DIR           = 0;// выход DIR
-                PORT3_STEP           = 0;// выход STEP
+                PORT3_ENABLE      = 0;// выход ENABLE
+                PORT3_DIR         = 0;// выход DIR
+                PORT3_STEP        = 0;// выход STEP
 
                 PORT3_ENABLE_Tris = 0;// выход ENABLE
                 PORT3_DIR_Tris    = 0;// выход DIR
@@ -405,8 +405,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     break;
             }
             rr->T.Val += rr->Interval;
-            buf[i].R = rr->T.word.LW;
-            buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+            buf[i].R = rr->T.Val;//(WORD)(rr->T.Val & 0xFFFF);
+            buf[i].RS = rr->T.Val + rr->Interval / 2;//(WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             
         } else { // вычисляем по нескольку шагов- времени мало
             // если m + i  <  FreeData => m = m
@@ -440,8 +440,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->T.Val += 1;
                     Corr--;
                 }
-                buf[i+j].R  = rr->T.word.LW;
-                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+                buf[i+j].R = rr->T.Val;//(WORD)(rr->T.Val & 0xFFFF);
+                buf[i+j].RS = rr->T.Val + rr->Interval / 2;//(WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             }            
             
         }
@@ -453,6 +453,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     }
     return FreeData;
 }
+
 // Функция для вызова через DMASetCallback 
 int Control(void * _This, WORD* Buf, WORD BufSize)
 {
@@ -592,6 +593,23 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
         }
     } else return 1;
     return 0;
+}
+BOOL NeedBreakCmd(GD_STATE CurrentCmd, GD_STATE NextCmd){
+    switch(CurrentCmd){
+        case ST_CONTINOUS:
+            if(NextCmd != ST_CONTINOUS) return true;
+            else return false;
+        break;
+        case ST_STOP:
+        case ST_ACCELERATE:
+        case ST_DECELERATE:
+        case ST_RUN:
+            if(NextCmd == ST_EMERGENCY_STOP) return true;
+            else return false;
+        break;
+        //case 
+    }
+    return false;
 }
 
 int ProcessCmd(RR * rr)
