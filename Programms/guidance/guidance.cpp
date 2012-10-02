@@ -29,8 +29,8 @@ extern ALL_PARAMS Params;
 #define SECOND_TIMER 2
 #define TH_TIMER 3
 #define FIRST_TIMER_INTERVAL 200 
-#define SECOND_TIMER_INTERVAL 100 
-#define TH_TIMER_INTERVAL 5000 
+#define SECOND_TIMER_INTERVAL 1000 
+#define TH_TIMER_INTERVAL 1000 
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -40,19 +40,22 @@ TCHAR szTitle[MAX_LOADSTRING];                          // Текст строк
 TCHAR szWindowClass[MAX_LOADSTRING];                    // имя класса главного окна
 
 char Text[256] = "Test";
-typedef struct DRAW_BUF {
+typedef DWORD
+/*struct DRAW_BUF {
     DWORD Value;
     LONG Pos;
     GD_STATE State;
-} DRAW_BUF;
+} 
+*/
+DRAW_BUF;
 
 DWORD Buf1Size = 0;
 DWORD Buf2Size = 0;
 DWORD Buf3Size = 0;
 
-DRAW_BUF DrawT1Buffer[576000];
-DRAW_BUF DrawT2Buffer[576000];
-DRAW_BUF DrawT3Buffer[576000];
+BUF_TYPE DrawT1Buffer[576000];
+BUF_TYPE DrawT2Buffer[576000];
+BUF_TYPE DrawT3Buffer[576000];
 
 //double DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
@@ -65,7 +68,7 @@ void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc();
 //void DrawRRGraph(HDC hdc, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py);
-void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py);
+void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 int BerkleyClient();
 
@@ -93,12 +96,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
-    SetTimer(hWindow, TH_TIMER, TH_TIMER_INTERVAL, (TIMERPROC) NULL);
+    //SetTimer(hWindow, TH_TIMER, TH_TIMER_INTERVAL, (TIMERPROC) NULL);
     if (!IsWindow(hwndDialog)) { 
         // окно в немодальном режиме                        
-        hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
-        ShowWindow(hwndDialog, SW_SHOW);
-        SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
+        //hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
+        //ShowWindow(hwndDialog, SW_SHOW);
+        //SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
         //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
     }
 
@@ -224,7 +227,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         {
             return FALSE;
         }
-
+        Calc();
         ShowWindow(hWnd, nCmdShow);
         UpdateWindow(hWnd);
         hWindow = hWnd;
@@ -265,8 +268,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (!IsWindow(hwndDialog)) { 
                         // окно в немодальном режиме                        
                         hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, (DLGPROC)KeyDialog);                         
-                        ShowWindow(hwndDialog, SW_SHOW);
-                        SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
+                        //ShowWindow(hwndDialog, SW_SHOW);
+                        //SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
                         //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
                     }
                     break;
@@ -280,15 +283,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
          case WM_TIMER:  
                 switch (wParam) { 
                 case TH_TIMER: 
-                    Calc();	
+                    //Calc();	
                     InvalidateRect(hWnd, NULL, TRUE);
                     k = true;
                 }
                 break;
          case WM_PAINT:{
                 hdc = BeginPaint(hWnd, &ps);
-                static DWORD SizeX = 30000;
-                static DWORD SizeY = 300;
+                static DWORD SizeX = 10;
+                static DWORD SizeY = 10;
                 DWORD Px;
                 DWORD Py;
                 HGDIOBJ original = NULL;
@@ -301,9 +304,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 LineTo(hdc, rect.left+9, rect.top);  
                 Px = rect.left + 10 + 100;
                 Py = rect.bottom - 10 - 00 * SizeY ;//- (rect.bottom/4);
-                DrawRRGraph(hdc, &rr1, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
-                DrawRRGraph(hdc, &rr2, DrawT2Buffer, Buf2Size, SizeX, SizeY, Px, Py); 
-                DrawRRGraph(hdc, &rr3, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py);                 
+                DrawRRGraph(hdc, rr1.dx, rr1.TimerStep, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
+                //DrawRRGraph(hdc, rr2.dx, rr2.TimerStep, DrawT2Buffer, Buf2Size, SizeX, SizeY, Px, Py); 
+                //DrawRRGraph(hdc, rr3.dx, rr3.TimerStep, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py);                 
                 SelectObject(hdc,original);
                 EndPaint(hWnd, &ps);
                 break;
@@ -530,7 +533,13 @@ void Calc()
     rr1.MaxSpeed = 10.0 * Grad_to_Rad;
     rr1.MinAngle = 0;
     rr1.MaxAngle = 180.0 * Grad_to_Rad;
-    ProcessCmd(&rr1);
+    rr1.CacheState = ST_ACCELERATE;
+    rr1.CacheCmdCounter = 32000;
+
+    Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
+    Buf1Size = rr1.CacheCmdCounter;
+    CalculateMove(&rr1,DrawT1Buffer,Buf1Size);
+    //ProcessCmd(&rr1);
     //PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
@@ -582,6 +591,7 @@ void Calc()
     PushCmdToQueue(&rr3, ST_RUN, 5.0 * Grad_to_Rad,  0 * Grad_to_Rad, -1);
     PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, -180 * Grad_to_Rad, -1);
    */
+    /*
     int k = 0;
     k = 0;
     int t = 0;
@@ -636,89 +646,128 @@ void Calc()
                 break;
             }
         }
-    }
+    }*/
 }
-void DrawRRGraph(HDC hdc, RR * rr, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
+void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
     POINT TX = {Px,Py};
-    POINT TV = {Px,Py};
     POINT TX1 = {Px,Py};
+    POINT TV = {Px,Py};
     POINT TV1 = {Px,Py};
+    POINT TA = {Px,Py};
+    POINT TA1 = {Px,Py};
+
+    POINT Tx = {Px,Py};
+    POINT Tx1 = {Px,Py};
+    POINT Tv = {Px,Py};
+    POINT Tv1 = {Px,Py};
+    POINT Ta = {Px,Py};
+    POINT Ta1 = {Px,Py};
+
     DWORD KX = 0;
     DWORD LX = 0;    
     DWORD KV = 0;
     DWORD LV = 0;  
+    DWORD KA = 0;
+    DWORD LA = 0;  
+    DWORD T = 0;
+    DWORD T1 = 0;
+    DWORD T2 = 0;
+    double DX = 0;
+    double DY = 0;  
+    double V = 0;
+    double V1 = 0;
+    double dT = 0;
+    double A = 0;
+    double K = rr1.K;
+    double B = rr1.B;
+    double TT = 0;
+    double dV = 0;
+    SizeY = 20;
+    SizeX = 20;
     MoveToEx(hdc, TX.x, TX.y, NULL);
     for(DWORD i = 0; i < BufSize; i++)
-    {        
-        TX.x = Px + (int)(Buf[i].Value / SizeX);
-        TX.y = Py - (int)(Buf[i].Pos * rr->dx * 200000 / SizeY);
+    {  
+       
+        T2 = T1;
+        T1 = Buf[i].R;
+        //while(T1 <= T){
+        //    T1 += 65536;
+        //}
+        if(T2 == T1){
+            break;
+        }
+        T = T1;
+        DX = (T * TimerStep * 10000/ SizeX);
+        DY = (i * dx * 1000 / SizeY);
+        TX.x = Px + (int)DX;
+        TX.y = Py - (int)DY;
         KX = TX.x;
-        if(KX!=LX)
+        TT = T * TimerStep;
+        Tx.x = Px + (int)DX;
+        Tx.y = Py - (int)(B*1000*TT * TT/((1-K*TT)*SizeY));
+        Tv.x = Px + (int)DX;
+        Tv.y = Py - (int)(B*1000*TT*(2-K*TT)/((1-K*TT)*(1-K*TT)*SizeY));
+        Ta.x = Px + (int)DX;
+        Ta.y = Py - (int)(B*2*1000/((1-K*TT)*(1-K*TT)*(1-K*TT)*SizeY));
+        //if(KX!=LX)
         {
-            LX = KX;            
-            switch(Buf[i].State){
-                    case ST_STOP :{
-                        SetDCPenColor(hdc,RGB(0,100,100));
-                        break;
-                                  }
-                    case ST_RUN :{
-                        SetDCPenColor(hdc,RGB(0,200,200));
-                        break;
-                                 }
-                    case ST_DECELERATE:{
-                        SetDCPenColor(hdc,RGB(0,150,150));
-                        break;
-                                       }
-                    case ST_ACCELERATE:{
-                        SetDCPenColor(hdc,RGB(0,255,255));
-                        break;
-                                       }
-                    default:;
-            }
+            //LX = KX;
             //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
+            SetDCPenColor(hdc,RGB(0,0,250));
             MoveToEx(hdc, TX1.x, TX1.y, NULL);
             LineTo(hdc, TX.x, TX.y);
             TX1 = TX;
         }
-        
-        if(i>1){
-            double V;
-            double dT = (Buf[i].Value - Buf[i-1].Value) * rr->TimerStep;
-            if(dT > 0.0)
-                V = rr->dx / dT;
-            else V = 0;            
-            TV.x = Px + (int)(Buf[i].Value / SizeX);
-            TV.y = Py - (int)(V * 360.0*10/PI);
+
+        //if(i>1)
+        {
+            dT = (T1 - T2) * TimerStep;
+            
+            if(dT > 0.0){
+                V1 = V;
+                V = dx / dT;
+                dV = (V - V1);
+                A = dV / dT;  
+            }
+                        
+            TV.x = Px + (int)DX;
+            TV.y = Py - (int)(V * 1000) / SizeY;
+
+           
+
+            TA.x = Px + (int) DX;
+            TA.y = Py - (int)(A * 1 / SizeY);
+
             KV = TV.x;
-            if(KV!=LV)
+            //if(KV!=LV)
             {
                 LV = KV;
-                switch(Buf[i].State){
-                        case ST_STOP :{
-                            SetDCPenColor(hdc,RGB(0,100,0));
-                            break;
-                                      }
-                        case ST_RUN :{
-                            SetDCPenColor(hdc,RGB(0,200,00));
-                            break;
-                                     }
-                        case ST_DECELERATE:{
-                            SetDCPenColor(hdc,RGB(0,150,0));
-                            break;
-                                           }
-                        case ST_ACCELERATE:{
-                            SetDCPenColor(hdc,RGB(0,255,0));
-                            break;
-                                           }
-                        default:;
-                }
-                //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
+                SetDCPenColor(hdc,RGB(0,250,0));
                 MoveToEx(hdc, TV1.x, TV1.y, NULL);
                 LineTo(hdc, TV.x, TV.y);
                 TV1 = TV;
+                SetDCPenColor(hdc,RGB(250,0,0));
+                MoveToEx(hdc, TA1.x, TA1.y, NULL);
+                LineTo(hdc, TA.x, TA.y);
+                TA1 = TA;
+                SetDCPenColor(hdc,RGB(0,0,128));
+                MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
+                LineTo(hdc, Tx.x, Tx.y);
+                Tx1 = Tx;
+                SetDCPenColor(hdc,RGB(0,128,0));
+                MoveToEx(hdc, Tv1.x, Tv1.y, NULL);
+                LineTo(hdc, Tv.x, Tv.y);
+                Tv1 = Tv;
+                SetDCPenColor(hdc,RGB(128,0,0));
+                MoveToEx(hdc, Ta1.x, Ta1.y, NULL);
+                LineTo(hdc, Ta.x, Ta.y);
+                Ta1 = Ta;
             }
         }
+       
+        
+        //T += Buf[i].R;
     }   
 }
 void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
