@@ -7,9 +7,9 @@
 #include <winsock2.h>
 #include <stdio.h>
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
-#include "..\dsPIC33\protocol.h"
-#include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
-#include "..\PIC18F97J60\TCPIP Demo App\Control.h"
+//#include "..\dsPIC33\protocol.h"
+// #include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
+//#include "..\PIC18F97J60\TCPIP Demo App\Control.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -22,7 +22,7 @@
 extern RR rr1;
 extern RR rr2;
 extern RR rr3;
-extern ALL_PARAMS Params;
+//extern ALL_PARAMS Params;
 
 // Глобальные переменные:
 #define FIRST_TIMER 1
@@ -342,7 +342,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
+{/*
     HDC hdc;    
     RECT rect;
     PAINTSTRUCT ps;    
@@ -373,8 +373,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
                 } 
             } else {
                 CheckDlgButton(hDlg, IDC_CHECK1, BST_UNCHECKED);
-                rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
-                rv = RunServer(0, (BYTE*)bfr, sizeof(bfr), &length);            
+                //rv = RunClient((BYTE*)bfr, sizeof(bfr), &length);            
+                //rv = RunServer(0, (BYTE*)bfr, sizeof(bfr), &length);            
             }
             InvalidateRect(hDlg, &rect, false);
             break;
@@ -491,22 +491,22 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         }   
     default:;
         
-    }    
+    }    */
     return (INT_PTR)FALSE;
 }
 
 void Calc()
 {
     
-    DisplayInit();
+    //DisplayInit();
 
-    ST_COMMANDS Cmd = STC_REQEST_DATA;
-    ST_FLAGS Flag = STF_OK;
-    ST_RESULT rv;
+    //ST_COMMANDS Cmd = STC_REQEST_DATA;
+    //ST_FLAGS Flag = STF_OK;
+    //ST_RESULT rv;
     BYTE Len = 0;
     BYTE * Value = NULL;
     BYTE * pPointer = NULL;
-    ST_ATTRIBUTE_TYPE  Attribute = STA_ALPHA;
+    //ST_ATTRIBUTE_TYPE  Attribute = STA_ALPHA;
     
 
     char Str[] = "All good!";
@@ -727,8 +727,8 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD Buf
             if(dT > 0.0){
                 V1 = V;
                 V = dx / dT;
-                dV = (V - V1);
-                A = dV / dT;  
+                //dV = (V - V1);
+                //A = dV / dT;  
             }
                         
             TV.x = Px + (int)DX;
@@ -736,21 +736,21 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD Buf
 
            
 
-            TA.x = Px + (int) DX;
-            TA.y = Py - (int)(A * 1 / SizeY);
+            //TA.x = Px + (int) DX;
+            //TA.y = Py - (int)(A * 1 / SizeY);
 
             KV = TV.x;
-            //if(KV!=LV)
+            if(KV!=LV)
             {
                 LV = KV;
                 SetDCPenColor(hdc,RGB(0,250,0));
                 MoveToEx(hdc, TV1.x, TV1.y, NULL);
                 LineTo(hdc, TV.x, TV.y);
                 TV1 = TV;
-                SetDCPenColor(hdc,RGB(250,0,0));
-                MoveToEx(hdc, TA1.x, TA1.y, NULL);
-                LineTo(hdc, TA.x, TA.y);
-                TA1 = TA;
+                //SetDCPenColor(hdc,RGB(250,0,0));
+                //MoveToEx(hdc, TA1.x, TA1.y, NULL);
+                //LineTo(hdc, TA.x, TA.y);
+                //TA1 = TA;
                 SetDCPenColor(hdc,RGB(0,0,128));
                 MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
                 LineTo(hdc, Tx.x, Tx.y);
@@ -790,7 +790,7 @@ void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
 
 
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
-{    
+{    /*
     LONG iWidth = rect->right - rect->left;
     LONG iHeight = rect->bottom - rect->top;
     int R = 2;
@@ -825,11 +825,11 @@ void DrawIface( LPPAINTSTRUCT ps, RECT * rect)
     // освобождаем контекст
     DeleteDC(hMemDC);
     DeleteObject(hbmScreen);
-
+*/
 }
 
 int BerkleyClient()
-{
+{/*
     //----------------------
     // Declare and initialize variables.
     WSADATA wsaData;
@@ -864,7 +864,7 @@ int BerkleyClient()
                 BSDClientState = BSD_CLOSE; 
                 break;
             }
-            SetClientDisconnect();
+            //SetClientDisconnect();
             BSDClientState = BSD_START;
             // no break
         }
@@ -915,7 +915,7 @@ int BerkleyClient()
         }
     case BSD_OPERATION:
         {
-            ST_RESULT res = RunClient((BYTE*)recvbuf, recvbuflen, &i);
+            ST_RESULT res =  STR_NEED_DISCONNECT;//RunClient((BYTE*)recvbuf, recvbuflen, &i);
             switch(res){
             case STR_NEED_ANSWER:  
                 i = send(ConnectSocket, recvbuf, i, 0);       
@@ -941,11 +941,11 @@ int BerkleyClient()
             // cleanup
             closesocket(ConnectSocket);
             WSACleanup();
-            SetClientDisconnect();
+            //SetClientDisconnect();
             BSDClientState = BSD_INIT; 
             return -1;
         }
         break;
-    }
+    }*/
     return 0;
 }

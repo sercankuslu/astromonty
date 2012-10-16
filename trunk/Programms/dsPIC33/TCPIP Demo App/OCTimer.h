@@ -1,10 +1,12 @@
 #ifndef __OC_TIMER_H_
 #define __OC_TIMER_H_
-#include "..\..\guidance\stdafx.h"
 
 #ifdef __C30__
-#include "GenericTypeDefs.h"
+#   include "GenericTypeDefs.h"
+#else
+#   include "..\..\guidance\stdafx.h"
 #endif
+
 
 typedef union MOTOR_POSITION{
     BYTE Val;
@@ -97,13 +99,29 @@ typedef struct CMD_QUEUE{
     //DWORD       RunStep;    // количество шагов на выполнение команды
 }Cmd_Queue;
 
+// очередь команд исполнения
+typedef struct RUNCMD_QUEUE{
+    GD_STATE    State;      // команда
+    //STATE_VALUE Value;      // значение параметра
+    BYTE        Direction;  // направление движения в команде
+    BYTE        Timer;
+    //double      Vend;       // скорость, которая будет достигнута
+    //double      deltaX;     // расстояние, которое будет пройдено после выполнения команды
+    DWORD       RunStep;    // количество шагов на выполнение команды
+}Run_Cmd_Queue;
+
 typedef struct RR{
 
-    // очередь команды        
+    // очередь команд кеша
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
     BYTE                    NextCacheCmd;               // указатель на начало очереди
     BYTE                    NextWriteCmd;               // указатель на конец очереди
     BYTE                    CmdCount;                   // количество команд в очереди
+    // очередь команд исполнения
+    Run_Cmd_Queue           RunCmdQueue[CQ_SIZE];       // очередь команд
+    BYTE                    RunCmdRead;                 // указатель на начало очереди
+    BYTE                    RunCmdWrite;                // указатель на конец очереди
+    BYTE                    RunCmdCount;                   // количество команд в очереди
 
     // параметры исполнения
     GD_STATE                RunState;                   // тип команды, выполняемой в данное время
@@ -156,10 +174,10 @@ typedef struct RR{
     BYTE Enable;                                        // признак включенности
     
 }RR;
-
+// структура DMA буфера для режима TOGGLE в OC
 typedef struct {
-    DWORD R;
-    DWORD RS;
+    WORD R;
+    WORD RS;
 } BUF_TYPE;
 
 typedef  struct 
