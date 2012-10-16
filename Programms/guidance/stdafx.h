@@ -26,10 +26,10 @@
 #define _DWORD_VAL_
 
 #define __EXTENSION 
-typedef union BYTE_VAL
+typedef union _BYTE_VAL
 {
     BYTE Val;
-    struct __PACKED
+    struct
     {
         __EXTENSION BYTE b0:1;
         __EXTENSION BYTE b1:1;
@@ -41,7 +41,7 @@ typedef union BYTE_VAL
         __EXTENSION BYTE b7:1;
     } bits;
 } BYTE_VAL;
-typedef union DWORD_VAL
+typedef union _DWORD_VAL
 {
     DWORD Val;
     WORD w[2];
@@ -98,7 +98,7 @@ typedef union DWORD_VAL
 #endif
 #ifndef _WORD_VAL_
 #define _WORD_VAL_
-typedef union WORD_VAL
+typedef union _WORD_VAL
 {
     WORD Val;
     BYTE v[2];
@@ -155,6 +155,8 @@ typedef struct {
     DWORD Time;
 } AppConfigType;
 #endif //#if !defined _APP_CONFIG_TYPE
+
+
 #endif //_WINDOWS
 
 // TODO. Установите здесь ссылки на дополнительные заголовки, требующиеся для программы

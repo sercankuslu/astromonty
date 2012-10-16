@@ -22,7 +22,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
-			EnableManagedIncrementalBuild="1"
+			EnableManagedIncrementalBuild="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -54,6 +54,7 @@
 				WarningLevel="4"
 				WarnAsError="false"
 				DebugInformationFormat="3"
+				CallingConvention="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -178,7 +179,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\PIC18F97J60\TCPIP Demo App\Control.c"
+				RelativePath="..\dsPIC33\TCPIP Demo App\device_control.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -244,18 +245,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\dsPIC33\protocol.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -282,7 +271,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\PIC18F97J60\TCPIP Demo App\Control.h"
+				RelativePath="..\dsPIC33\TCPIP Demo App\device_control.h"
 				>
 			</File>
 			<File
@@ -303,10 +292,6 @@
 			</File>
 			<File
 				RelativePath="..\PIC18F97J60\TCPIP Demo App\PCF8535.h"
-				>
-			</File>
-			<File
-				RelativePath="..\dsPIC33\protocol.h"
 				>
 			</File>
 			<File

@@ -7,11 +7,11 @@
 #ifdef __C30__
 #   include "TCPIP Stack/TCPIP.h"
 #   include "math.h"
-#   include "device_control.h"
+//#   include "device_control.h"
 #else
 #   include <math.h>
 #endif
-
+#include "device_control.h"
 #include "OCTimer.h"
 
 
@@ -27,7 +27,7 @@ __attribute__((far)) RR rr1;
 __attribute__((far)) RR rr2;
 __attribute__((far)) RR rr3;
 __attribute__((far)) RAMSaveConfig RRConfigRAM;
-//__attribute__((far)) APP_CONFIG AppConfig;
+__attribute__((far)) APP_CONFIG AppConfig;
 #else
 RR rr1;
 RR rr2;
@@ -46,15 +46,21 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
 
 double frac(double X);
 double GM_Sidereal_Time (double jd);
+int RunControl(void * _This, DMA_ID id);
 
 #ifdef __C30__
 
 
 #else
-    WORD TMR2 = 0;
-    WORD TMR3 = 0;
-    WORD OC1R = 0;
+    //WORD TMR2 = 0;
+    //WORD TMR3 = 0;
+    //WORD OC1R = 0;
 #endif
+
+int SetDirection(BYTE oc, BYTE Dir)
+{
+    return 0;
+}
 
 int OCSetup(void)
 {
@@ -405,8 +411,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     break;
             }
             rr->T.Val += rr->Interval;
-            buf[i].R = rr->T.Val;//(WORD)(rr->T.Val & 0xFFFF);
-            buf[i].RS = rr->T.Val + rr->Interval / 2;//(WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+            buf[i].R = (WORD)(rr->T.Val & 0xFFFF);
+            buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             
         } else { // вычисляем по нескольку шагов- времени мало
             // если m + i  <  FreeData => m = m
@@ -440,8 +446,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->T.Val += 1;
                     Corr--;
                 }
-                buf[i+j].R = rr->T.Val;//(WORD)(rr->T.Val & 0xFFFF);
-                buf[i+j].RS = rr->T.Val + rr->Interval / 2;//(WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+                buf[i+j].R = (WORD)(rr->T.Val & 0xFFFF);
+                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             }            
             
         }
@@ -453,6 +459,25 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     }
     return FreeData;
 }
+
+int RunControl(void * _This, DMA_ID id)
+{
+    RR * rr = (RR*)_This;
+    if(DMAGetPPState(id) != 0) {
+        return 1; // полушаг
+    }
+    if(rr->RunCmdQueue[rr->RunCmdRead].RunStep == 0){
+        //NextRunCmd(rr); // очистка и переключение команды
+        SetDirection( rr->Index, rr->RunCmdQueue[rr->RunCmdRead].Direction);
+        OCSetTmr((OC_ID)rr->Index, (OC_TMR_SELECT)rr->RunCmdQueue[rr->RunCmdRead].Timer);
+    } 
+    else {
+        rr->RunCmdQueue[rr->RunCmdRead].RunStep--;
+    }
+    
+    return 0;
+}
+
 
 // Функция для вызова через DMASetCallback 
 int Control(void * _This, WORD* Buf, WORD BufSize)
@@ -646,6 +671,8 @@ int ProcessCmd(RR * rr)
     PushCmd(rr, ST_DECELERATE, Value);
     Value.Angle = 52.0 * Grad_to_Rad;
     PushCmd(rr, ST_RUN, Value);
+    RunControl((void*)rr, DMA0);
+    //TimerSetValue(T1,0,0);
     return 0;
 }
 

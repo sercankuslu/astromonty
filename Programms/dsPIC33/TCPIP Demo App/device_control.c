@@ -1,5 +1,619 @@
+#include "stdafx.h"
 #include "device_control.h"
+
+#ifdef __C30__
 #include "TCPIP Stack/TCPIP.h"
+#   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
+#   define DMAOFFSET(x) __builtin_dmaoffset
+#else
+#   define INTERRUPT void
+#   define DMAOFFSET(x) (WORD)x
+#endif
+
+#ifdef _WIN32
+WORD T1CON;
+WORD T2CON;
+WORD T3CON;
+WORD T4CON;
+WORD T5CON;
+WORD T6CON;
+WORD T7CON;
+WORD T8CON;
+WORD T9CON;
+
+WORD TMR1;
+WORD TMR2;
+WORD TMR3;
+WORD TMR4;
+WORD TMR5;
+WORD TMR6;
+WORD TMR7;
+WORD TMR8;
+WORD TMR9;
+
+WORD PR1;
+WORD PR2;
+WORD PR3;
+WORD PR4;
+WORD PR5;
+WORD PR6;
+WORD PR7;
+WORD PR8;
+WORD PR9;
+
+WORD OC1CON;
+WORD OC2CON;
+WORD OC3CON;
+WORD OC4CON;
+WORD OC5CON;
+WORD OC6CON;
+WORD OC7CON;
+WORD OC8CON;
+
+WORD OC1R;
+WORD OC2R;
+WORD OC3R;
+WORD OC4R;
+WORD OC5R;
+WORD OC6R;
+WORD OC7R;
+WORD OC8R;
+
+WORD OC1RS;
+WORD OC2RS;
+WORD OC3RS;
+WORD OC4RS;
+WORD OC5RS;
+WORD OC6RS;
+WORD OC7RS;
+WORD OC8RS;
+
+WORD DMA0CON;
+WORD DMA1CON;
+WORD DMA2CON;
+WORD DMA3CON;
+WORD DMA4CON;
+WORD DMA5CON;
+WORD DMA6CON;
+WORD DMA7CON;
+
+WORD DMA0REQ;
+WORD DMA1REQ;
+WORD DMA2REQ;
+WORD DMA3REQ;
+WORD DMA4REQ;
+WORD DMA5REQ;
+WORD DMA6REQ;
+WORD DMA7REQ;
+
+WORD DMA0PAD;
+WORD DMA1PAD;
+WORD DMA2PAD;
+WORD DMA3PAD;
+WORD DMA4PAD;
+WORD DMA5PAD;
+WORD DMA6PAD;
+WORD DMA7PAD;
+
+WORD DMA0STA;
+WORD DMA1STA;
+WORD DMA2STA;
+WORD DMA3STA;
+WORD DMA4STA;
+WORD DMA5STA;
+WORD DMA6STA;
+WORD DMA7STA;
+
+WORD DMA0STB;
+WORD DMA1STB;
+WORD DMA2STB;
+WORD DMA3STB;
+WORD DMA4STB;
+WORD DMA5STB;
+WORD DMA6STB;
+WORD DMA7STB;
+
+WORD DMA0CNT;
+WORD DMA1CNT;
+WORD DMA2CNT;
+WORD DMA3CNT;
+WORD DMA4CNT;
+WORD DMA5CNT;
+WORD DMA6CNT;
+WORD DMA7CNT;
+
+typedef struct 
+{
+    __EXTENSION BYTE b0:1;
+    __EXTENSION BYTE TCS:1;
+    __EXTENSION BYTE TSYNC:1;
+    __EXTENSION BYTE T32:1;
+    __EXTENSION BYTE TCKPS:2;
+    __EXTENSION BYTE TGATE:1;
+    __EXTENSION BYTE b7:1;
+    __EXTENSION BYTE b8:1;
+    __EXTENSION BYTE b9:1;
+    __EXTENSION BYTE b10:1;
+    __EXTENSION BYTE b11:1;
+    __EXTENSION BYTE b12:1;
+    __EXTENSION BYTE TSIDL:1;
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE TON:1;
+} TIMER_CONbits;
+
+TIMER_CONbits T1CONbits;
+TIMER_CONbits T2CONbits;
+TIMER_CONbits T3CONbits;
+TIMER_CONbits T4CONbits;
+TIMER_CONbits T5CONbits;
+TIMER_CONbits T6CONbits;
+TIMER_CONbits T7CONbits;
+TIMER_CONbits T8CONbits;
+TIMER_CONbits T9CONbits;
+typedef struct 
+{
+    __EXTENSION BYTE OCM:3;
+    __EXTENSION BYTE OCTSEL:1;
+    __EXTENSION BYTE OCFLT:1;
+    __EXTENSION BYTE b4:8;
+    __EXTENSION BYTE OCSIDL:1;
+    __EXTENSION BYTE b14:2;
+} OC_CONbits;
+OC_CONbits OC1CONbits;
+OC_CONbits OC2CONbits;
+OC_CONbits OC3CONbits;
+OC_CONbits OC4CONbits;
+OC_CONbits OC5CONbits;
+OC_CONbits OC6CONbits;
+OC_CONbits OC7CONbits;
+OC_CONbits OC8CONbits;
+
+typedef struct 
+{
+    __EXTENSION BYTE MODE:2;
+    __EXTENSION BYTE b2:2;
+    __EXTENSION BYTE AMODE:2;
+    __EXTENSION BYTE b6:5;
+    __EXTENSION BYTE NULLW:1;
+    __EXTENSION BYTE HALF:1;
+    __EXTENSION BYTE DIR:1;
+    __EXTENSION BYTE SIZE:1;
+    __EXTENSION BYTE CHEN:1;
+} DMA_CONbits;
+DMA_CONbits DMA0CONbits;
+DMA_CONbits DMA1CONbits;
+DMA_CONbits DMA2CONbits;
+DMA_CONbits DMA3CONbits;
+DMA_CONbits DMA4CONbits;
+DMA_CONbits DMA5CONbits;
+DMA_CONbits DMA6CONbits;
+DMA_CONbits DMA7CONbits;
+
+typedef struct 
+{
+    __EXTENSION BYTE IRQSEL0:1;
+    __EXTENSION BYTE IRQSEL1:1;
+    __EXTENSION BYTE IRQSEL2:1;
+    __EXTENSION BYTE IRQSEL3:1;
+    __EXTENSION BYTE IRQSEL4:1;
+    __EXTENSION BYTE IRQSEL5:1;
+    __EXTENSION BYTE IRQSEL6:1;
+    __EXTENSION BYTE b7:8;
+    __EXTENSION BYTE FORCE:1;
+} DMA_REQbits;
+
+DMA_REQbits DMA0REQbits;
+DMA_REQbits DMA1REQbits;
+DMA_REQbits DMA2REQbits;
+DMA_REQbits DMA3REQbits;
+DMA_REQbits DMA4REQbits;
+DMA_REQbits DMA5REQbits;
+DMA_REQbits DMA6REQbits;
+DMA_REQbits DMA7REQbits;
+
+struct 
+{
+    __EXTENSION BYTE PPST0:1;
+    __EXTENSION BYTE PPST1:1;
+    __EXTENSION BYTE PPST2:1;
+    __EXTENSION BYTE PPST3:1;
+    __EXTENSION BYTE PPST4:1;
+    __EXTENSION BYTE PPST5:1;
+    __EXTENSION BYTE PPST6:1;
+    __EXTENSION BYTE PPST7:1;
+    __EXTENSION BYTE LSTCH:4;
+    __EXTENSION BYTE b12:4;
+} DMACS1bits;
+
+struct 
+{
+    __EXTENSION BYTE INT0IF:1;
+    __EXTENSION BYTE IC1IF:1;
+    __EXTENSION BYTE OC1IF:1;
+    __EXTENSION BYTE T1IF:1;
+    __EXTENSION BYTE DMA0IF:1;
+    __EXTENSION BYTE IC2IF:1;
+    __EXTENSION BYTE OC2IF:1;
+    __EXTENSION BYTE T2IF:1;
+    __EXTENSION BYTE T3IF:1;
+    __EXTENSION BYTE SPI1EIF:1;
+    __EXTENSION BYTE SPI1IF:1;
+    __EXTENSION BYTE U1RXIF:1;
+    __EXTENSION BYTE U1TXIF:1;
+    __EXTENSION BYTE AD1IF:1;
+    __EXTENSION BYTE DMA1IF:1;
+    __EXTENSION BYTE b16:1;
+} IFS0bits;
+struct 
+{
+    __EXTENSION BYTE SI2C1IF:1;
+    __EXTENSION BYTE MI2C1IF:1;
+    __EXTENSION BYTE b2:1;
+    __EXTENSION BYTE CNIIF:1;
+    __EXTENSION BYTE INT1IF:1;
+    __EXTENSION BYTE AD2IF:1;
+    __EXTENSION BYTE IC7IF:1;
+    __EXTENSION BYTE IC8IF:1;
+    __EXTENSION BYTE DMA2IF:1;
+    __EXTENSION BYTE OC3IF:1;
+    __EXTENSION BYTE OC4IF:1;
+    __EXTENSION BYTE T4IF:1;
+    __EXTENSION BYTE T5IF:1;
+    __EXTENSION BYTE INT2IF:1;
+    __EXTENSION BYTE U2RXIF:1;
+    __EXTENSION BYTE U2TXIF:1;    
+} IFS1bits;
+struct 
+{
+    __EXTENSION BYTE SPI2EIF:1;
+    __EXTENSION BYTE SPI2IF:1;
+    __EXTENSION BYTE C1RXIF:1;
+    __EXTENSION BYTE C1IF:1;
+    __EXTENSION BYTE DMA3IF:1;
+    __EXTENSION BYTE IC3IF:1;
+    __EXTENSION BYTE IC4IF:1;
+    __EXTENSION BYTE IC5IF:1;
+    __EXTENSION BYTE IC6IF:1;
+    __EXTENSION BYTE OC5IF:1;
+    __EXTENSION BYTE OC6IF:1;
+    __EXTENSION BYTE OC7IF:1;
+    __EXTENSION BYTE OC8IF:1;
+    __EXTENSION BYTE b13:1;
+    __EXTENSION BYTE DMA4IF:1;
+    __EXTENSION BYTE T6IF:1;
+} IFS2bits;
+struct 
+{
+    __EXTENSION BYTE T7IF:1;
+    __EXTENSION BYTE SI2C2IF:1;
+    __EXTENSION BYTE MI2C2IF:1;
+    __EXTENSION BYTE T8IF:1;
+    __EXTENSION BYTE T9IF:1;
+    __EXTENSION BYTE INT3IF:1;
+    __EXTENSION BYTE INT4IF:1;
+    __EXTENSION BYTE C2RXIF:1;
+    __EXTENSION BYTE C2IF:1;
+    __EXTENSION BYTE b9:1;
+    __EXTENSION BYTE b10:1;
+    __EXTENSION BYTE DCIEIF:1;
+    __EXTENSION BYTE DCIIF:1;
+    __EXTENSION BYTE DMA5IF:1;
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE b15:1;
+}IFS3bits;
+struct 
+{
+    __EXTENSION BYTE b0:1;
+    __EXTENSION BYTE U1EIF:1;
+    __EXTENSION BYTE U2EIF:1;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE DMA6IF:1;
+    __EXTENSION BYTE DMA7IF:1;
+    __EXTENSION BYTE C1TXIF:1;
+    __EXTENSION BYTE C2TXIF:1;
+    __EXTENSION BYTE b8:1;
+    __EXTENSION BYTE b9:1;
+    __EXTENSION BYTE b10:1;
+    __EXTENSION BYTE b11:1;
+    __EXTENSION BYTE b12:1;
+    __EXTENSION BYTE b13:1;
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE b15:1;
+}IFS4bits;
+
+struct 
+{
+    __EXTENSION BYTE INT0IE:1;
+    __EXTENSION BYTE IC1IE:1;
+    __EXTENSION BYTE OC1IE:1;
+    __EXTENSION BYTE T1IE:1;
+    __EXTENSION BYTE DMA0IE:1;
+    __EXTENSION BYTE IC2IE:1;
+    __EXTENSION BYTE OC2IE:1;
+    __EXTENSION BYTE T2IE:1;
+    __EXTENSION BYTE T3IE:1;
+    __EXTENSION BYTE SPI1EIE:1;
+    __EXTENSION BYTE SPI1IE:1;
+    __EXTENSION BYTE U1RXIE:1;
+    __EXTENSION BYTE U1TXIE:1;
+    __EXTENSION BYTE AD1IE:1;
+    __EXTENSION BYTE DMA1IE:1;
+    __EXTENSION BYTE b15:1;
+} IEC0bits;
+struct 
+{
+    __EXTENSION BYTE SI2C1IE:1;
+    __EXTENSION BYTE MI2C1IE:1;
+    __EXTENSION BYTE b2:1;
+    __EXTENSION BYTE CNIIE:1;
+    __EXTENSION BYTE INT1IE:1;
+    __EXTENSION BYTE AD2IE:1;
+    __EXTENSION BYTE IC7IE:1;
+    __EXTENSION BYTE IC8IE:1;
+    __EXTENSION BYTE DMA2IE:1;
+    __EXTENSION BYTE OC3IE:1;
+    __EXTENSION BYTE OC4IE:1;
+    __EXTENSION BYTE T4IE:1;
+    __EXTENSION BYTE T5IE:1;
+    __EXTENSION BYTE INT2IE:1;
+    __EXTENSION BYTE U2RXIE:1;
+    __EXTENSION BYTE U2TXIE:1;    
+} IEC1bits;
+struct 
+{
+    __EXTENSION BYTE SPI2EIE:1;
+    __EXTENSION BYTE SPI2IE:1;
+    __EXTENSION BYTE C1RXIE:1;
+    __EXTENSION BYTE C1IE:1;
+    __EXTENSION BYTE DMA3IE:1;
+    __EXTENSION BYTE IC3IE:1;
+    __EXTENSION BYTE IC4IE:1;
+    __EXTENSION BYTE IC5IE:1;
+    __EXTENSION BYTE IC6IE:1;
+    __EXTENSION BYTE OC5IE:1;
+    __EXTENSION BYTE OC6IE:1;
+    __EXTENSION BYTE OC7IE:1;
+    __EXTENSION BYTE OC8IE:1;
+    __EXTENSION BYTE b13:1;
+    __EXTENSION BYTE DMA4IE:1;
+    __EXTENSION BYTE T6IE:1;
+} IEC2bits;
+struct 
+{
+    __EXTENSION BYTE T7IE:1;
+    __EXTENSION BYTE SI2C2IE:1;
+    __EXTENSION BYTE MI2C2IE:1;
+    __EXTENSION BYTE T8IE:1;
+    __EXTENSION BYTE T9IE:1;
+    __EXTENSION BYTE INT3IE:1;
+    __EXTENSION BYTE INT4IE:1;
+    __EXTENSION BYTE C2RXIE:1;
+    __EXTENSION BYTE C2IE:1;
+    __EXTENSION BYTE b9:1;
+    __EXTENSION BYTE b10:1;
+    __EXTENSION BYTE DCIEIE:1;
+    __EXTENSION BYTE DCIIE:1;
+    __EXTENSION BYTE DMA5IE:1;
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE b15:1;
+}IEC3bits;
+struct 
+{
+    __EXTENSION BYTE b0:1;
+    __EXTENSION BYTE U1EIE:1;
+    __EXTENSION BYTE U2EIE:1;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE DMA6IE:1;
+    __EXTENSION BYTE DMA7IE:1;
+    __EXTENSION BYTE C1TXIE:1;
+    __EXTENSION BYTE C2TXIE:1;
+    __EXTENSION BYTE b8:1;
+    __EXTENSION BYTE b9:1;
+    __EXTENSION BYTE b10:1;
+    __EXTENSION BYTE b11:1;
+    __EXTENSION BYTE b12:1;
+    __EXTENSION BYTE b13:1;
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE b15:1;
+}IEC4bits;
+struct _IPC0bits
+{
+    __EXTENSION BYTE INT0IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE IC1IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE OC1IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE T1IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC0bits;
+struct _IPC1bits
+{
+    __EXTENSION BYTE DMA0IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE IC2IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE OC2IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE T2IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC1bits;
+struct _IPC2bits
+{
+    __EXTENSION BYTE T3IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE SPI1EIP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE SPI1IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE U1RXIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC2bits;
+struct _IPC3bits
+{
+    __EXTENSION BYTE U1TXIP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE AD1IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE DMA1IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE b6:4;
+} IPC3bits;
+struct _IPC4bits
+{
+    __EXTENSION BYTE SI2C1IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE MI2C1IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE b5:4;
+    __EXTENSION BYTE U1RXIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC4bits;
+struct _IPC5bits
+{
+    __EXTENSION BYTE INT1IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE AD2IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE IC7IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE IC8IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC5bits;
+struct _IPC6bits
+{
+    __EXTENSION BYTE DMA2IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE OC3IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE OC4IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE T4IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC6bits;
+struct _IPC7bits
+{
+    __EXTENSION BYTE T5IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE INT2IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE U2RXIP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE U2TXIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC7bits;
+struct _IPC8bits
+{
+    __EXTENSION BYTE SPI2EIP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE SPI2IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE C1RXIP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE C1IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC8bits;
+struct _IPC9bits
+{
+    __EXTENSION BYTE DMA3IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE IC3IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE IC4IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE IC5IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC9bits;
+struct _IPC10bits
+{
+    __EXTENSION BYTE IC6IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE OC5IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE OC6IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE OC7IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC10bits;
+struct _IPC11bits
+{
+    __EXTENSION BYTE OC8IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE b2:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE DMA4IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE T6IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC11bits;
+struct _IPC12bits
+{
+    __EXTENSION BYTE T7IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE SI2C2IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE MI2C2IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE T8IP:3;
+    __EXTENSION BYTE b7:1;
+} IPC12bits;
+struct _IPC13bits
+{
+    __EXTENSION BYTE T9IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE INT3IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE INT4IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE C2RXIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC13bits;
+struct _IPC14bits
+{
+    __EXTENSION BYTE C2IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE b2:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE b4IP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE DCEIIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC14bits;
+struct _IPC15bits
+{
+    __EXTENSION BYTE DCIIP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE DMA5IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE b4:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE b6:3;
+    __EXTENSION BYTE b7:1;
+} IPC15bits;
+struct _IPC16bits
+{
+    __EXTENSION BYTE b0:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE U1EIP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE U2EIP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE b6:3;
+    __EXTENSION BYTE b7:1;
+} IPC16bits;
+struct _IPC17bits
+{
+    __EXTENSION BYTE DMA6IP:3;
+    __EXTENSION BYTE b1:1;
+    __EXTENSION BYTE DMA7IP:3;
+    __EXTENSION BYTE b3:1;
+    __EXTENSION BYTE C1TXIP:3;
+    __EXTENSION BYTE b5:1;
+    __EXTENSION BYTE C2TXIP:3;
+    __EXTENSION BYTE b7:1;
+} IPC17bits;
+#endif //_WIN32
+
 
 //************************************************************************************************
 //
@@ -178,7 +792,7 @@ int TimerSetCallback(TIMERS_ID id, int (*CallbackFunc)(void))
 }
 /*
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T1Interrupt( void )
+INTERRUPT _T1Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T1;
@@ -189,7 +803,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T1Interrupt( void )
 }
 */
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
+INTERRUPT _T2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T2;
@@ -199,7 +813,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T2Interrupt( void )
     IFS0bits.T2IF = 0; // Clear T2 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
+INTERRUPT _T3Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T3;
@@ -209,7 +823,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T3Interrupt( void )
     IFS0bits.T3IF = 0; // Clear T3 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T4Interrupt( void )
+INTERRUPT _T4Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T4;
@@ -219,7 +833,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T4Interrupt( void )
     IFS1bits.T4IF = 0; // Clear T4 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T5Interrupt( void )
+INTERRUPT _T5Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T5;
@@ -229,7 +843,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T5Interrupt( void )
     IFS1bits.T5IF = 0; // Clear T5 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
+INTERRUPT _T6Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T6;
@@ -239,7 +853,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
     IFS2bits.T6IF = 0; // Clear T6 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
+INTERRUPT _T7Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T7;
@@ -249,7 +863,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
     IFS3bits.T7IF = 0; // Clear T7 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T8Interrupt( void )
+INTERRUPT _T8Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T8;
@@ -259,7 +873,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T8Interrupt( void )
     IFS3bits.T8IF = 0; // Clear T8 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _T9Interrupt( void )
+INTERRUPT _T9Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = T9;
@@ -276,7 +890,11 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T9Interrupt( void )
 
 // управл€ющие переменные
 DMAConfigType DMAConfig[8];
-unsigned int DMABuffer[1024] __attribute__((space(dma)));
+#ifdef __C30__
+    unsigned int DMABuffer[1024]  __attribute__((space(dma)));
+#else
+    unsigned int DMABuffer[1024];
+#endif
 static int BufferBusySize = 0;
 //------------------------------------------------------------------------------------------------
 int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
@@ -367,12 +985,12 @@ WORD DMAGetBuffer(WORD Count)
 }
 int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB)
 {
-    int A;
-    int B;
-    DMAConfig[id].BufA = (int)&DMABuffer + BufA;
-    DMAConfig[id].BufB = (int)&DMABuffer + BufB;
-    A = __builtin_dmaoffset(DMABuffer) + BufA;
-    B = __builtin_dmaoffset(DMABuffer) + BufB;
+    WORD A;
+    WORD B;
+    DMAConfig[id].BufA = (WORD)&DMABuffer + BufA;
+    DMAConfig[id].BufB = (WORD)&DMABuffer + BufB;
+    A = DMAOFFSET(DMABuffer) + BufA;
+    B = DMAOFFSET(DMABuffer) + BufB;
     switch(id){
         case DMA0:
             DMA0STA = A;
@@ -606,10 +1224,10 @@ int DMAForceTransfer(DMA_ID id)
     return 0;
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
+INTERRUPT _DMA0Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    int id = DMA0;
+    DMA_ID id = DMA0;
     if(DMAConfig[id].fillingBufferAFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -620,10 +1238,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA0Interrupt(void)
     IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
+INTERRUPT _DMA1Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    int id = DMA1;
+    DMA_ID id = DMA1;
     if(DMAConfig[id].fillingBufferBFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -634,10 +1252,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA1Interrupt(void)
     IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA2Interrupt(void)
+INTERRUPT _DMA2Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    int id = DMA2;
+    DMA_ID id = DMA2;
     if(DMAConfig[id].fillingBufferAFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -648,10 +1266,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA2Interrupt(void)
     IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA3Interrupt(void)
+INTERRUPT _DMA3Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    int id = DMA3;
+    DMA_ID id = DMA3;
     if(DMAConfig[id].fillingBufferBFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -662,10 +1280,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA3Interrupt(void)
     IFS2bits.DMA3IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA4Interrupt(void)
+INTERRUPT _DMA4Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    int id = DMA4;
+    DMA_ID id = DMA4;
     if(DMAConfig[id].fillingBufferAFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -676,10 +1294,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA4Interrupt(void)
     IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
+INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 //------------------------------------------------------------------------------------------------
 {    
-    int id = DMA5;
+    DMA_ID id = DMA5;
     if(DMAConfig[id].fillingBufferBFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -690,10 +1308,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _Interrupt61(void)//_DMA5Int
     IFS3bits.DMA5IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA6Interrupt(void)
+INTERRUPT _DMA6Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    int id = DMA6;
+    DMA_ID id = DMA6;
     if(DMAConfig[id].fillingBufferAFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -704,10 +1322,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _DMA6Interrupt(void)
     IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _DMA7Interrupt(void)
+INTERRUPT _DMA7Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    int id = DMA1;
+    DMA_ID id = DMA7;
     if(DMAConfig[id].fillingBufferBFunc){
         if(DMAGetPPState(id)==1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
@@ -750,6 +1368,32 @@ int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
             break;
         default:
         return -1;
+    }
+    return 0;
+}
+//------------------------------------------------------------------------------------------------
+int OCSetTmr(OC_ID id, OC_TMR_SELECT tmr)
+//------------------------------------------------------------------------------------------------
+{
+    switch(id){
+        case ID_OC1: OC1CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC2: OC2CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC3: OC3CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC4: OC4CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC5: OC5CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC6: OC6CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC7: OC7CONbits.OCTSEL = tmr;
+            break;
+        case ID_OC8: OC8CONbits.OCTSEL = tmr;
+            break;
+        default:
+            return -1;
     }
     return 0;
 }
@@ -879,7 +1523,7 @@ int OCSetCallback(OC_ID id, int (*CallbackFunc)(void))
     return 0;
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
+INTERRUPT _OC1Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC1;
@@ -889,7 +1533,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC1Interrupt( void )
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
+INTERRUPT _OC2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC2;
@@ -899,7 +1543,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC2Interrupt( void )
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
+INTERRUPT _OC3Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC3;
@@ -909,7 +1553,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC3Interrupt( void )
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC4Interrupt( void )
+INTERRUPT _OC4Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC4;
@@ -919,7 +1563,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC4Interrupt( void )
     IFS1bits.OC4IF = 0; // Clear OC4 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC5Interrupt( void )
+INTERRUPT _OC5Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC5;
@@ -929,7 +1573,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC5Interrupt( void )
     IFS2bits.OC5IF = 0; // Clear OC5 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC6Interrupt( void )
+INTERRUPT _OC6Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC6;
@@ -939,7 +1583,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC6Interrupt( void )
     IFS2bits.OC6IF = 0; // Clear OC6 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC7Interrupt( void )
+INTERRUPT _OC7Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC7;
@@ -949,7 +1593,7 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _OC7Interrupt( void )
     IFS2bits.OC7IF = 0; // Clear OC7 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
-void __attribute__((__interrupt__,__no_auto_psv__)) _OC8Interrupt( void )
+INTERRUPT _OC8Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     int id = ID_OC8;

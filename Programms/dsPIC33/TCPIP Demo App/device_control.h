@@ -1,7 +1,9 @@
 #ifndef __DEVICE_CONTROL_H_
 #define __DEVICE_CONTROL_H_
 #ifdef __C30__
-#include "GenericTypeDefs.h"
+#   include "GenericTypeDefs.h"
+#else
+#   include "..\..\guidance\stdafx.h"
 #endif 
 
 // Таймеры
@@ -89,7 +91,7 @@ int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_C
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
 int DMASetBufferSize(DMA_ID id, WORD Count);
 int DMASetBuffers(DMA_ID id, WORD* BufA, WORD* BufB);
-WORD* DMAGetBuffer(WORD Count);
+WORD DMAGetBuffer(WORD Count);
 int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, WORD*, WORD), int (*fillingBufBFunc)(void*, WORD*, WORD));
 int DMAPrepBuffer(DMA_ID id);
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force);
@@ -118,5 +120,5 @@ int OCSetInt(OC_ID id, BYTE Level, BOOL enabled);
 int OCSetMode(OC_ID id,OC_WORK_MODE ocm);
 int OCSetCallback(OC_ID id, int (*CallbackFunc)(void));
 int OCSetValue(OC_ID id, WORD ocr, WORD ocrs);
-
+int OCSetTmr(OC_ID id, OC_TMR_SELECT tmr);
 #endif //__DEVICE_CONTROL_H_
