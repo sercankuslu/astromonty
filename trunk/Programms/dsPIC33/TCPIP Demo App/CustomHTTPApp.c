@@ -650,14 +650,14 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
 		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
 		{// 0.004166667 1.0027389629079429924330346780558
 			if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
-    			GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
+    			//GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
 			}else
 			goto ConfigFailure;
 		}
 		else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
 		{// 
 			if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
-    			GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
+    			//GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
 			}else
 				goto ConfigFailure;
 		}
