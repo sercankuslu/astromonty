@@ -312,7 +312,7 @@ void CalculateParams(RR * rr)
     rr->dx = 360.0 /(rr->Reduction * rr->StepPerTurn * rr->uStepPerStep); // шаг перемещения в градусах
     rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
-    rr->e = (DWORD)(0.000160 / rr->TimerStep); //160us
+    rr->OneStepCalcTime = (DWORD)(0.000160 / rr->TimerStep); //160us
 }
 
 // вычисление скорости ( только для ускорения или торможения )
@@ -371,7 +371,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     LONG Corr = 0;
     WORD i = 0;
     WORD j = 0;
-    WORD m = 1;
+    WORD m = 8;
     BYTE m1 = 0;    
     double dx_div_Ts = rr->dx / rr->TimerStep;
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
@@ -387,11 +387,11 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     }
        
     for(i = 0; i < FreeData;){
-        while(rr->Interval < rr->e >> m1){
+        while(rr->Interval < rr->OneStepCalcTime >> m1){
             m1++;
         }
-        m = 1 << (m1);        
-        if(m == 1){ // вычисляем по одному шагу- времени много            
+        m = 8 << (m1);        
+        /*if(m == 1){ // вычисляем по одному шагу- времени много            
             switch(rr->CacheState){
                 case ST_ACCELERATE:
                     rr->XaccBeg++;
@@ -414,7 +414,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
             buf[i].R = (WORD)(rr->T.Val & 0xFFFF);
             buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             
-        } else { // вычисляем по нескольку шагов- времени мало
+        } else */
+        { // вычисляем по нескольку шагов- времени мало(времени всегда мало)
             // если m + i  <  FreeData => m = m
             // если m + i  >= FreeData => m = FreeData - i;
             if(m + i > FreeData){
