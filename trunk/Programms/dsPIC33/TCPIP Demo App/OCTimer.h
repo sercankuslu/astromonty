@@ -6,7 +6,7 @@
 #else
 #   include "..\..\guidance\stdafx.h"
 #endif
-
+#include "device_control.h"
 
 typedef union MOTOR_POSITION{
     BYTE Val;
@@ -110,18 +110,24 @@ typedef struct RUNCMD_QUEUE{
     DWORD       RunStep;    // количество шагов на выполнение команды
 }Run_Cmd_Queue;
 
+typedef struct _TIMERS_CON{
+    BYTE divide;                // какой делитель от основной частоты
+    BYTE SHRcount;              // divide = 2^SHRcount степень двойки делителя
+    double Period;              // период в секундах таймера
+} TIMERS_CON;
+
 typedef struct RR{
 
     // очередь команд кеша
     Cmd_Queue               CmdQueue[CQ_SIZE];          // очередь команд
-    BYTE                    NextCacheCmd;               // указатель на начало очереди
-    BYTE                    NextWriteCmd;               // указатель на конец очереди
+    BYTE                    CmdBeginQueue;              // указатель на начало очереди
+    BYTE                    CmdEndQueue;                // указатель на конец очереди
     BYTE                    CmdCount;                   // количество команд в очереди
     // очередь команд исполнения
-    Run_Cmd_Queue           RunCmdQueue[CQ_SIZE];       // очередь команд
-    BYTE                    RunCmdRead;                 // указатель на начало очереди
-    BYTE                    RunCmdWrite;                // указатель на конец очереди
-    BYTE                    RunCmdCount;                   // количество команд в очереди
+    Run_Cmd_Queue           RunQueue[CQ_SIZE];          // очередь команд исполнения
+    BYTE                    RunBeginQueue;              // указатель на начало очереди
+    BYTE                    RunEndQueue;                // указатель на конец очереди
+    BYTE                    RunCount;                   // количество команд в очереди
 
     // параметры исполнения
     GD_STATE                RunState;                   // тип команды, выполняемой в данное время
@@ -136,7 +142,7 @@ typedef struct RR{
     BYTE                    CacheDir;                   // направление вращения при просчете
     DWORD                   CacheCmdCounter;            // количество шагов до окончания команды
     DWORD                   Interval;                   // текущее значение интервала (число со знаком) почему?
-    DWORD                   XaccBeg;                   // параметры функции ускорения
+    DWORD                   XaccBeg;                    // параметры функции ускорения
     double                  d;                          // константы для минимизации вычислений
     double                  a;  
     double                  c;
@@ -170,11 +176,11 @@ typedef struct RR{
     double Reduction;                                   // коэффициент редукции червячной пары (1/360)
     WORD StepPerTurn;                                   // количество шагов двигателя на оборот (200 - ДШИ-200)
     WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
-    BYTE Index;                                         // номер канала
-    BYTE TmrId;                                         // номер таймера от которого работает канал
+    OC_ID Index;                                        // номер канала (номер OC)
+    TIMERS_ID TmrId;                                    // номер таймера от которого работает канал (T2/T3)
     BYTE Enable;                                        // признак включенности
-    BYTE Tmr2divide;                                    // делитель таймера 2(0 => 1, 3 => 8, 6 => 64, 8 => 256)
-    BYTE Tmr3divide;                                    // делитель таймера 3(0 => 1, 3 => 8, 6 => 64, 8 => 256)
+    //BYTE Tmr2divide;                                    // делитель таймера 2(0 => 1, 3 => 8, 6 => 64, 8 => 256)
+    //BYTE Tmr3divide;                                    // делитель таймера 3(0 => 1, 3 => 8, 6 => 64, 8 => 256)
     
 }RR;
 // структура DMA буфера для режима TOGGLE в OC

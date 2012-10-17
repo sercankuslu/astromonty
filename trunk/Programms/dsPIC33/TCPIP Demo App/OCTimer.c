@@ -37,6 +37,8 @@ DWORD TickGet()
     return 0;
 }
 #endif
+TIMERS_CON TimerConfig[2];
+
 int InitRR(RR * rr);
 int CacheNextCmd(RR * rr);
 int SetDirection(BYTE oc, BYTE Dir);
@@ -136,14 +138,14 @@ int OCSetup(void)
 #endif //#ifdef __C30__
 
         //TmrInit(2);
-        rr1.Index = 0;
-        rr1.TmrId = 2;
+        rr1.Index = ID_OC1;
+        rr1.TmrId = TIMER2;
         InitRR(&rr1);
-        rr2.Index = 1;
-        rr2.TmrId = 2;
+        rr2.Index = ID_OC2;
+        rr2.TmrId = TIMER2;
         InitRR(&rr2);
-        rr3.Index = 2;
-        rr3.TmrId = 2;
+        rr3.Index = ID_OC3;
+        rr3.TmrId = TIMER3;
         InitRR(&rr3);
         M1.Val = 0;
         M2.Val = 0;
@@ -175,10 +177,10 @@ int OCSetup(void)
         TimerSetInt(T2, 5, FALSE);
 
         // Initialize Timer3
-        TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-        TimerSetValue(T3, 0, 0xFFFF);
-        OCSetCallback(T3, NULL);
-        TimerSetInt(T3, 5, FALSE);
+        TimerInit(TIMER3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+        TimerSetValue(TIMER3, 0, 0xFFFF);
+        OCSetCallback(TIMER3, NULL);
+        TimerSetInt(TIMER3, 5, FALSE);
 
         // Setup and Enable DMA Channel
         DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
@@ -273,8 +275,8 @@ int InitRR(RR * rr)
     rr->CmdCount = 0;
     rr->CacheDir = 1;
     rr->RunDir = 1;    
-    rr->NextCacheCmd = 0;
-    rr->NextWriteCmd = 0;
+    rr->CmdBeginQueue = 0;
+    rr->CmdEndQueue = 0;
     rr->Interval = 32768;
     //rr->LastCmdV = 0.0;
     //rr->LastCmdX = 0.0;
@@ -415,7 +417,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
             buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
             
         } else */
-        { // вычисляем по нескольку шагов- времени мало(времени всегда мало)
+        { // вычисляем по нескольку шагов- времени мало(#me: времени всегда мало)
             // если m + i  <  FreeData => m = m
             // если m + i  >= FreeData => m = FreeData - i;
             if(m + i > FreeData){
@@ -447,8 +449,8 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
                     rr->T.Val += 1;
                     Corr--;
                 }
-                buf[i+j].R = (WORD)(rr->T.Val & 0xFFFF);
-                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+                buf[i+j].R  = (WORD)(rr->T.Val >> TimerConfig[rr->TmrId].SHRcount);
+                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) >> TimerConfig[rr->TmrId].SHRcount);
             }            
             
         }
@@ -467,13 +469,13 @@ int RunControl(void * _This, DMA_ID id)
     if(DMAGetPPState(id) != 0) {
         return 1; // полушаг
     }
-    if(rr->RunCmdQueue[rr->RunCmdRead].RunStep == 0){
+    if(rr->RunQueue[rr->RunBeginQueue].RunStep == 0){
         //NextRunCmd(rr); // очистка и переключение команды
-        SetDirection( rr->Index, rr->RunCmdQueue[rr->RunCmdRead].Direction);
-        OCSetTmr((OC_ID)rr->Index, (OC_TMR_SELECT)rr->RunCmdQueue[rr->RunCmdRead].Timer);
+        SetDirection( rr->Index, rr->RunQueue[rr->RunBeginQueue].Direction);
+        OCSetTmr((OC_ID)rr->Index, (OC_TMR_SELECT)rr->RunQueue[rr->RunBeginQueue].Timer);
     } 
     else {
-        rr->RunCmdQueue[rr->RunCmdRead].RunStep--;
+        rr->RunQueue[rr->RunBeginQueue].RunStep--;
     }
     
     return 0;
@@ -566,45 +568,45 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
         switch(cmd){
             case ST_STOP:
                 if(Value.Null == NULL){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value.Null = NULL;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value.Null = NULL;
                 } else return 2;
                 break;
             case ST_ACCELERATE:
             case ST_DECELERATE:
                 if((Value.Speed >= -rr->MaxSpeed )&&(Value.Speed <= rr->MaxSpeed)){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value = Value;
                 } else return 2;
                 break;
             case ST_RUN: // TODO: функцию сделать которая выяснит предельные углы
                 if((Value.Angle >= rr->MinAngle )&&(Value.Angle <= rr->MaxAngle)){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value = Value;
                 } else return 2;
                 break;
             case ST_SET_DIRECTION:
                 if((Value.Dir>=-1)&&(Value.Dir<=1)){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value = Value;
                 } else return 2;
                 break;
             case ST_SET_TIMER:
                 if((Value.Timer == 2 )||(Value.Timer == 3)){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value = Value;
                 } else return 2;
                 break;
             case ST_SET_STEP:
                 if((Value.Step == 1 )||(Value.Step == 2)||(Value.Step == 4 )||(Value.Step == 8)||(Value.Step == 16 )||(Value.Step == 32)){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value = Value;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value = Value;
                 } else return 2;
                 break;
             case ST_EMERGENCY_STOP:
                 if(Value.Null == NULL){
-                    rr->CmdQueue[rr->NextWriteCmd].State = cmd;
-                    rr->CmdQueue[rr->NextWriteCmd].Value.Null = NULL;
+                    rr->CmdQueue[rr->CmdEndQueue].State = cmd;
+                    rr->CmdQueue[rr->CmdEndQueue].Value.Null = NULL;
                 } else return 2;
                 break;
             default:
@@ -613,9 +615,9 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
         }
     
         rr->CmdCount++;
-        rr->NextWriteCmd++;
-        if(rr->NextWriteCmd >= CQ_SIZE){
-            rr->NextWriteCmd -= CQ_SIZE;
+        rr->CmdEndQueue++;
+        if(rr->CmdEndQueue >= CQ_SIZE){
+            rr->CmdEndQueue -= CQ_SIZE;
         }
     } else return 1;
     return 0;
@@ -694,11 +696,11 @@ int CacheNextCmd(RR * rr)
     if(rr->CmdCount > 0){
         //double D;
         //double X;
-        rr->CacheState = rr->CmdQueue[rr->NextCacheCmd].State;
-        //rr->Vend  = rr->CmdQueue[rr->NextCacheCmd].Vend;
-        //rr->deltaX  = rr->CmdQueue[rr->NextCacheCmd].deltaX;
-        //rr->CacheDir = rr->CmdQueue[rr->NextCacheCmd].Direction;
-        //rr->CacheCmdCounter = rr->CmdQueue[rr->NextCacheCmd].RunStep;
+        rr->CacheState = rr->CmdQueue[rr->CmdBeginQueue].State;
+        //rr->Vend  = rr->CmdQueue[rr->CmdBeginQueue].Vend;
+        //rr->deltaX  = rr->CmdQueue[rr->CmdBeginQueue].deltaX;
+        //rr->CacheDir = rr->CmdQueue[rr->CmdBeginQueue].Direction;
+        //rr->CacheCmdCounter = rr->CmdQueue[rr->CmdBeginQueue].RunStep;
         switch(rr->CacheState){
             case ST_ACCELERATE:
             case ST_DECELERATE:/*
@@ -717,13 +719,13 @@ int CacheNextCmd(RR * rr)
             default:;
         }
         rr->CmdCount--;
-        rr->CmdQueue[rr->NextCacheCmd].State = ST_STOP;
-        //rr->CmdQueue[rr->NextCacheCmd].Vend = 0.0;
-        //rr->CmdQueue[rr->NextCacheCmd].deltaX = 0.0;
-        //rr->CmdQueue[rr->NextCacheCmd].Direction = 1;
-        //rr->CmdQueue[rr->NextCacheCmd].RunStep = 0;
-        rr->NextCacheCmd++;
-        if(rr->NextCacheCmd >= CQ_SIZE)rr->NextCacheCmd -= CQ_SIZE;
+        rr->CmdQueue[rr->CmdBeginQueue].State = ST_STOP;
+        //rr->CmdQueue[rr->CmdBeginQueue].Vend = 0.0;
+        //rr->CmdQueue[rr->CmdBeginQueue].deltaX = 0.0;
+        //rr->CmdQueue[rr->CmdBeginQueue].Direction = 1;
+        //rr->CmdQueue[rr->CmdBeginQueue].RunStep = 0;
+        rr->CmdBeginQueue++;
+        if(rr->CmdBeginQueue >= CQ_SIZE)rr->CmdBeginQueue -= CQ_SIZE;
     } else {
         rr->CacheState = ST_STOP;
     }
