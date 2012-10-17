@@ -8,7 +8,7 @@
 
 // Таймеры
 typedef enum _TIMERS_ID{
-    T1 = 0, T2 = 1, T3 = 2, T4 = 3, T5 = 4, T6 = 5, T7 = 6, T8 = 7, T9 = 8
+    TIMER1 = 0, TIMER2 = 1, TIMER3 = 2, TIMER4 = 3, TIMER5 = 4, TIMER6 = 5, TIMER7 = 6, TIMER8 = 7, TIMER9 = 8
 } TIMERS_ID;
 typedef enum _TMR_CLOCK_SOURCE {
     CLOCK_SOURCE_INTERNAL = 0, CLOCK_SOURCE_EXTERNAL = 1

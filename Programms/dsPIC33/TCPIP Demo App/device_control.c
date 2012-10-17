@@ -634,23 +634,23 @@ int TimerInit(TIMERS_ID id, TMR_CLOCK_SOURCE source, TMR_GATED_MODE gated, TMR_P
     Config |= ((WORD)source) << 1;
 
     switch(id){
-        case T1: T1CON = Config;
+        case TIMER1: T1CON = Config;
             break;
-        case T2: T2CON = Config;
+        case TIMER2: T2CON = Config;
             break;
-        case T3: T3CON = Config;
+        case TIMER3: T3CON = Config;
             break;
-        case T4: T4CON = Config;
+        case TIMER4: T4CON = Config;
             break;
-        case T5: T5CON = Config;
+        case TIMER5: T5CON = Config;
             break;
-        case T6: T6CON = Config;
+        case TIMER6: T6CON = Config;
             break;
-        case T7: T7CON = Config;
+        case TIMER7: T7CON = Config;
             break;
-        case T8: T8CON = Config;
+        case TIMER8: T8CON = Config;
             break;
-        case T9: T9CON = Config;
+        case TIMER9: T9CON = Config;
             break;
         default:
         return -1;
@@ -662,47 +662,47 @@ int TimerSetInt(TIMERS_ID id, BYTE Level, BOOL enabled)
 //------------------------------------------------------------------------------------------------
 {
     switch(id){
-        case T1:
+        case TIMER1:
             IPC0bits.T1IP = Level & 0x07;     // Set Timer1 Interrupt Priority Level
             IFS0bits.T1IF = 0;         // Clear Timer1 Interrupt Flag
             IEC0bits.T1IE = enabled;   // Enable Timer1 interrupt
             break;
-        case T2:
+        case TIMER2:
             IPC1bits.T2IP = Level & 0x07;     // Set Timer2 Interrupt Priority Level
             IFS0bits.T2IF = 0;         // Clear Timer2 Interrupt Flag
             IEC0bits.T2IE = enabled;   // Enable Timer2 interrupt
             break;
-        case T3:
+        case TIMER3:
             IPC2bits.T3IP = Level & 0x07;     // Set Timer3 Interrupt Priority Level
             IFS0bits.T3IF = 0;         // Clear Timer3 Interrupt Flag
             IEC0bits.T3IE = enabled;   // Enable Timer3 interrupt
             break;
-        case T4:
+        case TIMER4:
             IPC6bits.T4IP = Level & 0x07;     // Set Timer4 Interrupt Priority Level
             IFS1bits.T4IF = 0;         // Clear Timer4 Interrupt Flag
             IEC1bits.T4IE = enabled;   // Enable Timer4 interrupt
             break;
-        case T5:
+        case TIMER5:
             IPC7bits.T5IP = Level & 0x07;     // Set Timer5 Interrupt Priority Level
             IFS1bits.T5IF = 0;         // Clear Timer5 Interrupt Flag
             IEC1bits.T5IE = enabled;   // Enable Timer5 interrupt
             break;
-        case T6:
+        case TIMER6:
             IPC11bits.T6IP = Level & 0x07;     // Set Timer6 Interrupt Priority Level
             IFS2bits.T6IF = 0;         // Clear Timer6 Interrupt Flag
             IEC2bits.T6IE = enabled;   // Enable Timer6 interrupt
             break;
-        case T7:
+        case TIMER7:
             IPC12bits.T7IP = Level & 0x07;     // Set Timer7 Interrupt Priority Level
             IFS3bits.T7IF = 0;         // Clear Timer7 Interrupt Flag
             IEC3bits.T7IE = enabled;   // Enable Timer7 interrupt
             break;
-        case T8:
+        case TIMER8:
             IPC12bits.T8IP = Level & 0x07;     // Set Timer8 Interrupt Priority Level
             IFS3bits.T8IF = 0;         // Clear Timer8 Interrupt Flag
             IEC3bits.T8IE = enabled;   // Enable Timer8 interrupt
             break;
-        case T9:
+        case TIMER9:
             IPC13bits.T9IP = Level & 0x07;     // Set Timer9 Interrupt Priority Level
             IFS3bits.T9IF = 0;         // Clear Timer9 Interrupt Flag
             IEC3bits.T9IE = enabled;   // Enable Timer9 interrupt
@@ -717,39 +717,39 @@ int TimerSetValue(TIMERS_ID id, WORD TmrValue, WORD PRValue)
 //------------------------------------------------------------------------------------------------
 {
     switch(id){
-        case T1:
+        case TIMER1:
             TMR1 = TmrValue;
             PR1  = PRValue;
             break;
-        case T2:
+        case TIMER2:
             TMR2 = TmrValue;
             PR2  = PRValue;
             break;
-        case T3:
+        case TIMER3:
             TMR3 = TmrValue;
             PR3  = PRValue;
             break;
-        case T4:
+        case TIMER4:
             TMR4 = TmrValue;
             PR4  = PRValue;
             break;
-        case T5:
+        case TIMER5:
             TMR5 = TmrValue;
             PR5  = PRValue;
             break;
-        case T6:
+        case TIMER6:
             TMR6 = TmrValue;
             PR6  = PRValue;
             break;
-        case T7:
+        case TIMER7:
             TMR7 = TmrValue;
             PR7  = PRValue;
             break;
-        case T8:
+        case TIMER8:
             TMR8 = TmrValue;
             PR8  = PRValue;
             break;
-        case T9:
+        case TIMER9:
             TMR9 = TmrValue;
             PR9  = PRValue;
             break;
@@ -763,23 +763,23 @@ void TimerSetState(TIMERS_ID id, BOOL enabled)
 //------------------------------------------------------------------------------------------------
 {
     switch(id){
-        case T1: T1CONbits.TON = enabled;
+        case TIMER1: T1CONbits.TON = enabled;
             break;
-        case T2: T2CONbits.TON = enabled;
+        case TIMER2: T2CONbits.TON = enabled;
             break;
-        case T3: T3CONbits.TON = enabled;
+        case TIMER3: T3CONbits.TON = enabled;
             break;
-        case T4: T4CONbits.TON = enabled;
+        case TIMER4: T4CONbits.TON = enabled;
             break;
-        case T5: T5CONbits.TON = enabled;
+        case TIMER5: T5CONbits.TON = enabled;
             break;
-        case T6: T6CONbits.TON = enabled;
+        case TIMER6: T6CONbits.TON = enabled;
             break;
-        case T7: T7CONbits.TON = enabled;
+        case TIMER7: T7CONbits.TON = enabled;
             break;
-        case T8: T8CONbits.TON = enabled;
+        case TIMER8: T8CONbits.TON = enabled;
             break;
-        case T9: T9CONbits.TON = enabled;
+        case TIMER9: T9CONbits.TON = enabled;
             break;        
     }
 }
@@ -795,92 +795,92 @@ int TimerSetCallback(TIMERS_ID id, int (*CallbackFunc)(void))
 INTERRUPT _T1Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T1;
+    int id = TIMER1;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS0bits.T1IF = 0; // Clear T1 interrupt flag
+    IFS0bits.T1IF = 0; // Clear TIMER1 interrupt flag
 }
 */
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T2;
+    int id = TIMER2;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS0bits.T2IF = 0; // Clear T2 interrupt flag
+    IFS0bits.T2IF = 0; // Clear TIMER2 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T3Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T3;
+    int id = TIMER3;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS0bits.T3IF = 0; // Clear T3 interrupt flag
+    IFS0bits.T3IF = 0; // Clear TIMER3 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T4Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T4;
+    int id = TIMER4;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS1bits.T4IF = 0; // Clear T4 interrupt flag
+    IFS1bits.T4IF = 0; // Clear TIMER4 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T5Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T5;
+    int id = TIMER5;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS1bits.T5IF = 0; // Clear T5 interrupt flag
+    IFS1bits.T5IF = 0; // Clear TIMER5 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T6Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T6;
+    int id = TIMER6;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS2bits.T6IF = 0; // Clear T6 interrupt flag
+    IFS2bits.T6IF = 0; // Clear TIMER6 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T7Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T7;
+    int id = TIMER7;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS3bits.T7IF = 0; // Clear T7 interrupt flag
+    IFS3bits.T7IF = 0; // Clear TIMER7 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T8Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T8;
+    int id = TIMER8;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS3bits.T8IF = 0; // Clear T8 interrupt flag
+    IFS3bits.T8IF = 0; // Clear TIMER8 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T9Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = T9;
+    int id = TIMER9;
     if(TMRConfig[id].CallbackFunc){
         TMRConfig[id].CallbackFunc();
     }
-    IFS3bits.T9IF = 0; // Clear T9 interrupt flag
+    IFS3bits.T9IF = 0; // Clear TIMER9 interrupt flag
 }
 //************************************************************************************************
 //
