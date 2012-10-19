@@ -530,6 +530,8 @@ void Calc()
     WORD BufSize = 256;
 
     OCSetup(); 
+    ProcessCmd(&rr1);
+    return;
     rr1.MaxSpeed = 10.0 * Grad_to_Rad;
     rr1.MinAngle = 0;
     rr1.MaxAngle = 180.0 * Grad_to_Rad;

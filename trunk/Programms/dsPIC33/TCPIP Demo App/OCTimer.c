@@ -50,6 +50,11 @@ double frac(double X);
 double GM_Sidereal_Time (double jd);
 int RunControl(void * _This, DMA_ID id);
 
+int PushRunCmd(RR * rr, GD_STATE State, BYTE Direction, TIMERS_ID Timer,DWORD RunStep);
+Run_Cmd_Queue PopRunCmd(RR * rr);
+int SearchHighPriorityRunCmd(RR * rr);
+
+
 #ifdef __C30__
 
 
@@ -58,16 +63,18 @@ int RunControl(void * _This, DMA_ID id);
     //WORD TMR3 = 0;
     //WORD OC1R = 0;
 #endif
-
+//------------------------------------------------------------------------------------------------
 int SetDirection(BYTE oc, BYTE Dir)
+//------------------------------------------------------------------------------------------------
 {
     return 0;
 }
-
+//------------------------------------------------------------------------------------------------
 int OCSetup(void)
+//------------------------------------------------------------------------------------------------
 {
         //BYTE i;
-#ifdef __C30__
+    #ifdef __C30__
         // MS1 = 1; MS2 = 1; 1/16
         // MS1 = 0; MS2 = 1; 1/4
         // MS1 = 1; MS2 = 0; 1/2
@@ -135,7 +142,7 @@ int OCSetup(void)
                 PORT3_DIR_Tris    = 0;// выход DIR
                 PORT3_STEP_Tris   = 0;// выход STEP
         }
-#endif //#ifdef __C30__
+    #endif //#ifdef __C30__
 
         //TmrInit(2);
         rr1.Index = ID_OC1;
@@ -150,11 +157,11 @@ int OCSetup(void)
         M1.Val = 0;
         M2.Val = 0;
         M3.Val = 0;
-#ifdef __C30__
+    #ifdef __C30__
         //IFS1bits.U2RXIF = 1;
         //IFS1bits.U2TXIF = 1;
         //IFS0bits.U1RXIF = 1;
-/*
+    /*
         // инициализация OC1        
         OCSetInt(ID_OC1, 6, TRUE);
         OCSetCallback(ID_OC1, NULL);
@@ -227,14 +234,15 @@ int OCSetup(void)
         //Timer2Big.Val = 0;
         //TMR2 = 0;
         //T2CONbits.TON = 1;         // Start Timer
-#endif //#ifdef __C30__
+    #endif //#ifdef __C30__
 
     return 0;
 }
-
+//------------------------------------------------------------------------------------------------
 int InitRR(RR * rr)
+//------------------------------------------------------------------------------------------------
 {   //AppConfig
-#ifdef __C30__
+    #ifdef __C30__
     if(AppConfig.RRConfig[rr->Index].Control){
         rr->Mass = AppConfig.RRConfig[rr->Index].Mass;
         rr->Radius = AppConfig.RRConfig[rr->Index].Radius;
@@ -246,7 +254,7 @@ int InitRR(RR * rr)
         //rr->VMax = AppConfig.RRConfig[rr->Index].VMax * Grad_to_Rad;
         rr->XPosition = RRConfigRAM.RRSave[rr->Index].XPosition;
     } else 
-#endif
+    #endif
     {
         rr->Mass = MY_DEFAULT_RR_PARA_Mass;
         rr->Radius = MY_DEFAULT_RR_PARA_Radius;
@@ -285,7 +293,9 @@ int InitRR(RR * rr)
 
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 void CalculateParams(RR * rr)
+//------------------------------------------------------------------------------------------------
 {
     double I;
     
@@ -316,16 +326,19 @@ void CalculateParams(RR * rr)
     rr->a = (4.0 * rr->B/(rr->K * rr->K));
     rr->OneStepCalcTime = (DWORD)(0.000160 / rr->TimerStep); //160us
 }
-
+//------------------------------------------------------------------------------------------------
 // вычисление скорости ( только для ускорения или торможения )
 // V = BT(2-KT)/(1-KT)^2 => V = U(BTU+1), U = 1/(1+KT)
 // T                          значение функции ускорения T=(-Kx+sqrt((Kx)^2+4Bx))/2B оптимиз: 
 //                            T = d(x+sqrt(x(x+a)), d = -k/2BTs, a = 4B/K^2; Ts - TimerStep
+//------------------------------------------------------------------------------------------------
 double GetSpeed(double T, double K, double B)
+//------------------------------------------------------------------------------------------------
 {
     double U = 1.0/(1.0 - K * T);
     return (U *(B * T * U + 1.0));
 }
+//------------------------------------------------------------------------------------------------
 // Вычисление интервала между значением T и значением функции, вычесленной на основании X
 // T                        предыдущее значение функции ускорения T=(-Kx+sqrt((Kx)^2+4Bx))/2B оптимиз: 
 //                          T = d(x+sqrt(x(x+a)), d = -k/2BTs, a = 4B/K^2; Ts - TimerStep
@@ -333,7 +346,9 @@ double GetSpeed(double T, double K, double B)
 // dx                       шаг двигателя в радианах
 // a                        константа
 // d                        константа
+//------------------------------------------------------------------------------------------------
 DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
+//------------------------------------------------------------------------------------------------
 {
     double D;
     double X = Xa * dx;
@@ -350,6 +365,7 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 /*
 Вычисление и заполнение буфера одной командой. (ST_ACCELERATE,ST_DECELERATE,ST_RUN)
 Используем:
@@ -366,13 +382,16 @@ rr->Interval                    интервал
 rr->T                           счетчик интервалов
 rr->CacheSpeed                  скорость
 */
+//------------------------------------------------------------------------------------------------
 WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
+//------------------------------------------------------------------------------------------------
 {
     WORD FreeData;
     DWORD dT = 0;
     LONG Corr = 0;
     WORD i = 0;
     WORD j = 0;
+    WORD k = 0;
     WORD m = 8;
     BYTE m1 = 0;    
     double dx_div_Ts = rr->dx / rr->TimerStep;
@@ -381,88 +400,94 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
 
     // если CacheCmdCounter < Count => FreeData = CacheCmdCounter
     // если CacheCmdCounter >= Count => FreeData = Count
-
-    if(rr->CacheCmdCounter < count) {
-        FreeData = (WORD)rr->CacheCmdCounter;        
-    } else {
-        FreeData = count;
-    }
-       
-    for(i = 0; i < FreeData;){
-        while(rr->Interval < rr->OneStepCalcTime >> m1){
-            m1++;
+    
+    while((k < count)&&(rr->CacheState != ST_STOP)){
+        if(rr->CacheCmdCounter <= 0){
+            CacheNextCmd(rr);
+        } 
+        if(rr->CacheCmdCounter < count - k) {
+            FreeData = (WORD)rr->CacheCmdCounter;        
+        } else {
+            FreeData = count - k;
         }
-        m = 8 << (m1);        
-        /*if(m == 1){ // вычисляем по одному шагу- времени много            
-            switch(rr->CacheState){
-                case ST_ACCELERATE:
-                    rr->XaccBeg++;
-                    rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                    rr->T1 += rr->Interval;
-                    break;
-                case ST_DECELERATE:
-                    rr->XaccBeg--;
-                    rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                    rr->T1 -= rr->Interval;
-                    break;
-                case ST_RUN:
-                    rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
-                    break;
-                default:
-                    return 0;
-                    break;
+           
+        for(i = 0; i < FreeData;){
+            while(rr->Interval < rr->OneStepCalcTime >> m1){
+                m1++;
             }
-            rr->T.Val += rr->Interval;
-            buf[i].R = (WORD)(rr->T.Val & 0xFFFF);
-            buf[i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
-            
-        } else */
-        { // вычисляем по нескольку шагов- времени мало(#me: времени всегда мало)
-            // если m + i  <  FreeData => m = m
-            // если m + i  >= FreeData => m = FreeData - i;
-            if(m + i > FreeData){
-                m = FreeData - i;
-            }             
-            switch(rr->CacheState){
-                case ST_ACCELERATE:
-                    rr->XaccBeg += m;
-                    dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                    rr->T1 += dT;
-                    break;
-                case ST_DECELERATE:
-                    rr->XaccBeg -= m;
-                    dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                    rr->T1 -= dT;
-                    break;
-                case ST_RUN:
-                    dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
-                    break;
-                default:
-                    return 0;
-                    break;
-            }            
-            rr->Interval =(dT / m);
-            Corr = (dT % m);
-            for( j = 0; j < m; j++) {
-                rr->T.Val += rr->Interval;
-                if(Corr>0) {
-                    rr->T.Val += 1;
-                    Corr--;
+            m = 8 << (m1);        
+            /*if(m == 1){ // вычисляем по одному шагу- времени много            
+                switch(rr->CacheState){
+                    case ST_ACCELERATE:
+                        rr->XaccBeg++;
+                        rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                        rr->T1 += rr->Interval;
+                        break;
+                    case ST_DECELERATE:
+                        rr->XaccBeg--;
+                        rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                        rr->T1 -= rr->Interval;
+                        break;
+                    case ST_RUN:
+                        rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
+                        break;
+                    default:
+                        return 0;
+                        break;
                 }
-                buf[i+j].R  = (WORD)(rr->T.Val >> TimerConfig[rr->TmrId].SHRcount);
-                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) >> TimerConfig[rr->TmrId].SHRcount);
-            }            
-            
+                rr->T.Val += rr->Interval;
+                buf[k+i].R = (WORD)(rr->T.Val & 0xFFFF);
+                buf[k+i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
+                
+            } else */
+            { // вычисляем по нескольку шагов- времени мало(#me: времени всегда мало)
+                // если m + i  <  FreeData => m = m
+                // если m + i  >= FreeData => m = FreeData - i;
+                if(m + i > FreeData){
+                    m = FreeData - i;
+                }             
+                switch(rr->CacheState){
+                    case ST_ACCELERATE:
+                        rr->XaccBeg += m;
+                        dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                        rr->T1 += dT;
+                        break;
+                    case ST_DECELERATE:
+                        rr->XaccBeg -= m;
+                        dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                        rr->T1 -= dT;
+                        break;
+                    case ST_RUN:
+                        dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
+                        break;
+                    default:
+                        return 0;
+                        break;
+                }            
+                rr->Interval =(dT / m);
+                Corr = (dT % m);
+                for( j = 0; j < m; j++) {
+                    rr->T.Val += rr->Interval;
+                    if(Corr>0) {
+                        rr->T.Val += 1;
+                        Corr--;
+                    }
+                    buf[k+i+j].R  = (WORD)(rr->T.Val >> TimerConfig[rr->TmrId].SHRcount);
+                    buf[k+i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) >> TimerConfig[rr->TmrId].SHRcount);
+                }            
+                
+            }
+            rr->CacheCmdCounter -= m;
+            i += m;
+        } 
+        {   // вычисление скорости        
+            rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
         }
-        rr->CacheCmdCounter -= m;
-        i += m;
-    } 
-    {   // вычисление скорости        
-        rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
+        k += FreeData;
     }
-    return FreeData;
+    return k;
 }
-
+//------------------------------------------------------------------------------------------------
 int RunControl(void * _This, DMA_ID id)
 {
     RR * rr = (RR*)_This;
@@ -482,20 +507,16 @@ int RunControl(void * _This, DMA_ID id)
 }
 
 
+//------------------------------------------------------------------------------------------------
 // Функция для вызова через DMASetCallback 
+//------------------------------------------------------------------------------------------------
 int Control(void * _This, WORD* Buf, WORD BufSize)
+//------------------------------------------------------------------------------------------------
 {
     RR * rr = (RR*)_This;
     WORD i = 0;
-    WORD j = 0;
-    for(i = 0; (i < BufSize)&&(rr->CacheState != ST_STOP);){
-        if(j == BufSize) j = 0;
-        j += CalculateMove(rr, (BUF_TYPE*)&Buf[j], (BufSize - j)/2);
-
-        if(rr->CacheCmdCounter <= 0){
-            CacheNextCmd(rr);
-        }        
-    }
+    WORD j = 0;    
+    CalculateMove(rr, (BUF_TYPE*)Buf, BufSize/2);
     if(rr->CacheState == ST_STOP)
         return 1;
     return 0;
@@ -553,7 +574,7 @@ int Control(void * _This, WORD* Buf, WORD BufSize)
 выполнение команды
 1.  выполняем предварительные вычисления (CalculateBreakParam)
 2.  
-
+//------------------------------------------------------------------------------------------------
 */
 // проверить параметры 
 // поставить команду в очередь
@@ -562,7 +583,9 @@ int Control(void * _This, WORD* Buf, WORD BufSize)
 // 1: очередь переполнена. повторить позже
 // 2: некорректные параметры команды
 // 3: неизвестная команда
+//------------------------------------------------------------------------------------------------
 int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
+//------------------------------------------------------------------------------------------------
 {
     if(rr->CmdCount < CQ_SIZE){
         switch(cmd){
@@ -622,6 +645,7 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
     } else return 1;
     return 0;
 }
+
 BOOL NeedBreakCmd(GD_STATE CurrentCmd, GD_STATE NextCmd){
     switch(CurrentCmd){
         case ST_CONTINOUS:
@@ -642,6 +666,7 @@ BOOL NeedBreakCmd(GD_STATE CurrentCmd, GD_STATE NextCmd){
 
 int ProcessCmd(RR * rr)
 {
+    /*
     STATE_VALUE Value;   
     double Vend = 10.0;
     double Vbeg = 0.0;
@@ -676,23 +701,111 @@ int ProcessCmd(RR * rr)
     PushCmd(rr, ST_RUN, Value);
     RunControl((void*)rr, DMA0);
     //TimerSetValue(T1,0,0);
+    */
+    PushRunCmd(rr, ST_ACCELERATE, 0, TIMER2, 256);
+    PushRunCmd(rr, ST_EMERGENCY_STOP, 0, TIMER2, 0);
+    Run_Cmd_Queue CurrCmd = PopRunCmd(rr);
+    if(CurrCmd.State == ST_ACCELERATE) return 1;
     return 0;
+}
+//
+//
+//      BeginQueue
+//      |      EndQueue
+//      |      |
+//      v      v
+//  ----*******------
+// |                 |
+//  -----------------
+//------------------------------------------------------------------------------------------------
+int PushRunCmd(RR * rr, GD_STATE State, BYTE Direction, TIMERS_ID Timer, DWORD RunStep)
+//------------------------------------------------------------------------------------------------
+{
+    if(rr->RunCount < CQ_SIZE){
+        rr->RunQueue[rr->RunEndQueue].State = State;
+        rr->RunQueue[rr->RunEndQueue].Direction = Direction;
+        rr->RunQueue[rr->RunEndQueue].Timer = Timer;
+        rr->RunQueue[rr->RunEndQueue].RunStep = RunStep;
+        rr->RunEndQueue++;
+        if (rr->RunEndQueue >= CQ_SIZE){
+            rr->RunEndQueue -= CQ_SIZE;
+        }
+        rr->RunCount++;
+        return 0;
+    } else {
+        return 1;
+    }
+}
+//------------------------------------------------------------------------------------------------
+Run_Cmd_Queue PopRunCmd(RR * rr)
+//------------------------------------------------------------------------------------------------
+{   
+    if(rr->RunCount>0){
+        BYTE NewBeginQueue = SearchHighPriorityRunCmd(rr);
+        Run_Cmd_Queue CurrCmd = rr->RunQueue[NewBeginQueue];
+        while(rr->RunBeginQueue != NewBeginQueue){
+            rr->RunQueue[rr->RunBeginQueue].Direction = 0;
+            rr->RunQueue[rr->RunBeginQueue].RunStep = 0;
+            rr->RunQueue[rr->RunBeginQueue].State = ST_STOP;
+            rr->RunQueue[rr->RunBeginQueue].Timer = TIMER2;
+            rr->RunBeginQueue++;
+            if (rr->RunBeginQueue >= CQ_SIZE){
+                rr->RunBeginQueue -= CQ_SIZE;
+            }
+            rr->RunCount--;
+        }
+        return CurrCmd;
+    }
+}
+//------------------------------------------------------------------------------------------------
+int SearchHighPriorityRunCmd(RR * rr)
+//------------------------------------------------------------------------------------------------
+// Ищем в очереди исполнения высоко приоритетные задачи
+{
+    GD_STATE CurrentState = rr->RunQueue[rr->RunBeginQueue].State;
+    BYTE QueuePos = rr->RunBeginQueue;
+    BYTE i = 0;
+    while(i < rr->RunCount){
+        QueuePos++;
+        if (QueuePos >= CQ_SIZE){
+            QueuePos -= CQ_SIZE;
+        }
+        i++;
+        switch(rr->RunQueue[QueuePos].State){
+            case ST_CONTINOUS:       // сопровождение
+            case ST_STOP:            // остановлен
+            break;
+            case ST_ACCELERATE:      // разгоняется
+            case ST_RUN:             // движется с постоянной скоростью
+            case ST_DECELERATE:      // тормозит
+            case ST_SET_TIMER:       // установка таймера
+            case ST_SET_DIRECTION:   // установка направления вращения
+                if((CurrentState == ST_CONTINOUS)||(CurrentState == ST_STOP)){
+                    return QueuePos;
+                }
+            break;
+            case ST_SET_STEP:        // установка количества микрошагов
+            case ST_EMERGENCY_STOP:  // аварийная остановка
+                if(CurrentState != ST_EMERGENCY_STOP){
+                    return QueuePos;
+                }
+            break;
+            default:
+            break;
+        }
+    }
+    return rr->RunBeginQueue;
 }
 
 
 
 
 
-
-
-
-
-
-
-
-
+//------------------------------------------------------------------------------------------------
 int CacheNextCmd(RR * rr)
+//------------------------------------------------------------------------------------------------
 {
+    double dx_div_Ts;
     if(rr->CmdCount > 0){
         //double D;
         //double X;
@@ -703,18 +816,15 @@ int CacheNextCmd(RR * rr)
         //rr->CacheCmdCounter = rr->CmdQueue[rr->CmdBeginQueue].RunStep;
         switch(rr->CacheState){
             case ST_ACCELERATE:
-            case ST_DECELERATE:/*
-                if((rr->XaccBeg > 0)){
-                    X = rr->XaccBeg * rr->dx;
-                    D = X *(X + rr->a);
-                    if(D >= 0.0){
-                        rr->T1 = (DWORD)((X + sqrt(D))*rr->d);
-                    }
-                };*/
+            case ST_DECELERATE:
+                rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                rr->T1 += rr->Interval;
                 break;
-            case ST_RUN:
-                rr->XCachePos = 0;
-                rr->T1 = 0;
+            case ST_RUN: //TODO:
+                dx_div_Ts = rr->dx / rr->TimerSte p;
+                rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
+                // вычисление скорости        
+                rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
                 break;
             default:;
         }
@@ -731,7 +841,9 @@ int CacheNextCmd(RR * rr)
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
 void GetAlgParams(double V, double K, double B, double dx, double * T, LONG * X)
+//------------------------------------------------------------------------------------------------
 {
     double VKpB = 0.0;
     double D = 0.0;
@@ -741,15 +853,12 @@ void GetAlgParams(double V, double K, double B, double dx, double * T, LONG * X)
     (*T) = ((VKpB - sqrt(D))/(K * VKpB));
     (*X) = (LONG)((B * (*T) * (*T)) / ((1 - K * (*T))*dx));
 }
+//------------------------------------------------------------------------------------------------
 // используем
-// rr->K
-// rr->B
-// rr->dx
-// rr->a
-// rr->d
-int CalculateBreakParam(RR * rr, GD_STATE State,
-                        double Vbeg, double * Vend,
-                        double * deltaX, double * deltaT, LONG * Xbreak)
+// rr->K,// rr->B// rr->dx// rr->a// rr->d
+//------------------------------------------------------------------------------------------------
+int CalculateBreakParam(RR * rr, GD_STATE State, double Vbeg, double * Vend, double * deltaX, double * deltaT, LONG * Xbreak)
+//------------------------------------------------------------------------------------------------
 {
     double dTb = 0.0;
     double dTe = 0.0;
@@ -815,9 +924,10 @@ int CalculateBreakParam(RR * rr, GD_STATE State,
     return 0;
 }
 
-/*
-int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
-{
+//------------------------------------------------------------------------------------------------
+//int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
+//------------------------------------------------------------------------------------------------
+/*{
     BYTE Direction = 1;
     BYTE TargetDirection = 1;
     LONG Xbreak;
@@ -884,8 +994,11 @@ int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick)
     }   * / 
     return 0;
 }*/
+//------------------------------------------------------------------------------------------------
 // информационные функции для Web интерфейса
+//------------------------------------------------------------------------------------------------
 double GetAngle(WORD n)
+//------------------------------------------------------------------------------------------------
 {
     double X = 0.0;
     switch(n){
@@ -900,7 +1013,9 @@ double GetAngle(WORD n)
     }
     return X;
 }
+//------------------------------------------------------------------------------------------------
 int GetStatus(WORD n){    
+//------------------------------------------------------------------------------------------------
     switch(n){
         case 0: return (rr1.RunState == ST_STOP)?0:1;            
         break;
@@ -912,9 +1027,11 @@ int GetStatus(WORD n){
     return 3;
 }
 
-
+//------------------------------------------------------------------------------------------------
 // Вычисление звездного времени
+//------------------------------------------------------------------------------------------------
 double GM_Sidereal_Time (double jd) {
+//------------------------------------------------------------------------------------------------
     double t_eph = 0.0;
     double ut = 0.0;
     double MJD0 = 0.0;
@@ -927,19 +1044,25 @@ double GM_Sidereal_Time (double jd) {
     return  6.697374558 + 1.0027379093*ut + (8640184.812866 + (0.093104 - 0.0000062*t_eph)*t_eph)*t_eph/3600.0;
 }
 
+//------------------------------------------------------------------------------------------------
 double LM_Sidereal_Time (double jd, double longitude) {
+//------------------------------------------------------------------------------------------------
     double GMST = GM_Sidereal_Time(jd);
     double LMST =  24.0*frac((GMST + longitude/15.0)/24.0);
     return LMST;
 }
-
+//------------------------------------------------------------------------------------------------
 double frac(double X) {
+//------------------------------------------------------------------------------------------------
     X = X - floor(X);
     if (X<0) X = X + 1.0;
     return X;
 }
+//------------------------------------------------------------------------------------------------
 // день d, месяц m, год y, время в часах  
+//------------------------------------------------------------------------------------------------
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s){
+//------------------------------------------------------------------------------------------------
     double JD = 0.0;
     double UT = h + m/60 + s/3600;
     if (Y < 1900) Y = Y + 1900;
