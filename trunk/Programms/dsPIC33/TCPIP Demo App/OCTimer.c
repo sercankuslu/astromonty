@@ -365,6 +365,29 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
     }
     return 0;
 }
+
+
+// ‘ункци€ дл€ вызова через DMASetCallback 
+//------------------------------------------------------------------------------------------------
+int Control(void * _This, WORD* Buf, WORD BufSize)
+//------------------------------------------------------------------------------------------------
+{
+    RR * rr = (RR*)_This;
+    WORD i = 0;
+    WORD j = 0;
+    for(i = 0; (i < BufSize)&&(rr->CacheState != ST_STOP);){
+        if(j == BufSize) j = 0;
+        j += CalculateMove(rr, (BUF_TYPE*)&Buf[j], (BufSize - j)/2);
+        PushRunCmd(rr, rr->CacheState, rr->CacheDir, rr->TmrId, j);
+        if(rr->CacheCmdCounter <= 0){
+            CacheNextCmd(rr);
+        }        
+    }
+    if(rr->CacheState == ST_STOP)
+        return 1;
+    return 0;
+}
+
 //------------------------------------------------------------------------------------------------
 /*
 ¬ычисление и заполнение буфера одной командой. (ST_ACCELERATE,ST_DECELERATE,ST_RUN)
@@ -391,8 +414,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
     LONG Corr = 0;
     WORD i = 0;
     WORD j = 0;
-    WORD k = 0;
-    WORD m = 8;
+    WORD m = 1;
     BYTE m1 = 0;    
     double dx_div_Ts = rr->dx / rr->TimerStep;
     // оптимизировано 37 uSec (1431.5 тактов за шаг) при m=1
@@ -400,95 +422,66 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count)
 
     // если CacheCmdCounter < Count => FreeData = CacheCmdCounter
     // если CacheCmdCounter >= Count => FreeData = Count
-    
-    while((k < count)&&(rr->CacheState != ST_STOP)){
-        if(rr->CacheCmdCounter <= 0){
-            CacheNextCmd(rr);
-        } 
-        if(rr->CacheCmdCounter < count - k) {
-            FreeData = (WORD)rr->CacheCmdCounter;        
-        } else {
-            FreeData = count - k;
-        }
-           
-        for(i = 0; i < FreeData;){
-            while(rr->Interval < rr->OneStepCalcTime >> m1){
-                m1++;
-            }
-            m = 8 << (m1);        
-            /*if(m == 1){ // вычисл€ем по одному шагу- времени много            
-                switch(rr->CacheState){
-                    case ST_ACCELERATE:
-                        rr->XaccBeg++;
-                        rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                        rr->T1 += rr->Interval;
-                        break;
-                    case ST_DECELERATE:
-                        rr->XaccBeg--;
-                        rr->Interval = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                        rr->T1 -= rr->Interval;
-                        break;
-                    case ST_RUN:
-                        rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
-                        break;
-                    default:
-                        return 0;
-                        break;
-                }
-                rr->T.Val += rr->Interval;
-                buf[k+i].R = (WORD)(rr->T.Val & 0xFFFF);
-                buf[k+i].RS = (WORD)((rr->T.Val + rr->Interval / 2) & 0xFFFF);
-                
-            } else */
-            { // вычисл€ем по нескольку шагов- времени мало(#me: времени всегда мало)
-                // если m + i  <  FreeData => m = m
-                // если m + i  >= FreeData => m = FreeData - i;
-                if(m + i > FreeData){
-                    m = FreeData - i;
-                }             
-                switch(rr->CacheState){
-                    case ST_ACCELERATE:
-                        rr->XaccBeg += m;
-                        dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                        rr->T1 += dT;
-                        break;
-                    case ST_DECELERATE:
-                        rr->XaccBeg -= m;
-                        dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
-                        rr->T1 -= dT;
-                        break;
-                    case ST_RUN:
-                        dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
-                        break;
-                    default:
-                        return 0;
-                        break;
-                }            
-                rr->Interval =(dT / m);
-                Corr = (dT % m);
-                for( j = 0; j < m; j++) {
-                    rr->T.Val += rr->Interval;
-                    if(Corr>0) {
-                        rr->T.Val += 1;
-                        Corr--;
-                    }
-                    buf[k+i+j].R  = (WORD)(rr->T.Val >> TimerConfig[rr->TmrId].SHRcount);
-                    buf[k+i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) >> TimerConfig[rr->TmrId].SHRcount);
-                }            
-                
-            }
-            rr->CacheCmdCounter -= m;
-            i += m;
-        } 
-        {   // вычисление скорости        
-            rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
-        }
-        k += FreeData;
+
+    if(rr->CacheCmdCounter < count) {
+        FreeData = (WORD)rr->CacheCmdCounter;        
+    } else {
+        FreeData = count;
     }
-    return k;
+       
+    for(i = 0; i < FreeData;){
+        m1 = 3;
+        while(rr->Interval < rr->OneStepCalcTime >> m1){
+            m1++;
+        }
+        m = 1 << m1; //
+        { // вычисл€ем по нескольку шагов- времени мало(#me: времени всегда мало)
+            // если m + i  <  FreeData => m = m
+            // если m + i  >= FreeData => m = FreeData - i;
+            if(m + i > FreeData){
+                m = FreeData - i;
+            }             
+            switch(rr->CacheState){
+                case ST_ACCELERATE:
+                    rr->XaccBeg += m;
+                    dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                    rr->T1 += dT;
+                    break;
+                case ST_DECELERATE:
+                    rr->XaccBeg -= m;
+                    dT = GetInterval(rr->T1, rr->XaccBeg, rr->dx, rr->a, rr->d);
+                    rr->T1 -= dT;
+                    break;
+                case ST_RUN:
+                    dT = (DWORD)(m * dx_div_Ts / rr->CacheSpeed);
+                    break;
+                default:
+                    return 0;
+                    break;
+            }            
+            rr->Interval =(dT / m);
+            Corr = (dT % m);
+            for( j = 0; j < m; j++) {
+                rr->T.Val += rr->Interval;
+                if(Corr>0) {
+                    rr->T.Val += 1;
+                    Corr--;
+                }
+                buf[i+j].R  = (WORD)(rr->T.Val >> TimerConfig[rr->TmrId].SHRcount);
+                buf[i+j].RS = (WORD)((rr->T.Val + rr->Interval / 2) >> TimerConfig[rr->TmrId].SHRcount);
+            }
+        }
+        rr->CacheCmdCounter -= m;
+        i += m;
+    } 
+    {   // вычисление скорости        
+        rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
+    }
+    return FreeData;
 }
 //------------------------------------------------------------------------------------------------
 int RunControl(void * _This, DMA_ID id)
+//------------------------------------------------------------------------------------------------
 {
     RR * rr = (RR*)_This;
     if(DMAGetPPState(id) != 0) {
@@ -506,21 +499,6 @@ int RunControl(void * _This, DMA_ID id)
     return 0;
 }
 
-
-//------------------------------------------------------------------------------------------------
-// ‘ункци€ дл€ вызова через DMASetCallback 
-//------------------------------------------------------------------------------------------------
-int Control(void * _This, WORD* Buf, WORD BufSize)
-//------------------------------------------------------------------------------------------------
-{
-    RR * rr = (RR*)_This;
-    WORD i = 0;
-    WORD j = 0;    
-    CalculateMove(rr, (BUF_TYPE*)Buf, BufSize/2);
-    if(rr->CacheState == ST_STOP)
-        return 1;
-    return 0;
-}
 
 
 /*
@@ -798,9 +776,6 @@ int SearchHighPriorityRunCmd(RR * rr)
 }
 
 
-
-
-
 //------------------------------------------------------------------------------------------------
 int CacheNextCmd(RR * rr)
 //------------------------------------------------------------------------------------------------
@@ -821,7 +796,7 @@ int CacheNextCmd(RR * rr)
                 rr->T1 += rr->Interval;
                 break;
             case ST_RUN: //TODO:
-                dx_div_Ts = rr->dx / rr->TimerSte p;
+                dx_div_Ts = rr->dx / rr->TimerStep;
                 rr->Interval = (DWORD)(dx_div_Ts / rr->CacheSpeed);
                 // вычисление скорости        
                 rr->CacheSpeed = GetSpeed(rr->T1 * rr->TimerStep, rr->K, rr->B);
