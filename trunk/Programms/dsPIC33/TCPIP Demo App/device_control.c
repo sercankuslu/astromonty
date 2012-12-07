@@ -612,6 +612,25 @@ struct _IPC17bits
     __EXTENSION BYTE C2TXIP:3;
     __EXTENSION BYTE b7:1;
 } IPC17bits;
+
+struct _SRbits
+    {
+    __EXTENSION BYTE C:1;
+    __EXTENSION BYTE Z:1;
+    __EXTENSION BYTE OV:1;
+    __EXTENSION BYTE N:1;
+    __EXTENSION BYTE RA:1;
+    __EXTENSION BYTE IPL:3;
+
+    __EXTENSION BYTE DC:1;
+    __EXTENSION BYTE DA:1;
+    __EXTENSION BYTE SAB:1;
+    __EXTENSION BYTE OAB:1;
+    __EXTENSION BYTE SB:1;
+    __EXTENSION BYTE SA:1;
+    __EXTENSION BYTE OB:1;
+    __EXTENSION BYTE OA:1;
+    } SRbits;
 #endif //_WIN32
 
 
@@ -1602,6 +1621,26 @@ INTERRUPT _OC8Interrupt( void )
     }
     IFS2bits.OC8IF = 0; // Clear OC8 interrupt flag
 }
+#define SET_INT_LOCK(x) SRbits.IPL = x
+#define SAVE_INT_LOCK SRbits.IPL
+#define RESTORE_INT_LOCK(x) SRbits.IPL = x
 
+int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )
+{
+    // установка текущий приоритет CPU на 4
+    BYTE TmpInt = SAVE_INT_LOCK;
+    SET_INT_LOCK(4);
+    // выбор устройства
+    DeviceSelect();
+    // отправка команды
+    DeviceRelease();
+    DeviceSelect(); 
+    // отправка данных
+    // освобождение устройства
+    DeviceRelease();
+    // восстановление приоритета CPU
+    RESTORE_INT_LOCK(TmpInt);
+    return 0;
+}
 //________________________________________________________________________________________________
 

@@ -121,4 +121,15 @@ int OCSetMode(OC_ID id,OC_WORK_MODE ocm);
 int OCSetCallback(OC_ID id, int (*CallbackFunc)(void));
 int OCSetValue(OC_ID id, WORD ocr, WORD ocrs);
 int OCSetTmr(OC_ID id, OC_TMR_SELECT tmr);
+
+WORD SPI_CreateParams(BYTE SPI_MODE, DWORD DeviceSpeed);
+int SPI1SetParams(WORD Para);
+int SPI1SendByte(WORD SPI_para, BYTE Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPI1SendWord(WORD SPI_para, WORD Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPI1SendData(WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPI1ReceiveByte(WORD SPI_para, BYTE* Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPI1ReceiveWord(WORD SPI_para, WORD* Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPI1ReceiveData(WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD* DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+
+int SPI2SendByte();
 #endif //__DEVICE_CONTROL_H_
