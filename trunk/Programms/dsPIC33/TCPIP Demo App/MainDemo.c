@@ -93,6 +93,7 @@
 
 // Include all headers for any enabled TCPIP Stack functions
 #include "TCPIP Stack/TCPIP.h"
+#include <i2c.h>
 
 #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
 #include "TCPIP Stack/ZeroconfLinkLocal.h"
@@ -107,6 +108,7 @@
 #include "OCTimer.h"
 #include "../protocol.h"
 #include "device_control.h"
+
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -305,6 +307,30 @@ void fillingBufferRS1(void* _This, WORD * Buf, WORD Count)
     }
 }
 
+void FillBufSPI(void* _This, WORD * Buf, WORD Count)
+{
+    static int T = 322;
+    int i = 0;   
+    int t = 0;
+    if(t < Count){
+	    
+    } 
+    for(i = 0; i < Count; i++){
+        Buf[i] = (int)(T+1)*200+25;
+        T++;
+    }
+}
+int ENCSelect()
+{
+    LATFbits.LATF12 = 0;
+    return 0;
+}
+int ENCRelease()
+{
+    LATFbits.LATF12 = 1;
+    return 0;
+}
+
 //
 // Main application entry point.
 //
@@ -319,6 +345,17 @@ int main(void)
     static DWORD d = 0;
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
+    //void (*mas[8])(WORD) = {f0,f1,f2,f3,f4,f5,f6,f7};    
+    //WORD Count = 10;
+    //DMA_ID id = 6;
+    //(mas[id])(Count);
+    BYTE Cmd[128];
+    BYTE Data[] = { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+                    0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
+    memset(Cmd,0x12,sizeof(Cmd));
+    //SPI1SendData( 0, (BYTE*)Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
+    //BYTE sync_mode=0;
+        //BYTE slew=0; 
     // указатель на функцию
     //int (*p)(void); // объявление
     //p = OCSetup;    // присвоение
@@ -326,8 +363,13 @@ int main(void)
 
     //volatile DWORD UTCT;
     LATFbits.LATF4 = 0;
-    TRISFbits.TRISF4 = 0;   
-    
+    TRISFbits.TRISF4 = 0;  
+//    CloseI2C1(); 
+//	sync_mode = 0;
+//    slew = 0;
+//    OpenI2C1(sync_mode,slew);
+//    I2C1BRG=32;             //1 MHz Baud clock(32) @40MHz
+//   	IdleI2C1();
         
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
@@ -348,30 +390,50 @@ int main(void)
     //    res = RunClient(bfr, sizeof(bfr), &length);        
     //    res = ProcessClients(0, bfr, &length);            
     //}
-    if(1){
+    if(0){
+            #ifdef NO_DEFINED
         WORD Buf[256];
         WORD BufSize = 256;
-        double k=1.23;
-        volatile double B;
-        B = exp(k);
-        if(B > 0.0){
-	        OCSetup();
-        }
+        WORD* BufA;
+        WORD* BufB;
+        //double k=1.23;
+        //volatile double B;
+        //B = exp(k);
+        //if(B > 0.0){
+            //    OCSetup();
+        //}
+        DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
+        DMASetBufferSize(DMA0, 64);
+        BufA = DMAGetBuffer(DMA0);
+        BufB = DMAGetBuffer(DMA0);
+        DMASetBuffers(DMA0,BufA,BufB);
+        
+        DMASetCallback(DMA0, NULL, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
+        DMASetInt(DMA0, 5, TRUE);
+        DMAPrepBuffer(DMA0);
+        DMASetState(DMA0, TRUE, FALSE);
          
-        PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
+        /*PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
         PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
         PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
         PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
         for(;;){
             if(Control(&rr1, Buf, BufSize))
                 break;
-        }
+        }*/
         while(1){
             Nop();
         }
+        #endif
     }
     if(0){
+#ifdef NO_DEFINED
+            DWORD i = 0;
+            WORD sz = 256;
         {
+                WORD* BufA;
+                WORD* BufB;
             // Initialize Output Compare Module in Contionous pulse mode
             OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
             OCSetValue(ID_OC1, 100, 125);
@@ -380,13 +442,13 @@ int main(void)
             OCSetMode(ID_OC1, TOGGLE);
             
             // Initialize Timer2
-            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T2, 0, 0xFFFF);
             OCSetCallback(T2, NULL);
             TimerSetInt(T2, 5, FALSE);
 
             // Initialize Timer3
-            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T3, 0, 0xFFFF);
             OCSetCallback(T3, NULL);
             TimerSetInt(T3, 5, FALSE);
@@ -395,14 +457,20 @@ int main(void)
             DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
             DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
             DMASetBufferSize(DMA0, 128);
+                BufA = DMAGetBuffer(DMA0);
+                BufB = DMAGetBuffer(DMA0);
+                DMASetBuffers(DMA0,BufA,BufB);
             DMASetCallback(DMA0, NULL, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
             DMASetInt(DMA0, 5, TRUE);
             DMAPrepBuffer(DMA0);
             DMASetState(DMA0, TRUE, FALSE);
             
             DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA1, IRQ_OC1, (int)&OC2R);
+            DMASelectDevice(DMA1, IRQ_OC2, (int)&OC2R);
             DMASetBufferSize(DMA1, 128);
+                BufA = DMAGetBuffer(DMA1);
+                BufB = DMAGetBuffer(DMA1);
+                DMASetBuffers(DMA1,BufA,BufB);
             DMASetCallback(DMA1, NULL, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
             DMASetInt(DMA1, 5, TRUE);
             DMAPrepBuffer(DMA1);
@@ -413,7 +481,7 @@ int main(void)
             OCSetValue(ID_OC2, 100, 125);
             OCSetInt(ID_OC2, 6, TRUE);
             OCSetCallback(ID_OC2, NULL);            
-            OCSetMode(ID_OC2, CONT_PULSE);
+            OCSetMode(ID_OC2, TOGGLE);
             /*
             // Setup and Enable DMA Channel
             DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
@@ -443,11 +511,30 @@ int main(void)
             DMAForceTransfer(DMA2);
             DMAForceTransfer(DMA3);
             */
+
         }
-        while(1){
+        while(1){	       	
+                if(i++ > 100000){
+                        if(sz == 32) 
+                                sz = 128; 
+                        else 
+                                sz = 32;
+                        //DMASetState(DMA0, FALSE, FALSE);
+                        //DMASetState(DMA1, FALSE, FALSE);
+                        DMASetBufferSize(DMA0, sz);
+                        DMASetBufferSize(DMA1, sz);
+                        //DMAForceTransfer(DMA0);
+                        //DMAForceTransfer(DMA1);
+                        //DMASetState(DMA0, TRUE, FALSE);
+                        //DMASetState(DMA1, TRUE, FALSE);
+                        
+                        
+                        i = 0;
+                }
            Nop();
            Nop();
         }
+#endif
     }
     
     if(0){
@@ -475,7 +562,7 @@ int main(void)
 //        PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
 //        PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
 //        PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-        GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, 90 * Grad_to_Rad, 0);
+        //GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, 90 * Grad_to_Rad, 0);
         //Control(&rr3);
         
         while(1){
@@ -604,18 +691,18 @@ int main(void)
     #endif
 
     if(0){
-	    LoadRRConfig();
-	    OCSetup();
-	    //вызов предпросчета двигателей
-	    {
-	        T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
-	        TMR6 = 0x0000;  //
-	        PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
-	        IFS2bits.T6IF = 0;
-	        IEC2bits.T6IE = 1;
-	        IPC11bits.T6IP = 5;    
-	        T6CONbits.TON = 1;
-	    } 
+            LoadRRConfig();
+            OCSetup();
+            //вызов предпросчета двигателей
+            {
+                T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
+                TMR6 = 0x0000;  //
+                PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
+                IFS2bits.T6IF = 0;
+                IEC2bits.T6IE = 1;
+                IPC11bits.T6IP = 5;    
+                T6CONbits.TON = 1;
+            } 
     }
     //Вентиляторы        
     {

@@ -185,7 +185,7 @@ static BYTE ENCRevID;
 void MACInit(void)
 {
     BYTE i;
-    WORD w;
+    PHYREG w;
     // Set up the SPI module on the PIC for communications with the ENC28J60
     ENC_CS_IO = 1;
     ENC_CS_TRIS = 0;        // Make the Chip Select pin an output
@@ -242,9 +242,9 @@ void MACInit(void)
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
     
-    do {
-        w = ReadPHYReg(PHID1);
-    } while (w == 0x0083); // Microchip UID
+    //do {
+    //    w = ReadPHYReg(PHID1);
+    //} while (w. == 0x0083); // Microchip UID
 
     // Start up in Bank 0 and configure the receive buffer boundary pointers
     // and the buffer write protect pointer (receive buffer read pointer)
