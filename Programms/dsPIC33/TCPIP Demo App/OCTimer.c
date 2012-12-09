@@ -27,7 +27,8 @@ __attribute__((far)) RR rr1;
 __attribute__((far)) RR rr2;
 __attribute__((far)) RR rr3;
 __attribute__((far)) RAMSaveConfig RRConfigRAM;
-__attribute__((far)) APP_CONFIG AppConfig;
+//__attribute__((far)) 
+extern APP_CONFIG AppConfig;
 #else
 RR rr1;
 RR rr2;
@@ -627,19 +628,19 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
 BOOL NeedBreakCmd(GD_STATE CurrentCmd, GD_STATE NextCmd){
     switch(CurrentCmd){
         case ST_CONTINOUS:
-            if(NextCmd != ST_CONTINOUS) return true;
-            else return false;
+            if(NextCmd != ST_CONTINOUS) return TRUE;
+            else return FALSE;
         break;
         case ST_STOP:
         case ST_ACCELERATE:
         case ST_DECELERATE:
         case ST_RUN:
-            if(NextCmd == ST_EMERGENCY_STOP) return true;
-            else return false;
+            if(NextCmd == ST_EMERGENCY_STOP) return TRUE;
+            else return FALSE;
         break;
         //case 
     }
-    return false;
+    return FALSE;
 }
 
 int ProcessCmd(RR * rr)

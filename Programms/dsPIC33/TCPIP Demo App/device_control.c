@@ -4,7 +4,7 @@
 #ifdef __C30__
 #include "TCPIP Stack/TCPIP.h"
 #   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
-#   define DMAOFFSET(x) __builtin_dmaoffset
+#   define DMAOFFSET(x) (WORD)__builtin_dmaoffset(x)
 #else
 #   define INTERRUPT void
 #   define DMAOFFSET(x) (WORD)x
@@ -121,6 +121,14 @@ WORD DMA4CNT;
 WORD DMA5CNT;
 WORD DMA6CNT;
 WORD DMA7CNT;
+
+WORD SPI1BUF;
+WORD SPI2BUF;
+
+WORD SPI1STAT;
+WORD SPI2STAT;
+WORD SPI2STATbits;
+WORD SPI2STATbits;
 
 typedef struct 
 {
@@ -910,13 +918,46 @@ INTERRUPT _T9Interrupt( void )
 // управляющие переменные
 DMAConfigType DMAConfig[8];
 #ifdef __C30__
-    unsigned int DMABuffer[1024]  __attribute__((space(dma)));
+    //unsigned int DMABuffer[1024]  __attribute__((space(dma)));
+    WORD DMA0BufferA[64] __attribute__((space(dma)));
+    WORD DMA0BufferB[64] __attribute__((space(dma)));
+    WORD DMA1BufferA[64] __attribute__((space(dma)));
+    WORD DMA1BufferB[64] __attribute__((space(dma)));
+    WORD DMA2BufferA[64] __attribute__((space(dma)));
+    WORD DMA2BufferB[64] __attribute__((space(dma)));
+    WORD DMA3BufferA[64] __attribute__((space(dma)));
+    WORD DMA3BufferB[64] __attribute__((space(dma)));
+    WORD DMA4BufferA[64] __attribute__((space(dma)));
+    WORD DMA4BufferB[64] __attribute__((space(dma)));
+    WORD DMA5BufferA[64] __attribute__((space(dma)));
+    WORD DMA5BufferB[64] __attribute__((space(dma)));
+    WORD DMA6BufferA[64] __attribute__((space(dma)));
+    WORD DMA6BufferB[64] __attribute__((space(dma)));
+    WORD DMA7BufferA[64] __attribute__((space(dma)));
+    WORD DMA7BufferB[64] __attribute__((space(dma)));
 #else
-    unsigned int DMABuffer[1024];
+    //unsigned int DMABuffer[1024];
+    WORD DMA0BufferA[64];
+    WORD DMA0BufferB[64];
+    WORD DMA1BufferA[64];
+    WORD DMA1BufferB[64];
+    WORD DMA2BufferA[64];
+    WORD DMA2BufferB[64];
+    WORD DMA3BufferA[64];
+    WORD DMA3BufferB[64];
+    WORD DMA4BufferA[64];
+    WORD DMA4BufferB[64];
+    WORD DMA5BufferA[64];
+    WORD DMA5BufferB[64];
+    WORD DMA6BufferA[64];
+    WORD DMA6BufferB[64];
+    WORD DMA7BufferA[64];
+    WORD DMA7BufferB[64];
+
 #endif
 static int BufferBusySize = 0;
 //------------------------------------------------------------------------------------------------
-int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
+WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
 //------------------------------------------------------------------------------------------------
 {
     WORD Config = 0;
@@ -926,26 +967,69 @@ int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_C
     Config |= ((WORD)nullw) << 11;
     Config |= ((WORD)addr)  << 4;
     Config |= ((WORD)mode)  << 0;
-    DMAConfig[id].fillingBufferAFunc = NULL;
-    DMAConfig[id].fillingBufferBFunc = NULL;
-    DMAConfig[id].Count = 0;
-
+    return Config;
+}
+//------------------------------------------------------------------------------------------------
+int DMAInit(DMA_ID id, WORD Config)
+//------------------------------------------------------------------------------------------------
+{
+    
     switch(id){
-        case DMA0: DMA0CON = Config;
+        case DMA0: 
+            DMA0CON = Config;
+            DMAConfig[id].BufA = DMA0BufferA;
+            DMAConfig[id].BufB = DMA0BufferB;
+            DMA0STA = DMAOFFSET(DMA0BufferA);
+            DMA0STB = DMAOFFSET(DMA0BufferB);
             break;
-        case DMA1: DMA1CON = Config;
+        case DMA1: 
+            DMA1CON = Config;
+            DMAConfig[id].BufA = DMA1BufferA;
+            DMAConfig[id].BufB = DMA1BufferB;
+            DMA1STA = DMAOFFSET(DMA1BufferA);
+            DMA1STB = DMAOFFSET(DMA1BufferB);
             break;
-        case DMA2: DMA2CON = Config;
+        case DMA2: 
+            DMA2CON = Config;
+            DMAConfig[id].BufA = DMA2BufferA;
+            DMAConfig[id].BufB = DMA2BufferB;
+            DMA2STA = DMAOFFSET(DMA2BufferA);
+            DMA2STB = DMAOFFSET(DMA2BufferB);
             break;
-        case DMA3: DMA3CON = Config;
+        case DMA3: 
+            DMA3CON = Config;
+            DMAConfig[id].BufA = DMA3BufferA;
+            DMAConfig[id].BufB = DMA3BufferB;
+            DMA3STA = DMAOFFSET(DMA3BufferA);
+            DMA3STB = DMAOFFSET(DMA3BufferB);
             break;
-        case DMA4: DMA4CON = Config;
+        case DMA4: 
+            DMA4CON = Config;
+            DMAConfig[id].BufA = DMA4BufferA;
+            DMAConfig[id].BufB = DMA4BufferB;
+            DMA4STA = DMAOFFSET(DMA4BufferA);
+            DMA4STB = DMAOFFSET(DMA4BufferB);
             break;
-        case DMA5: DMA5CON = Config;
+        case DMA5: 
+            DMA5CON = Config;
+            DMAConfig[id].BufA = DMA5BufferA;
+            DMAConfig[id].BufB = DMA5BufferB;
+            DMA5STA = DMAOFFSET(DMA5BufferA);
+            DMA5STB = DMAOFFSET(DMA5BufferB);
             break;
-        case DMA6: DMA6CON = Config;
+        case DMA6: 
+            DMA6CON = Config;
+            DMAConfig[id].BufA = DMA6BufferA;
+            DMAConfig[id].BufB = DMA6BufferB;
+            DMA6STA = DMAOFFSET(DMA6BufferA);
+            DMA6STB = DMAOFFSET(DMA6BufferB);
             break;
-        case DMA7: DMA7CON = Config;
+        case DMA7: 
+            DMA7CON = Config;
+            DMAConfig[id].BufA = DMA7BufferA;
+            DMAConfig[id].BufB = DMA7BufferB;
+            DMA7STA = DMAOFFSET(DMA7BufferA);
+            DMA7STB = DMAOFFSET(DMA7BufferB);
             break;
         default:
         return -1;
@@ -955,7 +1039,7 @@ int DMAInit(DMA_ID id, DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_C
 //------------------------------------------------------------------------------------------------
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
 //------------------------------------------------------------------------------------------------
-{
+{    
     switch(id){
         case DMA0:
             DMA0REQ = (BYTE)irq;
@@ -994,67 +1078,65 @@ int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
     }
     return 0;
 }
-//------------------------------------------------------------------------------------------------
-WORD DMAGetBuffer(WORD Count)
-//------------------------------------------------------------------------------------------------
-{
-    WORD buf = BufferBusySize*2;
-    BufferBusySize += Count;
-    return buf;
-}
-int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB)
-{
-    WORD A;
-    WORD B;
-    DMAConfig[id].BufA = (WORD)&DMABuffer + BufA;
-    DMAConfig[id].BufB = (WORD)&DMABuffer + BufB;
-    A = DMAOFFSET(DMABuffer) + BufA;
-    B = DMAOFFSET(DMABuffer) + BufB;
-    switch(id){
-        case DMA0:
-            DMA0STA = A;
-            DMA0STB = B;
-            break;
-        case DMA1:
-            DMA1STA = A;
-            DMA1STB = B;
-            break;
-        case DMA2:
-            DMA2STA = A;
-            DMA2STB = B;
-            break;
-        case DMA3:
-            DMA3STA = A;
-            DMA3STB = B;
-            break;
-        case DMA4:
-            DMA4STA = A;
-            DMA4STB = B;
-            break;
-        case DMA5:
-            DMA5STA = A;
-            DMA5STB = B;
-            break;
-        case DMA6:
-            DMA6STA = A;
-            DMA6STB = B;
-            break;
-        case DMA7:
-            DMA7STA = A;
-            DMA7STB = B;
-            break;
-        default:
-        return -1;
-    }
-    return 0;
-}
+////------------------------------------------------------------------------------------------------
+//WORD DMAGetBuffer(WORD Count)
+////------------------------------------------------------------------------------------------------
+//{
+//    WORD buf = BufferBusySize*2;
+//    BufferBusySize += Count;
+//    return buf;
+//}
+//int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB)
+//{
+//    WORD A = 0;
+//    WORD B = 0;
+//    //DMAConfig[id].BufA = (WORD)&DMABuffer + BufA;
+//    //DMAConfig[id].BufB = (WORD)&DMABuffer + BufB;
+//    A = BufA;
+//    B = BufB;
+//    switch(id){
+//        case DMA0:
+//            DMA0STA = A;
+//            DMA0STB = B;
+//            break;
+//        case DMA1:
+//            DMA1STA = A;
+//            DMA1STB = B;
+//            break;
+//        case DMA2:
+//            DMA2STA = A;
+//            DMA2STB = B;
+//            break;
+//        case DMA3:
+//            DMA3STA = A;
+//            DMA3STB = B;
+//            break;
+//        case DMA4:
+//            DMA4STA = A;
+//            DMA4STB = B;
+//            break;
+//        case DMA5:
+//            DMA5STA = A;
+//            DMA5STB = B;
+//            break;
+//        case DMA6:
+//            DMA6STA = A;
+//            DMA6STB = B;
+//            break;
+//        case DMA7:
+//            DMA7STA = A;
+//            DMA7STB = B;
+//            break;
+//        default:
+//        return -1;
+//    }
+//    return 0;
+//}
 
 //------------------------------------------------------------------------------------------------
 int DMASetBufferSize(DMA_ID id, WORD Count)
 //------------------------------------------------------------------------------------------------
 {
-    int A;
-    int B;
     DMAConfig[id].Count = Count;
     switch(id){
         case DMA0: DMA0CNT = Count-1;
@@ -1091,10 +1173,31 @@ int DMASetCallback(DMA_ID id, void* _This,  int (*fillingBufAFunc)(void*, WORD*,
 int DMAPrepBuffer(DMA_ID id)
 //------------------------------------------------------------------------------------------------
 {    
+        BYTE BufBEna = 0;
     if(DMAConfig[id].fillingBufferAFunc){
         DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
     }
-    if(DMAConfig[id].fillingBufferBFunc){
+    switch(id){
+        case DMA0: BufBEna = DMA0CONbits.MODE & 2;
+            break;
+        case DMA1: BufBEna = DMA1CONbits.MODE & 2;
+            break;
+        case DMA2: BufBEna = DMA2CONbits.MODE & 2;
+            break;
+        case DMA3: BufBEna = DMA3CONbits.MODE & 2;
+            break;
+        case DMA4: BufBEna = DMA4CONbits.MODE & 2;
+            break;
+        case DMA5: BufBEna = DMA5CONbits.MODE & 2;
+            break;
+        case DMA6: BufBEna = DMA6CONbits.MODE & 2;
+            break;
+        case DMA7: BufBEna = DMA7CONbits.MODE & 2;
+            break;
+        default:
+        return -1;
+    }
+    if(BufBEna && DMAConfig[id].fillingBufferBFunc){
         DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
     }
     return 0;
@@ -1248,7 +1351,7 @@ INTERRUPT _DMA0Interrupt(void)
 {
     DMA_ID id = DMA0;
     if(DMAConfig[id].fillingBufferAFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST0){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1262,7 +1365,7 @@ INTERRUPT _DMA1Interrupt(void)
 {    
     DMA_ID id = DMA1;
     if(DMAConfig[id].fillingBufferBFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST1){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1276,7 +1379,7 @@ INTERRUPT _DMA2Interrupt(void)
 {
     DMA_ID id = DMA2;
     if(DMAConfig[id].fillingBufferAFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST2){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1290,7 +1393,7 @@ INTERRUPT _DMA3Interrupt(void)
 {    
     DMA_ID id = DMA3;
     if(DMAConfig[id].fillingBufferBFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST3){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1304,7 +1407,7 @@ INTERRUPT _DMA4Interrupt(void)
 {
     DMA_ID id = DMA4;
     if(DMAConfig[id].fillingBufferAFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST4){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1318,7 +1421,7 @@ INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 {    
     DMA_ID id = DMA5;
     if(DMAConfig[id].fillingBufferBFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST5){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1332,7 +1435,7 @@ INTERRUPT _DMA6Interrupt(void)
 {
     DMA_ID id = DMA6;
     if(DMAConfig[id].fillingBufferAFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST6){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1346,7 +1449,7 @@ INTERRUPT _DMA7Interrupt(void)
 {    
     DMA_ID id = DMA7;
     if(DMAConfig[id].fillingBufferBFunc){
-        if(DMAGetPPState(id)==1){
+        if(DMACS1bits.PPST7){
             DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufA, DMAConfig[id].Count);
         } else {
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (WORD*)DMAConfig[id].BufB, DMAConfig[id].Count);
@@ -1625,17 +1728,136 @@ INTERRUPT _OC8Interrupt( void )
 #define SAVE_INT_LOCK SRbits.IPL
 #define RESTORE_INT_LOCK(x) SRbits.IPL = x
 
+typedef enum _Eflag
+{
+    SEND_DATA1 = 0,
+    SEND_DATA2,
+
+} EFlag;
+
+typedef struct _SPIData{
+    WORD Data1Len;
+    WORD Data2Len;
+    WORD DataPos;
+    BYTE* Data1;
+    BYTE* Data2;
+    BYTE Flag;
+} SPIData;
+/*
+ * 1. Data1Len > BufSize && Data2Len > BufSize 
+ * 2. Data1Len > BufSize && Data2Len < BufSize
+ * 4. Data1Len < BufSize && Data2Len < BufSize
+ * 5. Data1Len < BufSize && Data2Len > BufSize
+ * 6. Data1Len + Data2Len < BufSize
+ */
+void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
+{
+    SPIData* DataToSend;
+    WORD Config;
+    DataToSend = _This;
+    WORD BufferPos = 0;
+    WORD DataSize = 0;
+    BufSize = BufSize*2;
+    DataSize = DataToSend->Data1Len + DataToSend->Data2Len;
+    // только на первом проходе
+    if(DataSize < BufSize){
+        memcpy(DMABuff, &(DataToSend->Data1[0]), DataToSend->Data1Len);
+        memcpy(((BYTE*)DMABuff)+DataToSend->Data1Len, &DataToSend->Data2[0], DataToSend->Data2Len);
+        DataToSend->DataPos = DataSize;
+        DMA7CONbits.AMODE = ONE_SHOT; // DMASetMode(ONE_SHOT);
+        DMASetBufferSize(DMA7, DataSize);
+    }
+    /*
+    switch(DataToSend->Flag){
+    case 1:
+        if((DataToSend->Data1Len - DataToSend->Data1Pos) + (DataToSend->Data2Len - DataToSend->Data2Pos) <= BufSize){
+            // если данных осталось меньше, чем необходимо для полного буфера
+            DMASetState(DMA7, FALSE, FALSE);
+            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+            DMAInit(DMA7, Config);
+            DMASetState(DMA7, TRUE, FALSE);
+            BufSize = DataToSend->DataLen - DataToSend->Position;
+            memcpy(DMABuff,&DataToSend->Data[DataToSend->Position], BufSize);
+            DataToSend->Position += BufSize;
+            DataToSend->Flag = 2;
+        } else {
+            DataToSend->Flag = 0;
+        }
+        //break;
+    case 0:
+        if(DataToSend->DataPos < DataToSend->Data1Len){
+            if(DataToSend->Data1Len < BufSize){
+                DataSize = DataToSend->Data1Len;
+            } else {
+                DataSize = BufSize;
+            }
+            memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos]), DataSize);
+        } else {
+
+        }
+        memcpy(DMABuff, &(DataToSend->Data[DataToSend->Position]), BufSize);
+        DataToSend->Position += BufSize;
+        DataToSend->Flag = 1;
+        break;
+
+    case 2:
+        // осталось отправить маленький кусок, который уже загружен в буфер
+        if(DataToSend->DataLen > 64) return;
+        DMASetState(DMA7, FALSE, FALSE);
+        DMASetBufferSize(DMA7, DataToSend->DataLen - DataToSend->Position);
+        DMASetState(DMA7, TRUE, FALSE);
+        DataToSend->Flag = 2;
+        break;
+        case 3:
+            DMASetState(DMA7, FALSE, FALSE);
+            break;
+        default:
+            break;
+    }*/
+}
+
 int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )
 {
-    // установка текущий приоритет CPU на 4
-    BYTE TmpInt = SAVE_INT_LOCK;
+    BYTE TmpInt;
+    // установка текущего приоритета CPU на 4
+    TmpInt = SAVE_INT_LOCK;
+    SPIData DataToSend;
+    WORD BufA;
+    WORD BufB;
+    WORD Config;
+    if(DataLen <= 128){
+        Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+    } else {
+        if(DataLen <= 256){
+            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
+        } else {
+            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        }
+    }
+    if(DataLen & 0x0001){
+        // Если длинна нечетная, то отправим 1 байт отдельно в конце
+        DataLen -= 1;
+    }
+    DataToSend.Data1 = Cmd;
+    DataToSend.Data1Len = CmdLen;
+    DataToSend.Data2 = Data;
+    DataToSend.Data2Len = DataLen;
+    DataToSend.DataPos = 0;
+    DataToSend.Flag = 0;
+
+    DMAInit(DMA7, Config);
+    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
+    DMASetBufferSize(DMA7, 64);
+
+    DMASetCallback(DMA7, (void*)&DataToSend, SPIPPcallBack, SPIPPcallBack);
+    DMASetInt(DMA7, 5, TRUE);
+    DMAPrepBuffer(DMA7);
     SET_INT_LOCK(4);
     // выбор устройства
     DeviceSelect();
     // отправка команды
-    DeviceRelease();
-    DeviceSelect(); 
     // отправка данных
+    DMASetState(DMA7, TRUE, FALSE);
     // освобождение устройства
     DeviceRelease();
     // восстановление приоритета CPU
