@@ -1732,7 +1732,8 @@ typedef enum _Eflag
 {
     SEND_DATA1 = 0,
     SEND_DATA2,
-
+    FINAL_PART,
+    END_SEND
 } EFlag;
 
 typedef struct _SPIData{
@@ -1741,7 +1742,7 @@ typedef struct _SPIData{
     WORD DataPos;
     BYTE* Data1;
     BYTE* Data2;
-    BYTE Flag;
+    EFlag Flag;
 } SPIData;
 /*
  * 1. Data1Len > BufSize && Data2Len > BufSize 
@@ -1757,16 +1758,51 @@ void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
     DataToSend = _This;
     WORD BufferPos = 0;
     WORD DataSize = 0;
+    BOOL BufferFull = FALSE;
     BufSize = BufSize*2;
-    DataSize = DataToSend->Data1Len + DataToSend->Data2Len;
-    // только на первом проходе
-    if(DataSize < BufSize){
-        memcpy(DMABuff, &(DataToSend->Data1[0]), DataToSend->Data1Len);
-        memcpy(((BYTE*)DMABuff)+DataToSend->Data1Len, &DataToSend->Data2[0], DataToSend->Data2Len);
-        DataToSend->DataPos = DataSize;
-        DMA7CONbits.AMODE = ONE_SHOT; // DMASetMode(ONE_SHOT);
-        DMASetBufferSize(DMA7, DataSize);
+    
+    while(!BufferFull){
+        switch(DataToSend->Flag){
+        case SEND_DATA1:
+            if( DataToSend->Data1Len + DataToSend->DataPos < BufSize) {
+                DataSize = DataToSend->Data1Len;
+                DataToSend->Flag = SEND_DATA2;
+                BufferPos += DataSize;
+                DataToSend->DataPos = 0;
+            } else {
+                DataSize = BufSize;
+                BufferFull = TRUE;
+                DataToSend->DataPos += DataSize;
+            }
+            memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos]), DataSize);            
+            break;
+        case SEND_DATA2:
+            if( DataToSend->Data2Len + DataToSend->DataPos < BufSize - BufferPos) {
+                DataSize = DataToSend->Data2Len;
+                DataToSend->Flag = FINAL_PART;
+                BufferPos += DataSize;
+                DataToSend->DataPos = 0;
+            } else {
+                DataSize = BufSize - BufferPos;
+                BufferFull = TRUE;
+                DataToSend->DataPos += DataSize;
+            }
+            memcpy(((BYTE*)DMABuff) + BufferPos, &(DataToSend->Data2[DataToSend->DataPos]), DataSize);            
+            break;
+        case FINAL_PART: // все записано в буфер. осталось только поменять режим DMA
+            DMA7CONbits.AMODE = ONE_SHOT; // DMASetMode(ONE_SHOT);
+            DMASetBufferSize(DMA7, DataSize);
+            DataToSend->Flag = END_SEND;
+            break;
+        case END_SEND:
+            break;
+        default:
+            BufferFull = TRUE;
+            break;
+        }
     }
+
+
     /*
     switch(DataToSend->Flag){
     case 1:
@@ -1815,7 +1851,19 @@ void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
             break;
     }*/
 }
+void __attribute__((__interrupt__)) _SPI1Interrupt(void)
+{
+    IFS0bits.SPI1IF = 0;
+}
+#if defined(__C30__)
+    #define ClearSPIDoneFlag()
+    static inline __attribute__((__always_inline__)) void WaitForDataByte( void )
+    {
+        while ((ENC_SPISTATbits.SPITBF == 1) || (ENC_SPISTATbits.SPIRBF == 0));
+    }
 
+    #define SPI_ON_BIT          (ENC_SPISTATbits.SPIEN)
+#endif
 int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )
 {
     BYTE TmpInt;
@@ -1825,10 +1873,10 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     WORD BufA;
     WORD BufB;
     WORD Config;
-    if(DataLen <= 128){
+    if(DataLen + CmdLen <= 128){
         Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     } else {
-        if(DataLen <= 256){
+        if(DataLen + CmdLen <= 256){
             Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
         } else {
             Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
@@ -1846,7 +1894,7 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     DataToSend.Flag = 0;
 
     DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
+    DMASelectDevice(DMA7, 0x0A, (int)&SPI1BUF);
     DMASetBufferSize(DMA7, 64);
 
     DMASetCallback(DMA7, (void*)&DataToSend, SPIPPcallBack, SPIPPcallBack);
@@ -1855,9 +1903,26 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     SET_INT_LOCK(4);
     // выбор устройства
     DeviceSelect();
+    
+    //Setup for SPI1 Master mode:
+    // Interrupt Controller Settings
+    IFS0bits.SPI1IF = 0;
+    IEC0bits.SPI1IE = 1;
+    IPC2bits.SPI1IP = 5;
+    SPI1CON1 = 0x0F;
+    SPI1CON2 = 0;
+    SPI1CON1bits.CKE = 1;
+    SPI1CON1bits.MSTEN = 1;
+    SPI1STATbits.SPIEN = 1;
+    
     // отправка команды
     // отправка данных
-    DMASetState(DMA7, TRUE, FALSE);
+    ClearSPIDoneFlag();
+    DMASetState(DMA7, TRUE, TRUE);
+    while(DataToSend.Flag != END_SEND){
+        Nop();
+        Nop();
+    }
     // освобождение устройства
     DeviceRelease();
     // восстановление приоритета CPU
