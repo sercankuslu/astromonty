@@ -1767,14 +1767,14 @@ void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
             if( DataToSend->Data1Len + DataToSend->DataPos < BufSize) {
                 DataSize = DataToSend->Data1Len;
                 DataToSend->Flag = SEND_DATA2;
-                BufferPos += DataSize;
+                BufferPos += DataSize;                
                 DataToSend->DataPos = 0;
             } else {
                 DataSize = BufSize;
                 BufferFull = TRUE;
                 DataToSend->DataPos += DataSize;
             }
-            memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos]), DataSize);            
+			memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos-DataSize]), DataSize);                        
             break;
         case SEND_DATA2:
             if( DataToSend->Data2Len + DataToSend->DataPos < BufSize - BufferPos) {
@@ -1894,7 +1894,7 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     DataToSend.Flag = 0;
 
     DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, 0x0A, (int)&SPI1BUF);
+    DMASelectDevice(DMA7, IRQ_OC1, (int)&OC1R);
     DMASetBufferSize(DMA7, 64);
 
     DMASetCallback(DMA7, (void*)&DataToSend, SPIPPcallBack, SPIPPcallBack);
@@ -1904,21 +1904,33 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     // выбор устройства
     DeviceSelect();
     
-    //Setup for SPI1 Master mode:
-    // Interrupt Controller Settings
-    IFS0bits.SPI1IF = 0;
-    IEC0bits.SPI1IE = 1;
-    IPC2bits.SPI1IP = 5;
-    SPI1CON1 = 0x0F;
-    SPI1CON2 = 0;
-    SPI1CON1bits.CKE = 1;
-    SPI1CON1bits.MSTEN = 1;
-    SPI1STATbits.SPIEN = 1;
+//    //Setup for SPI1 Master mode:
+//    // Interrupt Controller Settings
+//    IFS0bits.SPI1IF = 0;
+//    IEC0bits.SPI1IE = 1;
+//    IPC2bits.SPI1IP = 5;
+//    SPI1CON1 = 0x0F;
+//    SPI1CON2 = 0;
+//    SPI1CON1bits.CKE = 1;
+//    SPI1CON1bits.MSTEN = 1;
+//    SPI1STATbits.SPIEN = 1;
+// Initialize Output Compare Module in Contionous pulse mode
+    OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
+    OCSetValue(ID_OC1, 100, 125);
+    OCSetInt(ID_OC1, 6, TRUE);
+    OCSetCallback(ID_OC1, NULL);
+    OCSetMode(ID_OC1, TOGGLE);
+// Initialize Timer2
+    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+    TimerSetValue(TIMER2, 0, 0xFFFF);
+    TimerSetCallback(TIMER2, NULL);
+    TimerSetInt(TIMER2, 5, FALSE);    
     
     // отправка команды
     // отправка данных
     ClearSPIDoneFlag();
     DMASetState(DMA7, TRUE, TRUE);
+    T2CONbits.TON = 1;
     while(DataToSend.Flag != END_SEND){
         Nop();
         Nop();

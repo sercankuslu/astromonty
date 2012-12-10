@@ -349,11 +349,15 @@ int main(void)
     //WORD Count = 10;
     //DMA_ID id = 6;
     //(mas[id])(Count);
-    BYTE Cmd[135];
+    WORD Cmd[135];
+    int i = 0;
+    for(i = 0; i < 135; i++){
+	    Cmd[i] = i;
+    }
     BYTE Data[] = { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
                     0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
-    memset(Cmd,0x12,sizeof(Cmd));
-    SPI1SendData( 0, (BYTE*)Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
+    //memset(Cmd,0x12,sizeof(Cmd));
+    SPI1SendData( 0, (BYTE*)&Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
     //BYTE sync_mode=0;
         //BYTE slew=0; 
     // указатель на функцию
@@ -444,7 +448,7 @@ int main(void)
             // Initialize Timer2
             TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
             TimerSetValue(T2, 0, 0xFFFF);
-            OCSetCallback(T2, NULL);
+            TimerSetCallback(T2, NULL);
             TimerSetInt(T2, 5, FALSE);
 
             // Initialize Timer3
