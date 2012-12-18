@@ -84,7 +84,8 @@ typedef struct _DMAConfigType{
     WORD Count;
     void* _This;
 } DMAConfigType;
-
+#define DMA6BUF_SIZE 128
+#define DMA7BUF_SIZE 128
 
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
 int DMAInit(DMA_ID id, WORD Config);
