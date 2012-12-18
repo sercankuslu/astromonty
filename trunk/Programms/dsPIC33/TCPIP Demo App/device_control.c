@@ -5,9 +5,11 @@
 #include "TCPIP Stack/TCPIP.h"
 #   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
 #   define DMAOFFSET(x) (WORD)__builtin_dmaoffset(x)
-#else
+#endif
+#ifdef _WIN32
 #   define INTERRUPT void
 #   define DMAOFFSET(x) (WORD)x
+#   define Nop()
 #endif
 
 #ifdef _WIN32
@@ -125,10 +127,43 @@ WORD DMA7CNT;
 WORD SPI1BUF;
 WORD SPI2BUF;
 
+typedef struct 
+{
+    __EXTENSION BYTE SPIRBF:1;
+    __EXTENSION BYTE SPITBF:1;
+    __EXTENSION BYTE b2:4;
+    __EXTENSION BYTE SPIROV:1;
+    __EXTENSION BYTE b7:6;
+    __EXTENSION BYTE SPISIDL:1;
+    __EXTENSION BYTE b15:1;
+    __EXTENSION BYTE SPIEN:1;
+} SPISTATbits;
+
+typedef struct 
+{
+    __EXTENSION BYTE PPRE:2;
+    __EXTENSION BYTE SPRE:3;
+    __EXTENSION BYTE MSTEN:1;
+    __EXTENSION BYTE CKP:1;
+    __EXTENSION BYTE SSEN:1;
+    __EXTENSION BYTE CKE:1;
+    __EXTENSION BYTE SMP:1;
+    __EXTENSION BYTE MODE16:1;
+    __EXTENSION BYTE DISSDO:1;
+    __EXTENSION BYTE DISSCK:1;
+    __EXTENSION BYTE b13:1;    
+    __EXTENSION BYTE b14:1;
+    __EXTENSION BYTE b15:1;
+} SPICON1bits;
+
 WORD SPI1STAT;
 WORD SPI2STAT;
-WORD SPI2STATbits;
-WORD SPI2STATbits;
+WORD SPI1CON1;
+WORD SPI2CON1;
+SPISTATbits SPI1STATbits;
+SPISTATbits SPI2STATbits;
+SPICON1bits SPI1CON1bits;
+SPICON1bits SPI2CON1bits;
 
 typedef struct 
 {
@@ -1730,18 +1765,15 @@ INTERRUPT _OC8Interrupt( void )
 
 typedef enum _Eflag
 {
-    SEND_DATA1 = 0,
-    SEND_DATA2,
+    SEND_DATA = 0,
     FINAL_PART,
     END_SEND
 } EFlag;
 
 typedef struct _SPIData{
-    WORD Data1Len;
-    WORD Data2Len;
+    WORD DataLen;
     WORD DataPos;
-    BYTE* Data1;
-    BYTE* Data2;
+    BYTE* Data;
     EFlag Flag;
 } SPIData;
 /*
@@ -1751,11 +1783,13 @@ typedef struct _SPIData{
  * 5. Data1Len < BufSize && Data2Len > BufSize
  * 6. Data1Len + Data2Len < BufSize
  */
-void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
+//------------------------------------------------------------------------------------------------
+int SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
+//------------------------------------------------------------------------------------------------
 {
     SPIData* DataToSend;
     WORD Config;
-    DataToSend = _This;
+    DataToSend = (_SPIData*)_This;
     WORD BufferPos = 0;
     WORD DataSize = 0;
     BOOL BufferFull = FALSE;
@@ -1763,107 +1797,209 @@ void SPIPPcallBack(void* _This, WORD* DMABuff, WORD BufSize)
     
     while(!BufferFull){
         switch(DataToSend->Flag){
-        case SEND_DATA1:
-            if( DataToSend->Data1Len + DataToSend->DataPos < BufSize) {
-                DataSize = DataToSend->Data1Len;
-                DataToSend->Flag = SEND_DATA2;
+        case SEND_DATA:
+            if( DataToSend->DataLen - DataToSend->DataPos < BufSize) {
+                DataSize = DataToSend->DataLen - DataToSend->DataPos;
+                DataToSend->Flag = FINAL_PART;
+                memcpy(DMABuff, &(DataToSend->Data[DataToSend->DataPos]), DataSize);
                 BufferPos += DataSize;                
                 DataToSend->DataPos = 0;
             } else {
                 DataSize = BufSize;
                 BufferFull = TRUE;
+                memcpy(DMABuff, &(DataToSend->Data[DataToSend->DataPos]), DataSize);
                 DataToSend->DataPos += DataSize;
             }
-			memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos-DataSize]), DataSize);                        
-            break;
-        case SEND_DATA2:
-            if( DataToSend->Data2Len + DataToSend->DataPos < BufSize - BufferPos) {
-                DataSize = DataToSend->Data2Len;
-                DataToSend->Flag = FINAL_PART;
-                BufferPos += DataSize;
-                DataToSend->DataPos = 0;
-            } else {
-                DataSize = BufSize - BufferPos;
-                BufferFull = TRUE;
-                DataToSend->DataPos += DataSize;
-            }
-            memcpy(((BYTE*)DMABuff) + BufferPos, &(DataToSend->Data2[DataToSend->DataPos]), DataSize);            
             break;
         case FINAL_PART: // все записано в буфер. осталось только помен€ть режим DMA
-            DMA7CONbits.AMODE = ONE_SHOT; // DMASetMode(ONE_SHOT);
-            DMASetBufferSize(DMA7, DataSize);
             DataToSend->Flag = END_SEND;
+            BufferFull = TRUE;
             break;
         case END_SEND:
+            BufferFull = TRUE;
             break;
         default:
             BufferFull = TRUE;
             break;
         }
     }
-
-
-    /*
-    switch(DataToSend->Flag){
-    case 1:
-        if((DataToSend->Data1Len - DataToSend->Data1Pos) + (DataToSend->Data2Len - DataToSend->Data2Pos) <= BufSize){
-            // если данных осталось меньше, чем необходимо дл€ полного буфера
-            DMASetState(DMA7, FALSE, FALSE);
-            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
-            DMAInit(DMA7, Config);
-            DMASetState(DMA7, TRUE, FALSE);
-            BufSize = DataToSend->DataLen - DataToSend->Position;
-            memcpy(DMABuff,&DataToSend->Data[DataToSend->Position], BufSize);
-            DataToSend->Position += BufSize;
-            DataToSend->Flag = 2;
-        } else {
-            DataToSend->Flag = 0;
-        }
-        //break;
-    case 0:
-        if(DataToSend->DataPos < DataToSend->Data1Len){
-            if(DataToSend->Data1Len < BufSize){
-                DataSize = DataToSend->Data1Len;
-            } else {
-                DataSize = BufSize;
-            }
-            memcpy(DMABuff, &(DataToSend->Data1[DataToSend->DataPos]), DataSize);
-        } else {
-
-        }
-        memcpy(DMABuff, &(DataToSend->Data[DataToSend->Position]), BufSize);
-        DataToSend->Position += BufSize;
-        DataToSend->Flag = 1;
-        break;
-
-    case 2:
-        // осталось отправить маленький кусок, который уже загружен в буфер
-        if(DataToSend->DataLen > 64) return;
-        DMASetState(DMA7, FALSE, FALSE);
-        DMASetBufferSize(DMA7, DataToSend->DataLen - DataToSend->Position);
-        DMASetState(DMA7, TRUE, FALSE);
-        DataToSend->Flag = 2;
-        break;
-        case 3:
-            DMASetState(DMA7, FALSE, FALSE);
-            break;
-        default:
-            break;
-    }*/
+    return 0;
 }
-void __attribute__((__interrupt__)) _SPI1Interrupt(void)
+static int SPI1DataCount = 0;
+//------------------------------------------------------------------------------------------------
+int SPIDataCounter(void)
+//------------------------------------------------------------------------------------------------
 {
+    if(SPI1DataCount>0){
+        if(SPI1CON1bits.MODE16){
+            SPI1DataCount-=2;
+        } else {
+            SPI1DataCount--;
+        }
+        
+    } else {
+        OCSetMode(ID_OC1, OC_DISABLED);
+    }
+    return 0;
+    
+}
+//------------------------------------------------------------------------------------------------
+INTERRUPT _SPI1Interrupt(void)
+//------------------------------------------------------------------------------------------------
+{    
     IFS0bits.SPI1IF = 0;
 }
+
 #if defined(__C30__)
     #define ClearSPIDoneFlag()
     static inline __attribute__((__always_inline__)) void WaitForDataByte( void )
     {
-        while ((ENC_SPISTATbits.SPITBF == 1) || (ENC_SPISTATbits.SPIRBF == 0));
+        while ((SPI1STATbits.SPITBF == 1) || (SPI1STATbits.SPIRBF == 0));
     }
 
-    #define SPI_ON_BIT          (ENC_SPISTATbits.SPIEN)
+    #define SPI_ON_BIT          (SPI1STATbits.SPIEN)
 #endif
+#ifdef _WIN32
+    #define WaitForDataByte( void )
+#endif
+
+
+int SPI1SendArrayDMA(BYTE* Data, WORD DataLen)
+{
+    SPIData DataToSend;
+    WORD BufA;
+    WORD BufB;
+    WORD Config;
+    if(DataLen <= 128){
+        Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+        } else {
+            if(DataLen <= 256){
+                Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
+                } else {
+                    Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+                }
+        }
+    DataToSend.Data = Data;
+    DataToSend.DataLen = DataLen;
+    DataToSend.DataPos = 0;
+    DataToSend.Flag = SEND_DATA;
+    SPI1DataCount = DataLen;
+    DMAInit(DMA7, Config);
+    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
+    DMASetBufferSize(DMA7, 64);
+    DMASetCallback(DMA7, (void*)&DataToSend, SPIPPcallBack, SPIPPcallBack);
+    DMASetInt(DMA7, 5, TRUE);
+    DMAPrepBuffer(DMA7);
+    // отправка данных
+    WaitForDataByte();
+    DMASetState(DMA7, TRUE, TRUE);
+    
+    while(SPI1DataCount>0){
+        Nop();
+        Nop();
+    }
+    return 0;
+}
+
+
+
+//------------------------------------------------------------------------------------------------
+// получение данных через SPI
+// регул€рна€ отправка без блокировок и выбора устройства
+//------------------------------------------------------------------------------------------------
+WORD SPI1GetArray(BYTE *val, WORD len)
+//------------------------------------------------------------------------------------------------
+{
+    volatile BYTE Dummy;
+    BYTE MODE16 = SPI1CON1bits.MODE16;
+    WaitForDataByte();
+    Dummy = SPI1BUF;
+    if(!val) return 0;
+    if(MODE16) {
+        WORD_VAL wv;
+        // Read the data, 2 bytes at a time, for as long as possible
+        SPI1BUF = 0x0000;    // Send a dummy WORD to generate 32 clocks
+        while(len >= 2) {
+            WaitForDataByte();      // Wait until WORD is transmitted
+            wv.Val = SPI1BUF;
+            len -= 2;
+            if(len >= 2)
+                SPI1BUF = 0x0000;    // Send a dummy WORD to generate 32 clocks
+            *(val++) = wv.v[1];
+            *(val++) = wv.v[0];
+        };
+    }
+    // Read the data
+    if(len) {
+        if(MODE16){
+            SPI1STATbits.SPIEN = 0;
+            SPI1CON1bits.MODE16 = 0;
+            SPI1STATbits.SPIEN = 1;
+        }
+        SPI1BUF = 0x00;    // Send a dummy BYTE to generate 16 clocks
+        while( len ) {
+            WaitForDataByte();      // Wait until BYTE is transmitted
+            *(val++) = SPI1BUF;            
+            len--;
+            if(len >= 1)
+                SPI1BUF = 0x00;    // Send a dummy WORD to generate 32 clocks
+        };
+    }
+    if(MODE16) {
+        SPI1STATbits.SPIEN = 0;
+        SPI1CON1bits.MODE16 = 1;
+        SPI1STATbits.SPIEN = 1;
+    }
+    return len;
+}//end 
+//------------------------------------------------------------------------------------------------
+// отправка данных по SPI
+// регул€рна€ отправка без блокировок и выбора устройства
+//------------------------------------------------------------------------------------------------
+void SPI1PutArray(BYTE *val, WORD len)
+//------------------------------------------------------------------------------------------------
+{    
+    volatile BYTE Dummy;
+    BYTE MODE16 = SPI1CON1bits.MODE16;
+    if(MODE16) {
+        WORD_VAL wv;
+        // Send the data, 2 bytes at a time, for as long as possible
+        while(len > 1) {
+            wv.v[1] = *val++;
+            wv.v[0] = *val++;
+            len -= 2;            
+            WaitForDataByte();      // Wait until WORD is transmitted
+            Dummy = SPI1BUF;
+            SPI1BUF = wv.Val;       // Start sending the WORD
+        };
+        WaitForDataByte();      // Wait until WORD is transmitted
+        Dummy = SPI1BUF;
+    }
+    // Send the data, one byte at a time
+    if(len) {
+        if(MODE16){
+            SPI1STATbits.SPIEN = 0;
+            SPI1CON1bits.MODE16 = 0;
+            SPI1STATbits.SPIEN = 1;
+        }
+        while(len) {
+            len--;                  
+            WaitForDataByte();      // Wait until byte is transmitted
+            Dummy = SPI1BUF;
+            SPI1BUF = *val++;       // Start sending the byte
+        };
+        WaitForDataByte();      // Wait until WORD is transmitted
+        Dummy = SPI1BUF;
+    }
+    if(MODE16) {
+        SPI1STATbits.SPIEN = 0;
+        SPI1CON1bits.MODE16 = 1;
+        SPI1STATbits.SPIEN = 1;
+    }
+}
+//________________________________________________________________________________________________
+
+/*
 int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )
 {
     BYTE TmpInt;
@@ -1892,9 +2028,9 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     DataToSend.Data2Len = DataLen;
     DataToSend.DataPos = 0;
     DataToSend.Flag = 0;
-
+    SPI1DataCount = CmdLen + DataLen;
     DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, IRQ_OC1, (int)&OC1R);
+    DMASelectDevice(DMA7, IRQ_TMR2, (int)&OC1R);
     DMASetBufferSize(DMA7, 64);
 
     DMASetCallback(DMA7, (void*)&DataToSend, SPIPPcallBack, SPIPPcallBack);
@@ -1916,13 +2052,13 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
 //    SPI1STATbits.SPIEN = 1;
 // Initialize Output Compare Module in Contionous pulse mode
     OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
-    OCSetValue(ID_OC1, 100, 125);
+    //OCSetValue(ID_OC1, 100, 125);
     OCSetInt(ID_OC1, 6, TRUE);
-    OCSetCallback(ID_OC1, NULL);
+    OCSetCallback(ID_OC1, SPIDataCounter);
     OCSetMode(ID_OC1, TOGGLE);
 // Initialize Timer2
     TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-    TimerSetValue(TIMER2, 0, 0xFFFF);
+    TimerSetValue(TIMER2, 0, 0x0100);
     TimerSetCallback(TIMER2, NULL);
     TimerSetInt(TIMER2, 5, FALSE);    
     
@@ -1931,7 +2067,7 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     ClearSPIDoneFlag();
     DMASetState(DMA7, TRUE, TRUE);
     T2CONbits.TON = 1;
-    while(DataToSend.Flag != END_SEND){
+    while(SPI1DataCount>0){
         Nop();
         Nop();
     }
@@ -1941,5 +2077,4 @@ int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLe
     RESTORE_INT_LOCK(TmpInt);
     return 0;
 }
-//________________________________________________________________________________________________
-
+*/
