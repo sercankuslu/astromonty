@@ -5,6 +5,10 @@
 #else
 #   include "..\..\guidance\stdafx.h"
 #endif 
+// блокировки
+#define SET_INT_LOCK(x) SRbits.IPL = x
+#define SAVE_INT_LOCK SRbits.IPL
+#define RESTORE_INT_LOCK(x) SRbits.IPL = x
 
 // Таймеры
 typedef enum _TIMERS_ID{
@@ -77,23 +81,32 @@ typedef enum _DMA_DEVICE_IRQ {
 } DMA_DEVICE_IRQ;
 
 typedef struct _DMAConfigType{
-    int (*fillingBufferAFunc)(void*, WORD*, WORD);
-    int (*fillingBufferBFunc)(void*, WORD*, WORD);
-    WORD* BufA;
-    WORD* BufB;
+    int (*fillingBufferAFunc)(void*, BYTE*, WORD);
+    int (*fillingBufferBFunc)(void*, BYTE*, WORD);
+    BYTE* BufA;
+    BYTE* BufB;
     WORD Count;
     void* _This;
 } DMAConfigType;
+
+#define DMA0BUF_SIZE 128
+#define DMA1BUF_SIZE 128
+#define DMA2BUF_SIZE 128
+#define DMA3BUF_SIZE 128
+#define DMA4BUF_SIZE 128
+#define DMA5BUF_SIZE 128
 #define DMA6BUF_SIZE 128
 #define DMA7BUF_SIZE 128
+
+
 
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
 int DMAInit(DMA_ID id, WORD Config);
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
-int DMASetBufferSize(DMA_ID id, WORD Count);
+int DMASetDataCount(DMA_ID id, WORD Count);
 //int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB);
 //WORD DMAGetBuffer(WORD Count);
-int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, WORD*, WORD), int (*fillingBufBFunc)(void*, WORD*, WORD));
+int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, BYTE*, WORD), int (*fillingBufBFunc)(void*, BYTE*, WORD));
 int DMAPrepBuffer(DMA_ID id);
 int DMASetState(DMA_ID id, BOOL enabled, BOOL force);
 int DMAGetPPState(DMA_ID id);
@@ -123,14 +136,45 @@ int OCSetCallback(OC_ID id, int (*CallbackFunc)(void));
 int OCSetValue(OC_ID id, WORD ocr, WORD ocrs);
 int OCSetTmr(OC_ID id, OC_TMR_SELECT tmr);
 
-WORD SPI_CreateParams(BYTE SPI_MODE, DWORD DeviceSpeed);
-int SPI1SetParams(WORD Para);
-int SPI1SendByte(WORD SPI_para, BYTE Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SPI1SendWord(WORD SPI_para, WORD Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SPI1SendData(WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SPI1ReceiveByte(WORD SPI_para, BYTE* Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SPI1ReceiveWord(WORD SPI_para, WORD* Data, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SPI1ReceiveData(WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD* DataLen, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+
+
+typedef enum _SPI_ID{
+    ID_SPI1, ID_SPI2, ID_SPI3, ID_SPI4, ID_SPI5, ID_SPI6
+}SPI_ID;
+
+typedef enum _SPI_CLOCK_MODE{
+    MODE0, MODE1, MODE2, MODE3
+}SPI_CLOCK_MODE;
+
+typedef enum _SPI_MODE{
+    SLAVE = 0, MASTER = 1
+}SPI_MODE;
+
+typedef enum _SPI_DATA_SIZE_BIT {
+    SPI_SIZE_BYTE = 0, SPI_SIZE_WORD = 1
+}SPI_DATA_SIZE_BIT;
+
+typedef enum _SPI_INPUT_PHASE{
+    MIDDLE_PHASE = 0, END_PHASE = 1
+}SPI_INPUT_PHASE;
+
+typedef struct _SPIConfig{
+    WORD SPISTAT;
+    WORD SPICON1;
+    //WORD SPICON2; фреймы не поддерживаем
+} SPIConfig;
+
+
+SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD DeviceSpeed,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase);
+int SPIInit(SPI_ID id, SPIConfig Config);
+int SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SelectDevice(BYTE DevId);
+int SPI1SendByte(BYTE Data);
+int SPI1SendWord(WORD Data);
+int SPI1SendData(BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen);
+int SPI1ReceiveByte(BYTE* Data);
+int SPI1ReceiveWord(WORD* Data);
+int SPI1ReceiveData(BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD* DataLen);
 
 int SPI2SendByte();
 #endif //__DEVICE_CONTROL_H_

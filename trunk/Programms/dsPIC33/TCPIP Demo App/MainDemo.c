@@ -357,7 +357,15 @@ int main(void)
     BYTE Data[] = { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
                     0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
     //memset(Cmd,0x12,sizeof(Cmd));
-    SPI1SendData( 0, (BYTE*)&Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
+    SPIConfig Config;
+    volatile int k = 0;
+    k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
+    k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
+    k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
+    k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
+    memcpy(Cmd,Data,sizeof(Data));
+    SPI1PutArray(Cmd, sizeof(Cmd));
+    //SPI1SendData( 0, (BYTE*)&Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
     //BYTE sync_mode=0;
         //BYTE slew=0; 
     // указатель на функцию
