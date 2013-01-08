@@ -166,8 +166,8 @@ typedef struct _SPIConfig{
 
 
 SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD DeviceSpeed,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase);
-int SPIInit(SPI_ID id, SPIConfig Config);
-int SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+int SPIInit();
+BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
 int SelectDevice(BYTE DevId);
 int SPI1SendByte(BYTE Data);
 int SPI1SendWord(WORD Data);

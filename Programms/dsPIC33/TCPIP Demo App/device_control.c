@@ -1717,6 +1717,21 @@ INTERRUPT _OC8Interrupt( void )
                                     @@   @@  @@      @@
                                      @@@@@  @@@@    @@@@
 ************************************************************************************************/
+// 1. Отправка команды
+// 
+// 2. Отправка команды + отправка BYTE
+// 3. Отправка команды + отправка WORD
+// 4. Отправка команды + отправка DWORD
+// 5. Отправка команды + отправка QWORD
+// 6. Отправка команды + отправка BYTE* через DMA
+// 7. Отправка команды + отправка WORD* через DMA
+// 
+// 8.  Отправка команды + получение BYTE
+// 9.  Отправка команды + получение WORD
+// 10. Отправка команды + получение DWORD
+// 11. Отправка команды + получение QWORD
+// 12. Отправка команды + получение BYTE* через DMA
+// 13. Отправка команды + получение WORD* через DMA
 
 typedef enum _Eflag
 {
@@ -1740,25 +1755,64 @@ typedef struct _DEVICE_REG{
     SPIConfig Config;
     int (*DeviceSelect)(void);
     int (*DeviceRelease)(void);
+    BYTE OldIntLevel;
 } DEVICE_REG;
+
+typedef struct _SPI_STATUS 
+{
+    BYTE SPI_INT_LEVEL;
+    BYTE CurrentDevice;
+    int SPIDataCount;
+}SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
 static BYTE DeviceCount = 0;
 
+SPI_STATUS SPIStatus[2];
 
-int SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
+//static int SPIDataCount[2] = [0,0];
+#define SPI1_INT_LEVEL 4
+#define SPI2_INT_LEVEL 5
+//BYTE SPI_INT_LEVEL[] = {
+//    SPI1_INT_LEVEL,
+//    SPI2_INT_LEVEL
+//};
+
+BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
 {
-    SPIDeviceList[DeviceCount].Config = Config;
+    SPIDeviceList[DeviceCount].Config.SPICON1 = Config.SPICON1;
+    SPIDeviceList[DeviceCount].Config.SPISTAT = Config.SPISTAT;
     SPIDeviceList[DeviceCount].DeviceSelect = DeviceSelect;
     SPIDeviceList[DeviceCount].DeviceRelease = DeviceRelease;
     SPIDeviceList[DeviceCount].id = id;
+    SPIDeviceList[DeviceCount].OldIntLevel = 0;
     return DeviceCount++;
 }
 
 //------------------------------------------------------------------------------------------------
-int SPIInit(SPI_ID id, SPIConfig Config)
+int SPIInit()
 //------------------------------------------------------------------------------------------------
 {
+    BYTE SPI_id = 0;
+    BYTE i = 0;
+    for (SPI_id = 0; SPI_id < 2; SPI_id++) {
+        SPIStatus[SPI_id].CurrentDevice = 0;
+        if(SPI_id == ID_SPI1){
+            SPIStatus[SPI_id].SPI_INT_LEVEL = SPI1_INT_LEVEL;
+        } else if(SPI_id == ID_SPI2){
+            SPIStatus[SPI_id].SPI_INT_LEVEL = SPI2_INT_LEVEL;
+        }
+        SPIStatus[SPI_id].SPIDataCount = 0;
+    }
+    DeviceCount = 0;
+    for(i = 0; i < MAX_SPI_DEVICES; i++){
+        SPIDeviceList[i].Config.SPICON1 = 0;
+        SPIDeviceList[i].Config.SPISTAT = 0;
+        SPIDeviceList[i].DeviceSelect = NULL;
+        SPIDeviceList[i].DeviceRelease = NULL;
+        SPIDeviceList[i].id = 0;
+        SPIDeviceList[i].OldIntLevel = 0;
+    }
     return 0;
 }
 //------------------------------------------------------------------------------------------------
@@ -1800,7 +1854,7 @@ int SPIPPCallBack(void* _This, BYTE* DMABuff, WORD BufSize)
                 DataSize = DataStruct->len - DataStruct->pos;
                 DataStruct->Flag = RECEIVE_FINAL_PART;
                 memcpy(&(DataStruct->val[DataStruct->pos]), DMABuff, DataSize);
-                BufferPos += DataSize;                
+                BufferPos += DataSize;
                 DataStruct->pos = 0;
             } else {
                 DataSize = BufSize;
@@ -1823,23 +1877,38 @@ int SPIPPCallBack(void* _This, BYTE* DMABuff, WORD BufSize)
     }
     return 0;
 }
-static int SPI1DataCount = 0;
+
 //------------------------------------------------------------------------------------------------
 int SPI1DataCounter(void)
 //------------------------------------------------------------------------------------------------
 {
-    if(SPI1DataCount>0){
+    if(SPIStatus[ID_SPI1].SPIDataCount>0){
         if(SPI1CON1bits.MODE16){
-            SPI1DataCount-=2;
+            SPIStatus[ID_SPI1].SPIDataCount-=2;
         } else {
-            SPI1DataCount--;
+            SPIStatus[ID_SPI1].SPIDataCount--;
         }
-        
     } else {
-        OCSetMode(ID_OC1, OC_DISABLED);
+        DMASetState(DMA7, FALSE, FALSE);
     }
     return 0;
     
+}
+//------------------------------------------------------------------------------------------------
+int SPI2DataCounter(void)
+//------------------------------------------------------------------------------------------------
+{
+    if(SPIStatus[ID_SPI2].SPIDataCount>0){
+        if(SPI2CON1bits.MODE16){
+            SPIStatus[ID_SPI2].SPIDataCount-=2;
+        } else {
+            SPIStatus[ID_SPI2].SPIDataCount--;
+        }
+    } else {
+        DMASetState(DMA6, FALSE, FALSE);
+    }
+    return 0;
+
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _SPI1Interrupt(void)
@@ -1857,111 +1926,105 @@ INTERRUPT _SPI1Interrupt(void)
 #ifdef _WIN32
     #define WaitForDataReady( void )     
 #endif
-
+// Send BYTE Array to Device
+// Internal!!!
 //------------------------------------------------------------------------------------------------
-WORD SPI1SendArrayDMA(BYTE* val, WORD len)
+WORD SPISendByteArrayDMA(SPI_ID SPI_id, BYTE* val, WORD len)
 //------------------------------------------------------------------------------------------------
 {
     SPIData DataToSend;
     WORD BufA;
     WORD BufB;
     WORD Config;
-    DMA_DATA_SIZE_BIT DataSize;
-    if(SPI1CON1bits.MODE16)
-        DataSize = SIZE_WORD;
-    else
-        DataSize = SIZE_BYTE;
+    WORD DMABuffSize;
+    DMA_ID DMA_id;
 
-    WORD DMABuffSize = DMA7BUF_SIZE;
-    if(len <= DMA7BUF_SIZE){
-        Config = DMACreateConfig(DataSize, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
-        DMABuffSize = len;
-    } else if(len <= DMA7BUF_SIZE*2){
-        DMABuffSize = len / 2;
-        Config = DMACreateConfig(DataSize, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
-    } else {
+    if(SPI_id == ID_SPI1) {
         DMABuffSize = DMA7BUF_SIZE;
-        Config = DMACreateConfig(DataSize, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        DMA_id = DMA7;
+    } else if(SPI_id == ID_SPI2){
+        DMABuffSize = DMA6BUF_SIZE;
+        DMA_id = DMA6;
+    } else return 0;
+
+    if(len <= DMABuffSize*2){ // данные меньше 256 байт отправляем одним куском
+        DMABuffSize = len;
+        Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+    } else {
+        Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
     }
 
     DataToSend.val = val;
     DataToSend.len = len;
     DataToSend.pos = 0;
     DataToSend.Flag = SEND_DATA;
-    SPI1DataCount = len;
-    DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
-    if(DataSize == SIZE_WORD){
-        DMASetDataCount(DMA7, DMABuffSize/2);
-    } else {
-        DMASetDataCount(DMA7, DMABuffSize);
+    SPIStatus[SPI_id].SPIDataCount = len;
+    DMAInit(DMA_id, Config);
+
+    if(SPI_id == ID_SPI1){
+        DMASelectDevice(DMA_id, IRQ_SPI1, (int)&SPI1BUF);
+    } else if(SPI_id == ID_SPI2){
+        DMASelectDevice(DMA_id, IRQ_SPI2, (int)&SPI2BUF);
     }
+    DMASetDataCount(DMA_id, DMABuffSize);
     
-    DMASetCallback(DMA7, (void*)&DataToSend, SPIPPCallBack, SPIPPCallBack);
-    DMASetInt(DMA7, 5, TRUE);
-    DMAPrepBuffer(DMA7);
+    DMASetCallback(DMA_id, (void*)&DataToSend, SPIPPCallBack, SPIPPCallBack);
+    DMASetInt(DMA_id, 5, TRUE);
+    DMAPrepBuffer(DMA_id);
     // отправка данных
     WaitForDataReady();
-    DMASetState(DMA7, TRUE, TRUE);
-    
-    while(SPI1DataCount>0){
-        Nop();
-        Nop();
-    }
+    DMASetState(DMA_id, TRUE, TRUE);
+    // ожидаем передачи данных в буфер DMA
+    while(DataToSend.Flag < SEND_FINAL_PART);
     return len;
 }
 //------------------------------------------------------------------------------------------------
-WORD SPI1ReceiveArrayDMA(BYTE* val, WORD len)
+WORD SPIReceiveByteArrayDMA(SPI_ID SPI_id, BYTE* val, WORD len)
 //------------------------------------------------------------------------------------------------
 {
     SPIData DataToSend;
     WORD BufA;
     WORD BufB;
     WORD Config;
-    DMA_DATA_SIZE_BIT DataSize;
-    
-    if(SPI1CON1bits.MODE16)
-        DataSize = SIZE_WORD;
-    else
-        DataSize = SIZE_BYTE;
+    WORD DMABuffSize;
+    DMA_ID DMA_id;
 
-    WORD DMABuffSize = DMA7BUF_SIZE;
+    if(SPI_id == ID_SPI1) {
+        DMABuffSize = DMA7BUF_SIZE;
+        DMA_id = DMA7;
+    } else if(SPI_id == ID_SPI2){
+        DMABuffSize = DMA6BUF_SIZE;
+        DMA_id = DMA6;
+    } else return 0;
 
-    if(len <= DMA7BUF_SIZE){
-        Config = DMACreateConfig(DataSize, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+    if(len <= DMABuffSize*2){ // данные меньше 256 байт получаем одним куском
         DMABuffSize = len;
-    } else if(len <= DMA7BUF_SIZE*2){
-        DMABuffSize = DMA7BUF_SIZE;
-        Config = DMACreateConfig(DataSize, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
+        Config = DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     } else {
-        DMABuffSize = DMA7BUF_SIZE;
-        Config = DMACreateConfig(DataSize, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
+        Config = DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
     }
 
     DataToSend.val = val;
     DataToSend.len = len;
     DataToSend.pos = 0;
     DataToSend.Flag = RECEIVE_DATA;
-    SPI1DataCount = len;
-    DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
-    if(DataSize == SIZE_WORD){
-        DMASetDataCount(DMA7, DMABuffSize/2);
-    } else {
-        DMASetDataCount(DMA7, DMABuffSize);
+    SPIStatus[SPI_id].SPIDataCount = len;
+    DMAInit(DMA_id, Config);
+    if(SPI_id == ID_SPI1){
+        DMASelectDevice(DMA_id, IRQ_SPI1, (int)&SPI1BUF);
+    } else if(SPI_id == ID_SPI2){
+        DMASelectDevice(DMA_id, IRQ_SPI2, (int)&SPI2BUF);
     }
+    DMASetDataCount(DMA_id, DMABuffSize);
 
-    DMASetCallback(DMA7, (void*)&DataToSend, SPIPPCallBack, SPIPPCallBack);
-    DMASetInt(DMA7, 5, TRUE);
-    DMAPrepBuffer(DMA7);
+    DMASetCallback(DMA_id, (void*)&DataToSend, SPIPPCallBack, SPIPPCallBack);
+    DMASetInt(DMA_id, 5, TRUE); //TODO: уровень обработчика DMA
+    DMAPrepBuffer(DMA_id);
     // получение данных
     WaitForDataReady();
-    DMASetState(DMA7, TRUE, TRUE);
+    DMASetState(DMA_id, TRUE, TRUE);
 
-    while(SPI1DataCount>0){
-        Nop();
-        Nop();
-    }
+    while(DataToSend.Flag < RECEIVE_FINAL_PART);
     return len;
 }
 
@@ -2018,7 +2081,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
 // отправка данных по SPI
 // регулярная отправка без блокировок и выбора устройства
 //------------------------------------------------------------------------------------------------
-WORD SPI1PutArray(BYTE *val, WORD len)
+WORD SPI1SendArray(BYTE *val, WORD len)
 //------------------------------------------------------------------------------------------------
 {    
     volatile BYTE Dummy;
@@ -2075,6 +2138,52 @@ SPIConfig SPI_CreateParams( SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD Devic
     return Config;
 }
 //________________________________________________________________________________________________
+// 
+// передача данных с помощью DMA
+// 1. Определить порт SPI
+// 2. Блокирование прерываний уровня порта SPI
+// 3. Проверка счетчика SPIxDataCount. Ожидание, если не 0
+// 4. настройка порта SPI
+// 5. инициализация DMA (передача функций Select и Release и т.д.)
+// 6. запуск передачи
+// 7. ожидание передачи всех данных в буфер DMA
+// 8. снятие блокировки прерывания выполняется счетчиком SPIxDataCounter()
+// 9. выход.
+
+WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen )
+{
+    // 1. Определить порт SPI
+    SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
+    WORD DataSent = 0;
+    // 2. Блокирование прерываний уровня порта SPI
+    SPIDeviceList[DeviceHandle].OldIntLevel = SAVE_INT_LOCK;
+    SET_INT_LOCK(SPIStatus[SPI_id].SPI_INT_LEVEL);
+    // 3. Проверка счетчика SPIxDataCount. Ожидание, если не 0
+    while (SPIStatus[SPI_id].SPIDataCount > 0);
+    // 4. настройка порта SPI
+    switch(SPI_id){
+        case ID_SPI1:
+            SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
+            SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
+            break;
+        case ID_SPI2:
+            SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
+            SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
+            break;
+        default:
+            SET_INT_LOCK(SPIDeviceList[DeviceHandle].OldIntLevel);
+            return;
+    }
+    // 5. отправка команды
+    SPIDeviceList[DeviceHandle].DeviceSelect();
+    SPI1SendArray(Cmd, CmdLen);
+    // 6. Отправка данных
+    DataSent = SPISendByteArrayDMA(SPI_id, Data, DataLen);
+    // 8. снятие блокировки прерывания выполняется счетчиком SPIxDataCounter()
+    // 9. выход.
+    return DataSent;
+}
+int SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* val, WORD len );
 
 /*
 int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* val, WORD len, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )

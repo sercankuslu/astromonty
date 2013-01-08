@@ -184,7 +184,7 @@ static BYTE ENCRevID;
  *****************************************************************************/
 void MACInit(void)
 {
-    BYTE i;
+    volatile BYTE i;
     PHYREG w;
     // Set up the SPI module on the PIC for communications with the ENC28J60
     ENC_CS_IO = 1;
@@ -212,8 +212,9 @@ void MACInit(void)
 #elif defined(__C30__)
     ENC_SPISTAT = 0;        // clear SPI
     #if defined(__PIC24H__) || defined(__dsPIC33F__)
-        ENC_SPICON1 = 0x0F;     // 1:1 primary prescale, 5:1 secondary prescale (8MHz  @ 40MIPS)
+    //    ENC_SPICON1 = 0x0F;     // 1:1 primary prescale, 5:1 secondary prescale (8MHz  @ 40MIPS)
     //    ENC_SPICON1 = 0x1E;   // 4:1 primary prescale, 1:1 secondary prescale (10MHz @ 40MIPS, Doesn't work.  CLKRDY is incorrectly reported as being clear.  Problem caused by dsPIC33/PIC24H ES silicon bug.)
+        ENC_SPICON1 = 0x13;   // 4:1 primary prescale, 1:1 secondary prescale (10MHz @ 40MIPS, Doesn't work.  CLKRDY is incorrectly reported as being clear.  Problem caused by dsPIC33/PIC24H ES silicon bug.)
     #elif defined(__PIC24F__) || defined(__PIC24FK__)
         ENC_SPICON1 = 0x1B;     // 1:1 primary prescale, 2:1 secondary prescale (8MHz  @ 16MIPS)
     #else   // dsPIC30F
@@ -241,7 +242,7 @@ void MACInit(void)
     do {        
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
-    
+    GetRegs();
     //do {
     //    w = ReadPHYReg(PHID1);
     //} while (w. == 0x0083); // Microchip UID
@@ -369,6 +370,7 @@ void MACInit(void)
 
     // Enable packet reception
     BFSReg(ECON1, ECON1_RXEN);
+    GetRegs();
 }//end MACInit
 
 
@@ -1651,7 +1653,7 @@ static void SendSystemReset(void)
 
     // Give some opportunity for the regulator to reach normal regulation and
     // have all clocks running
-    DelayMs(1);
+    DelayMs(2);
 
     // Execute the System Reset command
     ENC_CS_IO = 0;
@@ -1662,7 +1664,7 @@ static void SendSystemReset(void)
     ENC_CS_IO = 1;
 
     // Wait for the oscillator start up timer and PHY to become ready
-    DelayMs(1);
+    DelayMs(2);
 }//end SendSystemReset
 
 
@@ -2246,61 +2248,61 @@ void SetRXHashTableEntry(MAC_ADDR DestMACAddr)
 }
 #endif
 
-//// GetRegs is a function for debugging purposes only.  It will read all
-//// registers and store them in the PIC's RAM so they can be viewed with
-//// the ICD2.
-//REG Regs[4][32];
-//void GetRegs(void)
-//{
-//  BYTE i;
-//
-//  BankSel(0x000);
-//  for(i=0; i<0x1A; i++)
-//      Regs[0][i] = ReadETHReg(i);
-//  for(i=0x1B; i<32; i++)
-//      Regs[0][i] = ReadETHReg(i);
-//
-//  BankSel(0x100);
-//  for(i=0; i<0x1A; i++)
-//      Regs[1][i] = ReadETHReg(i);
-//  for(i=0x1B; i<32; i++)
-//      Regs[1][i] = ReadETHReg(i);
-//
-//  BankSel(0x200);
-//  for(i=0; i<5; i++)
-//      Regs[2][i] = ReadMACReg(i);
-//  Regs[2][5] = ReadETHReg(i);
-//  for(i=6; i<0x0F; i++)
-//      Regs[2][i] = ReadMACReg(i);
-//  Regs[2][0x0F] = ReadETHReg(i);
-//  for(i=0x10; i<0x13; i++)
-//      Regs[2][i] = ReadMACReg(i);
-//  Regs[2][0x13] = ReadETHReg(i);
-//  for(i=0x14; i<0x1A; i++)
-//      Regs[2][i] = ReadMACReg(i);
-//  for(i=0x1B; i<32; i++)
-//      Regs[2][i] = ReadETHReg(i);
-//
-//  BankSel(0x300);
-//  for(i=0; i<0x06; i++)
-//      Regs[3][i] = ReadMACReg(i);
-//  for(i=6; i<0x0A; i++)
-//      Regs[3][i] = ReadETHReg(i);
-//  Regs[3][0x0A] = ReadMACReg(i);
-//  for(i=0x0B; i<0x1A; i++)
-//      Regs[3][i] = ReadETHReg(i);
-//  for(i=0x1B; i<32; i++)
-//      Regs[3][i] = ReadETHReg(i);
-//
-//  Regs[0][0x1A].Val = 0;
-//  Regs[1][0x1A].Val = 0;
-//  Regs[2][0x1A].Val = 0;
-//  Regs[3][0x1A].Val = 0;
-//
-//  BankSel(ERDPTL);
-//
-//  return;
-//}
+// GetRegs is a function for debugging purposes only.  It will read all
+// registers and store them in the PIC's RAM so they can be viewed with
+// the ICD2.
+REG Regs[4][32];
+void GetRegs(void)
+{
+  BYTE i;
+
+  BankSel(0x000);
+  for(i=0; i<0x1A; i++)
+      Regs[0][i] = ReadETHReg(i);
+  for(i=0x1B; i<32; i++)
+      Regs[0][i] = ReadETHReg(i);
+
+  BankSel(0x100);
+  for(i=0; i<0x1A; i++)
+      Regs[1][i] = ReadETHReg(i);
+  for(i=0x1B; i<32; i++)
+      Regs[1][i] = ReadETHReg(i);
+
+  BankSel(0x200);
+  for(i=0; i<5; i++)
+      Regs[2][i] = ReadMACReg(i);
+  Regs[2][5] = ReadETHReg(i);
+  for(i=6; i<0x0F; i++)
+      Regs[2][i] = ReadMACReg(i);
+  Regs[2][0x0F] = ReadETHReg(i);
+  for(i=0x10; i<0x13; i++)
+      Regs[2][i] = ReadMACReg(i);
+  Regs[2][0x13] = ReadETHReg(i);
+  for(i=0x14; i<0x1A; i++)
+      Regs[2][i] = ReadMACReg(i);
+  for(i=0x1B; i<32; i++)
+      Regs[2][i] = ReadETHReg(i);
+
+  BankSel(0x300);
+  for(i=0; i<0x06; i++)
+      Regs[3][i] = ReadMACReg(i);
+  for(i=6; i<0x0A; i++)
+      Regs[3][i] = ReadETHReg(i);
+  Regs[3][0x0A] = ReadMACReg(i);
+  for(i=0x0B; i<0x1A; i++)
+      Regs[3][i] = ReadETHReg(i);
+  for(i=0x1B; i<32; i++)
+      Regs[3][i] = ReadETHReg(i);
+
+  Regs[0][0x1A].Val = 0;
+  Regs[1][0x1A].Val = 0;
+  Regs[2][0x1A].Val = 0;
+  Regs[3][0x1A].Val = 0;
+
+  BankSel(ERDPTL);
+
+  return;
+}
 
 //// Get8KBMem is a function intended for debugging purposes.  It will read all
 //// Ethernet RAM and output it in hex out the UART
