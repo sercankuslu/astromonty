@@ -1733,6 +1733,8 @@ INTERRUPT _OC8Interrupt( void )
 // 12. Отправка команды + получение BYTE* через DMA
 // 13. Отправка команды + получение WORD* через DMA
 
+
+
 typedef enum _Eflag
 {
     SEND_DATA = 0,
@@ -1760,9 +1762,9 @@ typedef struct _DEVICE_REG{
 
 typedef struct _SPI_STATUS 
 {
-    BYTE SPI_INT_LEVEL;
     BYTE CurrentDevice;
     int SPIDataCount;
+    BYTE Busy;
 }SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
@@ -1770,13 +1772,18 @@ static BYTE DeviceCount = 0;
 
 SPI_STATUS SPIStatus[2];
 
-//static int SPIDataCount[2] = [0,0];
-#define SPI1_INT_LEVEL 4
-#define SPI2_INT_LEVEL 5
-//BYTE SPI_INT_LEVEL[] = {
-//    SPI1_INT_LEVEL,
-//    SPI2_INT_LEVEL
-//};
+void SPIDeviceLock(SPI_ID id)
+{
+    while(SPIStatus[id].Busy){
+        Nop();
+        Nop();
+    };
+    SPIStatus[id].Busy = 1;
+}
+void SPIDeviceRelease(SPI_ID id)
+{
+    SPIStatus[id].Busy = 0;
+}
 
 BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
 {
@@ -1797,13 +1804,10 @@ int SPIInit()
     BYTE i = 0;
     for (SPI_id = 0; SPI_id < 2; SPI_id++) {
         SPIStatus[SPI_id].CurrentDevice = 0;
-        if(SPI_id == ID_SPI1){
-            SPIStatus[SPI_id].SPI_INT_LEVEL = SPI1_INT_LEVEL;
-        } else if(SPI_id == ID_SPI2){
-            SPIStatus[SPI_id].SPI_INT_LEVEL = SPI2_INT_LEVEL;
-        }
         SPIStatus[SPI_id].SPIDataCount = 0;
+        SPIStatus[SPI_id].Busy = 0;
     }
+
     DeviceCount = 0;
     for(i = 0; i < MAX_SPI_DEVICES; i++){
         SPIDeviceList[i].Config.SPICON1 = 0;
@@ -1890,6 +1894,7 @@ int SPI1DataCounter(void)
         }
     } else {
         DMASetState(DMA7, FALSE, FALSE);
+        SPIDeviceRelease(ID_SPI1);
     }
     return 0;
     
@@ -1906,6 +1911,7 @@ int SPI2DataCounter(void)
         }
     } else {
         DMASetState(DMA6, FALSE, FALSE);
+        SPIDeviceRelease(ID_SPI2);
     }
     return 0;
 
@@ -2155,11 +2161,8 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     // 1. Определить порт SPI
     SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
     WORD DataSent = 0;
-    // 2. Блокирование прерываний уровня порта SPI
-    SPIDeviceList[DeviceHandle].OldIntLevel = SAVE_INT_LOCK;
-    SET_INT_LOCK(SPIStatus[SPI_id].SPI_INT_LEVEL);
-    // 3. Проверка счетчика SPIxDataCount. Ожидание, если не 0
-    while (SPIStatus[SPI_id].SPIDataCount > 0);
+    // блокирование устройства
+    SPIDeviceLock(SPI_id);
     // 4. настройка порта SPI
     switch(SPI_id){
         case ID_SPI1:
