@@ -91,12 +91,12 @@ typedef struct _DMAConfigType{
 
 #define DMA0BUF_SIZE 256
 #define DMA1BUF_SIZE 256
-#define DMA2BUF_SIZE 0
-#define DMA3BUF_SIZE 0
-#define DMA4BUF_SIZE 0
-#define DMA5BUF_SIZE 0
+#define DMA2BUF_SIZE 32
+#define DMA3BUF_SIZE 32
+#define DMA4BUF_SIZE 32
+#define DMA5BUF_SIZE 32
 #define DMA6BUF_SIZE 256
-#define DMA7BUF_SIZE 256
+#define DMA7BUF_SIZE 128
 
 
 
@@ -169,13 +169,6 @@ typedef struct _SPIConfig{
 SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD DeviceSpeed,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase);
 int SPIInit();
 BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-int SelectDevice(BYTE DevId);
-int SPI1SendByte(BYTE Data);
-int SPI1SendWord(WORD Data);
-int SPI1SendData(BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen);
-int SPI1ReceiveByte(BYTE* Data);
-int SPI1ReceiveWord(WORD* Data);
-int SPI1ReceiveData(BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD* DataLen);
-
-int SPI2SendByte();
+WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
+WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
 #endif //__DEVICE_CONTROL_H_

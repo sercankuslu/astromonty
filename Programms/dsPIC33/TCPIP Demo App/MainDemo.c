@@ -320,14 +320,16 @@ void FillBufSPI(void* _This, WORD * Buf, WORD Count)
         T++;
     }
 }
+#define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
+#define SPIFLASH_CS_IO			(LATFbits.LATF5)
 int ENCSelect()
 {
-    LATFbits.LATF12 = 0;
+    SPIFLASH_CS_IO = 0;
     return 0;
 }
 int ENCRelease()
 {
-    LATFbits.LATF12 = 1;
+    SPIFLASH_CS_IO = 1;
     return 0;
 }
 
@@ -349,17 +351,26 @@ int main(void)
     //WORD Count = 10;
     //DMA_ID id = 6;
     //(mas[id])(Count);
-    //WORD Cmd[135];
-    //int i = 0;
-    //for(i = 0; i < 135; i++){
-	//    Cmd[i] = i;
-    //}
-    //BYTE Data[] = { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-    //                0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
-    //memset(Cmd,0x12,sizeof(Cmd));
-    //SPIConfig Config;
-    //volatile int k = 0;
-    //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
+    BYTE Cmd[] = {0x03,0,0,0};
+    
+    
+    BYTE Data[32]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+                  //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
+    SPIConfig Config;
+    BYTE EncHandle = 0;
+    
+    SPIFLASH_CS_TRIS = 1;
+    SPIFLASH_SCK_TRIS = 0;  // Set SCK pin as an output
+    SPIFLASH_SDI_TRIS = 1;  // Make sure SDI pin is an input
+    SPIFLASH_SDO_TRIS = 0;  // Set SDO pin as an output
+    
+    SPIInit();
+    Config.SPICON1 = 0x000F | 0x0120; //SPI_CreateParams( MASTER, MODE0, 0,IDLE_DISABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
+    Config.SPISTAT = 0;
+    EncHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
+    //SPISendData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
+    SPIReceiveData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
+    while(1);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
