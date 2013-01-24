@@ -101,16 +101,16 @@ void DisplayDraw(BYTE addr)
 
     LCDSetXY(addr,0,0);	
 
-    for(i=0;i<256;i+=BLOCK_SIZE){			
+    for(i=0;i<256;i+=BLOCK_SIZE){
         LCDSendData(addr, &DisplayBuffer0[i],BLOCK_SIZE);
     }   
-    for(i=0;i<256;i+=64){			
+    for(i=0;i<256;i+=64){
         LCDSendData(addr, &DisplayBuffer1[i],BLOCK_SIZE);
     }   
-    for(i=0;i<256;i+=64){			
+    for(i=0;i<256;i+=64){
         LCDSendData(addr, &DisplayBuffer2[i],BLOCK_SIZE);
     }   
-    for(i=0;i<256;i+=64){			
+    for(i=0;i<256;i+=64){
         LCDSendData(addr, &DisplayBuffer3[i],BLOCK_SIZE);
     }   
     LCDSendData(addr, DisplayBuffer4, 40);

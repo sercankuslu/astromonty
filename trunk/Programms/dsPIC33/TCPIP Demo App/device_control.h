@@ -89,19 +89,20 @@ typedef struct _DMAConfigType{
     void* _This;
 } DMAConfigType;
 
-#define DMA0BUF_SIZE 128
-#define DMA1BUF_SIZE 128
-#define DMA2BUF_SIZE 128
-#define DMA3BUF_SIZE 128
-#define DMA4BUF_SIZE 128
-#define DMA5BUF_SIZE 128
-#define DMA6BUF_SIZE 128
-#define DMA7BUF_SIZE 128
+#define DMA0BUF_SIZE 256
+#define DMA1BUF_SIZE 256
+#define DMA2BUF_SIZE 0
+#define DMA3BUF_SIZE 0
+#define DMA4BUF_SIZE 0
+#define DMA5BUF_SIZE 0
+#define DMA6BUF_SIZE 256
+#define DMA7BUF_SIZE 256
 
 
 
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
 int DMAInit(DMA_ID id, WORD Config);
+int DMASetConfig(DMA_ID id, WORD Config);
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
 int DMASetDataCount(DMA_ID id, WORD Count);
 //int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB);
