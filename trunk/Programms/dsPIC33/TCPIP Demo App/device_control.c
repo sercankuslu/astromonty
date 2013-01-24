@@ -1777,13 +1777,6 @@ typedef enum _Eflag
     RECEIVE_END
 } EFlag;
 
-typedef struct _SPIData{
-    WORD len;
-    WORD pos;
-    BYTE* val;
-    EFlag Flag;
-} SPIData;
-
 typedef struct _DEVICE_REG{
     SPI_ID id;
     SPIConfig Config;
@@ -1794,9 +1787,9 @@ typedef struct _DEVICE_REG{
 
 typedef struct _SPI_STATUS 
 {
-    BYTE CurrentDevice;
-    int SPIDataCount;
-    BYTE Busy;
+    BYTE CurrentDevice;     
+    int SPIDataCount;       // количество получаемых данных
+    BYTE Busy;              // флаг зан€тости устройства
     BYTE LastIntLevel;
     EFlag Flag;
 }SPI_STATUS;
@@ -1841,6 +1834,7 @@ void SPILock(SPI_ID id)
 }
 void SPIRelease(SPI_ID id)
 {
+    WaitForDataReady( void );
     SPIStatus[id].Busy = 0;
     // выход из критической секции
     SRbits.IPL = SPIStatus[id].LastIntLevel;
@@ -2163,82 +2157,3 @@ int SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD 
     return DataLen;
 }
 
-/*
-int SPI1SendData( WORD SPI_para, BYTE* Cmd, WORD CmdLen, BYTE* val, WORD len, int (*DeviceSelect)(void), int (*DeviceRelease)(void) )
-{
-    BYTE TmpInt;
-    // установка текущего приоритета CPU на 4
-    TmpInt = SAVE_INT_LOCK;
-    SPIData DataStruct;
-    WORD BufA;
-    WORD BufB;
-    WORD Config;
-    if(len + CmdLen <= 128){
-        Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
-    } else {
-        if(len + CmdLen <= 256){
-            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT_PP);
-        } else {
-            Config = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-        }
-    }
-    if(len & 0x0001){
-        // ≈сли длинна нечетна€, то отправим 1 байт отдельно в конце
-        len -= 1;
-    }
-    DataStruct.Data1 = Cmd;
-    DataStruct.Data1Len = CmdLen;
-    DataStruct.Data2 = val;
-    DataStruct.Data2Len = len;
-    DataStruct.pos = 0;
-    DataStruct.Flag = 0;
-    SPI1DataCount = CmdLen + len;
-    DMAInit(DMA7, Config);
-    DMASelectDevice(DMA7, IRQ_TMR2, (int)&OC1R);
-    DMASetDataCount(DMA7, 64);
-
-    DMASetCallback(DMA7, (void*)&DataStruct, SPIPPCallBack, SPIPPCallBack);
-    DMASetInt(DMA7, 5, TRUE);
-    DMAPrepBuffer(DMA7);
-    SET_INT_LOCK(4);
-    // выбор устройства
-    DeviceSelect();
-    
-//    //Setup for SPI1 Master mode:
-//    // Interrupt Controller Settings
-//    IFS0bits.SPI1IF = 0;
-//    IEC0bits.SPI1IE = 1;
-//    IPC2bits.SPI1IP = 5;
-//    SPI1CON1 = 0x0F;
-//    SPI1CON2 = 0;
-//    SPI1CON1bits.CKE = 1;
-//    SPI1CON1bits.MSTEN = 1;
-//    SPI1STATbits.SPIEN = 1;
-// Initialize Output Compare Module in Contionous pulse mode
-    OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
-    //OCSetValue(ID_OC1, 100, 125);
-    OCSetInt(ID_OC1, 6, TRUE);
-    OCSetCallback(ID_OC1, SPI1DataCounter);
-    OCSetMode(ID_OC1, TOGGLE);
-// Initialize Timer2
-    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-    TimerSetValue(TIMER2, 0, 0x0100);
-    TimerSetCallback(TIMER2, NULL);
-    TimerSetInt(TIMER2, 5, FALSE);    
-    
-    // отправка команды
-    // отправка данных
-    ClearSPIDoneFlag();
-    DMASetState(DMA7, TRUE, TRUE);
-    T2CONbits.TON = 1;
-    while(SPI1DataCount>0){
-        Nop();
-        Nop();
-    }
-    // освобождение устройства
-    DeviceRelease();
-    // восстановление приоритета CPU
-    RESTORE_INT_LOCK(TmpInt);
-    return 0;
-}
-*/
