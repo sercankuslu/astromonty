@@ -512,7 +512,7 @@ void Calc()
     char Str[] = "All good!";
     BYTE * Str2 = NULL;
     
-
+    WORD Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     // //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
