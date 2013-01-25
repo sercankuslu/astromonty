@@ -359,20 +359,16 @@ int main(void)
                   //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
     SPIConfig Config;
     BYTE EncHandle = 0;
-    
-    SPIFLASH_CS_TRIS = 1;
-    SPIFLASH_CS_IO = 1;
-    SPIFLASH_SCK_TRIS = 0;  // Set SCK pin as an output
-    SPIFLASH_SDI_TRIS = 1;  // Make sure SDI pin is an input
-    SPIFLASH_SDO_TRIS = 0;  // Set SDO pin as an output
-    //SPIFlashInit();
+        
     SPIInit();
-    Config.SPICON1 = 0x000F | 0x0120; //SPI_CreateParams( MASTER, MODE0, 0,IDLE_DISABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
-    Config.SPISTAT = 0;
+    SPIFlashInit();
+    SPIFlashReadArray(0x40000, Data, sizeof(Data));
+    //Config.SPICON1 = 0x000F | 0x0120; //SPI_CreateParams( MASTER, MODE0, 0,IDLE_DISABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
+    //Config.SPISTAT = 0;
     
-    EncHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
+    //EncHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
     //SPISendData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
-    SPIReceiveData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
+    //SPIReceiveData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
     
     while(1);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);

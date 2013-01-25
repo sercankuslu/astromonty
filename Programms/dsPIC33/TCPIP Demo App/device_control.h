@@ -162,7 +162,7 @@ typedef enum _SPI_INPUT_PHASE{
 typedef struct _SPIConfig{
     WORD SPISTAT;
     WORD SPICON1;
-    //WORD SPICON2; фреймы не поддерживаем
+    WORD SPICON2; //фреймы не поддерживаем
 } SPIConfig;
 
 
@@ -171,4 +171,5 @@ int SPIInit();
 BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
 WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
 WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
+WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen);
 #endif //__DEVICE_CONTROL_H_
