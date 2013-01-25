@@ -1797,15 +1797,28 @@ typedef struct _SPI_STATUS
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
 static BYTE DeviceCount = 0;
 
-SPI_STATUS SPIStatus[2];
+volatile SPI_STATUS SPIStatus[2];
 #if defined(__C30__)
-static inline __attribute__((__always_inline__)) void WaitForDataReady( void )
+static void WaitForDataReadySPI1( void )
 {
-    while ((SPI1STATbits.SPITBF == 1) || (SPI1STATbits.SPIRBF == 0));
+    if(SPI1STATbits.SPIEN)
+    while ((SPI1STATbits.SPITBF) || (!SPI1STATbits.SPIRBF)){
+        Nop();
+        Nop();
+    };
+}
+static void WaitForDataReadySPI2( void )
+{
+    if(SPI2STATbits.SPIEN)
+    while ((SPI2STATbits.SPITBF) || (!SPI2STATbits.SPIRBF)){
+        Nop();
+        Nop();
+    };
 }
 #endif
 #ifdef _WIN32
-#define WaitForDataReady( void )     
+#define WaitForDataReadySPI1( void )     
+#define WaitForDataReadySPI2( void )     
 #endif
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize);
 
@@ -1834,7 +1847,10 @@ void SPILock(SPI_ID id)
 }
 void SPIRelease(SPI_ID id)
 {
-    WaitForDataReady();
+    if(id == ID_SPI1)
+        WaitForDataReadySPI1();
+    else
+        WaitForDataReadySPI2();
     SPIStatus[id].Busy = 0;
     // выход из критической секции
     SRbits.IPL = SPIStatus[id].LastIntLevel;
@@ -1849,6 +1865,7 @@ BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), i
     SPIDeviceList[DeviceCount].DeviceRelease = DeviceRelease;
     SPIDeviceList[DeviceCount].id = id;
     SPIDeviceList[DeviceCount].OldIntLevel = 0;
+    DeviceRelease();
     return DeviceCount++;
 }
 
@@ -1876,12 +1893,18 @@ int SPIInit()
     DMAInit(DMA7, 0);
     DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
     DMASetCallback(DMA7, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA7, 5, TRUE);
+    DMASetInt(DMA7, 5, 1);
 
     DMAInit(DMA6, 0);
     DMASelectDevice(DMA6, IRQ_SPI2, (int)&SPI2BUF);
     DMASetCallback(DMA6, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA6, 5, TRUE);
+    DMASetInt(DMA6, 5, 1);
+    IPC8bits.SPI2IP = 6;
+    IFS2bits.SPI2IF = 0;
+    IFS2bits.SPI2EIF = 0;
+    IEC2bits.SPI2IE = 1;
+    IEC2bits.SPI2EIE = 0;
+
 
     return 0;
 }
@@ -1889,12 +1912,20 @@ int SPIInit()
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
 //------------------------------------------------------------------------------------------------
 {
+    volatile BYTE Dummy;
     SPI_STATUS* Status = (SPI_STATUS*)_This;
     BYTE DevHandle = Status->CurrentDevice;
     SPI_ID SPI_id = SPIDeviceList[DevHandle].id;
     switch(Status->Flag){
         case SEND_DATA:
-            WaitForDataReady();
+            switch(SPI_id){
+                case ID_SPI1:
+                    WaitForDataReadySPI1();
+                    break;
+                case ID_SPI2:
+                    WaitForDataReadySPI2();
+                    break;
+            }
             SPIDeviceList[DevHandle].DeviceRelease();
             SPIRelease(SPI_id);
             break;
@@ -1907,9 +1938,10 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
                     Status->Flag = RECEIVE_CONTINUE;
                 break;
                 case ID_SPI2:
+                    DMASetState(DMA6, 0, 0);
                     DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NULL_DATA_TO_DEVICE, REG_INDIRECT_W_POST_INC, ONE_SHOT));
                     DMASetDataCount(DMA6, Status->SPIDataCount);
-                    DMASetState(DMA6, TRUE, FALSE);
+                    DMASetState(DMA6, 1, 1);
                     Status->Flag = RECEIVE_CONTINUE;
                     break;
             }
@@ -1934,7 +1966,11 @@ INTERRUPT _SPI1Interrupt(void)
 //------------------------------------------------------------------------------------------------
 INTERRUPT _SPI2Interrupt(void)
 //------------------------------------------------------------------------------------------------
-{    
+{   
+    volatile BYTE Dummy;
+    if(SPIStatus[ID_SPI2].Flag == RECEIVE_DATA){
+        Dummy = SPI2BUF;
+    }
     IFS2bits.SPI2IF = 0;
 }
 //------------------------------------------------------------------------------------------------
@@ -1946,7 +1982,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
 {
     volatile BYTE Dummy;
     BYTE MODE16 = SPI1CON1bits.MODE16;
-    WaitForDataReady();
+    WaitForDataReadySPI1();
     Dummy = SPI1BUF;
     if(!val) return 0;
     if(MODE16) {
@@ -1954,7 +1990,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
         // Read the data, 2 bytes at a time, for as long as possible
         SPI1BUF = 0x0000;    // Send a dummy WORD to generate 32 clocks
         while(len >= 2) {
-            WaitForDataReady();      // Wait until WORD is transmitted
+            WaitForDataReadySPI1();      // Wait until WORD is transmitted
             wv.Val = SPI1BUF;
             len -= 2;
             if(len >= 2)
@@ -1972,7 +2008,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
         }
         SPI1BUF = 0x00;    // Send a dummy BYTE to generate 16 clocks
         while( len ) {
-            WaitForDataReady();      // Wait until BYTE is transmitted
+            WaitForDataReadySPI1();      // Wait until BYTE is transmitted
             *(val++) = SPI1BUF;            
             len--;
             if(len >= 1)
@@ -2002,11 +2038,11 @@ WORD SPI1SendArray(BYTE *val, WORD len)
             wv.v[1] = *val++;
             wv.v[0] = *val++;
             len -= 2;            
-            WaitForDataReady();      // Wait until WORD is transmitted
+            WaitForDataReadySPI1();      // Wait until WORD is transmitted
             Dummy = SPI1BUF;
             SPI1BUF = wv.Val;       // Start sending the WORD
         };
-        WaitForDataReady();      // Wait until WORD is transmitted
+        WaitForDataReadySPI1();      // Wait until WORD is transmitted
         Dummy = SPI1BUF;
     }
     // Send the data, one byte at a time
@@ -2018,11 +2054,11 @@ WORD SPI1SendArray(BYTE *val, WORD len)
         }
         while(len) {
             len--;                  
-            WaitForDataReady();      // Wait until byte is transmitted
+            WaitForDataReadySPI1();      // Wait until byte is transmitted
             Dummy = SPI1BUF;
             SPI1BUF = *val++;       // Start sending the byte
         };
-        WaitForDataReady();      // Wait until WORD is transmitted
+        WaitForDataReadySPI1();      // Wait until WORD is transmitted
         Dummy = SPI1BUF;
     }
     if(MODE16) {
@@ -2073,7 +2109,7 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     SPIStatus[SPI_id].Flag = SEND_DATA;
     switch(SPI_id){
         case ID_SPI1:
-            WaitForDataReady();
+            WaitForDataReadySPI1();
             SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
             DMASetConfig(DMA7, 0x4001);
@@ -2086,13 +2122,14 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
             DMAForceTransfer(DMA7);
             break;
         case ID_SPI2:
-            WaitForDataReady();
             SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
             DMASetConfig(DMA6, 0x4001);
             DMASetDataCount(DMA6, CmdLen + DataLen);
             memcpy(DMA6BufferA, Cmd, CmdLen);
             memcpy(&DMA6BufferA[CmdLen], Data, DataLen);
+            IFS2bits.SPI2IF = 0;
+            IFS2bits.SPI2EIF = 0;
             SPI2STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
             DMASetState(DMA6, TRUE, FALSE);
@@ -2110,7 +2147,7 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
     // 1. Определить порт SPI
     SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
     WORD DataSent = 0;
-    WORD i = 0;
+    volatile EFlag TFlag;
     // TODO: проверка размеров
     // Захват шины SPI
     SPILock(SPI_id);
@@ -2130,37 +2167,33 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             DMAForceTransfer(DMA7);
             // ждем получения данных
             while(SPIStatus[ID_SPI1].Flag != RECEIVE_END){
-                for(i = 0; i < 16; i++){
-                    Nop();
-                    Nop();
-                }
+                Nop();
+                Nop();
             }
-            WaitForDataReady();
+            WaitForDataReadySPI1();
             SPIDeviceList[DeviceHandle].DeviceRelease();
             memcpy(Data, DMA7BufferA, DataLen);
             SPIRelease(ID_SPI1);
             break;
         case ID_SPI2:
+            SPI2STATbits.SPIEN = 0;
             SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
             DMASetState(DMA6, 0, 0);
             DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
-            DMASetDataCount(DMA6, CmdLen);
+            DMASetDataCount(DMA6, CmdLen + 1);
             memcpy(DMA6BufferA, Cmd, CmdLen);
-            //memcpy(&DMA6BufferA[CmdLen], Data, DataLen);
-            IEC2bits.SPI2IE = 1;
-            IPC8bits.SPI2IP = 6;
+            DMA6BufferA[CmdLen] = 0;
+            IFS2bits.SPI2IF = 0;
+            IFS2bits.SPI2EIF = 0;
             SPI2STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA6, 1, 0);            
-            DMAForceTransfer(DMA6);
+            DMASetState(DMA6, 1, 1);
             while(SPIStatus[ID_SPI2].Flag != RECEIVE_END){
-                for(i = 0; i < 16; i++){
-                    Nop();
-                    Nop();
-                }
+                Nop();
+                Nop();
             }
-            WaitForDataReady();
+            WaitForDataReadySPI2();
             SPIDeviceList[DeviceHandle].DeviceRelease();
             memcpy(Data, DMA7BufferA, DataLen);
             SPIRelease(ID_SPI2);
