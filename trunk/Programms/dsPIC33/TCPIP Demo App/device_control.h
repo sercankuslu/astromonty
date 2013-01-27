@@ -89,14 +89,19 @@ typedef struct _DMAConfigType{
     void* _This;
 } DMAConfigType;
 
+// OC1
 #define DMA0BUF_SIZE 256
+// OC2
 #define DMA1BUF_SIZE 256
-#define DMA2BUF_SIZE 32
-#define DMA3BUF_SIZE 32
-#define DMA4BUF_SIZE 32
-#define DMA5BUF_SIZE 32
-#define DMA6BUF_SIZE 256
-#define DMA7BUF_SIZE 128
+// SPI2
+#define DMA2BUF_SIZE 224
+#define DMA3BUF_SIZE 224
+// SPI1
+#define DMA4BUF_SIZE 16
+#define DMA5BUF_SIZE 16
+// free
+#define DMA6BUF_SIZE 16
+#define DMA7BUF_SIZE 16
 
 
 
@@ -109,7 +114,7 @@ int DMASetDataCount(DMA_ID id, WORD Count);
 //WORD DMAGetBuffer(WORD Count);
 int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, BYTE*, WORD), int (*fillingBufBFunc)(void*, BYTE*, WORD));
 int DMAPrepBuffer(DMA_ID id);
-int DMASetState(DMA_ID id, BOOL enabled, BOOL force);
+int DMAEnable(DMA_ID id, BOOL enabled, BOOL force);
 int DMAGetPPState(DMA_ID id);
 int DMAForceTransfer(DMA_ID id);
 int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled);

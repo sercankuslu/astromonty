@@ -68,7 +68,7 @@
 #define __ENC28J60_C
 
 #include "HardwareProfile.h"
-
+#include "device_control.h"
 // Make sure that this hardware profile has an ENC28J60 in it
 #if defined(ENC_CS_TRIS)
 
@@ -153,7 +153,7 @@ static void WriteReg(BYTE Address, BYTE Data);
 static void BFCReg(BYTE Address, BYTE Data);
 static void BFSReg(BYTE Address, BYTE Data);
 static void SendSystemReset(void);
-//static void GetRegs(void);
+static void GetRegs(void);
 //void Get8KBRAM(void);
 
 // Internal MAC level variables and flags.
@@ -161,7 +161,19 @@ static WORD_VAL NextPacketLocation;
 static WORD_VAL CurrentPacketLocation;
 static BOOL WasDiscarded;
 static BYTE ENCRevID;
+static BYTE ENCDeviceHandle;
 
+
+int ENCSelect()
+{
+    ENC_CS_IO = 0;
+    return 0;
+}
+int ENCRelease()
+{
+    ENC_CS_IO = 1;
+    return 0;
+}
 
 //NOTE: All code in this module expects Bank 0 to be currently selected.  If code ever changes the bank, it must restore it to Bank 0 before returning.
 
@@ -184,54 +196,18 @@ static BYTE ENCRevID;
  *****************************************************************************/
 void MACInit(void)
 {
-    volatile BYTE i;
-    PHYREG w;
-    // Set up the SPI module on the PIC for communications with the ENC28J60
-    ENC_CS_IO = 1;
+   	volatile BYTE i;
+   	volatile PHYREG r;
+    // Set up the SPI module on the PIC for communications with the ENC28J60   
     ENC_CS_TRIS = 0;        // Make the Chip Select pin an output
+    
+	SPIConfig Config;    
 
-#if defined(__18CXX)
-    ENC_SCK_TRIS = 0;
-    ENC_SDO_TRIS = 0;
-    ENC_SDI_TRIS = 1;
-#endif
-
-    // If the RESET pin is connected, take the chip out of reset
-#if defined(ENC_RST_IO)
-    ENC_RST_IO      = 1;
-    ENC_RST_TRIS    = 0;
-#endif
-
-    // Set up SPI
-    ClearSPIDoneFlag();
-#if defined(__18CXX)
-    ENC_SPICON1 = 0x20;     // SSPEN bit is set, SPI in master mode, FOSC/4,
-                            //   IDLE state is low level
-    ENC_SPISTATbits.CKE = 1;// Transmit data on rising edge of clock
-    ENC_SPISTATbits.SMP = 0;// Input sampled at middle of data output time
-#elif defined(__C30__)
-    ENC_SPISTAT = 0;        // clear SPI
-    #if defined(__PIC24H__) || defined(__dsPIC33F__)
-    //    ENC_SPICON1 = 0x0F;     // 1:1 primary prescale, 5:1 secondary prescale (8MHz  @ 40MIPS)
-    //    ENC_SPICON1 = 0x1E;   // 4:1 primary prescale, 1:1 secondary prescale (10MHz @ 40MIPS, Doesn't work.  CLKRDY is incorrectly reported as being clear.  Problem caused by dsPIC33/PIC24H ES silicon bug.)
-        ENC_SPICON1 = 0x13;   // 4:1 primary prescale, 1:1 secondary prescale (10MHz @ 40MIPS, Doesn't work.  CLKRDY is incorrectly reported as being clear.  Problem caused by dsPIC33/PIC24H ES silicon bug.)
-    #elif defined(__PIC24F__) || defined(__PIC24FK__)
-        ENC_SPICON1 = 0x1B;     // 1:1 primary prescale, 2:1 secondary prescale (8MHz  @ 16MIPS)
-    #else   // dsPIC30F
-        ENC_SPICON1 = 0x17;     // 1:1 primary prescale, 3:1 secondary prescale (10MHz @ 30MIPS)
-    #endif
-    ENC_SPICON2 = 0;
-    ENC_SPICON1bits.CKE = 1;
-    ENC_SPICON1bits.MSTEN = 1;
-    ENC_SPISTATbits.SPIEN = 1;
-#elif defined(__C32__)
-    ENC_SPIBRG = (GetPeripheralClock()-1ul)/2ul/ENC_MAX_SPI_FREQ;
-	ENC_SPICON1bits.SMP = 1;	// Delay SDI input sampling (PIC perspective) by 1/2 SPI clock
-    ENC_SPICON1bits.CKE = 1;
-    ENC_SPICON1bits.MSTEN = 1;
-    ENC_SPICON1bits.ON = 1;
-#endif
-
+    Config.SPICON1 = 0x1E | 0x100 | 0x20; // CKE = 1 MSTEB = 1
+    Config.SPICON2 = 0;
+    Config.SPISTAT = 0;
+    ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
+    
     // RESET the entire ENC28J60, clearing all registers
     // Also wait for CLKRDY to become set.
     // Bit 3 in ESTAT is an unimplemented bit.  If it reads out as '1' that
@@ -243,10 +219,8 @@ void MACInit(void)
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
     GetRegs();
-    //do {
-    //    w = ReadPHYReg(PHID1);
-    //} while (w. == 0x0083); // Microchip UID
-
+    //r = ReadPHYReg(PHID1);
+    
     // Start up in Bank 0 and configure the receive buffer boundary pointers
     // and the buffer write protect pointer (receive buffer read pointer)
     WasDiscarded = TRUE;
@@ -1138,45 +1112,9 @@ BOOL MACIsMemCopyDone(void)
 BYTE MACGet()
 {
     BYTE Result;
-
-    ENC_CS_IO = 0;
-	ClearSPIDoneFlag();
-
-    #if defined(__C32__)
-    {
-        // Send the opcode and read a byte in one 16-bit operation
-        ENC_SPICON1bits.MODE16 = 1;
-        ENC_SSPBUF = RBM<<8 | 0x00; // Send Read Buffer Memory command plus 8 dummy bits to generate clocks for the return result
-        WaitForDataByte();          // Wait until WORD is transmitted
-        ENC_SPICON1bits.MODE16 = 0;
-    }
-    #elif defined(__C30__)
-    {
-        // Send the opcode and read a byte in one 16-bit operation
-        ENC_SPISTATbits.SPIEN = 0;
-        ENC_SPICON1bits.MODE16 = 1;
-        ENC_SPISTATbits.SPIEN = 1;
-        ENC_SSPBUF = RBM<<8 | 0x00; // Send Read Buffer Memory command plus 8 dummy bits to generate clocks for the return result
-        WaitForDataByte();          // Wait until WORD is transmitted
-        ENC_SPISTATbits.SPIEN = 0;
-        ENC_SPICON1bits.MODE16 = 0;
-        ENC_SPISTATbits.SPIEN = 1;
-    }
-    #else
-    {
-        // Send the opcode and read a byte in two 8-bit operations
-        ENC_SSPBUF = RBM;
-        WaitForDataByte();      // Wait until opcode/address is transmitted.
-        Result = ENC_SSPBUF;
-
-        ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
-                                //   contents.
-        WaitForDataByte();      // Wait until register is received.
-    }
-    #endif
-
-    Result = ENC_SSPBUF;
-    ENC_CS_IO = 1;
+	BYTE Cmd[] = {RBM};	
+	
+	SPIReceiveData( ENCDeviceHandle, Cmd, sizeof(Cmd), &Result, 1);
 
     return Result;
 }//end MACGet
@@ -1205,141 +1143,10 @@ BYTE MACGet()
  *****************************************************************************/
 WORD MACGetArray(BYTE *val, WORD len)
 {
-// Workaround needed on HPC Explorer (classic) board to prevent interference
-// with I2C temperature sensor on the same SPI wires
-#if defined(__18F8722) || defined(_18F8722) ||  defined(__18F8723) || defined(_18F8723)
-    WORD i;
-    volatile BYTE Dummy;
+	BYTE Cmd[] = {RBM};	
+	
+	return SPIReceiveData( ENCDeviceHandle, Cmd, sizeof(Cmd), val, len);
 
-    i = len;
-    Dummy = 0xFF;
-    ClearSPIDoneFlag();
-    while(i--)
-    {
-        if(((BYTE_VAL*)&Dummy)->bits.b0)
-        {
-            // End bust operation
-            ENC_CS_IO = 1;
-            ((BYTE_VAL*)&Dummy)->bits.b0 = 0;
-
-            // Start the burst operation
-            ENC_CS_IO = 0;
-            ENC_SSPBUF = RBM;       // Send the Read Buffer Memory opcode.
-            WaitForDataByte();      // Wait until opcode/address is transmitted.
-        }
-        else
-            Dummy = 0xFF;
-
-        ENC_SSPBUF = 0;     // Send a dummy byte to receive a byte
-        if(val)
-        {
-            WaitForDataByte();  // Wait until byte is received.
-            *val++ = ENC_SSPBUF;
-        }
-        else
-        {
-            WaitForDataByte();  // Wait until byte is received.
-        }
-    }
-
-    ENC_CS_IO = 1;
-
-    return len;
-#else
-    WORD i;
-    volatile BYTE Dummy;
-
-    // Start the burst operation
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RBM;       // Send the Read Buffer Memory opcode.
-    i = 0;
-    if(val)
-        val--;
-    WaitForDataByte();      // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-
-    #if defined(__C32__)
-    {
-        DWORD_VAL dwv;
-
-        // Read the data, 4 bytes at a time, for as long as possible
-        if(len >= 4)
-        {
-            ENC_SPICON1bits.MODE32 = 1;
-            while(1)
-            {
-                ENC_SSPBUF = 0x00000000;    // Send a dummy DWORD to generate 32 clocks
-                i += 4;
-                WaitForDataByte();         // Wait until DWORD is transmitted
-                dwv.Val = ENC_SSPBUF;
-                if(val)
-                {
-                    *(++val) = dwv.v[3];
-                    *(++val) = dwv.v[2];
-                    *(++val) = dwv.v[1];
-                    *(++val) = dwv.v[0];
-                }
-                if(len - i < 4)
-                    break;
-            };
-            ENC_SPICON1bits.MODE32 = 0;
-        }
-    }
-    #elif defined(__C30__)
-    {
-        WORD_VAL wv;
-
-        // Read the data, 2 bytes at a time, for as long as possible
-        if(len >= 2)
-        {
-            ENC_SPISTATbits.SPIEN = 0;
-            ENC_SPICON1bits.MODE16 = 1;
-            ENC_SPISTATbits.SPIEN = 1;
-            while(1)
-            {
-                ENC_SSPBUF = 0x0000;    // Send a dummy WORD to generate 32 clocks
-                i += 2;
-                WaitForDataByte();      // Wait until WORD is transmitted
-                wv.Val = ENC_SSPBUF;
-                if(val)
-                {
-                    *(++val) = wv.v[1];
-                    *(++val) = wv.v[0];
-                }
-                if(len - i < 2)
-                    break;
-            };
-            ENC_SPISTATbits.SPIEN = 0;
-            ENC_SPICON1bits.MODE16 = 0;
-            ENC_SPISTATbits.SPIEN = 1;
-        }
-    }
-    #endif
-
-    // Read the data
-    while(i<len)
-    {
-        ENC_SSPBUF = 0;     // Send a dummy byte to receive a byte
-        i++;
-        if(val)
-        {
-            val++;
-            WaitForDataByte();  // Wait until byte is received.
-            *val = ENC_SSPBUF;
-        }
-        else
-        {
-            WaitForDataByte();  // Wait until byte is received.
-            Dummy = ENC_SSPBUF;
-        }
-    };
-
-    // Terminate the burst operation
-    ENC_CS_IO = 1;
-
-    return i;
-#endif
 }//end MACGetArray
 
 
@@ -1363,43 +1170,8 @@ WORD MACGetArray(BYTE *val, WORD len)
  *****************************************************************************/
 void MACPut(BYTE val)
 {
-    volatile BYTE Dummy;
-
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    #if defined(__C32__)
-    {
-        // Send the Write Buffer Memory and data, in on 16-bit write
-        ENC_SPICON1bits.MODE16 = 1;
-        ENC_SSPBUF = (WBM<<8) | (WORD)val;  // Start sending the WORD
-        WaitForDataByte();                  // Wait until WORD is transmitted
-        ENC_SPICON1bits.MODE16 = 0;
-    }
-    #elif defined(__C30__)
-    {
-        // Send the Write Buffer Memory and data, in on 16-bit write
-        ENC_SPISTATbits.SPIEN = 0;
-        ENC_SPICON1bits.MODE16 = 1;
-        ENC_SPISTATbits.SPIEN = 1;
-        ENC_SSPBUF = (WBM<<8) | (WORD)val;  // Start sending the WORD
-        WaitForDataByte();                  // Wait until WORD is transmitted
-        ENC_SPISTATbits.SPIEN = 0;
-        ENC_SPICON1bits.MODE16 = 0;
-        ENC_SPISTATbits.SPIEN = 1;
-    }
-    #else
-    {
-        ENC_SSPBUF = WBM;       // Send the opcode and constant.
-        WaitForDataByte();      // Wait until opcode/constant is transmitted.
-        Dummy = ENC_SSPBUF;
-        ENC_SSPBUF = val;       // Send the byte to be writen.
-        WaitForDataByte();      // Wait until finished transmitting
-    }
-    #endif
-
-    Dummy = ENC_SSPBUF;
-    ENC_CS_IO = 1;
+   	BYTE Cmd[] = {WBM};	
+    SPISendData(ENCDeviceHandle, Cmd, sizeof(Cmd), &val, 1 );
 }//end MACPut
 
 
@@ -1424,205 +1196,12 @@ void MACPut(BYTE val)
  *****************************************************************************/
 void MACPutArray(BYTE *val, WORD len)
 {
-// Workaround needed on HPC Explorer (classic) board to prevent interference
-// with I2C temperature sensor on the same SPI wires
-#if defined(__18F8722) || defined(_18F8722) ||  defined(__18F8723) || defined(_18F8723)
-    WORD i;
-    volatile BYTE Dummy;
 
-    i = len;
-    Dummy = 0xFF;
-    ClearSPIDoneFlag();
-    while(i--)
-    {
-        if(((BYTE_VAL*)&Dummy)->bits.b0)
-        {
-            // End bust operation
-            ENC_CS_IO = 1;
-            ((BYTE_VAL*)&Dummy)->bits.b0 = 0;
-
-            // Start the burst operation
-            ENC_CS_IO = 0;
-            ENC_SSPBUF = WBM;       // Send the Read Buffer Memory opcode.
-            WaitForDataByte();      // Wait until opcode/address is transmitted.
-        }
-        else
-            Dummy = 0xFF;
-
-        ENC_SSPBUF = *val++;    // Send byte
-        WaitForDataByte();      // Wait until byte is sent
-    }
-
-    ENC_CS_IO = 1;
-
-    return;
-#else
-    volatile BYTE Dummy;
-
-    // Select the chip and send the proper opcode
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = WBM;       // Send the Write Buffer Memory opcode
-    WaitForDataByte();      // Wait until opcode/constant is transmitted.
-    Dummy = ENC_SSPBUF;
-
-    #if defined(__C32__)
-    {
-        DWORD_VAL dwv;
-
-        // Send the data, 4 bytes at a time, for as long as possible
-        if(len >= 4)
-        {
-            dwv.v[3] = *val++;
-            dwv.v[2] = *val++;
-            dwv.v[1] = *val++;
-            dwv.v[0] = *val++;
-            ENC_SPICON1bits.MODE32 = 1;
-            while(1)
-            {
-                ENC_SSPBUF = dwv.Val;       // Start sending the DWORD
-                len -= 4;
-                if(len < 4)
-                    break;
-                dwv.v[3] = *val++;
-                dwv.v[2] = *val++;
-                dwv.v[1] = *val++;
-                dwv.v[0] = *val++;
-                WaitForDataByte();          // Wait until DWORD is transmitted
-                Dummy = ENC_SSPBUF;
-            };
-            WaitForDataByte();              // Wait until DWORD is transmitted
-            Dummy = ENC_SSPBUF;
-            ENC_SPICON1bits.MODE32 = 0;
-        }
-    }
-    #elif defined(__C30__)
-    {
-        WORD_VAL wv;
-
-        // Send the data, 2 bytes at a time, for as long as possible
-        if(len >= 2)
-        {
-            wv.v[1] = *val++;
-            wv.v[0] = *val++;
-            ENC_SPISTATbits.SPIEN = 0;
-            ENC_SPICON1bits.MODE16 = 1;
-            ENC_SPISTATbits.SPIEN = 1;
-            while(1)
-            {
-                ENC_SSPBUF = wv.Val;        // Start sending the WORD
-                len -= 2;
-                if(len < 2)
-                    break;
-                wv.v[1] = *val++;
-                wv.v[0] = *val++;
-                WaitForDataByte();          // Wait until WORD is transmitted
-                Dummy = ENC_SSPBUF;
-            };
-            WaitForDataByte();              // Wait until WORD is transmitted
-            Dummy = ENC_SSPBUF;
-            ENC_SPISTATbits.SPIEN = 0;
-            ENC_SPICON1bits.MODE16 = 0;
-            ENC_SPISTATbits.SPIEN = 1;
-        }
-    }
-    #endif
-
-    // Send the data, one byte at a time
-    while(len)
-    {
-        ENC_SSPBUF = *val;  // Start sending the byte
-        val++;              // Increment after writing to ENC_SSPBUF to increase speed
-        len--;              // Decrement after writing to ENC_SSPBUF to increase speed
-        WaitForDataByte();  // Wait until byte is transmitted
-        Dummy = ENC_SSPBUF;
-    };
-
-    // Terminate the burst operation
-    ENC_CS_IO = 1;
-#endif
+	BYTE Cmd[] = {WBM};	
+    SPISendData(ENCDeviceHandle, Cmd, sizeof(Cmd), val, len );    
+    
 }//end MACPutArray
 
-
-#if defined(__18CXX)
-/******************************************************************************
- * Function:        void MACPutROMArray(ROM BYTE *val, WORD len)
- *
- * PreCondition:    SPI bus must be initialized (done in MACInit()).
- *                  EWRPT must point to the location to begin writing.
- *
- * Input:           *val: Pointer to source of bytes to copy.
- *                  len:  Number of bytes to write to the data buffer.
- *
- * Output:          None
- *
- * Side Effects:    None
- *
- * Overview:        MACPutArray writes several sequential bytes to the
- *                  ENC28J60 RAM.  It performs faster than multiple MACPut()
- *                  calls.  EWRPT is incremented by len.
- *
- * Note:            None
- *****************************************************************************/
-void MACPutROMArray(ROM BYTE *val, WORD len)
-{
-// Workaround needed on HPC Explorer (classic) board to prevent interference
-// with I2C temperature sensor on the same SPI wires
-#if defined(__18F8722) || defined(_18F8722) ||  defined(__18F8723) || defined(_18F8723)
-    WORD i;
-    volatile BYTE Dummy;
-
-    i = len;
-    Dummy = 0xFF;
-    ClearSPIDoneFlag();
-    while(i--)
-    {
-        if(((BYTE_VAL*)&Dummy)->bits.b0)
-        {
-            // End bust operation
-            ENC_CS_IO = 1;
-            ((BYTE_VAL*)&Dummy)->bits.b0 = 0;
-
-            // Start the burst operation
-            ENC_CS_IO = 0;
-            ENC_SSPBUF = WBM;       // Send the Read Buffer Memory opcode.
-            WaitForDataByte();      // Wait until opcode/address is transmitted.
-        }
-        else
-            Dummy = 0xFF;
-
-        ENC_SSPBUF = *val++;    // Send byte
-        WaitForDataByte();      // Wait until byte is sent
-    }
-
-    ENC_CS_IO = 1;
-
-    return;
-#else
-    volatile BYTE Dummy;
-
-    // Select the chip and send the proper opcode
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = WBM;       // Send the Write Buffer Memory opcode
-    WaitForDataByte();      // Wait until opcode/constant is transmitted.
-    Dummy = ENC_SSPBUF;
-
-    // Send the data
-    while(len)
-    {
-        ENC_SSPBUF = *val;  // Start sending the byte
-        val++;              // Increment after writing to ENC_SSPBUF to increase speed
-        len--;              // Decrement after writing to ENC_SSPBUF to increase speed
-        WaitForDataByte();  // Wait until byte is transmitted
-        Dummy = ENC_SSPBUF;
-    };
-
-    // Terminate the burst operation
-    ENC_CS_IO = 1;
-#endif
-}//end MACPutROMArray
-#endif
 
 /******************************************************************************
  * Function:        static void SendSystemReset(void)
@@ -1644,7 +1223,7 @@ void MACPutROMArray(ROM BYTE *val, WORD len)
  *****************************************************************************/
 static void SendSystemReset(void)
 {
-    volatile BYTE Dummy;
+   	BYTE Cmd[] = {SR};	
 
     // Note: The power save feature may prevent the reset from executing, so
     // we must make sure that the device is not in power save before issuing
@@ -1656,12 +1235,7 @@ static void SendSystemReset(void)
     DelayMs(2);
 
     // Execute the System Reset command
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = SR;
-    WaitForDataByte();      // Wait until the command is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_CS_IO = 1;
+    SPISendCmd(ENCDeviceHandle, Cmd, 1);
 
     // Wait for the oscillator start up timer and PHY to become ready
     DelayMs(2);
@@ -1693,20 +1267,10 @@ static void SendSystemReset(void)
 static REG ReadETHReg(BYTE Address)
 {
     REG r;
-
-    // Select the chip and send the Read Control Register opcode/address
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RCR | Address;
-
-    WaitForDataByte();      // Wait until the opcode/address is transmitted
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
-                            //   contents
-    WaitForDataByte();      // Wait until the register is received
-    r.Val = ENC_SSPBUF;
-    ENC_CS_IO = 1;
-
+	BYTE Cmd[] = {RCR | Address};	
+	
+	SPIReceiveData( ENCDeviceHandle, Cmd, 1, &r.Val, 1);
+	
     return r;
 }//end ReadETHReg
 
@@ -1736,22 +1300,12 @@ static REG ReadETHReg(BYTE Address)
 static REG ReadMACReg(BYTE Address)
 {
     REG r;
-
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RCR | Address; // Send the Read Control Register opcode and
-                                //   address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;             // Send a dummy byte
-    WaitForDataByte();          // Wait for the dummy byte to be transmitted
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;             // Send another dummy byte to receive the register
-                                //   contents.
-    WaitForDataByte();          // Wait until register is received.
-    r.Val = ENC_SSPBUF;
-    ENC_CS_IO = 1;
-
+	BYTE Cmd[] = {RCR | Address};	
+	BYTE Data[5];
+	
+	SPIReceiveData( ENCDeviceHandle, Cmd, 1, Data, 5);
+	r.Val = Data[2];
+	
     return r;
 }//end ReadMACReg
 
@@ -1827,48 +1381,10 @@ PHYREG ReadPHYReg(BYTE Register)
  *****************************************************************************/
 static void WriteReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
+	
+	BYTE Cmd[] = {WCR | Address};	
+    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
 
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    #if defined(__C32__)
-    {
-        // Send the Write Buffer Memory and data, in on 16-bit write
-        ENC_SPICON1bits.MODE16 = 1;
-        ENC_SSPBUF = ((WCR | Address)<<8) | (WORD)Data; // Start sending the WORD
-        WaitForDataByte();                  // Wait until WORD is transmitted
-        ENC_SPICON1bits.MODE16 = 0;
-    }
-    #else
-    {
-        ENC_SSPBUF = WCR | Address; // Send the opcode and address.
-        WaitForDataByte();          // Wait until opcode/constant is transmitted.
-        Dummy = ENC_SSPBUF;
-        ENC_SSPBUF = Data;          // Send the byte to be writen.
-        WaitForDataByte();          // Wait until finished transmitting
-    }
-    #endif
-
-    Dummy = ENC_SSPBUF;
-
-
-	// For faster processors (dsPIC), delay for a few clock cycles to ensure 
-	// the MAC/MII register write Chip Select hold time minimum of 210ns is met.
-	#if (GetInstructionClock() > 30000000)
-		Nop();
-		Nop();
-	#endif
-	#if (GetInstructionClock() > 40000000)
-		Nop();
-		Nop();
-	#endif
-	#if (GetInstructionClock() > 50000000)
-		Nop();
-		Nop();
-	#endif
-
-	ENC_CS_IO = 1;
 }//end WriteReg
 
 
@@ -1896,17 +1412,9 @@ static void WriteReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFCReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
-
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = BFC | Address; // Send the opcode and address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_SSPBUF = Data;          // Send the byte to be writen.
-    WaitForDataByte();          // Wait until register is written.
-    Dummy = ENC_SSPBUF;
-    ENC_CS_IO = 1;
+	BYTE Cmd[] = {BFC | Address};	
+    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
+	
 }//end BFCReg
 
 
@@ -1934,17 +1442,9 @@ static void BFCReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFSReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
-
-    ENC_CS_IO = 0;
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = BFS | Address; // Send the opcode and address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_SSPBUF = Data;          // Send the byte to be writen.
-    WaitForDataByte();          // Wait until register is written.
-    Dummy = ENC_SSPBUF;
-    ENC_CS_IO = 1;
+	BYTE Cmd[] = {BFS | Address};	
+    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
+    
 }//end BFSReg
 
 

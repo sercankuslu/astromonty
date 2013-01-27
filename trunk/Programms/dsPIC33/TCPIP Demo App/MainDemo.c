@@ -320,19 +320,6 @@ void FillBufSPI(void* _This, WORD * Buf, WORD Count)
         T++;
     }
 }
-#define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
-#define SPIFLASH_CS_IO			(LATFbits.LATF5)
-int ENCSelect()
-{
-    SPIFLASH_CS_IO = 0;
-    return 0;
-}
-int ENCRelease()
-{
-    SPIFLASH_CS_IO = 1;
-    return 0;
-}
-
 //
 // Main application entry point.
 //
@@ -353,16 +340,21 @@ int main(void)
     //(mas[id])(Count);
     BYTE Cmd[] = {0x03,0x04,0x00,0x00};
     //BYTE Cmd[] = {0x9F};
+    SPIFLASH_CS_TRIS = 0;
+    SPIFLASH_CS_IO = 1;
+    SPIRTCSRAM_CS_TRIS = 0;
+    SPIRTCSRAM_CS_IO = 1;
+    ENC_CS_TRIS = 0;
+    ENC_CS_IO = 1;
     
-    
-    BYTE Data[256]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+    BYTE Data[512]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
                   //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
     SPIConfig Config;
     BYTE EncHandle = 0;
         
     SPIInit();
-    SPIFlashInit();
-    SPIFlashReadArray(0x40000, Data, sizeof(Data));
+    //SPIFlashInit();
+    //SPIFlashReadArray(0x40200, Data, sizeof(Data));
     //Config.SPICON1 = 0x000F | 0x0120; //SPI_CreateParams( MASTER, MODE0, 0,IDLE_DISABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
     //Config.SPISTAT = 0;
     
@@ -370,7 +362,7 @@ int main(void)
     //SPISendData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
     //SPIReceiveData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
     
-    while(1);
+    //while(1);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
     //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
@@ -794,10 +786,10 @@ int main(void)
                 //    TimeAdjusted = AdjustLocalRTCTime(); 
                 //    LED2_IO = TimeAdjusted;           
                 //}
-                RRConfigRAM.RRSave[0].XPosition = rr1.XPosition;
-                RRConfigRAM.RRSave[1].XPosition = rr2.XPosition;                
-                   RRConfigRAM.RRSave[2].XPosition = rr3.XPosition;
-                SaveRRConfig();
+                //RRConfigRAM.RRSave[0].XPosition = rr1.XPosition;
+                //RRConfigRAM.RRSave[1].XPosition = rr2.XPosition;                
+                //   RRConfigRAM.RRSave[2].XPosition = rr3.XPosition;
+                //SaveRRConfig();
         }
         // This task performs normal stack task including checking
         // for incoming packet, type of packet and calling
@@ -1485,7 +1477,7 @@ static void InitializeBoard(void)
     SPIFlashInit();
 #endif
 #if defined(SPIRTCSRAM_CS_TRIS)
-    SPIRTCSRAMInit();
+    //SPIRTCSRAMInit();
 #endif
 }
 

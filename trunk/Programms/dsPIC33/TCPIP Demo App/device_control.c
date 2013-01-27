@@ -4,13 +4,15 @@
 #ifdef __C30__
 #include "TCPIP Stack/TCPIP.h"
 #   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
-#   define DMAOFFSET(x) (WORD)__builtin_dmaoffset(x)
+//#   define DMAOFFSET(x) (WORD)__builtin_dmaoffset(x)
 #endif
 #ifdef _WIN32
 #   define INTERRUPT void
-#   define DMAOFFSET(x) (WORD)x
+BYTE _DMA_BASE[1];
+#   define DMAOFFSET(x) (unsigned int)&x - (unsigned int)&_DMA_BASE
 #   define Nop()
 #endif
+
 
 #ifdef _WIN32
 WORD T1CON;
@@ -127,6 +129,93 @@ WORD DMA7CNT;
 WORD SPI1BUF;
 WORD SPI2BUF;
 
+
+typedef struct 
+{
+    __EXTENSION BYTE TRISG0:1;
+    __EXTENSION BYTE TRISG1:1;
+    __EXTENSION BYTE TRISG2:1;
+    __EXTENSION BYTE TRISG3:1;
+    __EXTENSION BYTE TRISG4:1;
+    __EXTENSION BYTE TRISG5:1;
+    __EXTENSION BYTE TRISG6:1;
+    __EXTENSION BYTE TRISG7:1;
+    __EXTENSION BYTE TRISG8:1;
+    __EXTENSION BYTE TRISG9:1;
+    __EXTENSION BYTE TRISG10:1;
+    __EXTENSION BYTE TRISG11:1;
+    __EXTENSION BYTE TRISG12:1;
+    __EXTENSION BYTE TRISG13:1;
+    __EXTENSION BYTE TRISG14:1;
+    __EXTENSION BYTE TRISG15:1;
+} _TRISGbits;
+typedef struct 
+{
+    __EXTENSION BYTE TRISF0:1;
+    __EXTENSION BYTE TRISF1:1;
+    __EXTENSION BYTE TRISF2:1;
+    __EXTENSION BYTE TRISF3:1;
+    __EXTENSION BYTE TRISF4:1;
+    __EXTENSION BYTE TRISF5:1;
+    __EXTENSION BYTE TRISF6:1;
+    __EXTENSION BYTE TRISF7:1;
+    __EXTENSION BYTE TRISF8:1;
+    __EXTENSION BYTE TRISF9:1;
+    __EXTENSION BYTE TRISF10:1;
+    __EXTENSION BYTE TRISF11:1;
+    __EXTENSION BYTE TRISF12:1;
+    __EXTENSION BYTE TRISF13:1;
+    __EXTENSION BYTE TRISF14:1;
+    __EXTENSION BYTE TRISF15:1;
+} _TRISFbits;
+typedef struct 
+{
+    __EXTENSION BYTE LATG0:1;
+    __EXTENSION BYTE LATG1:1;
+    __EXTENSION BYTE LATG2:1;
+    __EXTENSION BYTE LATG3:1;
+    __EXTENSION BYTE LATG4:1;
+    __EXTENSION BYTE LATG5:1;
+    __EXTENSION BYTE LATG6:1;
+    __EXTENSION BYTE LATG7:1;
+    __EXTENSION BYTE LATG8:1;
+    __EXTENSION BYTE LATG9:1;
+    __EXTENSION BYTE LATG10:1;
+    __EXTENSION BYTE LATG11:1;
+    __EXTENSION BYTE LATG12:1;
+    __EXTENSION BYTE LATG13:1;
+    __EXTENSION BYTE LATG14:1;
+    __EXTENSION BYTE LATG15:1;
+} _LATGbits;
+typedef struct 
+{
+    __EXTENSION BYTE LATF0:1;
+    __EXTENSION BYTE LATF1:1;
+    __EXTENSION BYTE LATF2:1;
+    __EXTENSION BYTE LATF3:1;
+    __EXTENSION BYTE LATF4:1;
+    __EXTENSION BYTE LATF5:1;
+    __EXTENSION BYTE LATF6:1;
+    __EXTENSION BYTE LATF7:1;
+    __EXTENSION BYTE LATF8:1;
+    __EXTENSION BYTE LATF9:1;
+    __EXTENSION BYTE LATF10:1;
+    __EXTENSION BYTE LATF11:1;
+    __EXTENSION BYTE LATF12:1;
+    __EXTENSION BYTE LATF13:1;
+    __EXTENSION BYTE LATF14:1;
+    __EXTENSION BYTE LATF15:1;
+} _LATFbits;
+WORD TRISG;
+WORD TRISF;
+WORD LATG;
+WORD LATF;
+_TRISGbits TRISGbits;
+_TRISFbits TRISFbits;
+_LATGbits LATGbits;
+_LATFbits LATFbits;
+
+
 typedef struct 
 {
     __EXTENSION BYTE SPIRBF:1;
@@ -160,6 +249,8 @@ WORD SPI1STAT;
 WORD SPI2STAT;
 WORD SPI1CON1;
 WORD SPI2CON1;
+WORD SPI1CON2;
+WORD SPI2CON2;
 SPISTATbits SPI1STATbits;
 SPISTATbits SPI2STATbits;
 SPICON1bits SPI1CON1bits;
@@ -958,40 +1049,74 @@ INTERRUPT _T9Interrupt( void )
 DMAConfigType DMAConfig[8];
 #ifdef __C30__
     //unsigned int DMABuffer[1024]  __attribute__((space(dma)));
+#if DMA0BUF_SIZE > 0
     BYTE DMA0BufferA[DMA0BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA0BufferB[DMA0BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA1BUF_SIZE > 0
     BYTE DMA1BufferA[DMA1BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA1BufferB[DMA1BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA2BUF_SIZE > 0
     BYTE DMA2BufferA[DMA2BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA2BufferB[DMA2BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA3BUF_SIZE > 0
     BYTE DMA3BufferA[DMA3BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA3BufferB[DMA3BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA4BUF_SIZE > 0
     BYTE DMA4BufferA[DMA4BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA4BufferB[DMA4BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA5BUF_SIZE > 0
     BYTE DMA5BufferA[DMA5BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA5BufferB[DMA5BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA6BUF_SIZE > 0
     BYTE DMA6BufferA[DMA6BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA6BufferB[DMA6BUF_SIZE] __attribute__((space(dma)));
+#endif
+#if DMA7BUF_SIZE > 0
     BYTE DMA7BufferA[DMA7BUF_SIZE] __attribute__((space(dma)));
     BYTE DMA7BufferB[DMA7BUF_SIZE] __attribute__((space(dma)));
+#endif
+
 #else
+
+#if DMA0BUF_SIZE > 0
     //unsigned int DMABuffer[1024];
     BYTE DMA0BufferA[DMA0BUF_SIZE];
     BYTE DMA0BufferB[DMA0BUF_SIZE];
+#endif
+#if DMA1BUF_SIZE > 0
     BYTE DMA1BufferA[DMA1BUF_SIZE];
     BYTE DMA1BufferB[DMA1BUF_SIZE];
-    BYTE *DMA2BufferA;//[DMA2BUF_SIZE];
-    BYTE *DMA2BufferB;//[DMA2BUF_SIZE];
-    BYTE *DMA3BufferA;//[DMA3BUF_SIZE];
-    BYTE *DMA3BufferB;//[DMA3BUF_SIZE];
-    BYTE *DMA4BufferA;//[DMA4BUF_SIZE];
-    BYTE *DMA4BufferB;//[DMA4BUF_SIZE];
-    BYTE *DMA5BufferA;//[DMA5BUF_SIZE];
-    BYTE *DMA5BufferB;//[DMA5BUF_SIZE];
+#endif
+#if DMA2BUF_SIZE > 0
+    BYTE DMA2BufferA[DMA2BUF_SIZE];
+    BYTE DMA2BufferB[DMA2BUF_SIZE];
+#endif
+#if DMA3BUF_SIZE > 0
+    BYTE DMA3BufferA[DMA3BUF_SIZE];
+    BYTE DMA3BufferB[DMA3BUF_SIZE];
+#endif
+#if DMA4BUF_SIZE > 0
+    BYTE DMA4BufferA[DMA4BUF_SIZE];
+    BYTE DMA4BufferB[DMA4BUF_SIZE];
+#endif
+#if DMA5BUF_SIZE > 0
+    BYTE DMA5BufferA[DMA5BUF_SIZE];
+    BYTE DMA5BufferB[DMA5BUF_SIZE];
+#endif
+#if DMA6BUF_SIZE > 0
     BYTE DMA6BufferA[DMA6BUF_SIZE];
     BYTE DMA6BufferB[DMA6BUF_SIZE];
+#endif
+#if DMA7BUF_SIZE > 0
     BYTE DMA7BufferA[DMA7BUF_SIZE];
     BYTE DMA7BufferB[DMA7BUF_SIZE];
+#endif
 
 #endif
 static int BufferBusySize = 0;
@@ -1009,73 +1134,75 @@ WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COM
     return Config;
 }
 //------------------------------------------------------------------------------------------------
-int DMAInit(DMA_ID id, WORD Config)
+int DMASetBuffer(DMA_ID id, BYTE* BufferA, BYTE* BufferB)
 //------------------------------------------------------------------------------------------------
 {
-    
+    DMAConfig[id].BufA = BufferA;
+    DMAConfig[id].BufB = BufferB;
     switch(id){
         case DMA0: 
-            DMA0CON = Config;
-            DMAConfig[id].BufA = DMA0BufferA;
-            DMAConfig[id].BufB = DMA0BufferB;
-            DMA0STA = DMAOFFSET(DMA0BufferA);
-            DMA0STB = DMAOFFSET(DMA0BufferB);
+            DMA0STA = DMAOFFSET(BufferA);
+            DMA0STB = DMAOFFSET(BufferB);
             break;
         case DMA1: 
-            DMA1CON = Config;
-            DMAConfig[id].BufA = DMA1BufferA;
-            DMAConfig[id].BufB = DMA1BufferB;
-            DMA1STA = DMAOFFSET(DMA1BufferA);
-            DMA1STB = DMAOFFSET(DMA1BufferB);
+            DMA1STA = DMAOFFSET(BufferA);
+            DMA1STB = DMAOFFSET(BufferB);
             break;
         case DMA2: 
-            DMA2CON = Config;
-            DMAConfig[id].BufA = DMA2BufferA;
-            DMAConfig[id].BufB = DMA2BufferB;
-            DMA2STA = DMAOFFSET(DMA2BufferA);
-            DMA2STB = DMAOFFSET(DMA2BufferB);
+            DMA2STA = DMAOFFSET(BufferA);
+            DMA2STB = DMAOFFSET(BufferB);
             break;
         case DMA3: 
-            DMA3CON = Config;
-            DMAConfig[id].BufA = DMA3BufferA;
-            DMAConfig[id].BufB = DMA3BufferB;
-            DMA3STA = DMAOFFSET(DMA3BufferA);
-            DMA3STB = DMAOFFSET(DMA3BufferB);
+            DMA3STA = DMAOFFSET(BufferA);
+            DMA3STB = DMAOFFSET(BufferB);
             break;
         case DMA4: 
-            DMA4CON = Config;
-            DMAConfig[id].BufA = DMA4BufferA;
-            DMAConfig[id].BufB = DMA4BufferB;
-            DMA4STA = DMAOFFSET(DMA4BufferA);
-            DMA4STB = DMAOFFSET(DMA4BufferB);
+            DMA4STA = DMAOFFSET(BufferA);
+            DMA4STB = DMAOFFSET(BufferB);
             break;
         case DMA5: 
-            DMA5CON = Config;
-            DMAConfig[id].BufA = DMA5BufferA;
-            DMAConfig[id].BufB = DMA5BufferB;
-            DMA5STA = DMAOFFSET(DMA5BufferA);
-            DMA5STB = DMAOFFSET(DMA5BufferB);
+            DMA5STA = DMAOFFSET(BufferA);
+            DMA5STB = DMAOFFSET(BufferB);
             break;
         case DMA6: 
-            DMA6CON = Config;
-            DMAConfig[id].BufA = DMA6BufferA;
-            DMAConfig[id].BufB = DMA6BufferB;
-            DMA6STA = DMAOFFSET(DMA6BufferA);
-            DMA6STB = DMAOFFSET(DMA6BufferB);
+            DMA6STA = DMAOFFSET(BufferA);
+            DMA6STB = DMAOFFSET(BufferB);
             break;
         case DMA7: 
-            DMA7CON = Config;
-            DMAConfig[id].BufA = DMA7BufferA;
-            DMAConfig[id].BufB = DMA7BufferB;
-            DMA7STA = DMAOFFSET(DMA7BufferA);
-            DMA7STB = DMAOFFSET(DMA7BufferB);
+            DMA7STA = DMAOFFSET(BufferA);
+            DMA7STB = DMAOFFSET(BufferB);
             break;
         default:
-        return -1;
+            return -1;
     }
     return 0;
 }
 //------------------------------------------------------------------------------------------------
+int DMAInit()
+//------------------------------------------------------------------------------------------------
+{
+    BYTE i;
+    for (i = DMA0; i <= DMA7; i++){
+        DMAConfig[i]._This = NULL;
+        DMAConfig[i].BufA = NULL;
+        DMAConfig[i].BufB = NULL;
+        DMAConfig[i].Count = 0;
+        DMAConfig[i].fillingBufferAFunc = NULL;
+        DMAConfig[i].fillingBufferBFunc = NULL;
+    }
+
+    return 0;
+}
+//------------------------------------------------------------------------------------------------
+#define DMA0SetConfig(Config) DMA0CON = Config
+#define DMA1SetConfig(Config) DMA1CON = Config
+#define DMA2SetConfig(Config) DMA2CON = Config
+#define DMA3SetConfig(Config) DMA3CON = Config
+#define DMA4SetConfig(Config) DMA4CON = Config
+#define DMA5SetConfig(Config) DMA5CON = Config
+#define DMA6SetConfig(Config) DMA6CON = Config
+#define DMA7SetConfig(Config) DMA7CON = Config
+
 int DMASetConfig(DMA_ID id, WORD Config)
 //------------------------------------------------------------------------------------------------
 {
@@ -1151,6 +1278,14 @@ int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
     }
     return 0;
 }
+#define DMA0SetDataCount(Count) DMA0CNT = Count
+#define DMA1SetDataCount(Count) DMA1CNT = Count
+#define DMA2SetDataCount(Count) DMA2CNT = Count
+#define DMA3SetDataCount(Count) DMA3CNT = Count
+#define DMA4SetDataCount(Count) DMA4CNT = Count
+#define DMA5SetDataCount(Count) DMA5CNT = Count
+#define DMA6SetDataCount(Count) DMA6CNT = Count
+#define DMA7SetDataCount(Count) DMA7CNT = Count
 //------------------------------------------------------------------------------------------------
 int DMASetDataCount(DMA_ID id, WORD Count)
 //------------------------------------------------------------------------------------------------
@@ -1220,48 +1355,91 @@ int DMAPrepBuffer(DMA_ID id)
     }
     return 0;
 }
+#define DMA0Enable  DMA0CONbits.CHEN = 1
+#define DMA0Disable DMA0CONbits.CHEN = 0
+#define DMA1Enable  DMA1CONbits.CHEN = 1
+#define DMA1Disable DMA1CONbits.CHEN = 0
+#define DMA2Enable  DMA2CONbits.CHEN = 1
+#define DMA2Disable DMA2CONbits.CHEN = 0
+#define DMA3Enable  DMA3CONbits.CHEN = 1
+#define DMA3Disable DMA3CONbits.CHEN = 0
+#define DMA4Enable  DMA4CONbits.CHEN = 1
+#define DMA4Disable DMA4CONbits.CHEN = 0
+#define DMA5Enable  DMA5CONbits.CHEN = 1
+#define DMA5Disable DMA5CONbits.CHEN = 0
+#define DMA6Enable  DMA6CONbits.CHEN = 1
+#define DMA6Disable DMA6CONbits.CHEN = 0
+#define DMA7Enable  DMA7CONbits.CHEN = 1
+#define DMA7Disable DMA7CONbits.CHEN = 0
 //------------------------------------------------------------------------------------------------
-int DMASetState(DMA_ID id, BOOL enabled, BOOL force)
+int DMAEnable(DMA_ID id)
 //------------------------------------------------------------------------------------------------
 {
     switch(id){
         case DMA0:
-            DMA0CONbits.CHEN = enabled;
-            DMA0REQbits.FORCE = force;
+            DMA0CONbits.CHEN = 1;
             break;
         case DMA1:
-            DMA1CONbits.CHEN = enabled;
-            DMA1REQbits.FORCE = force;
+            DMA1CONbits.CHEN = 1;
             break;
         case DMA2:
-            DMA2CONbits.CHEN = enabled;
-            DMA2REQbits.FORCE = force;
+            DMA2CONbits.CHEN = 1;
             break;
         case DMA3:
-            DMA3CONbits.CHEN = enabled;
-            DMA3REQbits.FORCE = force;
+            DMA3CONbits.CHEN = 1;
             break;
         case DMA4:
-            DMA4CONbits.CHEN = enabled;
-            DMA4REQbits.FORCE = force;
+            DMA4CONbits.CHEN = 1;
             break;
         case DMA5:
-            DMA5CONbits.CHEN = enabled;
-            DMA5REQbits.FORCE = force;
+            DMA5CONbits.CHEN = 1;
             break;
         case DMA6:
-            DMA6CONbits.CHEN = enabled;
-            DMA6REQbits.FORCE = force;
+            DMA6CONbits.CHEN = 1;
             break;
         case DMA7:
-            DMA7CONbits.CHEN = enabled;
-            DMA7REQbits.FORCE = force;
+            DMA7CONbits.CHEN = 1;
             break;
         default:
-        return -1;
+            return -1;
     }
     return 0;
 }
+//------------------------------------------------------------------------------------------------
+int DMADisable(DMA_ID id)
+//------------------------------------------------------------------------------------------------
+{
+    switch(id){
+        case DMA0:
+            DMA0CONbits.CHEN = 0;
+            break;
+        case DMA1:
+            DMA1CONbits.CHEN = 0;
+            break;
+        case DMA2:
+            DMA2CONbits.CHEN = 0;
+            break;
+        case DMA3:
+            DMA3CONbits.CHEN = 0;
+            break;
+        case DMA4:
+            DMA4CONbits.CHEN = 0;
+            break;
+        case DMA5:
+            DMA5CONbits.CHEN = 0;
+            break;
+        case DMA6:
+            DMA6CONbits.CHEN = 0;
+            break;
+        case DMA7:
+            DMA7CONbits.CHEN = 0;
+            break;
+        default:
+            return -1;
+    }
+    return 0;
+}
+
 //------------------------------------------------------------------------------------------------
 int DMAGetPPState(DMA_ID id)
 //------------------------------------------------------------------------------------------------
@@ -1339,24 +1517,32 @@ int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled)
     }
     return 0;
 }
+#define DMA0ForceTransfer DMA0REQbits.FORCE = 1
+#define DMA1ForceTransfer DMA1REQbits.FORCE = 1
+#define DMA2ForceTransfer DMA2REQbits.FORCE = 1
+#define DMA3ForceTransfer DMA3REQbits.FORCE = 1
+#define DMA4ForceTransfer DMA4REQbits.FORCE = 1
+#define DMA5ForceTransfer DMA5REQbits.FORCE = 1
+#define DMA6ForceTransfer DMA6REQbits.FORCE = 1
+#define DMA7ForceTransfer DMA7REQbits.FORCE = 1
 int DMAForceTransfer(DMA_ID id)
 {
     switch(id){
-        case DMA0: DMA0REQbits.FORCE = 1;
+        case DMA0: DMA0ForceTransfer;
             break;
-        case DMA1: DMA1REQbits.FORCE = 1;
+        case DMA1: DMA1ForceTransfer;
             break;
-        case DMA2: DMA2REQbits.FORCE = 1;
+        case DMA2: DMA2ForceTransfer;
             break;
-        case DMA3: DMA3REQbits.FORCE = 1;
+        case DMA3: DMA3ForceTransfer;
             break;
-        case DMA4: DMA4REQbits.FORCE = 1;
+        case DMA4: DMA4ForceTransfer;
             break;
-        case DMA5: DMA5REQbits.FORCE = 1;
+        case DMA5: DMA5ForceTransfer;
             break;
-        case DMA6: DMA6REQbits.FORCE = 1;
+        case DMA6: DMA6ForceTransfer;
             break;
-        case DMA7: DMA7REQbits.FORCE = 1;
+        case DMA7: DMA7ForceTransfer;
             break;
         default:
         return -1;
@@ -1451,6 +1637,7 @@ INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 INTERRUPT _DMA6Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
+	IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
     DMA_ID id = DMA6;
     if(DMAConfig[id].fillingBufferAFunc){
         if(DMACS1bits.PPST6){
@@ -1459,7 +1646,7 @@ INTERRUPT _DMA6Interrupt(void)
             DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
         }
     }     
-    IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
+    //IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA7Interrupt(void)
@@ -1794,6 +1981,8 @@ typedef struct _SPI_STATUS
     BYTE Busy;              // флаг занятости устройства
     BYTE LastIntLevel;
     EFlag Flag;
+    WORD DMASendCfg;
+    WORD DMAReceiveCfg;
 }SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
@@ -1804,7 +1993,7 @@ volatile SPI_STATUS SPIStatus[2];
 static void WaitForDataReadySPI1( void )
 {
     if(SPI1STATbits.SPIEN)
-    while ((SPI1STATbits.SPITBF) || (!SPI1STATbits.SPIRBF)){
+    while (SPI1STAT & 0x03 != 1 ){
         Nop();
         Nop();
     };
@@ -1812,7 +2001,7 @@ static void WaitForDataReadySPI1( void )
 static void WaitForDataReadySPI2( void )
 {
     if(SPI2STATbits.SPIEN)
-    while ((SPI2STATbits.SPITBF) || (!SPI2STATbits.SPIRBF)){
+    while (SPI2STAT & 0x03 != 1 ){
         Nop();
         Nop();
     };
@@ -1829,21 +2018,17 @@ void SPILock(SPI_ID id)
 {
     BYTE Tmp = SRbits.IPL;
     BYTE i = 0;
+    volatile SPI_STATUS* Status = &SPIStatus[id];
     while(1){
         // вход в критическую секцию
         SRbits.IPL = 4;
-        if(SPIStatus[id].Busy){
+        if(Status->Busy){
             // выход из критической секции
             SRbits.IPL = Tmp;
         } else {
-            SPIStatus[id].Busy = 1;
-            SPIStatus[id].LastIntLevel = Tmp;
+            Status->Busy = 1;
+            Status->LastIntLevel = Tmp;
             break;
-        }
-        // ждем 32 такта ( время отправки байта )
-        for(i = 0; i < 16; i++){
-            Nop();
-            Nop();
         }
     };
 }
@@ -1860,12 +2045,14 @@ void SPIRelease(SPI_ID id)
 
 BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
 {
-    SPIDeviceList[DeviceCount].Config.SPICON1 = Config.SPICON1;
-    SPIDeviceList[DeviceCount].Config.SPISTAT = Config.SPISTAT;
-    SPIDeviceList[DeviceCount].DeviceSelect = DeviceSelect;
-    SPIDeviceList[DeviceCount].DeviceRelease = DeviceRelease;
-    SPIDeviceList[DeviceCount].id = id;
-    SPIDeviceList[DeviceCount].OldIntLevel = 0;
+    DEVICE_REG* Device = &SPIDeviceList[DeviceCount];
+    Device->Config.SPICON1 = Config.SPICON1;
+    Device->Config.SPICON2 = Config.SPICON2;
+    Device->Config.SPISTAT = Config.SPISTAT;
+    Device->DeviceSelect = DeviceSelect;
+    Device->DeviceRelease = DeviceRelease;
+    Device->id = id;
+    Device->OldIntLevel = 0;
     DeviceRelease();
     return DeviceCount++;
 }
@@ -1876,27 +2063,33 @@ int SPIInit()
 {
     BYTE SPI_id = 0;
     BYTE i = 0;
+    volatile SPI_STATUS* Status;
+    DEVICE_REG* Device;
     for (SPI_id = 0; SPI_id < 2; SPI_id++) {
-        SPIStatus[SPI_id].CurrentDevice = 0;
-        SPIStatus[SPI_id].SPIDataCount = 0;
-        SPIStatus[SPI_id].Busy = 0;
+        Status = &SPIStatus[SPI_id];
+        Status->CurrentDevice = 0;
+        Status->SPIDataCount = 0;
+        Status->Busy = 0;
+        Status->DMASendCfg    = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+        Status->DMAReceiveCfg = DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     }
 
     DeviceCount = 0;
     for(i = 0; i < MAX_SPI_DEVICES; i++){
-        SPIDeviceList[i].Config.SPICON1 = 0;
-        SPIDeviceList[i].Config.SPICON2 = 0;
-        SPIDeviceList[i].Config.SPISTAT = 0;
-        SPIDeviceList[i].DeviceSelect = NULL;
-        SPIDeviceList[i].DeviceRelease = NULL;
-        SPIDeviceList[i].id = ID_SPI1;
-        SPIDeviceList[i].OldIntLevel = 0;
+        Device = &SPIDeviceList[i];
+        Device->Config.SPICON1 = 0;
+        Device->Config.SPICON2 = 0;
+        Device->Config.SPISTAT = 0;
+        Device->DeviceSelect = NULL;
+        Device->DeviceRelease = NULL;
+        Device->id = ID_SPI1;
+        Device->OldIntLevel = 0;
     }
 	// SPI2
-    DMAInit(DMA6, 0);
-    DMASelectDevice(DMA6, IRQ_SPI2, (int)&SPI2BUF);
-    DMASetCallback(DMA6, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA6, 5, 1);
+    DMAInit(DMA3, 0);
+    DMASelectDevice(DMA3, IRQ_SPI2, (int)&SPI2BUF);
+    DMASetCallback(DMA3, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
+    DMASetInt(DMA3, 5, 1);
 
     TRISGbits.TRISG6 = 0;  // Set SCK pin as an output
     TRISGbits.TRISG7 = 1;  // Make sure SDI pin is an input
@@ -1908,10 +2101,10 @@ int SPIInit()
     IEC2bits.SPI2IE = 1;
     IEC2bits.SPI2EIE = 0;
 	// SPI1
-    DMAInit(DMA7, 0);
-    DMASelectDevice(DMA7, IRQ_SPI1, (int)&SPI1BUF);
-    DMASetCallback(DMA7, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA7, 5, 1);
+    DMAInit(DMA2, 0);
+    DMASelectDevice(DMA2, IRQ_SPI1, (int)&SPI1BUF);
+    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
+    DMASetInt(DMA2, 5, 1);
 
     TRISFbits.TRISF6 = 0;  // Set SCK pin as an output
     TRISFbits.TRISF7 = 1;  // Make sure SDI pin is an input
@@ -1932,38 +2125,43 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
     volatile BYTE Dummy;
     SPI_STATUS* Status = (SPI_STATUS*)_This;
     BYTE DevHandle = Status->CurrentDevice;
-    SPI_ID SPI_id = SPIDeviceList[DevHandle].id;
+    DEVICE_REG* Device = &SPIDeviceList[DevHandle];
+    SPI_ID SPI_id = Device->id;
     switch(Status->Flag){
         case SEND_DATA:
         case SEND_CMD:
-            SPIDeviceList[DevHandle].DeviceRelease();
+            Device->DeviceRelease();
             SPIRelease(SPI_id);
             Status->Flag = SEND_END;
             break;
         case RECEIVE_DATA:
-        	if(Status->SPIDataCount > 0){
-	            switch(SPI_id){
-	                case ID_SPI1:
-	                    DMASetConfig(DMA7, DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NULL_DATA_TO_DEVICE, REG_INDIRECT_W_POST_INC, ONE_SHOT));
-	                    DMASetDataCount(DMA7, Status->SPIDataCount);
-	                    DMASetState(DMA7, TRUE, FALSE);
-	                    Status->Flag = RECEIVE_CONTINUE;
-	                break;
-	                case ID_SPI2:
-	                    DMASetState(DMA6, 0, 0);
-	                    DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NULL_DATA_TO_DEVICE, REG_INDIRECT_W_POST_INC, ONE_SHOT));
-	                    DMASetDataCount(DMA6, Status->SPIDataCount);
-	                    DMASetState(DMA6, 1, 1);
-	                    Status->Flag = RECEIVE_CONTINUE;
-	                    break;
-	            }
-	            break;
-	         }   
+            if(Status->SPIDataCount > 0){
+                switch(SPI_id){
+                    case ID_SPI1:
+                        DMA2SetConfig(Status->DMAReceiveCfg);
+                        DMA2SetDataCount(Status->SPIDataCount);
+                        Status->Flag = RECEIVE_CONTINUE;
+                        DMA2Enable;
+                        DMA2ForceTransfer;
+                    break;
+                    case ID_SPI2:
+                        DMA3SetConfig(Status->DMAReceiveCfg);
+                        DMA3SetDataCount(Status->SPIDataCount);
+                        Status->Flag = RECEIVE_CONTINUE;
+                        DMA3Enable;
+                        DMA3ForceTransfer;
+                    break;
+                    default: 
+                    break;
+                }
+                break;
+             }   
         case RECEIVE_CONTINUE:
             Status->Flag = RECEIVE_END;
             break;
         case SEND_END:
         case RECEIVE_END:
+        default:
             break;
     }
     
@@ -1975,7 +2173,7 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
 INTERRUPT _SPI1Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-	volatile BYTE Dummy;
+    volatile BYTE Dummy;
     if(SPIStatus[ID_SPI1].Flag != RECEIVE_CONTINUE){
         Dummy = SPI1BUF;
     }
@@ -2118,47 +2316,59 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
+    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
+    SPI_ID SPI_id = Device->id;
     WORD DataSent = 0;
+    volatile SPI_STATUS* Status;
+    
     // TODO: проверка размеров
     // Захват шины SPI
     SPILock(SPI_id);
-    SPIStatus[SPI_id].CurrentDevice = DeviceHandle;
-    SPIStatus[SPI_id].Flag = SEND_DATA;
+    Status = &SPIStatus[SPI_id];
+    Status->CurrentDevice = DeviceHandle;
+    Status->Flag = SEND_DATA;
     switch(SPI_id){
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI1CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;            
-            SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA7, 0, 0);
-            DMASetConfig(DMA7, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
-            DMASetDataCount(DMA7, CmdLen + DataLen);
-            memcpy(DMA7BufferA, Cmd, CmdLen);
-            memcpy(&DMA7BufferA[CmdLen], Data, DataLen);
-            DMA7BufferA[CmdLen] = 0;
+            SPI1CON1 = Device->Config.SPICON1;
+            SPI1CON2 = Device->Config.SPICON2;
+            SPI1STAT = Device->Config.SPISTAT;
+            // буфер для отправки
+            DMA2Disable;
+            DMA2SetConfig(Status->DMASendCfg);
+            DMA2SetDataCount(CmdLen + DataLen);
+            // буфер для приёма
+            DMA3Disable;
+            DMA3SetConfig(Status->DMAReceiveCfg);
+            DMA3SetDataCount(CmdLen + DataLen);
+            memcpy(DMA2BufferA, Cmd, CmdLen);
+            memcpy(&DMA2BufferA[CmdLen], Data, DataLen);
+            DMA2BufferA[CmdLen] = 0;
             IFS0bits.SPI1IF = 0;
             IFS0bits.SPI1EIF = 0;
             SPI1STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA7, 1, 1);
+            Device->DeviceSelect();
+            DMA2Enable;
+            DMA3Enable;
+            DMA2ForceTransfer;
             break;
         case ID_SPI2:
             SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI2CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;            
-            SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA6, 0, 0);
-            DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
-            DMASetDataCount(DMA6, CmdLen + DataLen);
-            memcpy(DMA6BufferA, Cmd, CmdLen);
-            memcpy(&DMA6BufferA[CmdLen], Data, DataLen);
-            DMA6BufferA[CmdLen] = 0;
+            SPI2CON1 = Device->Config.SPICON1;
+            SPI2CON2 = Device->Config.SPICON2;            
+            SPI2STAT = Device->Config.SPISTAT;
+            DMA3Disable;
+            DMA3SetConfig(Status->DMASendCfg);
+            DMA3SetDataCount(CmdLen + DataLen);
+            memcpy(DMA3BufferA, Cmd, CmdLen);
+            memcpy(&DMA3BufferA[CmdLen], Data, DataLen);
+            DMA3BufferA[CmdLen] = 0;
             IFS2bits.SPI2IF = 0;
             IFS2bits.SPI2EIF = 0;
             SPI2STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA6, 1, 1);
+            Device->DeviceSelect();
+            DMA3Enable;
+            DMA3ForceTransfer;
             break;
         default:
             SPIRelease(SPI_id);
@@ -2187,8 +2397,8 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI1CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;            
             SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA7, 0, 0);
-            DMASetConfig(DMA7, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
+            DMAEnable(DMA7, 0, 0);
+            DMASetConfig(DMA7, SPIStatus[SPI_id].DMASendCfg);
             DMASetDataCount(DMA7, CmdLen + 1);
             memcpy(DMA7BufferA, Cmd, CmdLen);
             DMA7BufferA[CmdLen] = 0;
@@ -2196,7 +2406,7 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             IFS0bits.SPI1EIF = 0;
             SPI1STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA7, 1, 1);
+            DMAEnable(DMA7, 1, 1);
             while(SPIStatus[ID_SPI1].Flag != RECEIVE_END){
                 Nop();
                 Nop();
@@ -2211,8 +2421,8 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI2CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;
             SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA6, 0, 0);
-            DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
+            DMAEnable(DMA6, 0, 0);
+            DMASetConfig(DMA6, SPIStatus[SPI_id].DMASendCfg);
             DMASetDataCount(DMA6, CmdLen + 1);
             memcpy(DMA6BufferA, Cmd, CmdLen);
             DMA6BufferA[CmdLen] = 0;
@@ -2220,7 +2430,7 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             IFS2bits.SPI2EIF = 0;
             SPI2STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA6, 1, 1);
+            DMAEnable(DMA6, 1, 1);
             while(SPIStatus[ID_SPI2].Flag != RECEIVE_END){
                 Nop();
                 Nop();
@@ -2255,8 +2465,8 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             SPI1STATbits.SPIEN = 0;
             SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA7, 0, 0);
-            DMASetConfig(DMA7, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
+            DMAEnable(DMA7, 0, 0);
+            DMASetConfig(DMA7, SPIStatus[SPI_id].DMASendCfg);
             DMASetDataCount(DMA7, CmdLen);
             memcpy(DMA7BufferA, Cmd, CmdLen);
             DMA7BufferA[CmdLen] = 0;
@@ -2264,14 +2474,14 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             IFS0bits.SPI1EIF = 0;
             SPI1STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA7, 1, 1);
+            DMAEnable(DMA7, 1, 1);
             break;
         case ID_SPI2:
             SPI2STATbits.SPIEN = 0;
             SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
             SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMASetState(DMA6, 0, 0);
-            DMASetConfig(DMA6, DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT));
+            DMAEnable(DMA6, 0, 0);
+            DMASetConfig(DMA6, SPIStatus[SPI_id].DMASendCfg);
             DMASetDataCount(DMA6, CmdLen);
             memcpy(DMA6BufferA, Cmd, CmdLen);
             DMA6BufferA[CmdLen] = 0;
@@ -2279,7 +2489,7 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             IFS2bits.SPI2EIF = 0;
             SPI2STATbits.SPIEN = 1;
             SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMASetState(DMA6, 1, 1);
+            DMAEnable(DMA6, 1, 1);
             break;
         default:
             SPIRelease(SPI_id);            
