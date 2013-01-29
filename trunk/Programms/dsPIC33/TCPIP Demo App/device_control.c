@@ -1053,6 +1053,7 @@ DMAConfigType DMAConfig[8];
     BYTE DMABuffer[2048];
 #endif
 static int BufferBusySize = 0;
+//BYTE DMARegisterDevice(DMA_ID id, );
 //------------------------------------------------------------------------------------------------
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode)
 //------------------------------------------------------------------------------------------------
@@ -1157,7 +1158,7 @@ int DMAInit()
 #define DMA5SetConfig(Config) DMA5CON = Config
 #define DMA6SetConfig(Config) DMA6CON = Config
 #define DMA7SetConfig(Config) DMA7CON = Config
-
+//------------------------------------------------------------------------------------------------
 int DMASetConfig(DMA_ID id, WORD Config)
 //------------------------------------------------------------------------------------------------
 {
@@ -1233,14 +1234,14 @@ int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG)
     }
     return 0;
 }
-#define DMA0SetDataCount(Count) DMA0CNT = Count
-#define DMA1SetDataCount(Count) DMA1CNT = Count
-#define DMA2SetDataCount(Count) DMA2CNT = Count
-#define DMA3SetDataCount(Count) DMA3CNT = Count
-#define DMA4SetDataCount(Count) DMA4CNT = Count
-#define DMA5SetDataCount(Count) DMA5CNT = Count
-#define DMA6SetDataCount(Count) DMA6CNT = Count
-#define DMA7SetDataCount(Count) DMA7CNT = Count
+#define DMA0SetDataCount(Count) DMA0CNT = Count - 1
+#define DMA1SetDataCount(Count) DMA1CNT = Count - 1
+#define DMA2SetDataCount(Count) DMA2CNT = Count - 1
+#define DMA3SetDataCount(Count) DMA3CNT = Count - 1
+#define DMA4SetDataCount(Count) DMA4CNT = Count - 1
+#define DMA5SetDataCount(Count) DMA5CNT = Count - 1
+#define DMA6SetDataCount(Count) DMA6CNT = Count - 1
+#define DMA7SetDataCount(Count) DMA7CNT = Count - 1
 //------------------------------------------------------------------------------------------------
 int DMASetDataCount(DMA_ID id, WORD Count)
 //------------------------------------------------------------------------------------------------
@@ -2044,9 +2045,9 @@ int SPIInit()
     DMA3SetConfig(Status->DMAReceiveCfg); //Receive
     DMASelectDevice(DMA2, IRQ_SPI2, (int)&SPI2BUF);
     DMASelectDevice(DMA3, IRQ_SPI2, (int)&SPI2BUF);
-    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
+    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI2]), NULL, NULL);
     DMASetCallback(DMA3, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA2, 5, 1);
+    //DMASetInt(DMA2, 5, 1);
     DMASetInt(DMA3, 5, 1);
 
     Status = &SPIStatus[ID_SPI1];
@@ -2084,10 +2085,11 @@ int SPIInit()
     TRISGbits.TRISG8 = 0;  // Set SDO pin as an output
     
     IPC8bits.SPI2IP = 6;
+    IPC8bits.SPI2EIP = 6;
     IFS2bits.SPI2IF = 0;
     IFS2bits.SPI2EIF = 0;
     IEC2bits.SPI2IE = 1;
-    IEC2bits.SPI2EIE = 0;
+    IEC2bits.SPI2EIE = 1;
     // SPI1
 
     TRISFbits.TRISF6 = 0;  // Set SCK pin as an output
@@ -2095,10 +2097,11 @@ int SPIInit()
     TRISFbits.TRISF8 = 0;  // Set SDO pin as an output
     
     IPC2bits.SPI1IP = 6;
+    IPC2bits.SPI1EIP = 6;
     IFS0bits.SPI1IF = 0;
     IFS0bits.SPI1EIF = 0;
     IEC0bits.SPI1IE = 1;
-    IEC0bits.SPI1EIE = 0;
+    IEC0bits.SPI1EIE = 1;
 
     SPIInitialized = 1;
     return 0;
@@ -2143,6 +2146,18 @@ INTERRUPT _SPI2Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
     IFS2bits.SPI2IF = 0;
+}
+//------------------------------------------------------------------------------------------------
+INTERRUPT _SPI1ErrInterrupt(void)
+//------------------------------------------------------------------------------------------------
+{
+    IFS0bits.SPI1EIF = 0;
+}
+//------------------------------------------------------------------------------------------------
+INTERRUPT _SPI2ErrInterrupt(void)
+//------------------------------------------------------------------------------------------------
+{
+    IFS2bits.SPI2EIF = 0;
 }
 //------------------------------------------------------------------------------------------------
 // получение данных через SPI
@@ -2274,12 +2289,14 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     // 1. ќпределить порт SPI
     DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = Device->id;
-    volatile SPI_STATUS* Status;
-    
-    // TODO: проверка размеров
+    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
+
+    // проверка размеров
+    if(CmdLen + DataLen > Status->DMASendBufLen){
+        while(1);
+    }
     // «ахват шины SPI
     SPILock(SPI_id);
-    Status = &SPIStatus[SPI_id];
     Status->CurrentDevice = DeviceHandle;
     Status->Flag = SEND_DATA;
     switch(SPI_id){
@@ -2336,7 +2353,11 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
     DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = Device->id;
     volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
-    // TODO: проверка размеров
+
+    // проверка размеров
+    if(CmdLen + DataLen > Status->DMASendBufLen){
+        while(1);
+    }
     // «ахват шины SPI
     SPILock(SPI_id);
     Status->CurrentDevice = DeviceHandle;
@@ -2408,7 +2429,11 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
     DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = Device->id;
     volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
-    // TODO: проверка размеров
+
+    // проверка размеров
+    if(CmdLen > Status->DMASendBufLen){
+        while(1);
+    }
     // «ахват шины SPI
     SPILock(SPI_id);
     Status->CurrentDevice = DeviceHandle;

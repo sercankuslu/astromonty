@@ -169,7 +169,7 @@ int FlashRelease()
 static SPIFlashInitialized = 0;  
 void SPIFlashInit(void)
 {
-	BYTE Cmd[] = {JEDEC_ID};
+	BYTE Cmd = JEDEC_ID;
 	BYTE Data[3];
     if(SPIFlashInitialized) return 0;
     SPIFlashInitialized = 1;
@@ -185,7 +185,7 @@ void SPIFlashInit(void)
 	// Read Device ID code to determine supported device capabilities/instructions
 	{
 		
-		SPIReceiveData( FlashDeviceHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
+		SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3 );
 
 		// Decode Device Capabilities Flags from Device ID
 		deviceCaps.v = 0x00;
@@ -221,17 +221,17 @@ void SPIFlashInit(void)
     // Clear any pre-existing AAI write mode
     // This may occur if the PIC is reset during a write, but the Flash is
     // not tied to the same hardware reset.
-    Cmd[0] = WRDI;
-    SPISendCmd( FlashDeviceHandle, Cmd, 1);
+    Cmd = WRDI;
+    SPISendCmd( FlashDeviceHandle, &Cmd, 1);
 
     // Execute Enable-Write-Status-Register (EWSR) instruction
-    Cmd[0] = EWSR;
-    SPISendCmd( FlashDeviceHandle, Cmd, 1);
+    Cmd = EWSR;
+    SPISendCmd( FlashDeviceHandle, &Cmd, 1);
 
     // Clear Write-Protect on all memory locations
-    Cmd[0] = WRSR;
+    Cmd = WRSR;
     Data[0] = 0;
-    SPISendData( FlashDeviceHandle,  Cmd, 1, Data, 1 );
+    SPISendData( FlashDeviceHandle, &Cmd, 1, Data, 1 );
 }
 
 
@@ -811,18 +811,8 @@ void SPIFlashEraseSector(DWORD dwAddr)
     None
   ***************************************************************************/
 static void _SendCmd(BYTE cmd)
-{
-    // Activate chip select
-    SPIFLASH_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Send instruction
-    SPIFLASH_SSPBUF = cmd;
-    WaitForDataByte();
-    cmd = SPIFLASH_SSPBUF;
-
-    // Deactivate chip select
-    SPIFLASH_CS_IO = 1;
+{    
+    SPISendCmd( FlashDeviceHandle, &cmd, 1);
 }
 
 
@@ -847,28 +837,14 @@ static void _SendCmd(BYTE cmd)
     None
   ***************************************************************************/
 static void _WaitWhileBusy(void)
-{
-    volatile BYTE Dummy;
-
-    // Activate chip select
-    SPIFLASH_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Send Read Status Register instruction
-    SPIFLASH_SSPBUF = RDSR;
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
+{    
+    BYTE Cmd = RDSR;	
+	BYTE Data;
     // Poll the BUSY bit
     do
     {
-        SPIFLASH_SSPBUF = 0x00;
-        WaitForDataByte();
-        Dummy = SPIFLASH_SSPBUF;
-    } while(Dummy & BUSY);
-
-    // Deactivate chip select
-    SPIFLASH_CS_IO = 1;
+        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, &Data, 1);
+    } while(Data & BUSY);
 }
 
 /*****************************************************************************
