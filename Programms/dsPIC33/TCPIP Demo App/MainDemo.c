@@ -338,54 +338,31 @@ int main(void)
     //WORD Count = 10;
     //DMA_ID id = 6;
     //(mas[id])(Count);
-    BYTE Cmd[] = {0x03,0x04,0x00,0x00};
+    //BYTE Cmd[] = {0x03,0x04,0x00,0x00};
     //BYTE Cmd[] = {0x9F};
-    SPIFLASH_CS_TRIS = 0;
-    SPIFLASH_CS_IO = 1;
-    SPIRTCSRAM_CS_TRIS = 0;
-    SPIRTCSRAM_CS_IO = 1;
-    ENC_CS_TRIS = 0;
-    ENC_CS_IO = 1;
+    //SPIFLASH_CS_TRIS = 0;
+    //SPIFLASH_CS_IO = 1;
+    //SPIRTCSRAM_CS_TRIS = 0;
+    //SPIRTCSRAM_CS_IO = 1;
+    //ENC_CS_TRIS = 0;
+    //ENC_CS_IO = 1;
     
-    BYTE Data[512]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+    //BYTE Data[512]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
                   //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
-    SPIConfig Config;
-    BYTE EncHandle = 0;
+    //SPIConfig Config;
+    //BYTE EncHandle = 0;
         
     SPIInit();
-    //SPIFlashInit();
-    //SPIFlashReadArray(0x40200, Data, sizeof(Data));
-    //Config.SPICON1 = 0x000F | 0x0120; //SPI_CreateParams( MASTER, MODE0, 0,IDLE_DISABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
-    //Config.SPISTAT = 0;
-    
-    //EncHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
-    //SPISendData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
-    //SPIReceiveData( EncHandle, Cmd, sizeof(Cmd), Data, sizeof(Data) );
-    
-    //while(1);
-    //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
-    //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
-    //k = SPIRegisterDevice(ID_SPI1, Config, ENCSelect, ENCRelease);
-    //memcpy(Cmd,Data,sizeof(Data));
-    //SPI1PutArray(Cmd, sizeof(Cmd));
-    //SPI1SendData( 0, (BYTE*)&Cmd, sizeof(Cmd), (BYTE*)Data, sizeof(Data), ENCSelect, ENCRelease);
-    //BYTE sync_mode=0;
-        //BYTE slew=0; 
+ 
     // указатель на функцию
     //int (*p)(void); // объявление
     //p = OCSetup;    // присвоение
     //p();			  // вызов
 
     //volatile DWORD UTCT;
-    LATFbits.LATF4 = 0;
-    TRISFbits.TRISF4 = 0;  
-//    CloseI2C1(); 
-//	sync_mode = 0;
-//    slew = 0;
-//    OpenI2C1(sync_mode,slew);
-//    I2C1BRG=32;             //1 MHz Baud clock(32) @40MHz
-//   	IdleI2C1();
-        
+    //LATFbits.LATF4 = 0;
+    //TRISFbits.TRISF4 = 0;  
+
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
     {
@@ -396,198 +373,8 @@ int main(void)
         AD1PCFGL = 0xFFFF;
         AD2PCFGL = 0xFFFF;
     }
-        
-    //BYTE res;
-    //char bfr[64];
-    //BYTE length=0;
-    //AppConfig.MyIPAddr.Val = 0x12345678;
-    //while(1){
-    //    res = RunClient(bfr, sizeof(bfr), &length);        
-    //    res = ProcessClients(0, bfr, &length);            
-    //}
-    if(0){
-            #ifdef NO_DEFINED
-        WORD Buf[256];
-        WORD BufSize = 256;
-        WORD* BufA;
-        WORD* BufB;
-        //double k=1.23;
-        //volatile double B;
-        //B = exp(k);
-        //if(B > 0.0){
-            //    OCSetup();
-        //}
-        DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-        DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
-        DMASetBufferSize(DMA0, 64);
-        BufA = DMAGetBuffer(DMA0);
-        BufB = DMAGetBuffer(DMA0);
-        DMASetBuffers(DMA0,BufA,BufB);
-        
-        DMASetCallback(DMA0, NULL, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
-        DMASetInt(DMA0, 5, TRUE);
-        DMAPrepBuffer(DMA0);
-        DMASetState(DMA0, TRUE, FALSE);
-         
-        /*PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-        PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);
-        PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-        PushCmdToQueue(&rr1, ST_STOP, 0.0 * Grad_to_Rad, 0.0 * Grad_to_Rad, 1);
-        for(;;){
-            if(Control(&rr1, Buf, BufSize))
-                break;
-        }*/
-        while(1){
-            Nop();
-        }
-        #endif
-    }
-    if(0){
-#ifdef NO_DEFINED
-            DWORD i = 0;
-            WORD sz = 256;
-        {
-                WORD* BufA;
-                WORD* BufB;
-            // Initialize Output Compare Module in Contionous pulse mode
-            OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
-            OCSetValue(ID_OC1, 100, 125);
-            OCSetInt(ID_OC1, 6, TRUE);
-            OCSetCallback(ID_OC1, NULL);
-            OCSetMode(ID_OC1, TOGGLE);
-            
-            // Initialize Timer2
-            TimerInit(T2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-            TimerSetValue(T2, 0, 0xFFFF);
-            TimerSetCallback(T2, NULL);
-            TimerSetInt(T2, 5, FALSE);
 
-            // Initialize Timer3
-            TimerInit(T3, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
-            TimerSetValue(T3, 0, 0xFFFF);
-            OCSetCallback(T3, NULL);
-            TimerSetInt(T3, 5, FALSE);
-           
-            // Setup and Enable DMA Channel
-            DMAInit(DMA0, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA0, IRQ_OC1, (int)&OC1R);
-            DMASetBufferSize(DMA0, 128);
-                BufA = DMAGetBuffer(DMA0);
-                BufB = DMAGetBuffer(DMA0);
-                DMASetBuffers(DMA0,BufA,BufB);
-            DMASetCallback(DMA0, NULL, (ROM void*)fillingBufferR, (ROM void*)fillingBufferR);
-            DMASetInt(DMA0, 5, TRUE);
-            DMAPrepBuffer(DMA0);
-            DMASetState(DMA0, TRUE, FALSE);
-            
-            DMAInit(DMA1, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA1, IRQ_OC2, (int)&OC2R);
-            DMASetBufferSize(DMA1, 128);
-                BufA = DMAGetBuffer(DMA1);
-                BufB = DMAGetBuffer(DMA1);
-                DMASetBuffers(DMA1,BufA,BufB);
-            DMASetCallback(DMA1, NULL, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
-            DMASetInt(DMA1, 5, TRUE);
-            DMAPrepBuffer(DMA1);
-            DMASetState(DMA1, TRUE, FALSE);            
-            
-            // Initialize Output Compare Module in Contionous pulse mode
-            OCInit(ID_OC2, IDLE_DISABLE, OC_TMR3, OC_DISABLED);
-            OCSetValue(ID_OC2, 100, 125);
-            OCSetInt(ID_OC2, 6, TRUE);
-            OCSetCallback(ID_OC2, NULL);            
-            OCSetMode(ID_OC2, TOGGLE);
-            /*
-            // Setup and Enable DMA Channel
-            DMAInit(DMA2, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA2, IRQ_OC2, (int)&OC2R);
-            DMASetBufferSize(DMA2, 64);
-            DMASetCallback(DMA2, NULL, (ROM void*)fillingBufferR1, (ROM void*)fillingBufferR1);
-            DMASetInt(DMA2, 5, TRUE);
-            DMAPrepBuffer(DMA2);
-            DMASetState(DMA2, TRUE, FALSE);
-            
-            DMAInit(DMA3, SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
-            DMASelectDevice(DMA3, IRQ_OC2, (int)&OC2RS);
-            DMASetBufferSize(DMA3, 64);
-            DMASetCallback(DMA3, NULL, (ROM void*)fillingBufferRS1, (ROM void*)fillingBufferRS1);
-            DMASetInt(DMA3, 5, TRUE);
-            DMAPrepBuffer(DMA3);
-            DMASetState(DMA3, TRUE, FALSE);      
-            */
-            // Enable Timer
-            //TimerSetState(T2, TRUE);
-            //TimerSetState(T3, TRUE);
-            T2CONbits.TON = 1;
-            T3CONbits.TON = 1;
-            /*
-            DMAForceTransfer(DMA0);
-            DMAForceTransfer(DMA1);
-            DMAForceTransfer(DMA2);
-            DMAForceTransfer(DMA3);
-            */
-
-        }
-        while(1){	       	
-                if(i++ > 100000){
-                        if(sz == 32) 
-                                sz = 128; 
-                        else 
-                                sz = 32;
-                        //DMASetState(DMA0, FALSE, FALSE);
-                        //DMASetState(DMA1, FALSE, FALSE);
-                        DMASetBufferSize(DMA0, sz);
-                        DMASetBufferSize(DMA1, sz);
-                        //DMAForceTransfer(DMA0);
-                        //DMAForceTransfer(DMA1);
-                        //DMASetState(DMA0, TRUE, FALSE);
-                        //DMASetState(DMA1, TRUE, FALSE);
-                        
-                        
-                        i = 0;
-                }
-           Nop();
-           Nop();
-        }
-#endif
-    }
-    
-    if(0){
-        OCSetup();
-        //вызов предпросчета двигателей
-        {
-            T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
-            TMR6 = 0x0000;  //
-            PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
-            IFS2bits.T6IF = 0;
-            IEC2bits.T6IE = 1;
-            IPC11bits.T6IP = 5;    
-            T6CONbits.TON = 1;
-        } 
-//        PushCmdToQueue(&rr1, ST_ACCELERATE, 20.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr1, ST_RUN, 20.0,  45.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-//        //Control(&rr1);
-//        PushCmdToQueue(&rr2, ST_ACCELERATE, 18.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr2, ST_RUN, 18.0,  45.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);         
-//        //Control(&rr2);
-//        
-//        
-//        PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
-//        PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-        //GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, 90 * Grad_to_Rad, 0);
-        //Control(&rr3);
-        
-        while(1){
-            //TimerMonitor();
-            Nop();
-            ////Control(&rr1);
-            //Control(&rr2);
-            //Control(&rr3);
-        }
-     }   
+  
     InitializeBoard();
     // calculate CPU speed  
     if(0){
@@ -705,21 +492,7 @@ int main(void)
     mDNSMulticastFilterRegister();            
     #endif
 
-    if(0){
-            LoadRRConfig();
-            OCSetup();
-            //вызов предпросчета двигателей
-            {
-                T6CON = 0x0030; //0.000000025*256 = 0.0000064 = 6.4us
-                TMR6 = 0x0000;  //
-                PR6 = 10;//;    //0.0000064 * 10 = 0.000064 = 64us
-                IFS2bits.T6IF = 0;
-                IEC2bits.T6IE = 1;
-                IPC11bits.T6IP = 5;    
-                T6CONbits.TON = 1;
-            } 
-    }
-    //Вентиляторы        
+     //Вентиляторы        
     {
         TRISBbits.TRISB4 = 0;
         T7CON = 0x0030; //0.000000025*256 = 0.0000064
@@ -730,29 +503,7 @@ int main(void)
         IPC12bits.T7IP = 4;    
         T7CONbits.TON = 1;
     } 
-    /*
-    PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_RUN, 10.0,  90.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr1, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-    //Control(&rr1);
-    
-    PushCmdToQueue(&rr2, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
-    PushCmdToQueue(&rr2, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);         
-    */
-    //Control(&rr2);
-    //0.004166667
-    //GoToCmd(&rr1, 0.0 * Grad_to_Rad, 90.0 * Grad_to_Rad, 0);
-    //GoToCmd(&rr2, 0.0 * Grad_to_Rad, 10.0 * Grad_to_Rad, 0);
-    
-    //PushCmdToQueue(&rr3, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
-    //PushCmdToQueue(&rr3, ST_RUN, 10.0,  45.0 * Grad_to_Rad, 1);
-    //PushCmdToQueue(&rr3, ST_DECELERATE, 0.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1); 
-    //Control(&rr3); 
-    /*
-    while(1){
-        Nop();
-    }*/
+
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
     // execute all stack-related tasks, as well as your own

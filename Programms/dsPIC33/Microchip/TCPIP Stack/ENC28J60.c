@@ -205,7 +205,7 @@ void MACInit(void)
     
 	SPIConfig Config;    
 
-    Config.SPICON1 = 0x1E | 0x100 | 0x20; // CKE = 1 MSTEB = 1
+    Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1
     Config.SPICON2 = 0;
     Config.SPISTAT = 0;
     ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
@@ -221,7 +221,7 @@ void MACInit(void)
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
     GetRegs();
-    //r = ReadPHYReg(PHID1);
+    r = ReadPHYReg(PHID1);
     
     // Start up in Bank 0 and configure the receive buffer boundary pointers
     // and the buffer write protect pointer (receive buffer read pointer)
@@ -1270,9 +1270,9 @@ static REG ReadETHReg(BYTE Address)
 {
     REG r;
 	BYTE Cmd[] = {RCR | Address};	
-	
-	SPIReceiveData( ENCDeviceHandle, Cmd, 1, &r.Val, 1);
-	
+	BYTE Data[1];
+	SPIReceiveData( ENCDeviceHandle, Cmd, 1, Data, 1);
+	r.Val = Data[0];
     return r;
 }//end ReadETHReg
 
@@ -1302,12 +1302,11 @@ static REG ReadETHReg(BYTE Address)
 static REG ReadMACReg(BYTE Address)
 {
     REG r;
-	BYTE Cmd[] = {RCR | Address};	
-	BYTE Data[5];
-	
-	SPIReceiveData( ENCDeviceHandle, Cmd, 1, Data, 5);
-	r.Val = Data[2];
-	
+	BYTE Cmd[] = {RCR | Address, 0x00};
+	BYTE Data[1];	
+	SPIReceiveData( ENCDeviceHandle, Cmd, 2, Data, 1);	
+    r.Val = Data[0];
+    
     return r;
 }//end ReadMACReg
 
