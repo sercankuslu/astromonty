@@ -12,7 +12,7 @@ BYTE _DMA_BASE[1];
 #   define DMAOFFSET(x) (unsigned int)&x - (unsigned int)&_DMA_BASE
 #   define Nop()
 #endif
-
+#define DMAOFFSET(x) (unsigned int)x - 0x4000
 
 #ifdef _WIN32
 WORD T1CON;
@@ -1048,76 +1048,9 @@ INTERRUPT _T9Interrupt( void )
 // управляющие переменные
 DMAConfigType DMAConfig[8];
 #ifdef __C30__
-    //unsigned int DMABuffer[1024]  __attribute__((space(dma)));
-#if DMA0BUF_SIZE > 0
-    BYTE DMA0BufferA[DMA0BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA0BufferB[DMA0BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA1BUF_SIZE > 0
-    BYTE DMA1BufferA[DMA1BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA1BufferB[DMA1BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA2BUF_SIZE > 0
-    BYTE DMA2BufferA[DMA2BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA2BufferB[DMA2BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA3BUF_SIZE > 0
-    BYTE DMA3BufferA[DMA3BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA3BufferB[DMA3BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA4BUF_SIZE > 0
-    BYTE DMA4BufferA[DMA4BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA4BufferB[DMA4BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA5BUF_SIZE > 0
-    BYTE DMA5BufferA[DMA5BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA5BufferB[DMA5BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA6BUF_SIZE > 0
-    BYTE DMA6BufferA[DMA6BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA6BufferB[DMA6BUF_SIZE] __attribute__((space(dma)));
-#endif
-#if DMA7BUF_SIZE > 0
-    BYTE DMA7BufferA[DMA7BUF_SIZE] __attribute__((space(dma)));
-    BYTE DMA7BufferB[DMA7BUF_SIZE] __attribute__((space(dma)));
-#endif
-
+    BYTE DMABuffer[2048] __attribute__((space(dma)));
 #else
-
-#if DMA0BUF_SIZE > 0
-    //unsigned int DMABuffer[1024];
-    BYTE DMA0BufferA[DMA0BUF_SIZE];
-    BYTE DMA0BufferB[DMA0BUF_SIZE];
-#endif
-#if DMA1BUF_SIZE > 0
-    BYTE DMA1BufferA[DMA1BUF_SIZE];
-    BYTE DMA1BufferB[DMA1BUF_SIZE];
-#endif
-#if DMA2BUF_SIZE > 0
-    BYTE DMA2BufferA[DMA2BUF_SIZE];
-    BYTE DMA2BufferB[DMA2BUF_SIZE];
-#endif
-#if DMA3BUF_SIZE > 0
-    BYTE DMA3BufferA[DMA3BUF_SIZE];
-    BYTE DMA3BufferB[DMA3BUF_SIZE];
-#endif
-#if DMA4BUF_SIZE > 0
-    BYTE DMA4BufferA[DMA4BUF_SIZE];
-    BYTE DMA4BufferB[DMA4BUF_SIZE];
-#endif
-#if DMA5BUF_SIZE > 0
-    BYTE DMA5BufferA[DMA5BUF_SIZE];
-    BYTE DMA5BufferB[DMA5BUF_SIZE];
-#endif
-#if DMA6BUF_SIZE > 0
-    BYTE DMA6BufferA[DMA6BUF_SIZE];
-    BYTE DMA6BufferB[DMA6BUF_SIZE];
-#endif
-#if DMA7BUF_SIZE > 0
-    BYTE DMA7BufferA[DMA7BUF_SIZE];
-    BYTE DMA7BufferB[DMA7BUF_SIZE];
-#endif
-
+    BYTE DMABuffer[2048];
 #endif
 static int BufferBusySize = 0;
 //------------------------------------------------------------------------------------------------
@@ -1134,7 +1067,26 @@ WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COM
     return Config;
 }
 //------------------------------------------------------------------------------------------------
-int DMASetBuffer(DMA_ID id, BYTE* BufferA, BYTE* BufferB)
+BYTE* DMAGetBuffer(WORD Count)
+//------------------------------------------------------------------------------------------------
+{
+    BYTE* buf = &DMABuffer[BufferBusySize];
+    if(BufferBusySize + Count <= 2048){
+        BufferBusySize += Count;
+        return buf;
+    } else return NULL;
+}
+
+//------------------------------------------------------------------------------------------------
+int DMAGetBuffers(DMA_ID id, BYTE** BufferA, BYTE** BufferB)
+//------------------------------------------------------------------------------------------------
+{
+    *BufferA = DMAConfig[id].BufA;
+    *BufferB = DMAConfig[id].BufB;
+    return 0;
+}
+//------------------------------------------------------------------------------------------------
+int DMASetBuffers(DMA_ID id, BYTE* BufferA, BYTE* BufferB)
 //------------------------------------------------------------------------------------------------
 {
     DMAConfig[id].BufA = BufferA;
@@ -1177,11 +1129,14 @@ int DMASetBuffer(DMA_ID id, BYTE* BufferA, BYTE* BufferB)
     }
     return 0;
 }
+static BYTE DMAInitialized = 0;
 //------------------------------------------------------------------------------------------------
 int DMAInit()
 //------------------------------------------------------------------------------------------------
 {
     BYTE i;
+    if(DMAInitialized) 
+        return 0;
     for (i = DMA0; i <= DMA7; i++){
         DMAConfig[i]._This = NULL;
         DMAConfig[i].BufA = NULL;
@@ -1190,7 +1145,7 @@ int DMAInit()
         DMAConfig[i].fillingBufferAFunc = NULL;
         DMAConfig[i].fillingBufferBFunc = NULL;
     }
-
+    DMAInitialized = 1;
     return 0;
 }
 //------------------------------------------------------------------------------------------------
@@ -1553,114 +1508,113 @@ int DMAForceTransfer(DMA_ID id)
 INTERRUPT _DMA0Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    DMA_ID id = DMA0;
-    if(DMAConfig[id].fillingBufferAFunc){
+    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA0];
+    if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST0){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
         } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
     }     
-    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA1Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    DMA_ID id = DMA1;
-    if(DMAConfig[id].fillingBufferBFunc){
-        if(DMACS1bits.PPST1){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
-        } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
-        }
-    }
     IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA1];
+    if(DMACfg->fillingBufferAFunc){
+        if(DMACS1bits.PPST1){
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
+        } else {
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
+        }
+    }     
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA2Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    DMA_ID id = DMA2;
-    if(DMAConfig[id].fillingBufferAFunc){
+    IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA2];
+    if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST2){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
         } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
     }     
-    IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA3Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    DMA_ID id = DMA3;
-    if(DMAConfig[id].fillingBufferBFunc){
-        if(DMACS1bits.PPST3){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
-        } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
-        }
-    }
     IFS2bits.DMA3IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA3];
+    if(DMACfg->fillingBufferAFunc){
+        if(DMACS1bits.PPST3){
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
+        } else {
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
+        }
+    }     
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA4Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    DMA_ID id = DMA4;
-    if(DMAConfig[id].fillingBufferAFunc){
+    IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA4];
+    if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST4){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
         } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
     }     
-    IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 //------------------------------------------------------------------------------------------------
 {    
-    DMA_ID id = DMA5;
-    if(DMAConfig[id].fillingBufferBFunc){
-        if(DMACS1bits.PPST5){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
-        } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
-        }
-    }
     IFS3bits.DMA5IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA5];
+    if(DMACfg->fillingBufferAFunc){
+        if(DMACS1bits.PPST5){
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
+        } else {
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
+        }
+    }     
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA6Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-	IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
-    DMA_ID id = DMA6;
-    if(DMAConfig[id].fillingBufferAFunc){
+    IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA6];
+    if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST6){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
         } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
-    }     
-    //IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
+    }
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA7Interrupt(void)
 //------------------------------------------------------------------------------------------------
-{    
-    DMA_ID id = DMA7;
-    if(DMAConfig[id].fillingBufferBFunc){
-        if(DMACS1bits.PPST7){
-            DMAConfig[id].fillingBufferAFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufA, DMAConfig[id].Count);
+{
+    IFS4bits.DMA7IF = 0; // Clear the DMA0 Interrupt Flag
+    DMAConfigType *DMACfg = &DMAConfig[DMA6];
+    if(DMACfg->fillingBufferAFunc){
+        if(DMACS1bits.PPST6){
+            DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
         } else {
-            DMAConfig[id].fillingBufferBFunc(DMAConfig[id]._This, (BYTE*)DMAConfig[id].BufB, DMAConfig[id].Count);
+            DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
     }
-    IFS4bits.DMA7IF = 0; // Clear the DMA0 Interrupt Flag
 }
 //************************************************************************************************
 //
@@ -1983,6 +1937,10 @@ typedef struct _SPI_STATUS
     EFlag Flag;
     WORD DMASendCfg;
     WORD DMAReceiveCfg;
+    BYTE* DMASendBuf;
+    BYTE* DMAReceiveBuf;
+    WORD DMASendBufLen;
+    WORD DMAReceiveBufLen;
 }SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
@@ -1993,18 +1951,16 @@ volatile SPI_STATUS SPIStatus[2];
 static void WaitForDataReadySPI1( void )
 {
     if(SPI1STATbits.SPIEN)
-    while (SPI1STAT & 0x03 != 1 ){
-        Nop();
-        Nop();
-    };
+    {
+        while ((SPI1STATbits.SPITBF == 0) || (SPI1STATbits.SPIRBF == 0));
+    }
 }
 static void WaitForDataReadySPI2( void )
 {
-    if(SPI2STATbits.SPIEN)
-    while (SPI2STAT & 0x03 != 1 ){
-        Nop();
-        Nop();
-    };
+    if(SPI2STATbits.SPIEN)     
+    {
+        while ((SPI2STATbits.SPITBF == 1) || (SPI2STATbits.SPIRBF == 1));
+    }
 }
 #endif
 #ifdef _WIN32
@@ -2012,12 +1968,10 @@ static void WaitForDataReadySPI2( void )
 #define WaitForDataReadySPI2( void )     
 #endif
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize);
-
 // блокировка SPI
 void SPILock(SPI_ID id)
 {
     BYTE Tmp = SRbits.IPL;
-    BYTE i = 0;
     volatile SPI_STATUS* Status = &SPIStatus[id];
     while(1){
         // вход в критическую секцию
@@ -2056,7 +2010,7 @@ BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), i
     DeviceRelease();
     return DeviceCount++;
 }
-
+static BYTE SPIInitialized = 0;
 //------------------------------------------------------------------------------------------------
 int SPIInit()
 //------------------------------------------------------------------------------------------------
@@ -2065,6 +2019,10 @@ int SPIInit()
     BYTE i = 0;
     volatile SPI_STATUS* Status;
     DEVICE_REG* Device;
+    // защита от повтороной инициализации
+    if(SPIInitialized) 
+        return 0;
+    DMAInit();
     for (SPI_id = 0; SPI_id < 2; SPI_id++) {
         Status = &SPIStatus[SPI_id];
         Status->CurrentDevice = 0;
@@ -2073,6 +2031,40 @@ int SPIInit()
         Status->DMASendCfg    = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
         Status->DMAReceiveCfg = DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     }
+    Status = &SPIStatus[ID_SPI2];
+    // один общий буфер для отправки и получения
+    Status->DMAReceiveBufLen = 1008;
+    Status->DMASendBufLen = Status->DMAReceiveBufLen;
+    Status->DMASendBuf = DMAGetBuffer(Status->DMAReceiveBufLen);
+    Status->DMAReceiveBuf = Status->DMASendBuf;
+    
+    DMASetBuffers(DMA2, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetBuffers(DMA3, Status->DMASendBuf, Status->DMASendBuf);
+    DMA2SetConfig(Status->DMASendCfg); //Send
+    DMA3SetConfig(Status->DMAReceiveCfg); //Receive
+    DMASelectDevice(DMA2, IRQ_SPI2, (int)&SPI2BUF);
+    DMASelectDevice(DMA3, IRQ_SPI2, (int)&SPI2BUF);
+    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
+    DMASetCallback(DMA3, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
+    DMASetInt(DMA2, 5, 1);
+    DMASetInt(DMA3, 5, 1);
+
+    Status = &SPIStatus[ID_SPI1];
+    Status->DMAReceiveBufLen = 16;
+    Status->DMASendBufLen = Status->DMAReceiveBufLen;
+    Status->DMASendBuf = DMAGetBuffer(Status->DMAReceiveBufLen);
+    Status->DMAReceiveBuf = Status->DMASendBuf;
+
+    DMASetBuffers(DMA4, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetBuffers(DMA5, Status->DMASendBuf, Status->DMASendBuf);
+    DMA4SetConfig(Status->DMASendCfg);
+    DMA5SetConfig(Status->DMAReceiveCfg);
+    DMASelectDevice(DMA4, IRQ_SPI1, (int)&SPI2BUF);
+    DMASelectDevice(DMA5, IRQ_SPI1, (int)&SPI2BUF);
+    DMASetCallback(DMA4, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
+    DMASetCallback(DMA5, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
+    DMASetInt(DMA4, 5, 1);
+    DMASetInt(DMA5, 5, 1);
 
     DeviceCount = 0;
     for(i = 0; i < MAX_SPI_DEVICES; i++){
@@ -2085,11 +2077,7 @@ int SPIInit()
         Device->id = ID_SPI1;
         Device->OldIntLevel = 0;
     }
-	// SPI2
-    DMAInit(DMA3, 0);
-    DMASelectDevice(DMA3, IRQ_SPI2, (int)&SPI2BUF);
-    DMASetCallback(DMA3, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA3, 5, 1);
+    // SPI2
 
     TRISGbits.TRISG6 = 0;  // Set SCK pin as an output
     TRISGbits.TRISG7 = 1;  // Make sure SDI pin is an input
@@ -2100,11 +2088,7 @@ int SPIInit()
     IFS2bits.SPI2EIF = 0;
     IEC2bits.SPI2IE = 1;
     IEC2bits.SPI2EIE = 0;
-	// SPI1
-    DMAInit(DMA2, 0);
-    DMASelectDevice(DMA2, IRQ_SPI1, (int)&SPI1BUF);
-    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA2, 5, 1);
+    // SPI1
 
     TRISFbits.TRISF6 = 0;  // Set SCK pin as an output
     TRISFbits.TRISF7 = 1;  // Make sure SDI pin is an input
@@ -2116,13 +2100,13 @@ int SPIInit()
     IEC0bits.SPI1IE = 1;
     IEC0bits.SPI1EIE = 0;
 
+    SPIInitialized = 1;
     return 0;
 }
 //------------------------------------------------------------------------------------------------
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
 //------------------------------------------------------------------------------------------------
 {
-    volatile BYTE Dummy;
     SPI_STATUS* Status = (SPI_STATUS*)_This;
     BYTE DevHandle = Status->CurrentDevice;
     DEVICE_REG* Device = &SPIDeviceList[DevHandle];
@@ -2135,36 +2119,15 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
             Status->Flag = SEND_END;
             break;
         case RECEIVE_DATA:
-            if(Status->SPIDataCount > 0){
-                switch(SPI_id){
-                    case ID_SPI1:
-                        DMA2SetConfig(Status->DMAReceiveCfg);
-                        DMA2SetDataCount(Status->SPIDataCount);
-                        Status->Flag = RECEIVE_CONTINUE;
-                        DMA2Enable;
-                        DMA2ForceTransfer;
-                    break;
-                    case ID_SPI2:
-                        DMA3SetConfig(Status->DMAReceiveCfg);
-                        DMA3SetDataCount(Status->SPIDataCount);
-                        Status->Flag = RECEIVE_CONTINUE;
-                        DMA3Enable;
-                        DMA3ForceTransfer;
-                    break;
-                    default: 
-                    break;
-                }
-                break;
-             }   
-        case RECEIVE_CONTINUE:
+            Device->DeviceRelease();
+            SPIRelease(SPI_id);
             Status->Flag = RECEIVE_END;
             break;
-        case SEND_END:
         case RECEIVE_END:
+        case SEND_END:
         default:
             break;
     }
-    
     return 0;
 }
 
@@ -2172,21 +2135,13 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
 //------------------------------------------------------------------------------------------------
 INTERRUPT _SPI1Interrupt(void)
 //------------------------------------------------------------------------------------------------
-{    
-    volatile BYTE Dummy;
-    if(SPIStatus[ID_SPI1].Flag != RECEIVE_CONTINUE){
-        Dummy = SPI1BUF;
-    }
+{
     IFS0bits.SPI1IF = 0;
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _SPI2Interrupt(void)
 //------------------------------------------------------------------------------------------------
-{   
-    volatile BYTE Dummy;
-    if(SPIStatus[ID_SPI2].Flag != RECEIVE_CONTINUE){
-        Dummy = SPI2BUF;
-    }
+{
     IFS2bits.SPI2IF = 0;
 }
 //------------------------------------------------------------------------------------------------
@@ -2297,6 +2252,7 @@ SPIConfig SPI_CreateParams( SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD Devic
     Config.SPICON1 |= ((WORD)InputPhase) << 9;
     Config.SPICON1 |= ((WORD)DataSize) << 10;
     Config.SPICON1 |= 0x1E;
+    Config.SPICON2 = 0;
     return Config;
 }
 //________________________________________________________________________________________________
@@ -2318,7 +2274,6 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     // 1. Определить порт SPI
     DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = Device->id;
-    WORD DataSent = 0;
     volatile SPI_STATUS* Status;
     
     // TODO: проверка размеров
@@ -2328,47 +2283,43 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     Status->CurrentDevice = DeviceHandle;
     Status->Flag = SEND_DATA;
     switch(SPI_id){
+        case ID_SPI2:
+            SPI2STATbits.SPIEN = 0;
+            SPI2CON1 = Device->Config.SPICON1;
+            SPI2CON2 = Device->Config.SPICON2;
+            SPI2STAT = Device->Config.SPISTAT;
+            // буфер для отправки
+            DMA2Disable;
+            DMA2SetDataCount(CmdLen + DataLen);
+            // буфер для приёма
+            DMA3Disable;
+            DMA3SetDataCount(CmdLen + DataLen);
+            memcpy(Status->DMASendBuf, Cmd, CmdLen);
+            memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
+            SPI2STATbits.SPIEN = 1;
+            Device->DeviceSelect();
+            DMA2Enable;
+            DMA3Enable;
+            DMA2ForceTransfer;
+            break;
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
             SPI1CON1 = Device->Config.SPICON1;
             SPI1CON2 = Device->Config.SPICON2;
             SPI1STAT = Device->Config.SPISTAT;
             // буфер для отправки
-            DMA2Disable;
-            DMA2SetConfig(Status->DMASendCfg);
-            DMA2SetDataCount(CmdLen + DataLen);
+            DMA4Disable;
+            DMA4SetDataCount(CmdLen + DataLen);
             // буфер для приёма
-            DMA3Disable;
-            DMA3SetConfig(Status->DMAReceiveCfg);
-            DMA3SetDataCount(CmdLen + DataLen);
-            memcpy(DMA2BufferA, Cmd, CmdLen);
-            memcpy(&DMA2BufferA[CmdLen], Data, DataLen);
-            DMA2BufferA[CmdLen] = 0;
-            IFS0bits.SPI1IF = 0;
-            IFS0bits.SPI1EIF = 0;
+            DMA5Disable;
+            DMA5SetDataCount(CmdLen + DataLen);
+            memcpy(Status->DMASendBuf, Cmd, CmdLen);
+            memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
             SPI1STATbits.SPIEN = 1;
             Device->DeviceSelect();
-            DMA2Enable;
-            DMA3Enable;
-            DMA2ForceTransfer;
-            break;
-        case ID_SPI2:
-            SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = Device->Config.SPICON1;
-            SPI2CON2 = Device->Config.SPICON2;            
-            SPI2STAT = Device->Config.SPISTAT;
-            DMA3Disable;
-            DMA3SetConfig(Status->DMASendCfg);
-            DMA3SetDataCount(CmdLen + DataLen);
-            memcpy(DMA3BufferA, Cmd, CmdLen);
-            memcpy(&DMA3BufferA[CmdLen], Data, DataLen);
-            DMA3BufferA[CmdLen] = 0;
-            IFS2bits.SPI2IF = 0;
-            IFS2bits.SPI2EIF = 0;
-            SPI2STATbits.SPIEN = 1;
-            Device->DeviceSelect();
-            DMA3Enable;
-            DMA3ForceTransfer;
+            DMA4Enable;
+            DMA5Enable;
+            DMA4ForceTransfer;
             break;
         default:
             SPIRelease(SPI_id);
@@ -2382,117 +2333,124 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
-    WORD DataSent = 0;
-    volatile EFlag TFlag;
+    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
+    SPI_ID SPI_id = Device->id;
+    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
     // TODO: проверка размеров
     // Захват шины SPI
     SPILock(SPI_id);
-    SPIStatus[SPI_id].CurrentDevice = DeviceHandle;
-    SPIStatus[SPI_id].Flag = RECEIVE_DATA;
-    SPIStatus[SPI_id].SPIDataCount = DataLen;
+    Status->CurrentDevice = DeviceHandle;
+    Status->Flag = RECEIVE_DATA;
+    Status->SPIDataCount = DataLen;
     switch(SPI_id){
-        case ID_SPI1:
-            SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI1CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;            
-            SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMAEnable(DMA7, 0, 0);
-            DMASetConfig(DMA7, SPIStatus[SPI_id].DMASendCfg);
-            DMASetDataCount(DMA7, CmdLen + 1);
-            memcpy(DMA7BufferA, Cmd, CmdLen);
-            DMA7BufferA[CmdLen] = 0;
-            IFS0bits.SPI1IF = 0;
-            IFS0bits.SPI1EIF = 0;
-            SPI1STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMAEnable(DMA7, 1, 1);
-            while(SPIStatus[ID_SPI1].Flag != RECEIVE_END){
-                Nop();
-                Nop();
-            }
-            WaitForDataReadySPI1();
-            SPIDeviceList[DeviceHandle].DeviceRelease();
-            memcpy(Data, DMA7BufferA, DataLen);
-            SPIRelease(ID_SPI1);
-            break;
         case ID_SPI2:
             SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI2CON2 = SPIDeviceList[DeviceHandle].Config.SPICON2;
-            SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMAEnable(DMA6, 0, 0);
-            DMASetConfig(DMA6, SPIStatus[SPI_id].DMASendCfg);
-            DMASetDataCount(DMA6, CmdLen + 1);
-            memcpy(DMA6BufferA, Cmd, CmdLen);
-            DMA6BufferA[CmdLen] = 0;
-            IFS2bits.SPI2IF = 0;
-            IFS2bits.SPI2EIF = 0;
+            SPI2CON1 = Device->Config.SPICON1;
+            SPI2CON2 = Device->Config.SPICON2;
+            SPI2STAT = Device->Config.SPISTAT;
+            DMA2Disable; //send
+            DMA3Disable; //receive
+            DMA2SetDataCount(CmdLen + DataLen);
+            DMA3SetDataCount(CmdLen + DataLen);
+            memset(Status->DMASendBuf,0,Status->DMASendBufLen);
+            memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMAEnable(DMA6, 1, 1);
-            while(SPIStatus[ID_SPI2].Flag != RECEIVE_END){
+            Device->DeviceSelect();
+            DMA2Enable;
+            DMA3Enable;
+            DMA2ForceTransfer;
+            while(Status->Flag != RECEIVE_END){
                 Nop();
                 Nop();
             }
-            WaitForDataReadySPI2();
-            SPIDeviceList[DeviceHandle].DeviceRelease();
-            memcpy(Data, DMA6BufferA, DataLen);
+            //WaitForDataReadySPI2();
+            Device->DeviceRelease();
+            memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
             SPIRelease(ID_SPI2);
+            break;
+        case ID_SPI1:
+            SPI1STATbits.SPIEN = 0;
+            SPI1CON1 = Device->Config.SPICON1;
+            SPI1CON2 = Device->Config.SPICON2;
+            SPI1STAT = Device->Config.SPISTAT;
+            DMA4Disable; //send
+            DMA5Disable; //receive
+            DMA4SetDataCount(CmdLen + DataLen);
+            DMA5SetDataCount(CmdLen + DataLen);
+            memset(Status->DMASendBuf,0, Status->DMASendBufLen);
+            memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
+            SPI1STATbits.SPIEN = 1;
+            Device->DeviceSelect();
+            DMA4Enable;
+            DMA5Enable;
+            DMA4ForceTransfer;
+            while(Status->Flag != RECEIVE_END){
+                Nop();
+                Nop();
+            }
+            //WaitForDataReadySPI1();
+            Device->DeviceRelease();
+            memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
+            SPIRelease(ID_SPI1);
             break;
         default:
             SPIRelease(SPI_id);
             SPIUnlock(SPI_id);
-        	return 0;
+            return 0;
     }
-	SPIUnlock(SPI_id);
+    SPIUnlock(SPI_id);
     return DataLen;
 }
 WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    SPI_ID SPI_id = SPIDeviceList[DeviceHandle].id;
-    WORD DataSent = 0;
+    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
+    SPI_ID SPI_id = Device->id;
+    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
     // TODO: проверка размеров
     // Захват шины SPI
     SPILock(SPI_id);
-    SPIStatus[SPI_id].CurrentDevice = DeviceHandle;
-    SPIStatus[SPI_id].Flag = SEND_CMD;
-    SPIStatus[SPI_id].SPIDataCount = 0;
+    Status->CurrentDevice = DeviceHandle;
+    Status->Flag = RECEIVE_DATA;
+    Status->SPIDataCount = 0;
     switch(SPI_id){
-        case ID_SPI1:
-            SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI1STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMAEnable(DMA7, 0, 0);
-            DMASetConfig(DMA7, SPIStatus[SPI_id].DMASendCfg);
-            DMASetDataCount(DMA7, CmdLen);
-            memcpy(DMA7BufferA, Cmd, CmdLen);
-            DMA7BufferA[CmdLen] = 0;
-            IFS0bits.SPI1IF = 0;
-            IFS0bits.SPI1EIF = 0;
-            SPI1STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMAEnable(DMA7, 1, 1);
-            break;
         case ID_SPI2:
             SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = SPIDeviceList[DeviceHandle].Config.SPICON1;
-            SPI2STAT = SPIDeviceList[DeviceHandle].Config.SPISTAT;
-            DMAEnable(DMA6, 0, 0);
-            DMASetConfig(DMA6, SPIStatus[SPI_id].DMASendCfg);
-            DMASetDataCount(DMA6, CmdLen);
-            memcpy(DMA6BufferA, Cmd, CmdLen);
-            DMA6BufferA[CmdLen] = 0;
-            IFS2bits.SPI2IF = 0;
-            IFS2bits.SPI2EIF = 0;
+            SPI2CON1 = Device->Config.SPICON1;
+            SPI2CON2 = Device->Config.SPICON2;
+            SPI2STAT = Device->Config.SPISTAT;
+            DMA2Disable; //send
+            DMA3Disable; //receive
+            DMA2SetDataCount(CmdLen);
+            DMA3SetDataCount(CmdLen);
+            memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
-            SPIDeviceList[DeviceHandle].DeviceSelect();
-            DMAEnable(DMA6, 1, 1);
+            Device->DeviceSelect();
+            DMA2Enable;
+            DMA3Enable;
+            DMA2ForceTransfer;
+            break;
+        case ID_SPI1:
+            SPI1STATbits.SPIEN = 0;
+            SPI1CON1 = Device->Config.SPICON1;
+            SPI1CON2 = Device->Config.SPICON2;
+            SPI1STAT = Device->Config.SPISTAT;
+            DMA4Disable; //send
+            DMA5Disable; //receive
+            DMA4SetDataCount(CmdLen);
+            DMA5SetDataCount(CmdLen);
+            memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
+            SPI1STATbits.SPIEN = 1;
+            Device->DeviceSelect();
+            DMA4Enable;
+            DMA5Enable;
+            DMA4ForceTransfer;
             break;
         default:
-            SPIRelease(SPI_id);            
+            SPIRelease(SPI_id);
+            SPIUnlock(SPI_id);
+            return 0;
     }
     SPIUnlock(SPI_id);
     return 0;

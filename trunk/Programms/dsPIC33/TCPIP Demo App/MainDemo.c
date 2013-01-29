@@ -781,7 +781,7 @@ int main(void)
         //FanControl();        
         if(PORTAbits.RA13 != t){
             t = PORTAbits.RA13;
-                LED0_IO = t;
+                //LED0_IO = t;
                 //if(!TimeAdjusted){
                 //    TimeAdjusted = AdjustLocalRTCTime(); 
                 //    LED2_IO = TimeAdjusted;           
