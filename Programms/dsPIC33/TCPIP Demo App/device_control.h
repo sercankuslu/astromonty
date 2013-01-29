@@ -89,32 +89,18 @@ typedef struct _DMAConfigType{
     void* _This;
 } DMAConfigType;
 
-// OC1
-#define DMA0BUF_SIZE 256
-// OC2
-#define DMA1BUF_SIZE 256
-// SPI2
-#define DMA2BUF_SIZE 224
-#define DMA3BUF_SIZE 224
-// SPI1
-#define DMA4BUF_SIZE 16
-#define DMA5BUF_SIZE 16
-// free
-#define DMA6BUF_SIZE 16
-#define DMA7BUF_SIZE 16
-
-
-
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
-int DMAInit(DMA_ID id, WORD Config);
+int DMAInit();
 int DMASetConfig(DMA_ID id, WORD Config);
 int DMASelectDevice(DMA_ID id, DMA_DEVICE_IRQ irq, int DEVICE_REG);
 int DMASetDataCount(DMA_ID id, WORD Count);
-//int DMASetBuffers(DMA_ID id, WORD BufA, WORD BufB);
-//WORD DMAGetBuffer(WORD Count);
+int DMAGetBuffers(DMA_ID id, BYTE** BufferA, BYTE** BufferB);
+int DMASetBuffers(DMA_ID id, BYTE* BufferA, BYTE* BufferB);
+BYTE* DMAGetBuffer(WORD Count);
 int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, BYTE*, WORD), int (*fillingBufBFunc)(void*, BYTE*, WORD));
 int DMAPrepBuffer(DMA_ID id);
-int DMAEnable(DMA_ID id, BOOL enabled, BOOL force);
+int DMAEnable(DMA_ID id);
+int DMADisable(DMA_ID id);
 int DMAGetPPState(DMA_ID id);
 int DMAForceTransfer(DMA_ID id);
 int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled);

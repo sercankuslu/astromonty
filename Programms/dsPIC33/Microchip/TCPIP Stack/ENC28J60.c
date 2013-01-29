@@ -167,11 +167,13 @@ static BYTE ENCDeviceHandle;
 int ENCSelect()
 {
     ENC_CS_IO = 0;
+    LED1_IO = 1;
     return 0;
 }
 int ENCRelease()
 {
     ENC_CS_IO = 1;
+    LED1_IO = 0;
     return 0;
 }
 

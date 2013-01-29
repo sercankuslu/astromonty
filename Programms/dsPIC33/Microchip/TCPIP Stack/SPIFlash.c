@@ -134,11 +134,13 @@ void SPIFlashPageWrite(BYTE* vData, WORD wLen);
 int FlashSelect()
 {
     SPIFLASH_CS_IO = 0;
+    LED0_IO = 1;
     return 0;
 }
 int FlashRelease()
-{
+{    
     SPIFLASH_CS_IO = 1;
+    LED0_IO = 0;
     return 0;
 }
 /*****************************************************************************
@@ -164,11 +166,13 @@ int FlashRelease()
     This function sends WRDI to clear any pending write operation, and also
     clears the software write-protect on all memory locations.
   ***************************************************************************/
+static SPIFlashInitialized = 0;  
 void SPIFlashInit(void)
 {
 	BYTE Cmd[] = {JEDEC_ID};
 	BYTE Data[3];
-
+    if(SPIFlashInitialized) return 0;
+    SPIFlashInitialized = 1;
     SPIFLASH_CS_TRIS = 0;   // Drive SPI Flash chip select pin
 
     // Configure SPI
