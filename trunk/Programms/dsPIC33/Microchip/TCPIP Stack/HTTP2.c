@@ -1014,7 +1014,7 @@ static void HTTPProcess(void)
 static BOOL HTTPSendFile(void)
 {
 	WORD numBytes, len;
-	BYTE c, data[64];
+	BYTE c, data[256];
 	
 	// Determine how many bytes we can read right now
 	len = TCPIsPutReady(sktHTTP);
@@ -1837,7 +1837,7 @@ static HTTP_IO_RESULT HTTPMPFSUpload(void)
 void HTTPIncFile(ROM BYTE* cFile)
 {
 	WORD wCount, wLen;
-	BYTE data[64];
+	BYTE data[256];
 	MPFS_HANDLE fp;
 	
 	// Check if this is a first round call

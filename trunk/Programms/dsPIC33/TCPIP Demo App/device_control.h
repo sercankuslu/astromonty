@@ -163,4 +163,7 @@ BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), i
 WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
 WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
 WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen);
+void SPILock(SPI_ID id);
+void SPIUnlock(SPI_ID id);
+void SPIRelease(SPI_ID id);
 #endif //__DEVICE_CONTROL_H_
