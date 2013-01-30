@@ -94,7 +94,7 @@
 //#define STACK_USE_UDP_PERFORMANCE_TEST	// Module for testing UDP TX performance characteristics.  NOTE: Enabling this will cause a huge amount of UDP broadcast packets to flood your network on the discard port.  Use care when enabling this on production networks, especially with VPNs (could tunnel broadcast traffic across a limited bandwidth connection).
 //#define STACK_USE_TCP_PERFORMANCE_TEST	// Module for testing TCP TX performance characteristics
 //#define STACK_USE_DYNAMICDNS_CLIENT		// Dynamic DNS client updater module
-#define STACK_USE_BERKELEY_API			// Berekely Sockets APIs are available
+//#define STACK_USE_BERKELEY_API			// Berekely Sockets APIs are available
 //#define STACK_USE_ZEROCONF_LINK_LOCAL	// Zeroconf IPv4 Link-Local Addressing
 //#define STACK_USE_ZEROCONF_MDNS_SD		// Zeroconf mDNS and mDNS service discovery
 
@@ -252,7 +252,7 @@
  */
 	// Allocate how much total RAM (in bytes) you want to allocate
 	// for use by your TCP TCBs, RX FIFOs, and TX FIFOs.
-	#define TCP_ETH_RAM_SIZE					(5150ul)
+	#define TCP_ETH_RAM_SIZE					(4590ul)
 	#define TCP_PIC_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_SIZE					(0ul)
 	#define TCP_SPI_RAM_BASE_ADDRESS			(0x00)
@@ -311,11 +311,11 @@
 			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
 			//{TCP_PURPOSE_HTTP_SERVER, TCP_ETH_RAM, 1024, 1024},
 			//{TCP_PURPOSE_DEFAULT, TCP_ETH_RAM, 200, 200},
-			{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 256, 256},
-			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 125, 100},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 0, 1},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 0, 1},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 0, 1},
+			//{TCP_PURPOSE_BERKELEY_SERVER, TCP_ETH_RAM, 0, 1},
+			//{TCP_PURPOSE_BERKELEY_CLIENT, TCP_ETH_RAM, 0, 1},
 		};
 		#define END_OF_TCP_CONFIGURATION
 	#endif

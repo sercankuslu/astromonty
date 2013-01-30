@@ -220,7 +220,7 @@ void MACInit(void)
     do {        
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
-    GetRegs();
+    //GetRegs();
     r = ReadPHYReg(PHID1);
     
     // Start up in Bank 0 and configure the receive buffer boundary pointers
@@ -310,7 +310,7 @@ void MACInit(void)
     WritePHYReg(PHCON2, PHCON2_HDLDIS);
 
     // Configure LEDA to display LINK status, LEDB to display TX/RX activity
-    SetLEDConfig(0x3472);
+    SetLEDConfig(0x3D32);
 
     // Set the MAC and PHY into the proper duplex state
 #if defined(FULL_DUPLEX)
@@ -346,7 +346,7 @@ void MACInit(void)
 
     // Enable packet reception
     BFSReg(ECON1, ECON1_RXEN);
-    GetRegs();
+    //GetRegs();
 }//end MACInit
 
 
@@ -1114,9 +1114,9 @@ BOOL MACIsMemCopyDone(void)
 BYTE MACGet()
 {
     BYTE Result;
-	BYTE Cmd[] = {RBM};	
+	BYTE Cmd = RBM;	
 	
-	SPIReceiveData( ENCDeviceHandle, Cmd, sizeof(Cmd), &Result, 1);
+	SPIReceiveData( ENCDeviceHandle, &Cmd, 1, &Result, 1);
 
     return Result;
 }//end MACGet
@@ -1145,9 +1145,9 @@ BYTE MACGet()
  *****************************************************************************/
 WORD MACGetArray(BYTE *val, WORD len)
 {
-	BYTE Cmd[] = {RBM};	
+	BYTE Cmd = RBM;	
 	
-	return SPIReceiveData( ENCDeviceHandle, Cmd, sizeof(Cmd), val, len);
+	return SPIReceiveData( ENCDeviceHandle, &Cmd, 1, val, len);
 
 }//end MACGetArray
 
@@ -1172,8 +1172,8 @@ WORD MACGetArray(BYTE *val, WORD len)
  *****************************************************************************/
 void MACPut(BYTE val)
 {
-   	BYTE Cmd[] = {WBM};	
-    SPISendData(ENCDeviceHandle, Cmd, sizeof(Cmd), &val, 1 );
+   	BYTE Cmd = WBM;	
+    SPISendData(ENCDeviceHandle, &Cmd, 1, &val, 1 );
 }//end MACPut
 
 
@@ -1199,8 +1199,8 @@ void MACPut(BYTE val)
 void MACPutArray(BYTE *val, WORD len)
 {
 
-	BYTE Cmd[] = {WBM};	
-    SPISendData(ENCDeviceHandle, Cmd, sizeof(Cmd), val, len );    
+	BYTE Cmd = WBM;	
+    SPISendData(ENCDeviceHandle, &Cmd, 1, val, len );    
     
 }//end MACPutArray
 
@@ -1225,7 +1225,7 @@ void MACPutArray(BYTE *val, WORD len)
  *****************************************************************************/
 static void SendSystemReset(void)
 {
-   	BYTE Cmd[] = {SR};	
+   	BYTE Cmd = SR;	
 
     // Note: The power save feature may prevent the reset from executing, so
     // we must make sure that the device is not in power save before issuing
@@ -1237,7 +1237,7 @@ static void SendSystemReset(void)
     DelayMs(2);
 
     // Execute the System Reset command
-    SPISendCmd(ENCDeviceHandle, Cmd, 1);
+    SPISendCmd(ENCDeviceHandle, &Cmd, 1);
 
     // Wait for the oscillator start up timer and PHY to become ready
     DelayMs(2);
@@ -1269,10 +1269,8 @@ static void SendSystemReset(void)
 static REG ReadETHReg(BYTE Address)
 {
     REG r;
-	BYTE Cmd[] = {RCR | Address};	
-	BYTE Data[1];
-	SPIReceiveData( ENCDeviceHandle, Cmd, 1, Data, 1);
-	r.Val = Data[0];
+	BYTE Cmd = RCR | Address;	
+	SPIReceiveData( ENCDeviceHandle, &Cmd, 1, &r.Val, 1);
     return r;
 }//end ReadETHReg
 
@@ -1303,10 +1301,7 @@ static REG ReadMACReg(BYTE Address)
 {
     REG r;
 	BYTE Cmd[] = {RCR | Address, 0x00};
-	BYTE Data[1];	
-	SPIReceiveData( ENCDeviceHandle, Cmd, 2, Data, 1);	
-    r.Val = Data[0];
-    
+	SPIReceiveData( ENCDeviceHandle, Cmd, 2, &r.Val, 1);	
     return r;
 }//end ReadMACReg
 
@@ -1383,8 +1378,8 @@ PHYREG ReadPHYReg(BYTE Register)
 static void WriteReg(BYTE Address, BYTE Data)
 {
 	
-	BYTE Cmd[] = {WCR | Address};	
-    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
+	BYTE Cmd = WCR | Address;	
+    SPISendData(ENCDeviceHandle, &Cmd, 1, &Data, 1 );   
 
 }//end WriteReg
 
@@ -1413,8 +1408,8 @@ static void WriteReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFCReg(BYTE Address, BYTE Data)
 {
-	BYTE Cmd[] = {BFC | Address};	
-    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
+	BYTE Cmd = BFC | Address;
+    SPISendData(ENCDeviceHandle, &Cmd, 1, &Data, 1 );   
 	
 }//end BFCReg
 
@@ -1443,8 +1438,8 @@ static void BFCReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFSReg(BYTE Address, BYTE Data)
 {
-	BYTE Cmd[] = {BFS | Address};	
-    SPISendData(ENCDeviceHandle, Cmd, 1, &Data, 1 );   
+	BYTE Cmd = BFS | Address;
+    SPISendData(ENCDeviceHandle, &Cmd, 1, &Data, 1 );   
     
 }//end BFSReg
 
@@ -1752,6 +1747,7 @@ void SetRXHashTableEntry(MAC_ADDR DestMACAddr)
 // GetRegs is a function for debugging purposes only.  It will read all
 // registers and store them in the PIC's RAM so they can be viewed with
 // the ICD2.
+/*
 REG Regs[4][32];
 void GetRegs(void)
 {
@@ -1804,7 +1800,7 @@ void GetRegs(void)
 
   return;
 }
-
+*/
 //// Get8KBMem is a function intended for debugging purposes.  It will read all
 //// Ethernet RAM and output it in hex out the UART
 //void Get8KBMem(void)
