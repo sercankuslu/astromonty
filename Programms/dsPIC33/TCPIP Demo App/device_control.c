@@ -2293,6 +2293,7 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     SPI_ID SPI_id = Device->id;
     volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
 
+	
     // проверка размеров
     if(CmdLen + DataLen > Status->DMASendBufLen){
         while(1);
@@ -2370,16 +2371,13 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
     if(CmdLen + DataLen > Status->DMASendBufLen){
         while(1);
     }
+
     // Захват шины SPI
     SPILock(SPI_id);
     Status->CurrentDevice = DeviceHandle;
     Status->Flag = RECEIVE_DATA;
     Status->SPIDataCount = DataLen;
     Status->TransferComplete = 0;
-    if((WORD)Data < 0x0200){
-        Nop();
-        Nop();
-    }
     switch(SPI_id){
         case ID_SPI2:
             SPI2STATbits.SPIEN = 0;
@@ -2397,11 +2395,13 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
-            memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
+            if(Data){
+                while(Status->TransferComplete == 0){
+                    Nop();
+                    Nop();
+                }
+                memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
+            }            
             break;
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
@@ -2419,11 +2419,13 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
-            memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
+            if(Data){
+                while(Status->TransferComplete == 0){
+                    Nop();
+                    Nop();
+                }
+                memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
+            }    
             break;
         default:
             SPIRelease(SPI_id);
