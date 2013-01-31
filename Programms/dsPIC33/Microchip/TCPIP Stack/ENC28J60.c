@@ -84,8 +84,8 @@
 // not compatible with most switches/routers.  If a dedicated network is used
 // where the duplex of the remote node can be manually configured, you may
 // change this configuration.  Otherwise, half duplex should always be used.
-#define HALF_DUPLEX
-//#define FULL_DUPLEX
+//#define HALF_DUPLEX
+#define FULL_DUPLEX
 //#define LEDB_DUPLEX
 
 // Pseudo Functions
@@ -208,12 +208,14 @@ int ENCRelease1()
  *
  * Note:            None
  *****************************************************************************/
+//BYTE TestBuf1[1000];
+//BYTE TestBuf2[1000];
 void MACInit(void)
 {
     volatile BYTE i;
     volatile PHYREG w;
     SPIConfig Config;    
-
+    WORD j = 0;
     // Set up the SPI module on the PIC for communications with the ENC28J60
     ENC_CS_IO = 1;
     ENC_CS_TRIS = 0;        // Make the Chip Select pin an output
@@ -262,7 +264,7 @@ void MACInit(void)
 
     
 
-    Config.SPICON1 = 0x13 | 0x100 | 0x20; // CKE = 1 MSTEB = 1
+    Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1
     Config.SPICON2 = 0;
     Config.SPISTAT = 0;
     ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect1, ENCRelease1);
@@ -277,7 +279,31 @@ void MACInit(void)
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
     //GetRegs();
+    /*
+    for(j = 0; j < sizeof(TestBuf1);j++){
+        TestBuf1[j] = (BYTE)j;
+    }
+    
     w = ReadPHYReg(PHID1);
+    memset(TestBuf2,0,sizeof(TestBuf2));    
+    MACSetWritePtr(0x0000);
+    MACPutArray(TestBuf1, 1000);
+    MACSetReadPtr(0x0000);
+    MACGetArray(TestBuf2, 1000);
+    if(memcmp(TestBuf1, TestBuf2, sizeof(TestBuf1)) != 0){
+        Nop();
+        Nop();
+    }
+    {
+        BYTE Cmd = RBM;
+        MACSetReadPtr(0x0000);
+        i = SPIReceiveData(ENCDeviceHandle, &Cmd, 1, TestBuf2, sizeof(TestBuf1) );
+        if(memcmp(TestBuf1, TestBuf2, sizeof(TestBuf1)) != 0){
+            Nop();
+            Nop();
+        }
+    }
+    */
     //do {
     //    w = ReadPHYReg(PHID1);
     //} while (w. == 0x0083); // Microchip UID
@@ -369,7 +395,7 @@ void MACInit(void)
     WritePHYReg(PHCON2, PHCON2_HDLDIS);
 
     // Configure LEDA to display LINK status, LEDB to display TX/RX activity
-    SetLEDConfig(0x3472);
+    SetLEDConfig(0x3D32);
 
     // Set the MAC and PHY into the proper duplex state
 #if defined(FULL_DUPLEX)
@@ -1240,44 +1266,15 @@ BYTE MACGet()
  *
  * Note:            None
  *****************************************************************************/
+//BYTE Test[256];
 WORD MACGetArray(BYTE *val, WORD len)
 {
-    WORD i;
-    volatile BYTE Dummy;
-
-    // Start the burst operation
-
-    ENCSelect();
-
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RBM;       // Send the Read Buffer Memory opcode.
-    i = 0;
+    BYTE Cmd = RBM;
     if(val)
-        val--;
-    WaitForDataByte();      // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-    // Read the data
-    while(i<len)
-    {
-        ENC_SSPBUF = 0;     // Send a dummy byte to receive a byte
-        i++;
-        if(val)
-        {
-            val++;
-            WaitForDataByte();  // Wait until byte is received.
-            *val = ENC_SSPBUF;
-        }
-        else
-        {
-            WaitForDataByte();  // Wait until byte is received.
-            Dummy = ENC_SSPBUF;
-        }
-    };
-
-    // Terminate the burst operation
-    ENCRelease();
-
-    return i;
+        return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len );
+    else 
+        return len;
+    
 }//end MACGetArray
 
 
