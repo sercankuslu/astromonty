@@ -1270,11 +1270,8 @@ BYTE MACGet()
 WORD MACGetArray(BYTE *val, WORD len)
 {
     BYTE Cmd = RBM;
-    if(val)
-        return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len );
-    else 
-        return len;
-    
+    return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len );
+  
 }//end MACGetArray
 
 
