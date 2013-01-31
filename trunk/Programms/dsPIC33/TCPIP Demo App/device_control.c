@@ -2321,10 +2321,10 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
+//             while(Status->TransferComplete == 0){
+//                 Nop();
+//                 Nop();
+//             }
 
             break;
         case ID_SPI1:
@@ -2345,10 +2345,10 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
+//             while(Status->TransferComplete == 0){
+//                 Nop();
+//                 Nop();
+//             }
             break;
         default:
             SPIRelease(SPI_id);
@@ -2390,7 +2390,7 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             DMA3Disable; //receive
             DMA2SetDataCount(CmdLen + DataLen);
             DMA3SetDataCount(CmdLen + DataLen);
-            //memset(Status->DMASendBuf,0,Status->DMASendBufLen);
+            memset(Status->DMASendBuf,0,Status->DMASendBufLen);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
             Device->DeviceSelect();
@@ -2467,10 +2467,10 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
+//             while(Status->TransferComplete == 0){
+//                 Nop();
+//                 Nop();
+//             }
             break;
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
@@ -2487,10 +2487,10 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
-            while(Status->TransferComplete == 0){
-                Nop();
-                Nop();
-            }
+//             while(Status->TransferComplete == 0){
+//                 Nop();
+//                 Nop();
+//             }
             break;
         default:
             SPIRelease(SPI_id);
