@@ -88,24 +88,6 @@ typedef struct __attribute__((__packed__))
     MAC_ADDR    MACAddr;
 } NODE_INFO;
 
-typedef struct __attribute__((__packed__))
-{
-    double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощьности двигател€ от скорости вращени€
-    double B;                                           // B - константа, мощьность двигател€ в Hm скорость в радианах в сек 
-    double Mass;                                        // масса монтировки
-    double Radius;                                      // радиус оси/трубы телескопа
-    double Length;                                      // длинна оси (эквивалентна€)
-    double Reduction;                                   // коэффициент редукции черв€чной пары (1/360)
-    double TimerStep;
-    WORD StepPerTurn;                                   // количество шагов двигател€ на оборот (200 - ƒЎ»-200)
-    WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
-    LONG XMinPosition;                  				// минимальное значение номера шага (положение датчика 0)
-    LONG XMaxPosition;                  				// максимальное значение номера шага
-    LONG XZenitPosition;                                // номер шага в зените
-    LONG XParkPosition;                  				// значение номера шага парковочной позиции
-    double VMax;
-    WORD Control;
-}RRFlashSave;
 
 // Application-dependent structure used to contain address information
 typedef struct __attribute__((__packed__)) 
@@ -125,7 +107,6 @@ typedef struct __attribute__((__packed__))
 		unsigned char bInConfigMode : 1;
 	} Flags;                            // Flag structure
 	MAC_ADDR	MyMACAddr;              // Application MAC address
-	RRFlashSave RRConfig[3];
 #if defined(WF_CS_TRIS)
 	BYTE		MySSID[32];             // Wireless SSID (if using MRF24WB0M)
 	BYTE        SsidLength;             // number of bytes in SSID

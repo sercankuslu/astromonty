@@ -503,7 +503,7 @@ int main(void)
         IPC12bits.T7IP = 4;    
         T7CONbits.TON = 1;
     } 
-
+     OCSetup();
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
     // execute all stack-related tasks, as well as your own
@@ -1287,22 +1287,6 @@ static void InitAppConfig(void)
         AppConfig.MyGateway.Val = MY_DEFAULT_GATE_BYTE1 | MY_DEFAULT_GATE_BYTE2<<8ul | MY_DEFAULT_GATE_BYTE3<<16ul | MY_DEFAULT_GATE_BYTE4<<24ul;
         AppConfig.PrimaryDNSServer.Val = MY_DEFAULT_PRIMARY_DNS_BYTE1 | MY_DEFAULT_PRIMARY_DNS_BYTE2<<8ul  | MY_DEFAULT_PRIMARY_DNS_BYTE3<<16ul  | MY_DEFAULT_PRIMARY_DNS_BYTE4<<24ul;
         AppConfig.SecondaryDNSServer.Val = MY_DEFAULT_SECONDARY_DNS_BYTE1 | MY_DEFAULT_SECONDARY_DNS_BYTE2<<8ul  | MY_DEFAULT_SECONDARY_DNS_BYTE3<<16ul  | MY_DEFAULT_SECONDARY_DNS_BYTE4<<24ul;
-        for(i = 0; i < 3; i++ ){
-            AppConfig.RRConfig[i].K     = MY_DEFAULT_RR_PARA_K;
-            AppConfig.RRConfig[i].B     = MY_DEFAULT_RR_PARA_B;
-            AppConfig.RRConfig[i].Mass     = MY_DEFAULT_RR_PARA_Mass;
-            AppConfig.RRConfig[i].Radius = MY_DEFAULT_RR_PARA_Radius;
-            AppConfig.RRConfig[i].Length = MY_DEFAULT_RR_PARA_Length;
-            AppConfig.RRConfig[i].Reduction = MY_DEFAULT_RR_PARA_Rdct;
-            AppConfig.RRConfig[i].TimerStep = MY_DEFAULT_RR_PARA_TimerStep;
-            AppConfig.RRConfig[i].StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
-            AppConfig.RRConfig[i].uStepPerStep = MY_DEFAULT_RR_PARA_uSPS;
-            AppConfig.RRConfig[i].XMinPosition = MY_DEFAULT_RR_PARA_XMinPos;
-            AppConfig.RRConfig[i].XMaxPosition = MY_DEFAULT_RR_PARA_XMaxPos;
-            AppConfig.RRConfig[i].XParkPosition = MY_DEFAULT_RR_PARA_XParkPos;
-            AppConfig.RRConfig[i].VMax = MY_DEFAULT_RR_PARA_VMax;
-            AppConfig.RRConfig[i].Control = 1;
-        }
     
         // SNMP Community String configuration
         #if defined(STACK_USE_SNMP_SERVER)
@@ -1486,6 +1470,7 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
     //    SPISRAMWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));        
     #else
         SPIFlashBeginWrite(0x0000);
+        SPIFlashEraseSector(0x0000);
         SPIFlashWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
         SPIFlashWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));
         
@@ -1493,49 +1478,4 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
 }
 #endif
 
-void SaveRRConfig()
- {
-    NVM_VALIDATION_STRUCT NVMValidationStruct;
-
-    // Ensure adequate space has been reserved in non-volatile storage to 
-    // store the entire AppConfig structure.  If you get stuck in this while(1) 
-    // trap, it means you have a design time misconfiguration in TCPIPConfig.h.
-    // You must increase MPFS_RESERVE_BLOCK to allocate more space.
-    if(sizeof(NVMValidationStruct) + sizeof(RAMSaveConfig) > 256)
-            while(1);
-        
-    // Get proper values for the validation structure indicating that we can use 
-    // these EEPROM/Flash contents on future boot ups
-    NVMValidationStruct.wOriginalChecksum = 0;
-    NVMValidationStruct.wCurrentChecksum = CalcIPChecksum((BYTE*)&RRConfigRAM, sizeof(RAMSaveConfig));
-    NVMValidationStruct.wConfigurationLength = sizeof(RAMSaveConfig);
-
-    // Write the validation struct and current AppConfig contents to CMOS RAM    
-    #if defined(SPIRTCSRAM_CS_TRIS)
-        SPISRAMBeginWrite(0x0000);
-        SPISRAMWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
-        SPISRAMWriteArray((BYTE*)&RRConfigRAM, sizeof(RAMSaveConfig));        
-    #endif
-}
-
-void LoadRRConfig()
-{
-    NVM_VALIDATION_STRUCT NVMValidationStruct;
-    #if defined(SPIRTCSRAM_CS_TRIS)
-    {
-        SPISRAMReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
-        SPISRAMReadArray(sizeof(NVMValidationStruct), (BYTE*)&RRConfigRAM, sizeof(RAMSaveConfig));
-    }
-    #endif
-    if((NVMValidationStruct.wConfigurationLength != sizeof(RAMSaveConfig)) ||       
-       (NVMValidationStruct.wCurrentChecksum != CalcIPChecksum((BYTE*)&RRConfigRAM, sizeof(RAMSaveConfig))))
-    {
-        BYTE i;        
-        for(i = 0; i<3;i++){
-            RRConfigRAM.RRSave[i].Timestamp = 0;
-            RRConfigRAM.RRSave[i].XPosition = 0;
-            RRConfigRAM.RRSave[i].uStepPerStep = 16;
-        }
-    }    
-}
 
