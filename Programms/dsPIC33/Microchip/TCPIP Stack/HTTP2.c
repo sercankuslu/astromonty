@@ -106,7 +106,7 @@
 	    "application/java-vm",   // HTTP_JAVA
 	    "audio/x-wave",          // HTTP_WAV
 	    "text/javascript",       // HTTP_JS
-		""						 // HTTP_UNKNOWN
+		""                   // HTTP_UNKNOWN
 	};
 		
 /****************************************************************************

@@ -494,6 +494,155 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     }    */
     return (INT_PTR)FALSE;
 }
+/*
+typedef struct _iobuf {
+    char *_ptr;
+    int   _cnt;
+    char *_base;
+    int   _flag;
+    int   _file;
+    int   _charbuf;
+    int   _bufsiz;
+    char *_tmpfname;
+} FILE;
+
+// первая очередь
+FILE *  fopen ( const char * filename, const char * mode );  //Open file
+FILE *  freopen ( const char * filename, const char * mode, FILE * stream ); //Reopen stream with different file or mode
+int     fclose ( FILE * stream );   //Close file
+int     fsetpos ( FILE * stream, const fpos_t * pos );  //Set position indicator of stream
+int     fseek ( FILE * stream, long int offset, int origin );   //Reposition stream position indicator
+int     feof ( FILE * stream );     //Check end-of-file indicator
+long int ftell ( FILE * stream );   //Get current position in stream
+size_t  fwrite ( const void * ptr, size_t size, size_t count, FILE * stream );   //Write block of data to stream
+size_t  fread ( void * ptr, size_t size, size_t count, FILE * stream );  //Read block of data from stream
+int     fflush ( FILE * stream );   //Flush stream
+// вторая очередь или не реализуем
+int     ferror ( FILE * stream );   //Check error indicator
+int     fprintf ( FILE * stream, const char * format, ... ); //Write formatted data to stream
+int     fscanf ( FILE * stream, const char * format, ... ); //Read formatted data from stream
+int     fgetc ( FILE * stream );    //Get character from stream
+int     fputc ( int character, FILE * stream ); //Write character to stream
+char *  fgets ( char * str, int num, FILE * stream );   //Get string from stream
+int     fputs ( const char * str, FILE * stream );  //Write string to stream
+*/
+/*
+    1. Если размер файла меньше 224 байт, то весь файл находится в первом секторе, 
+указатель на таблицу секторов установлен в 0xFFFF
+    2. Если размер файла больше 224 байт, но меньше 32744 байт, то в начало файла 
+находится в первом секторе, указатель на таблицу указывает на первую таблицу 
+секторов, а указатель на таблицу таблиц равен 0xFFFF
+    3. 
+    */
+#define PAGE_SIZE 256
+#define SECTOR_SIZE 256*1024
+//Формат первого сектора файла / папки
+typedef struct  _FILE_HEADER
+{
+    WORD Flags;                     // флаги (файл/директория и т.д)
+    BYTE Name[16];                  // имя файла
+    DWORD Size;                     //размер файла (для папки указывает значение размеров записи папки)
+    WORD SectorTable[5];            //указатели на первый сектор таблицы  Если первый равен 0, то используется следующий не нулевой
+                                    //если значение указателя 0xFFFF значит секторов нет
+    BYTE Data[PAGE_SIZE - 32];
+} FILE_HEADER;
+//Формат второго и более сектора файла
+struct  _FILE_DATA
+{
+    BYTE Data[PAGE_SIZE];
+};
+//Формат сектора таблицы секторов и таблицы таблиц
+typedef struct _TABLE_DATA
+{
+    WORD Sector[PAGE_SIZE];               //указатели на сектора данных
+    WORD NextSector[4];             //указатель на следующий сектор таблицы. Если первый равен 0, то используется следующий не нулевой
+} TABLE_DATA;
+/*
+ File record
+|-----------|                                            Data record                (For folder)
+|           |               Table record        |------>|-----------|                FileRecord
+|SectorTable|-------------->|-----------|       |       |  DATA[1]. |-------------->|-----------|
+|-----------|               |Sector[0]  |-------|       |___________|               |File record|
+|  DATA[0]  |               |  ........ |                                           |___________|
+|___________|               |Sector[N]  |-------------->|-----------|
+                            |           |               |  DATA[N]. |
+                     |------|NextSector |               |___________|
+                     |      |___________|               
+                     |                          |------>|-----------|
+                     |----->|-----------|       |       |  DATA[N+1]|
+                            |Sector[N+1]|-------|       |___________|
+                            |  ........ |
+                            |Sector[M]  |-------------->|-----------|
+                            |           |               |  DATA[M]. |
+                            |NextSector |               |___________|
+                            |___________|               
+
+корень файловой системы это папка в которой находятся:
+файл свободного места       8192 байта
+файл освободившегося места  8192 байта
+файлы и папки данных
+файл сетевых настроек системы
+файл настроек двигатлей
+файлы таблиц интервалов для двигателей
+*/
+#define FLAG_FOLDER 1
+#define FLAG_FILE 2
+DWORD CreateCheckSum(BYTE * val, WORD len);
+BYTE TmpSect[256];
+BYTE FileSystem[65536][256];
+char FSName[]   = "MYFileSystem   ";
+char OccupyS[]  = ".occupysectors ";
+char ReleaseS[] = ".releasesectors";
+/*
+//-------------------------------------------------------------------------
+void ClearSector(WORD Sector)
+{
+    memset(&FileSystem[Sector],0xFF,SECTOR_SIZE);
+}
+//-------------------------------------------------------------------------
+void ClearAll()
+{
+    memset(FileSystem,0xFF,sizeof(FileSystem));
+}
+//-------------------------------------------------------------------------
+void WriteArray(DWORD Addr, BYTE* val, WORD len)
+{
+    memcpy(&FileSystem[Addr>>8][Addr & 0xFF], val, len);
+}
+void ReadArray(DWORD Addr, BYTE* val, WORD len)
+{
+    memcpy(val, &FileSystem[Addr>>8][Addr & 0xFF], len);
+}
+//-------------------------------------------------------------------------
+void CreateFileSystem(WORD PageSize, WORD SectorSize)
+{
+// формируем первый сектор
+    //memset(TmpSect,0xFF,sizeof(TmpSect));
+    FILE_HEADER * Header;
+    ClearAll();
+
+    // корень файловой системы
+    Header = (FILE_HEADER*)TmpSect;
+    Header->Flags = FLAG_FOLDER;
+    memcpy(Header->Name, FSName, sizeof(FSName));
+    WriteArray(0, TmpSect, 2 + sizeof(FSName));
+    
+    // Файл занятого места
+    Header->Flags = FLAG_FILE;
+    memcpy(Header->Name, OccupyS, sizeof(OccupyS));
+    //Header->
+    WriteArray(0, TmpSect, 2 + sizeof(OccupyS));
+    
+
+}
+// от скорости 0 до 0.2 градуса в сек делитель на 256
+*/
+
+HEADER OCHead;
+WORD OCSector1[64][2];
+
+
+
 
 void Calc()
 {
@@ -512,7 +661,8 @@ void Calc()
     char Str[] = "All good!";
     BYTE * Str2 = NULL;
     
-    WORD Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+    //CreateFileSystem(256, 256*1024);
+    //WORD Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     // //    double XX = 5.0 * Grad_to_Rad;
 /*
     // вычислим время в которое пересекутся две функции:
@@ -526,10 +676,15 @@ void Calc()
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
 */
-    WORD Buf[256];
-    WORD BufSize = 256;
+    //WORD Buf[256];
+    //WORD BufSize = 256;
 
+    // работа от таймера TMR3(6.4us) от интервала 16777216(0.00074град/сек) до интервала 65536(0.2град/сек)
+    // работа от таймера TMR2(25ns)  от интервала 65535(0.2град/сек) до интервала 1250(10град/сек)
+    const char Name1[] = "RR1";
     OCSetup(); 
+    
+    /*
     ProcessCmd(&rr1);
     return;
     rr1.MaxSpeed = 10.0 * Grad_to_Rad;
@@ -540,7 +695,9 @@ void Calc()
 
     Buf1Size = sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);
     Buf1Size = rr1.CacheCmdCounter;
-    CalculateMove(&rr1,DrawT1Buffer,Buf1Size);
+    */
+
+    //CalculateMove(&rr1,DrawT1Buffer,Buf1Size);
     //ProcessCmd(&rr1);
     //PushCmdToQueue(&rr1, ST_ACCELERATE, 10.0 * Grad_to_Rad, 180.0 * Grad_to_Rad, 1);
     //PushCmdToQueue(&rr1, ST_RUN, 10.0 * Grad_to_Rad, 15.0 * Grad_to_Rad, 1);

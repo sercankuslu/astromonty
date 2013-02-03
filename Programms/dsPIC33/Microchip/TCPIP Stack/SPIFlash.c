@@ -166,12 +166,12 @@ int FlashRelease()
     This function sends WRDI to clear any pending write operation, and also
     clears the software write-protect on all memory locations.
   ***************************************************************************/
-static SPIFlashInitialized = 0;  
+static int SPIFlashInitialized = 0;  
 void SPIFlashInit(void)
 {
 	BYTE Cmd = JEDEC_ID;
 	BYTE Data[3];
-    if(SPIFlashInitialized) return 0;
+    if(SPIFlashInitialized) return;
     SPIFlashInitialized = 1;
     SPIFLASH_CS_TRIS = 0;   // Drive SPI Flash chip select pin
 
@@ -182,41 +182,41 @@ void SPIFlashInit(void)
     Config.SPISTAT = 0;
     FlashDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, FlashSelect, FlashRelease);
 
-	// Read Device ID code to determine supported device capabilities/instructions
-	{
-		
-		SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3 );
+    // Read Device ID code to determine supported device capabilities/instructions
+    {
+            
+        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3 );
 
-		// Decode Device Capabilities Flags from Device ID
-		deviceCaps.v = 0x00;
-		switch(Data[2])
-		{
-			case 0x43:	// SST25LF020(A)	(2 Mbit)	0xAF, 14us, AAI Byte
-			case 0x48:	// SST25VF512(A)	(512 Kbit)	0xAF, 14us, AAI Byte
-			case 0x49:	// SST25VF010A		(1 Mbit)	0xAF, 14us, AAI Byte
-				deviceCaps.bits.bWriteByteStream = 1;
-				break;
-			case 0x18:	
-			case 0x4B:	// SST25VF064C		(64 Mbit)	0x02, 1.5ms/256 byte page, no AAI			
-				deviceCaps.bits.bPageProgram = 1;
-				break;
+        // Decode Device Capabilities Flags from Device ID
+        deviceCaps.v = 0x00;
+        switch(Data[2])
+        {
+            case 0x43:	// SST25LF020(A)	(2 Mbit)	0xAF, 14us, AAI Byte
+            case 0x48:	// SST25VF512(A)	(512 Kbit)	0xAF, 14us, AAI Byte
+            case 0x49:	// SST25VF010A		(1 Mbit)	0xAF, 14us, AAI Byte
+                deviceCaps.bits.bWriteByteStream = 1;
+                break;
+            case 0x18:	// M25P128              (128 Mbit)
+            case 0x4B:	// SST25VF064C		(64 Mbit)	0x02, 1.5ms/256 byte page, no AAI			
+                deviceCaps.bits.bPageProgram = 1;
+                break;
 
-			//case 0x01:	// SST25WF512		(512 Kbit)	0xAD, 50us, AAI Word
-			//case 0x02:	// SST25WF010		(1 Mbit)	0xAD, 50us, AAI Word
-			//case 0x03:	// SST25WF020		(2 Mbit)	0xAD, 50us, AAI Word
-			//case 0x04:	// SST25WF040		(4 Mbit)	0xAD, 50us, AAI Word
-			//case 0x05:	// SST25WF080		(8 Mbit)	0xAD, 14us, AAI Word
-			//case 0x41:	// SST25VF016B		(16 Mbit)	0xAD,  7us, AAI Word
-			//case 0x4A:	// SST25VF032B		(32 Mbit)	0xAD,  7us, AAI Word
-			//case 0x8C:	// SST25VF020B		(2 Mbit)	0xAD,  7us, AAI Word
-			//case 0x8D:	// SST25VF040B		(4 Mbit)	0xAD,  7us, AAI Word
-			//case 0x8E:	// SST25VF080B		(8 Mbit)	0xAD,  7us, AAI Word				
-			// Assume AAI Word programming is supported for the above commented 
-			// devices and unknown devices.
-			default:	
-				deviceCaps.bits.bWriteWordStream = 1;
-		}
-	}
+            //case 0x01:	// SST25WF512		(512 Kbit)	0xAD, 50us, AAI Word
+            //case 0x02:	// SST25WF010		(1 Mbit)	0xAD, 50us, AAI Word
+            //case 0x03:	// SST25WF020		(2 Mbit)	0xAD, 50us, AAI Word
+            //case 0x04:	// SST25WF040		(4 Mbit)	0xAD, 50us, AAI Word
+            //case 0x05:	// SST25WF080		(8 Mbit)	0xAD, 14us, AAI Word
+            //case 0x41:	// SST25VF016B		(16 Mbit)	0xAD,  7us, AAI Word
+            //case 0x4A:	// SST25VF032B		(32 Mbit)	0xAD,  7us, AAI Word
+            //case 0x8C:	// SST25VF020B		(2 Mbit)	0xAD,  7us, AAI Word
+            //case 0x8D:	// SST25VF040B		(4 Mbit)	0xAD,  7us, AAI Word
+            //case 0x8E:	// SST25VF080B		(8 Mbit)	0xAD,  7us, AAI Word				
+            // Assume AAI Word programming is supported for the above commented 
+            // devices and unknown devices.
+            default:
+                deviceCaps.bits.bWriteWordStream = 1;
+        }
+    }
 
     // Clear any pre-existing AAI write mode
     // This may occur if the PIC is reset during a write, but the Flash is
@@ -261,11 +261,11 @@ void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     if(vData == NULL || wLength == 0)
         return;
 
-	Cmd[0] = READ;
-	Cmd[1] = ((BYTE*)&dwAddress)[2];
-	Cmd[2] = ((BYTE*)&dwAddress)[1];
-	Cmd[3] = ((BYTE*)&dwAddress)[0];
-	SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength);
+    Cmd[0] = READ;
+    Cmd[1] = ((BYTE*)&dwAddress)[2];
+    Cmd[2] = ((BYTE*)&dwAddress)[1];
+    Cmd[3] = ((BYTE*)&dwAddress)[0];
+    SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength);
 }
 
 /*****************************************************************************
@@ -340,189 +340,23 @@ void SPIFlashBeginWrite(DWORD dwAddr)
   ***************************************************************************/
 void SPIFlashWrite(BYTE vData)
 {
-    volatile BYTE Dummy;
-    BYTE vSPIONSave;
-    #if defined(__18CXX)
-    BYTE SPICON1Save;
-    #elif defined(__C30__)
-    WORD SPICON1Save;
-    #else
-    DWORD SPICON1Save;
-    #endif
-
-    // Save SPI state (clock speed)
-    SPICON1Save = SPIFLASH_SPICON1;
-    vSPIONSave = SPI_ON_BIT;
-
-    // Configure SPI
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
-    SPI_ON_BIT = 1;
+    BYTE Cmd[4];
 
     // If address is a boundary, erase a sector first
     if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0u)
         SPIFlashEraseSector(dwWriteAddr);
 
-    // Enable writing
-    _SendCmd(WREN);
-
-    // Activate the chip select
-    SPIFLASH_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Issue WRITE command with address
-    SPIFLASH_SSPBUF = WRITE;
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    // Write the byte
-    SPIFLASH_SSPBUF = vData;
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-    dwWriteAddr++;
-
-    // Deactivate chip select and wait for write to complete
-    SPIFLASH_CS_IO = 1;
     _WaitWhileBusy();
 
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
-}
-/*****************************************************************************
-  Function:
-    void SPIFlashWrite(BYTE vData)
+    Cmd[0] = WREN;
+    SPISendCmd( FlashDeviceHandle, Cmd, 1);
 
-  Summary:
-    Writes a byte to the SPI Flash part.
+    Cmd[0] = WRITE;
+    Cmd[1] = ((BYTE*)&dwWriteAddr)[2];
+    Cmd[2] = ((BYTE*)&dwWriteAddr)[1];
+    Cmd[3] = ((BYTE*)&dwWriteAddr)[0];
+    SPISendData(FlashDeviceHandle, Cmd, 4, &vData, 1);
 
-  Description:
-    This function writes a byte to the SPI Flash part.  If the current
-    address pointer indicates the beginning of a 4kB sector, the entire
-    sector will first be erased to allow writes to proceed.  If the current
-    address pointer indicates elsewhere, it will be assumed that the sector
-    has already been erased.  If this is not true, the chip will silently
-    ignore the write command.
-
-  Precondition:
-    SPIFlashInit and SPIFlashBeginWrite have been called, and the current
-    address is either the front of a 4kB sector or has already been erased.
-
-  Parameters:
-    vData - The byte to write to the next memory location.
-
-  Returns:
-    None
-
-  Remarks:
-    See Remarks in SPIFlashBeginWrite for important information about Flash
-    memory parts.
-  ***************************************************************************/
-void _BeginWritePage()
-{
-    //WORD wFirst;
-    //WORD wSecond;
-    volatile WORD Dummy;
-    
-    //wFirst = (WRITE << 8) | ((BYTE*)&dwWriteAddr)[2];
-    //wSecond = ((WORD*)&dwWriteAddr)[0];
-    
-    // Enable writing
-    _SendCmd(WREN);
-       
-    // Activate the chip select
-    SPIFLASH_CS_IO = 0;
-    ClearSPIDoneFlag();
-        
-    SPIFLASH_SSPBUF = WRITE;
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-}
-void SPIFlashPageWrite(BYTE* vData, WORD wLen)
-{
-    volatile BYTE Dummy;
-    BYTE vSPIONSave;    
-    BOOL isStarted;
-    #if defined(__18CXX)
-    BYTE SPICON1Save;
-    #elif defined(__C30__)
-    WORD SPICON1Save;
-    #else
-    DWORD SPICON1Save;
-    #endif
-
-    // Save SPI state (clock speed)
-    SPICON1Save = SPIFLASH_SPICON1;
-    vSPIONSave = SPI_ON_BIT;
-
-    // Configure SPI
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
-    SPI_ON_BIT = 1;
-    
-    // Enable writing
-    _SendCmd(WREN);
-    
-    isStarted = FALSE;
-    while(wLen>0){
-        if((dwWriteAddr & SPI_FLASH_PAGE_MASK)==0 ){// сменить страницу            
-            if(isStarted){
-                // Deactivate chip select and wait for write to complete
-                SPIFLASH_CS_IO = 1;
-                _WaitWhileBusy();
-                isStarted = FALSE;
-            }
-            if((dwWriteAddr & SPI_FLASH_SECTOR_MASK)==0){ // стереть сектор                
-                SPIFlashEraseSector(dwWriteAddr);
-            }
-        }
-        if(!isStarted){
-            _WaitWhileBusy();
-            _BeginWritePage(); // отправили команду и адрес
-            isStarted = TRUE;
-        } 
-        if(isStarted){
-            SPIFLASH_SSPBUF = *vData++;
-            dwWriteAddr++;
-            wLen--;
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-        }
-    }
-    // Deactivate chip select and wait for write to complete
-    SPIFLASH_CS_IO = 1;
-    _WaitWhileBusy();
-
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
 }
 /*****************************************************************************
   Function:
@@ -554,155 +388,53 @@ void SPIFlashPageWrite(BYTE* vData, WORD wLen)
     See Remarks in SPIFlashBeginWrite for important information about Flash
     memory parts.
   ***************************************************************************/
+
+
 void SPIFlashWriteArray(BYTE* vData, WORD wLen)
 {
-    volatile BYTE Dummy;
-    BYTE vSPIONSave;
-    #if defined(__18CXX)
-    BYTE SPICON1Save;
-    #elif defined(__C30__)
-    WORD SPICON1Save;
-    #else
-    DWORD SPICON1Save;
-    #endif
-    BOOL isStarted;
-    BYTE vOpcode;
-    BYTE i;
-
-	// Do nothing if no data to process
-	if(wLen == 0u)
-		return;
-    if(deviceCaps.bits.bPageProgram){
-        SPIFlashPageWrite(vData,wLen);
-        return;
-    }
+    DWORD FreeInCurrentPage = 0;
+    WORD CurrentLen = 0;
+    WORD CurrentData = 0;
+    WORD DataLen = wLen;
+    BYTE Cmd[4];
     
-    // Save SPI state (clock speed)
-    SPICON1Save = SPIFLASH_SPICON1;
-    vSPIONSave = SPI_ON_BIT;
-
-    // Configure SPI
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
-    SPI_ON_BIT = 1;
-
-    // If starting at an odd address, write a single byte
-    if((dwWriteAddr & 0x01) && wLen)
-    {
-        SPIFlashWrite(*vData);
-        vData++;
-        wLen--;
-    }
-
-	// Assume we are using AAI Word program mode unless changed later
-	vOpcode = WRITE_WORD_STREAM;	
-
-    isStarted = FALSE;
-
-    // Loop over all remaining WORDs
-    while(wLen > 1)
-    {
-        // Don't do anything until chip is ready
+    while(DataLen > 0){        
+        if((dwWriteAddr & SPI_FLASH_SECTOR_MASK)==0){ // стереть сектор  TODO: стирать весь сектор автоматически плохо
+            SPIFlashEraseSector(dwWriteAddr);
+        }
         _WaitWhileBusy();
 
-        // If address is a sector boundary
-        if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0)
-            SPIFlashEraseSector(dwWriteAddr);
+        Cmd[0] = WREN;
+        SPISendCmd( FlashDeviceHandle,Cmd, 1);
 
-        // If not yet started, initiate AAI mode
-        if(!isStarted)
+        if (deviceCaps.bits.bPageProgram)
         {
-            // Enable writing
-            _SendCmd(WREN);
-
-			// Select appropriate programming opcode.  The WRITE_WORD_STREAM 
-			// mode is the default if neither of these flags are set.
-	        if(deviceCaps.bits.bWriteByteStream)
-	            vOpcode = WRITE_BYTE_STREAM;
-			else if(deviceCaps.bits.bPageProgram)
-			{
-				// Note: Writing one byte at a time is extremely slow (ex: ~667 
-				// bytes/second write speed on SST SST25VF064C).  You can 
-				// improve this by over a couple of orders of magnitude by 
-				// writing a function to write full pages of up to 256 bytes at 
-				// a time.  This is implemented this way only because I don't 
-				// have an SST25VF064C handy to test with right now. -HS
-				while(wLen--)
-			        SPIFlashWrite(*vData++);
-				return;
-			}
-
-            // Activate the chip select
-            SPIFLASH_CS_IO = 0;
-            ClearSPIDoneFlag();
-
-            // Issue WRITE_xxx_STREAM command with address
-			SPIFLASH_SSPBUF = vOpcode;
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-
-            SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[2];
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-
-            SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[1];
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-
-            SPIFLASH_SSPBUF = ((BYTE*)&dwWriteAddr)[0];
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-
-            isStarted = TRUE;
-        }
-        // Otherwise, just write the AAI command again
-        else
-        {
-            // Assert the chip select pin
-            SPIFLASH_CS_IO = 0;
-            ClearSPIDoneFlag();
-
-            // Issue the WRITE_STREAM command for continuation
-            SPIFLASH_SSPBUF = vOpcode;
-            WaitForDataByte();
-            Dummy = SPIFLASH_SSPBUF;
-        }
-
-        // Write a byte or two
-        for(i = 0; i <= deviceCaps.bits.bWriteWordStream; i++)
-        {
-	        SPIFLASH_SSPBUF = *vData++;
-	        dwWriteAddr++;
-	        wLen--;
-	        WaitForDataByte();
-	        Dummy = SPIFLASH_SSPBUF;
-		}
-
-        // Release the chip select to begin the write
-        SPIFLASH_CS_IO = 1;
-
-        // If a boundary was reached, end the write
-        if((dwWriteAddr & SPI_FLASH_SECTOR_MASK) == 0)
-        {
-            _WaitWhileBusy();
-            _SendCmd(WRDI);
-            isStarted = FALSE;
-        }
+            Cmd[0] = WRITE;
+            FreeInCurrentPage = SPI_FLASH_PAGE_SIZE - (dwWriteAddr & SPI_FLASH_PAGE_MASK);
+            if(DataLen <= FreeInCurrentPage){
+                CurrentLen = DataLen;
+            } else {
+                CurrentLen = FreeInCurrentPage;
+            }
+        } else if(deviceCaps.bits.bWriteByteStream){
+            CurrentLen = wLen;
+            Cmd[0] = WRITE_BYTE_STREAM;
+        } else {
+            CurrentLen = wLen;
+            Cmd[0] = WRITE;
+        }         
+        
+        Cmd[1] = ((BYTE*)&dwWriteAddr)[2];
+        Cmd[2] = ((BYTE*)&dwWriteAddr)[1];
+        Cmd[3] = ((BYTE*)&dwWriteAddr)[0];
+        SPISendData(FlashDeviceHandle, Cmd, 4, &vData[CurrentData], CurrentLen);
+        DataLen -= CurrentLen;
+        CurrentData += CurrentLen;
+        dwWriteAddr += CurrentLen;
+        _WaitWhileBusy();
     }
-
-    // Wait for write to complete, then exit AAI mode
-    _WaitWhileBusy();
-    _SendCmd(WRDI);
-
-    // If a byte remains, write the odd address
-    if(wLen)
-        SPIFlashWrite(*vData);
-
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
 }
+
 
 
 /*****************************************************************************
@@ -732,59 +464,19 @@ void SPIFlashWriteArray(BYTE* vData, WORD wLen)
   ***************************************************************************/
 void SPIFlashEraseSector(DWORD dwAddr)
 {
-    volatile BYTE Dummy;
-    BYTE vSPIONSave;
-    #if defined(__18CXX)
-    BYTE SPICON1Save;
-    #elif defined(__C30__)
-    WORD SPICON1Save;
-    #else
-    DWORD SPICON1Save;
-    #endif
+    BYTE Cmd[4];
 
-    // Save SPI state (clock speed)
-    SPICON1Save = SPIFLASH_SPICON1;
-    vSPIONSave = SPI_ON_BIT;
-
-    // Configure SPI
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = FLASH_PROPER_SPICON1;
-    SPI_ON_BIT = 1;
-
-    // Enable writing
-    _SendCmd(WREN);
-
-    // Activate the chip select
-    SPIFLASH_CS_IO = 0;
-    ClearSPIDoneFlag();
-
-    // Issue ERASE command with address
-    SPIFLASH_SSPBUF = ERASE_SECTOR;
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwAddr)[2];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwAddr)[1];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    SPIFLASH_SSPBUF = ((BYTE*)&dwAddr)[0];
-    WaitForDataByte();
-    Dummy = SPIFLASH_SSPBUF;
-
-    // Deactivate chip select to perform the erase
-    SPIFLASH_CS_IO = 1;
-
-    // Wait for erase to complete
     _WaitWhileBusy();
 
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIFLASH_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
+    Cmd[0] = WREN;
+    SPISendCmd( FlashDeviceHandle, Cmd, 1);
+
+    Cmd[0] = ERASE_SECTOR;
+    Cmd[1] = ((BYTE*)&dwAddr)[2];
+    Cmd[2] = ((BYTE*)&dwAddr)[1];
+    Cmd[3] = ((BYTE*)&dwAddr)[0];
+    SPISendCmd(FlashDeviceHandle, Cmd, 4);
+
 }
 
 
@@ -838,8 +530,8 @@ static void _SendCmd(BYTE cmd)
   ***************************************************************************/
 static void _WaitWhileBusy(void)
 {    
-    BYTE Cmd = RDSR;	
-	BYTE Data;
+    BYTE Cmd = RDSR;
+    BYTE Data;
     // Poll the BUSY bit
     do
     {

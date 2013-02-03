@@ -116,6 +116,41 @@ typedef struct _TIMERS_CON{
     double Period;              // период в секундах таймера
 } TIMERS_CON;
 
+typedef struct _TABLE_ADDR {
+    DWORD TableAddr;
+    DWORD TableSize;
+} TABLE_ADDR;
+
+// сектор из 256Кб для хранения данных канала ОС
+typedef struct _HEADER{
+    char Magic[4];
+    TABLE_ADDR SlowAcc;
+    TABLE_ADDR FastAcc;
+    TABLE_ADDR SlowDec;
+    TABLE_ADDR FastDec;
+    //double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощьности двигателя от скорости вращения
+    //double B;                                           // B - константа, мощьность двигателя в Hm скорость в радианах в сек 
+    double Mass;                                        // масса монтировки
+    double Radius;                                      // радиус оси/трубы телескопа
+    double Length;                                      // длинна оси (эквивалентная)
+    double Reduction;                                   // коэффициент редукции червячной пары (1/360)
+    double TimerStep;
+    WORD StepPerTurn;                                   // количество шагов двигателя на оборот (200 - ДШИ-200)
+    WORD uStepPerStep;                                  // количество микрошагов на шаг (16)
+    LONG XMinPosition;                                  // минимальное значение номера шага (положение датчика 0)
+    LONG XMaxPosition;                                  // максимальное значение номера шага
+    LONG XZenitPosition;                                // номер шага в зените
+    LONG XParkPosition;                                 // значение номера шага парковочной позиции
+
+    DWORD DataCheckSumm;
+    DWORD HeadCheckSumm;
+} HEADER;
+
+typedef struct _OC_RECORD {
+    WORD r;
+    WORD rs;
+} OC_RECORD;
+
 typedef struct RR{
 
     // очередь команд кеша
@@ -182,6 +217,11 @@ typedef struct RR{
     //BYTE Tmr2divide;                                    // делитель таймера 2(0 => 1, 3 => 8, 6 => 64, 8 => 256)
     //BYTE Tmr3divide;                                    // делитель таймера 3(0 => 1, 3 => 8, 6 => 64, 8 => 256)
     
+    TABLE_ADDR SlowAcc;
+    TABLE_ADDR FastAcc;
+    TABLE_ADDR SlowDec;
+    TABLE_ADDR FastDec;
+
 }RR;
 // структура DMA буфера для режима TOGGLE в OC
 typedef struct {
@@ -194,7 +234,7 @@ typedef  struct
 __attribute__((__packed__))
 #endif 
 {
-    DWORD Timestamp;									// метка времени UTC
+    DWORD Timestamp;                                    // метка времени UTC
     LONG XPosition;                  					// текущий номер шага TODO: поддержать переключение скоростей
     WORD uStepPerStep;                                  // текущее количество микрошагов на шаг (16)
 }RRRAMSave;
@@ -340,6 +380,7 @@ WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count);
 //int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
 int GetStatus(WORD n);
+DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
 /*
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
