@@ -64,6 +64,12 @@ int SearchHighPriorityRunCmd(RR * rr);
     //WORD TMR3 = 0;
     //WORD OC1R = 0;
 #endif
+#ifdef _WINDOWS_
+#define SECTOR_SIZE 262144
+#define PAGE_SIZE 256
+#define SECTOR_MASK (DWORD)(SECTOR_SIZE - 1)
+BYTE FileSystem[64*1024*256];
+#endif
 //------------------------------------------------------------------------------------------------
 int SetDirection(BYTE oc, BYTE Dir)
 //------------------------------------------------------------------------------------------------
@@ -81,11 +87,16 @@ DWORD CalcCheckSumm(BYTE* Buf, WORD len)
     return Res;
 }
 
+
 //------------------------------------------------------------------------------------------------
 void ClearSector(DWORD Addr)
 //------------------------------------------------------------------------------------------------
 {
-    SPIFlashEraseSector(Addr);    
+#ifdef __C30__
+    SPIFlashEraseSector(Addr);
+#else
+    memset(&FileSystem[Addr],0xFF, SECTOR_SIZE);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -99,15 +110,24 @@ void ClearAll()
 void WriteArray(DWORD Addr, BYTE* val, WORD len)
 //------------------------------------------------------------------------------------------------
 {
+#ifdef __C30__
     SPIFlashBeginWrite(Addr);
     SPIFlashWriteArray(val, len);
+#else
+    memcpy(&FileSystem[Addr], val, len);
+#endif
+
 }
 
 //------------------------------------------------------------------------------------------------
 void ReadArray(DWORD Addr, BYTE* val, WORD len)
 //------------------------------------------------------------------------------------------------
 {
+#ifdef __C30__
     SPIFlashReadArray(Addr, val, len);
+#else
+    memcpy(val, &FileSystem[Addr], len);
+#endif
 }
 
 //------------------------------------------------------------------------------------------------
@@ -137,6 +157,7 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
     DWORD e = 0;
     DWORD k = 0;
     DWORD Addr = 1;
+    DWORD Addr1 = 1;
     DWORD j = 0;
     HEADER OCHead;
     WORD OCSector1[64][2];
@@ -144,6 +165,8 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
     WORD t1;
     WORD t2;
     DWORD r = 0;
+    DWORD TableSize = 0;
+    DWORD TableAddr = 0;
 
     memcpy(OCHead.Magic, Name, sizeof(OCHead.Magic));
     //OCHead.K = rr->K;
@@ -160,7 +183,7 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
     OCHead.XZenitPosition = rr->XZenitPosition;
     OCHead.XParkPosition = rr->XParkPosition;
 
-    OCHead.SlowAcc.TableAddr = 256;
+    OCHead.SlowAcc.TableAddr = 0;
 
     ClearSector(BaseAddress);
     for(i = 0; i < 32000; i++){
@@ -169,7 +192,8 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
             Addr++;
             j = 0;
             if(e == 1){
-                OCHead.FastAcc.TableSize = i * sizeof(TABLE_ADDR) - OCHead.SlowAcc.TableSize;
+                OCHead.FastAcc.TableSize = TableSize;
+                TableSize = 0;
                 break;
             }
         }
@@ -184,26 +208,30 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
         OCSector1[j][0] = (WORD)r;
         OCSector1[j][1] = OCSector1[j][0]/2;
         j++;
+        TableSize++;
 
         if((kt < 65536)&&(bt>0)&&(l==0)) {
-            l = 1;
-            OCHead.FastAcc.TableAddr = i * sizeof(TABLE_ADDR) + OCHead.SlowAcc.TableAddr;
-            OCHead.SlowAcc.TableSize = i  * sizeof(TABLE_ADDR);
+            l = 1; // закончили разгон на таймере 3
+            OCHead.FastAcc.TableAddr = i * sizeof(HEADER);
+            OCHead.SlowAcc.TableSize = TableSize;
+            TableSize = 0;
         }
-        if(l == 1 && kt <= 1250) {
+        if((l == 1) && (kt <= 1250)) {
             e = 1;
         }
     }
     k = i;
+    Addr1 = Addr;
     i++;
-    OCHead.FastDec.TableAddr = 131072;
+    OCHead.FastDec.TableAddr = Addr;
     OCHead.FastDec.TableSize = OCHead.FastAcc.TableSize;
-    OCHead.SlowDec.TableAddr = OCHead.FastDec.TableAddr + OCHead.FastDec.TableSize;
+    OCHead.SlowDec.TableAddr = OCHead.FastDec.TableAddr + OCHead.FastDec.TableSize * 4;
     OCHead.SlowDec.TableSize = OCHead.SlowAcc.TableSize;
     OCHead.HeadCheckSumm = 0x0;
     OCHead.DataCheckSumm = 0x0;
-    for(j = 0; j < (OCHead.FastAcc.TableSize + OCHead.SlowAcc.TableSize) / 256 ; j++){
-        ReadArray(BaseAddress+OCHead.SlowAcc.TableAddr + OCHead.SlowAcc.TableSize + OCHead.FastAcc.TableSize - 256 *(j+1), (BYTE*)OCSector1, 256);
+    for(j = 0; Addr1 > 1 ; j++){
+        Addr1--;
+        ReadArray( BaseAddress + Addr1*256, (BYTE*)OCSector1, 256);
         for(i = 0; i< 32; i++){
             t1 = OCSector1[i][0];
             t2 = OCSector1[i][1];
@@ -212,8 +240,9 @@ void CreateAndSaveRRParams(RR * rr, DWORD BaseAddress, const char * Name)
             OCSector1[63-i][0] = t1;
             OCSector1[63-i][1] = t2;
         }
-        WriteArray(BaseAddress+OCHead.FastDec.TableAddr + 256*j, (BYTE*)OCSector1, 256);
+        WriteArray(BaseAddress + Addr * 256, (BYTE*)OCSector1, 256);
         Summ += CalcCheckSumm((BYTE*)OCSector1, 256);
+        Addr++;
     }
     OCHead.DataCheckSumm = Summ * 2;
     OCHead.HeadCheckSumm = CalcCheckSumm((BYTE*)&OCHead, sizeof(HEADER));
@@ -227,11 +256,24 @@ int LoadRRParams(RR * rr, DWORD BaseAddress)
     HEADER OCHead;
     DWORD Summ;
     DWORD SummNew;
+    BYTE Buf[256];
+    DWORD Count = 0;
+    DWORD i = 0;
     ReadArray(BaseAddress + 1, (BYTE*)&OCHead, sizeof(HEADER));
     Summ = OCHead.HeadCheckSumm;
     OCHead.HeadCheckSumm = 0;
     SummNew = CalcCheckSumm((BYTE*)&OCHead, sizeof(HEADER));
-    if(Summ != SummNew){
+    if((Summ != SummNew) || (Summ == 0)){
+        return 1;
+    }
+    Count = (OCHead.SlowAcc.TableSize+OCHead.FastAcc.TableSize+OCHead.SlowDec.TableSize+OCHead.FastDec.TableSize)*4;
+    SummNew = 0;
+    Summ = OCHead.DataCheckSumm;
+    for(i = 0; i < Count; i+=256){
+        ReadArray(BaseAddress + OCHead.SlowAcc.TableAddr + i + 256, Buf, 256);
+        SummNew += CalcCheckSumm(Buf, 256);
+    }
+    if((Summ != SummNew) || (Summ == 0)){
         return 1;
     }
     // TODO: сделать проверку контрольной суммы данных
@@ -256,7 +298,7 @@ int LoadRRParams(RR * rr, DWORD BaseAddress)
     rr->SlowDec.TableSize = OCHead.SlowDec.TableSize;
     rr->FastDec.TableAddr = OCHead.FastDec.TableAddr + BaseAddress;
     rr->FastDec.TableSize = OCHead.FastDec.TableSize;
-
+    CalculateParams(rr);
     return 0;
 }
 
@@ -327,14 +369,20 @@ int OCSetup(void)
 
         //TmrInit(2);
         rr1.Index = ID_OC1;
-        rr1.TmrId = TIMER2;
-        InitRR(&rr1);
+        rr1.TmrId = TIMER3;
+        if(InitRR(&rr1)){
+            return 1;
+        };
         rr2.Index = ID_OC2;
-        rr2.TmrId = TIMER2;
-        InitRR(&rr2);
+        rr2.TmrId = TIMER3;
+        if(InitRR(&rr2)){
+            return 1;
+        };
         rr3.Index = ID_OC3;
         rr3.TmrId = TIMER3;
-        InitRR(&rr3);
+        if(InitRR(&rr3)){
+            return 1;
+        };
         M1.Val = 0;
         M2.Val = 0;
         M3.Val = 0;
@@ -350,7 +398,7 @@ void LoadDefaultRRParams(RR * rr)
     rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
     rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
     rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
-    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;//0.0000002; // шаг таймера
+    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep / 8;//0.0000002; // шаг таймера
     //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
     rr->XPosition = 0;
     rr->Vend = 0.0;
@@ -375,6 +423,7 @@ void LoadDefaultRRParams(RR * rr)
     rr->Interval = 16777216;
     //rr->LastCmdV = 0.0;
     //rr->LastCmdX = 0.0;
+    CalculateParams(rr);
 }
 //------------------------------------------------------------------------------------------------
 int InitRR(RR * rr)
@@ -403,10 +452,9 @@ int InitRR(RR * rr)
     }
     if(LoadRRParams(rr, BaseAddress)){
         LoadDefaultRRParams(rr);
-        CalculateParams(rr);
         CreateAndSaveRRParams(rr, BaseAddress, Name);
-    } else {
-        CalculateParams(rr);
+        if(LoadRRParams(rr, BaseAddress)) 
+            return 1;
     }
 
     return 0;
@@ -507,8 +555,8 @@ int Control(void * _This, WORD* Buf, WORD BufSize)
 }
 WORD LoadFromFlash(RR * rr, BUF_TYPE* buf, WORD count)
 {
-
-    WriteArray(rr->FastAcc, (BYTE*)buf, count);
+    WriteArray(rr->FastAcc.TableAddr, (BYTE*)buf, count);
+    return 0;
 }
 //------------------------------------------------------------------------------------------------
 /*

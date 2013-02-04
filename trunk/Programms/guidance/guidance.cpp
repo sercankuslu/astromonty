@@ -589,7 +589,7 @@ typedef struct _TABLE_DATA
 #define FLAG_FILE 2
 DWORD CreateCheckSum(BYTE * val, WORD len);
 BYTE TmpSect[256];
-BYTE FileSystem[65536][256];
+//BYTE FileSystem[65536][256];
 char FSName[]   = "MYFileSystem   ";
 char OccupyS[]  = ".occupysectors ";
 char ReleaseS[] = ".releasesectors";
