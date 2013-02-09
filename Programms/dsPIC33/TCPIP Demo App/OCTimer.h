@@ -146,6 +146,7 @@ typedef struct _HEADER{
     DWORD HeadCheckSumm;
 } HEADER;
 
+// структура DMA буфера для режима TOGGLE в OC
 typedef struct _OC_RECORD {
     WORD r;
     WORD rs;
@@ -223,11 +224,7 @@ typedef struct RR{
     TABLE_ADDR FastDec;
 
 }RR;
-// структура DMA буфера для режима TOGGLE в OC
-typedef struct {
-    WORD R;
-    WORD RS;
-} BUF_TYPE;
+
 
 typedef  struct 
 #ifdef __C30__
@@ -376,7 +373,7 @@ __attribute__((__packed__))
 int OCSetup(void);
 int ProcessCmd(RR * rr);
 int Control(void * _This, WORD* Buf, WORD BufSize);
-WORD CalculateMove(RR * rr, BUF_TYPE* buf, WORD count);
+WORD CalculateMove(RR * rr, OC_RECORD* buf, WORD count);
 //int GoToCmd(RR * rr, double VTarget, double XTarget, DWORD Tick);
 double GetAngle(WORD n);
 int GetStatus(WORD n);
@@ -387,5 +384,11 @@ int JDToGDate(double JD, DateTime * GDate );
 */
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
 double LM_Sidereal_Time (double jd, double longitude);
+
+void FS_ClearSector(WORD Sector);
+void FS_ClearAll();
+void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
+void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
+
 #endif //__OC_TIMER_H_
 
