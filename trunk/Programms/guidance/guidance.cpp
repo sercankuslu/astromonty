@@ -53,9 +53,9 @@ DWORD Buf1Size = 0;
 DWORD Buf2Size = 0;
 DWORD Buf3Size = 0;
 
-BUF_TYPE DrawT1Buffer[576000];
-BUF_TYPE DrawT2Buffer[576000];
-BUF_TYPE DrawT3Buffer[576000];
+OC_RECORD DrawT1Buffer[576000];
+OC_RECORD DrawT2Buffer[576000];
+OC_RECORD DrawT3Buffer[576000];
 
 //double DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
@@ -68,7 +68,7 @@ void                    GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem);
  
 void Calc();
 //void DrawRRGraph(HDC hdc, DRAW_BUF * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, POINT * TX, DWORD Px, DWORD Py);
-void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py);
+void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 int BerkleyClient();
 
@@ -494,6 +494,8 @@ INT_PTR CALLBACK KeyDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     }    */
     return (INT_PTR)FALSE;
 }
+
+
 /*
 typedef struct _iobuf {
     char *_ptr;
@@ -536,27 +538,48 @@ int     fputs ( const char * str, FILE * stream );  //Write string to stream
     */
 #define PAGE_SIZE 256
 #define SECTOR_SIZE 256*1024
-//Формат первого сектора файла / папки
-typedef struct  _FILE_HEADER
+
+//Формат первого сектора файла
+// размер файла вычисляем при необходимости
+typedef struct _FILE_HEADER
 {
     WORD Flags;                     // флаги (файл/директория и т.д)
     BYTE Name[16];                  // имя файла
-    DWORD Size;                     //размер файла (для папки указывает значение размеров записи папки)
-    WORD SectorTable[5];            //указатели на первый сектор таблицы  Если первый равен 0, то используется следующий не нулевой
-                                    //если значение указателя 0xFFFF значит секторов нет
-    BYTE Data[PAGE_SIZE - 32];
+    WORD Sector[PAGE_SIZE - 20];    // указатели на сектора данных Если равен 0xFFFF значит секторов нет
+    WORD NextTableSector;           // указатель на следующий сектор таблицы.  Если равен 0xFFFF значит секторов нет
 } FILE_HEADER;
-//Формат второго и более сектора файла
-struct  _FILE_DATA
-{
-    BYTE Data[PAGE_SIZE];
-};
-//Формат сектора таблицы секторов и таблицы таблиц
+
+//Формат сектора таблицы секторов
 typedef struct _TABLE_DATA
 {
-    WORD Sector[PAGE_SIZE];               //указатели на сектора данных
-    WORD NextSector[4];             //указатель на следующий сектор таблицы. Если первый равен 0, то используется следующий не нулевой
+    WORD Sector[PAGE_SIZE/2];       //указатели на сектора данных
+    WORD NextSector;                //указатель на следующий сектор таблицы. Если первый равен 0, то используется следующий не нулевой
 } TABLE_DATA;
+
+//Формат сектора файла
+typedef struct _FILE_DATA
+{
+    BYTE Data[PAGE_SIZE];
+} FILE_DATA;
+
+//Формат сектора данных папки
+typedef struct _FOLDER_DATA
+{
+    WORD Data[PAGE_SIZE/2];
+} FOLDER_DATA;
+
+// Формат сектора файла свободного места
+// секторы размещаются в последней странице(256б) сектора flash(256к) 1023 страница сектора
+// то есть разбросаны по диску каждые 1024 сектора
+// заголовок файла находится во 2 секторе диска. 
+// в корневой папке файловой системы есть указатель на него
+typedef struct _FREE_SECTOR_FILE_DATA
+{
+    BYTE FreeSectors[PAGE_SIZE/2];
+    BYTE Releasedsectors[PAGE_SIZE/2];
+} FREE_SECTOR_FILE_DATA;
+
+
 /*
  File record
 |-----------|                                            Data record                (For folder)
@@ -584,65 +607,171 @@ typedef struct _TABLE_DATA
 файл сетевых настроек системы
 файл настроек двигатлей
 файлы таблиц интервалов для двигателей
+
+Особенности:
+1. Файл, открытый для записи записывается на flash секторами по 256 байт по мере наполнения сектора и после закрытия файла.
+Для каждого открытого на запись файла выделяется буфер на 256 байт
 */
 #define FLAG_FOLDER 1
 #define FLAG_FILE 2
 DWORD CreateCheckSum(BYTE * val, WORD len);
-BYTE TmpSect[256];
-//BYTE FileSystem[65536][256];
+
+extern BYTE FileSystem[64*1024*256];
 char FSName[]   = "MYFileSystem   ";
-char OccupyS[]  = ".occupysectors ";
-char ReleaseS[] = ".releasesectors";
+char OccupyS[]  = ".osec";
+char ReleaseS[] = ".rsec";
+void FS_CreateFileHeader(BYTE *Buf, WORD BufSize, const char * Name);
+void CreateFreeSpaceFile(DWORD Addr, BYTE *Buf, WORD BufSize);
 /*
 //-------------------------------------------------------------------------
-void ClearSector(WORD Sector)
+void FS_ClearSector(WORD Sector)
 {
-    memset(&FileSystem[Sector],0xFF,SECTOR_SIZE);
+    memset(&FileSystem[Sector << 8],0xFF,SECTOR_SIZE);
 }
 //-------------------------------------------------------------------------
-void ClearAll()
+void FS_ClearAll()
 {
     memset(FileSystem,0xFF,sizeof(FileSystem));
 }
 //-------------------------------------------------------------------------
-void WriteArray(DWORD Addr, BYTE* val, WORD len)
+void FS_WriteArray(DWORD Addr, BYTE* val, WORD len)
 {
-    memcpy(&FileSystem[Addr>>8][Addr & 0xFF], val, len);
+    memcpy(&FileSystem[Addr], val, len);
 }
-void ReadArray(DWORD Addr, BYTE* val, WORD len)
+void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
 {
-    memcpy(val, &FileSystem[Addr>>8][Addr & 0xFF], len);
+    memcpy(val, &FileSystem[Addr], len);
 }
-//-------------------------------------------------------------------------
-void CreateFileSystem(WORD PageSize, WORD SectorSize)
-{
-// формируем первый сектор
-    //memset(TmpSect,0xFF,sizeof(TmpSect));
-    FILE_HEADER * Header;
-    ClearAll();
-
-    // корень файловой системы
-    Header = (FILE_HEADER*)TmpSect;
-    Header->Flags = FLAG_FOLDER;
-    memcpy(Header->Name, FSName, sizeof(FSName));
-    WriteArray(0, TmpSect, 2 + sizeof(FSName));
-    
-    // Файл занятого места
-    Header->Flags = FLAG_FILE;
-    memcpy(Header->Name, OccupyS, sizeof(OccupyS));
-    //Header->
-    WriteArray(0, TmpSect, 2 + sizeof(OccupyS));
-    
-
-}
-// от скорости 0 до 0.2 градуса в сек делитель на 256
 */
 
-HEADER OCHead;
-WORD OCSector1[64][2];
+// Addr адрес первого сектора файла свободного места
+// сектора файла находятся в последних страницах физического сектора памяти 
+// и стираются вместе со всем сектором, что гарантирует актуальность 
+// информации о свободном месте
+void CreateFreeSpaceFile(DWORD Addr, BYTE *Buf, WORD BufSize)
+{
+    FILE_HEADER * fileHead = (FILE_HEADER *)Buf;
+    BYTE val = 0;
+    WORD i = 0;
+
+    for(i = 0; i< 64;i++){
+        fileHead->Sector[i] = (i + 1)*1024 - 1;
+    }
+
+    FS_WriteArray(Addr, Buf, BufSize);
+
+    val = 0xFC; // первые два сектора заняты
+    FS_WriteArray(261888, &val, 1);
+
+    val = 0x7F;
+    for(i = 0; i< 64;i++){
+        FS_WriteArray(262015 + i * 262144, &val, 1);
+    }
+}
+
+//-------------------------------------------------------------------------
+void CreateFileSystem()
+{
+// формируем первый сектор
+    //memset(Buf,0xFF,sizeof(Buf));
+    BYTE TmpBuf[256];
+    FILE_HEADER * fileHead = (FILE_HEADER *)TmpBuf;
+    FOLDER_DATA * folderData = (FOLDER_DATA *)TmpBuf;
+    FS_ClearAll();
+    
+    // корень файловой системы
+    FS_CreateFileHeader(TmpBuf, sizeof(TmpBuf), "FileSystem");
+    // первый сектор папки
+    fileHead->Sector[0] = 0x01; 
+    // записываем первый сектор
+    FS_WriteArray(0x000000, TmpBuf, sizeof(TmpBuf));
+    memset(TmpBuf,0xFF, sizeof(TmpBuf));
+    // указатель на первый сектор файла свободного места
+    folderData->Data[0] = 0x02;
+    // записываем сектор
+    FS_WriteArray(0x000100, TmpBuf, 2);
+    // создаём файл свободного места
+    FS_CreateFileHeader(TmpBuf, sizeof(TmpBuf),".free.sec");
+    // записываем файл свободного места
+    CreateFreeSpaceFile(0x000200, TmpBuf, sizeof(TmpBuf));
+
+}
+
+// пишет заголовок Файла по указанному адресу
+void FS_CreateFileHeader(BYTE *Buf, WORD BufSize, const char * Name)
+{
+    FILE_HEADER * fileHead;
+    memset(Buf,0xFF, BufSize);
+    fileHead = (FILE_HEADER*)Buf;
+
+    fileHead->Flags = 0x00;                     // флаги (файл/директория и т.д)
+    memcpy(fileHead->Name, Name, strlen(Name) + 1); // имя папки
+}
+
+DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
+DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
+
+typedef struct _FS_iobuf {
+    char *_ptr;
+    int   _cnt;
+    char *_base;
+    int   _flag;
+    int   _file;
+    int   _charbuf;
+    int   _bufsiz;
+    char *_tmpfname;
+} FS_FILE;
+
+/*
+"r"     read: Open file for input operations. The file must exist.
+"w"     write: Create an empty file for output operations. If a file with the same name already exists, 
+        its contents are discarded and the file is treated as a new empty file.
+"a"     append: Open file for output at the end of a file. Output operations always 
+        write data at the end of the file, expanding it. Repositioning operations (fseek, fsetpos, rewind) 
+        are ignored. The file is created if it does not exist.
+"r+"    read/update: Open a file for update (both for input and output). The file must exist.
+"w+"    write/update: Create an empty file and open it for update (both for input and output). 
+        If a file with the same name already exists its contents are discarded and the file is treated as a new empty file.
+"a+"    append/update: Open a file for update (both for input and output) with all output 
+        operations writing data at the end of the file. Repositioning operations 
+        (fseek, fsetpos, rewind) affects the next input operations, but output operations 
+        (move the position back to the end of file. The file is created if it does not exist.
+text:
+r, w, a, r+, w+, a+
+binary:
+rb, wb, ab, rb+, wb+, ab+
+
+/folder/filename.bin
+./filename.bin
+
+Если файл на запись, выделяем буфер
+*/
+FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
+{
+
+    if(mode[0] == 'r'){
+
+    }
+}
 
 
+/* Запись файла:
+ * fopen
+ * 1. получить свободный сектор
+ * 2. Записать заголовок
+ * fwrite
+ * 3. Начать писать данные в загловок
+ * 4. Если данных больше, чем влазит в первый сектор,запросить свободный сектор, записать в заголовок указатель на первый сектор данных
+ * 5  записать в свободный сектор данные
+ * 6. если данных больше, чем помещается в сектор, запросить свободный сектор. Записать в заголовок указатель на первый сектор таблицы,
+ * записать в таблицу адрес первого сектора файла и первого сектора данных.
+ * 7. при заполнении сектора таблицы, за исключением последних 2 байт, запросить свободный сектор и в последние 2 байта таблицы записать значение адреса полученного сектора.
+ * fclose
+ * 8. если данных больше нет, записать размер файла в первый сектор
+ */
 
+
+// от скорости 0 до 0.2 градуса в сек делитель на 256
 
 void Calc()
 {
@@ -682,8 +811,8 @@ void Calc()
     // работа от таймера TMR3(6.4us) от интервала 16777216(0.00074град/сек) до интервала 65536(0.2град/сек)
     // работа от таймера TMR2(25ns)  от интервала 65535(0.2град/сек) до интервала 1250(10град/сек)
     const char Name1[] = "RR1";
-    OCSetup(); 
-    
+    //OCSetup(); 
+    CreateFileSystem();
     /*
     ProcessCmd(&rr1);
     return;
@@ -807,7 +936,7 @@ void Calc()
         }
     }*/
 }
-void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
+void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
     POINT TX = {Px,Py};
     POINT TX1 = {Px,Py};
@@ -849,7 +978,7 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, BUF_TYPE * Buf, DWORD Buf
     {  
        
         T2 = T1;
-        T1 = Buf[i].R;
+        T1 = Buf[i].r;
         //while(T1 <= T){
         //    T1 += 65536;
         //}
