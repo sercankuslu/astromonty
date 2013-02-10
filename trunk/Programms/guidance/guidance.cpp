@@ -711,6 +711,35 @@ void FS_CreateFileHeader(BYTE *Buf, WORD BufSize, const char * Name)
 DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
 DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
 
+//-------------------------------------------------------------------------
+// копирует в Name имя папки или файла из строки пути 
+// типа "/folder1/folder2/file1.txt". 
+// в Name должно быть минимум 13 байт(8+.+3+\0). 
+// (максимально допустимое количество символов в имени папки или файла)
+// возвращает адрес следующего '/' после возвращенного имени, 
+// или адрес '\0' если строка закончилась
+// в случае ошибки возвращает NULL
+//-------------------------------------------------------------------------
+char * getNameFromPath(char * Path, char * Name)
+//-------------------------------------------------------------------------
+{
+    if((Path == NULL) || (Name == NULL) || (Path[0]!= '/'))
+        return 0;
+    Path++;
+    while ((*Path != '/')&&((*Path != '\0')))
+    {
+        *Name++ = *Path++;
+    }
+    *Name = '\0';
+    return Path;
+}
+//-------------------------------------------------------------------------
+// ищет файл. возвращает позицию записи файла на диске
+DWORD fsearch(char * Name)
+{
+    return 0;
+}
+
 typedef struct _FS_iobuf {
     char *_ptr;
     int   _cnt;
@@ -737,21 +766,72 @@ typedef struct _FS_iobuf {
         (fseek, fsetpos, rewind) affects the next input operations, but output operations 
         (move the position back to the end of file. The file is created if it does not exist.
 text:
-r, w, a, r+, w+, a+
+r, r+, rt, rt+, r+t
+w, w+, wt, wt+, w+t
+a, a+, at, at+, a+t
+
 binary:
-rb, wb, ab, rb+, wb+, ab+
+rb, rb+, r+b
+wb, wb+, w+b
+ab, ab+, a+b
 
 /folder/filename.bin
 ./filename.bin
 
 Если файл на запись, выделяем буфер
 */
+typedef enum _FS_MODE {
+    FS_NONE, FS_READ, FS_WRITE, FS_APPEND, FS_READ_UPDATE, FS_WRITE_UPDATE, FS_APPEND_UPDATE
+} FS_MODE;
+typedef enum _FS_RW_MODE {
+    RW_NONE, RW_TEXT, RW_BINARY
+}FS_RW_MODE;
+
 FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
 {
+    int i;
+    FS_MODE fsmode = FS_NONE;
+    FS_RW_MODE fsrwmode = RW_NONE;
 
-    if(mode[0] == 'r'){
-
+    if ((filename == NULL)||(mode == NULL)) {
+        return NULL;
     }
+    
+    for (i = 0; i < 3; i++)
+    {
+        switch (mode[i])
+        {
+        // взаимоисключающие
+        case 'r':
+            if (fsmode == FS_NONE) fsmode = FS_READ;
+            break;
+        case 'w':
+            if (fsmode == FS_NONE) fsmode = FS_WRITE;
+            break;
+        case 'a':
+            if (fsmode == FS_NONE) fsmode = FS_APPEND;
+            break;
+        // модификаторы
+        case '+':
+            if (fsmode == FS_READ) fsmode = FS_READ_UPDATE; else
+            if (fsmode == FS_WRITE) fsmode = FS_WRITE_UPDATE; else
+            if (fsmode == FS_APPEND) fsmode = FS_APPEND_UPDATE;
+            break;
+        case 'b':
+            if(fsrwmode == RW_NONE) fsrwmode = RW_BINARY;
+            break;
+        case 't':
+            if(fsrwmode == RW_NONE) fsrwmode = RW_TEXT;
+            break;
+        // конец строки
+        case '\0':
+            i = 3;
+            break;
+        default:
+            return NULL;
+        }
+    }
+    return NULL;
 }
 
 
@@ -812,7 +892,44 @@ void Calc()
     // работа от таймера TMR2(25ns)  от интервала 65535(0.2град/сек) до интервала 1250(10град/сек)
     const char Name1[] = "RR1";
     //OCSetup(); 
-    CreateFileSystem();
+    //CreateFileSystem();
+    char * r;
+    char * r1;
+    char * r2;
+    char * r3;
+    char Fold[13];
+    char path[] = "/style/style.css";
+    FS_FILE * file;
+    r = getNameFromPath(path, Fold);
+    r1 = getNameFromPath(r, Fold);
+
+    file = FS_fopen ( path, "r" );
+    file = FS_fopen ( path, "w" );
+    file = FS_fopen ( path, "a" );
+    file = FS_fopen ( path, "r+" );
+    file = FS_fopen ( path, "w+" );
+    file = FS_fopen ( path, "a+" );
+    file = FS_fopen ( path, "rb" );
+    file = FS_fopen ( path, "wb" );
+    file = FS_fopen ( path, "ab" );
+    file = FS_fopen ( path, "rb+" );
+    file = FS_fopen ( path, "wb+" );
+    file = FS_fopen ( path, "ab+" );
+    file = FS_fopen ( path, "r+b" );
+    file = FS_fopen ( path, "w+b" );
+    file = FS_fopen ( path, "a+b" );
+    file = FS_fopen ( path, "rt" );
+    file = FS_fopen ( path, "wt" );
+    file = FS_fopen ( path, "at" );
+    file = FS_fopen ( path, "rt+" );
+    file = FS_fopen ( path, "wt+" );
+    file = FS_fopen ( path, "at+" );
+    file = FS_fopen ( path, "r+t" );
+    file = FS_fopen ( path, "w+t" );
+    file = FS_fopen ( path, "a+t" );
+
+
+
     /*
     ProcessCmd(&rr1);
     return;

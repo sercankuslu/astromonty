@@ -398,7 +398,7 @@ void LoadDefaultRRParams(RR * rr)
     rr->Reduction = MY_DEFAULT_RR_PARA_Rdct;
     rr->StepPerTurn = MY_DEFAULT_RR_PARA_SPT;
     rr->uStepPerStep = MY_DEFAULT_RR_PARA_uSPS; //16
-    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep / 8;//0.0000002; // øàã òàéìåğà
+    rr->TimerStep = MY_DEFAULT_RR_PARA_TimerStep;// / 8;//0.0000002; // øàã òàéìåğà
     //rr->VMax = MY_DEFAULT_RR_PARA_VMax* Grad_to_Rad;
     rr->XPosition = 0;
     rr->Vend = 0.0;
