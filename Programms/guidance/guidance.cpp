@@ -528,188 +528,211 @@ int     fputc ( int character, FILE * stream ); //Write character to stream
 char *  fgets ( char * str, int num, FILE * stream );   //Get string from stream
 int     fputs ( const char * str, FILE * stream );  //Write string to stream
 */
-/*
-    1. Если размер файла меньше 224 байт, то весь файл находится в первом секторе, 
-указатель на таблицу секторов установлен в 0xFFFF
-    2. Если размер файла больше 224 байт, но меньше 32744 байт, то в начало файла 
-находится в первом секторе, указатель на таблицу указывает на первую таблицу 
-секторов, а указатель на таблицу таблиц равен 0xFFFF
-    3. 
-    */
+
 #define PAGE_SIZE 256
 #define SECTOR_SIZE 256*1024
 
-//Формат первого сектора файла
-// размер файла вычисляем при необходимости
-typedef struct _FILE_HEADER
+// Формат заголовка файла в первом секторе файла
+typedef struct _FILE_HEAD
 {
-    WORD Flags;                     // флаги (файл/директория и т.д)
     BYTE Name[16];                  // имя файла
-    WORD Sector[PAGE_SIZE - 20];    // указатели на сектора данных Если равен 0xFFFF значит секторов нет
-    WORD NextTableSector;           // указатель на следующий сектор таблицы.  Если равен 0xFFFF значит секторов нет
-} FILE_HEADER;
+    DWORD dataSize;                  // размер данных у папок 0xFFFF
+    DWORD fileHash;                  // хеш сумма данных файла
+} FILE_HEAD;
 
-//Формат сектора таблицы секторов
-typedef struct _TABLE_DATA
+// формат записи файла в таблице файлов
+typedef struct _FILE_RECORD
 {
-    WORD Sector[PAGE_SIZE/2];       //указатели на сектора данных
-    WORD NextSector;                //указатель на следующий сектор таблицы. Если первый равен 0, то используется следующий не нулевой
-} TABLE_DATA;
-
-//Формат сектора файла
-typedef struct _FILE_DATA
-{
-    BYTE Data[PAGE_SIZE];
-} FILE_DATA;
-
-//Формат сектора данных папки
-typedef struct _FOLDER_DATA
-{
-    WORD Data[PAGE_SIZE/2];
-} FOLDER_DATA;
-
-// Формат сектора файла свободного места
-// секторы размещаются в последней странице(256б) сектора flash(256к) 1023 страница сектора
-// то есть разбросаны по диску каждые 1024 сектора
-// заголовок файла находится во 2 секторе диска. 
-// в корневой папке файловой системы есть указатель на него
-typedef struct _FREE_SECTOR_FILE_DATA
-{
-    BYTE FreeSectors[PAGE_SIZE/2];
-    BYTE Releasedsectors[PAGE_SIZE/2];
-} FREE_SECTOR_FILE_DATA;
-
+    WORD ID;
+    WORD ParentId;
+    WORD NameHash;
+    WORD SectorTable;
+} FILE_RECORD;
 
 /*
- File record
-|-----------|                                            Data record                (For folder)
-|           |               Table record        |------>|-----------|                FileRecord
-|SectorTable|-------------->|-----------|       |       |  DATA[1]. |-------------->|-----------|
-|-----------|               |Sector[0]  |-------|       |___________|               |File record|
-|  DATA[0]  |               |  ........ |                                           |___________|
-|___________|               |Sector[N]  |-------------->|-----------|
-                            |           |               |  DATA[N]. |
-                     |------|NextSector |               |___________|
-                     |      |___________|               
-                     |                          |------>|-----------|
-                     |----->|-----------|       |       |  DATA[N+1]|
-                            |Sector[N+1]|-------|       |___________|
-                            |  ........ |
-                            |Sector[M]  |-------------->|-----------|
-                            |           |               |  DATA[M]. |
-                            |NextSector |               |___________|
-                            |___________|               
+ * Вариант 2
+ * с первого сектора файловой системы начинается файл таблицы файлов
+ * и занимает первые 4 сектора + 1 сектор таблицы секторов
+ * первая запись в этом файле-это сам файл таблицы
+ * вторая запись в файле-файл свободного места
+ * файл свободного места распределен по физическим секторам флеш памяти
+ * 1 сектор файла на 1 сектор памяти, причем в первом секторе находится 1 сектор файла СМ + таблица секторов файла СМ
+ * файл оссвободившегося места распределен по физическим секторам флеш памяти
+ * 1 сектор файла на 1 сектор памяти, причем в первом секторе находится 1 сектор файла ОМ + таблица секторов файла ОМ
+ * 24+256+256+256+256(в каждом секторе начинаем с 24 байта и занимаем 128 байт)
+ * 
+ *
+ *
+ *
+ *
+ */
 
-корень файловой системы это папка в которой находятся:
-файл свободного места       8192 байта
-файл освободившегося места  8192 байта
-файлы и папки данных
-файл сетевых настроек системы
-файл настроек двигатлей
-файлы таблиц интервалов для двигателей
+typedef enum _FS_MODE {
+    FS_NONE, FS_READ, FS_WRITE, FS_APPEND, FS_READ_UPDATE, FS_WRITE_UPDATE, FS_APPEND_UPDATE
+} FS_MODE;
+typedef enum _FS_RW_MODE {
+    RW_NONE, RW_TEXT, RW_BINARY
+}FS_RW_MODE;
 
-Особенности:
-1. Файл, открытый для записи записывается на flash секторами по 256 байт по мере наполнения сектора и после закрытия файла.
-Для каждого открытого на запись файла выделяется буфер на 256 байт
-*/
 #define FLAG_FOLDER 1
 #define FLAG_FILE 2
 DWORD CreateCheckSum(BYTE * val, WORD len);
 
 extern BYTE FileSystem[64*1024*256];
-char FSName[]   = "MYFileSystem   ";
-char OccupyS[]  = ".osec";
-char ReleaseS[] = ".rsec";
-void FS_CreateFileHeader(BYTE *Buf, WORD BufSize, const char * Name);
-void CreateFreeSpaceFile(DWORD Addr, BYTE *Buf, WORD BufSize);
-/*
-//-------------------------------------------------------------------------
-void FS_ClearSector(WORD Sector)
-{
-    memset(&FileSystem[Sector << 8],0xFF,SECTOR_SIZE);
-}
-//-------------------------------------------------------------------------
-void FS_ClearAll()
-{
-    memset(FileSystem,0xFF,sizeof(FileSystem));
-}
-//-------------------------------------------------------------------------
-void FS_WriteArray(DWORD Addr, BYTE* val, WORD len)
-{
-    memcpy(&FileSystem[Addr], val, len);
-}
-void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
-{
-    memcpy(val, &FileSystem[Addr], len);
-}
-*/
-
-// Addr адрес первого сектора файла свободного места
-// сектора файла находятся в последних страницах физического сектора памяти 
-// и стираются вместе со всем сектором, что гарантирует актуальность 
-// информации о свободном месте
-void CreateFreeSpaceFile(DWORD Addr, BYTE *Buf, WORD BufSize)
-{
-    FILE_HEADER * fileHead = (FILE_HEADER *)Buf;
-    BYTE val = 0;
-    WORD i = 0;
-
-    for(i = 0; i< 64;i++){
-        fileHead->Sector[i] = (i + 1)*1024 - 1;
-    }
-
-    FS_WriteArray(Addr, Buf, BufSize);
-
-    val = 0xFC; // первые два сектора заняты
-    FS_WriteArray(261888, &val, 1);
-
-    val = 0x7F;
-    for(i = 0; i< 64;i++){
-        FS_WriteArray(262015 + i * 262144, &val, 1);
-    }
-}
+char FSName[]   = "uFS";
+char FFName[]   = ".free";
+char OFName[]   = ".freed";
+DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
+DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
 
 //-------------------------------------------------------------------------
 void CreateFileSystem()
 {
-// формируем первый сектор
-    //memset(Buf,0xFF,sizeof(Buf));
+// формируем таблицу файлов
     BYTE TmpBuf[256];
-    FILE_HEADER * fileHead = (FILE_HEADER *)TmpBuf;
-    FOLDER_DATA * folderData = (FOLDER_DATA *)TmpBuf;
+    FILE_HEAD * FS_Head = (FILE_HEAD *)TmpBuf;
+    FILE_RECORD * FSRecord = (FILE_RECORD *)&TmpBuf[sizeof(FILE_HEAD)];
+    WORD * Sector = NULL;
+    WORD i;
+    BYTE * SecMask = NULL;
+    BYTE b = 0;
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
     FS_ClearAll();
+
+    // имя ФС
+    memcpy(FS_Head->Name,FSName,sizeof(FSName));
+
+    // первая запись-сам файл таблицы
+    FSRecord->ID = 0;
+    FSRecord->ParentId = 0;
+    FSRecord->NameHash = CalcCheckSumm((BYTE*)FSName, sizeof(FSName));
+    FSRecord->SectorTable = 8;
+
+    // вторая запись - файл свободного места
+    FSRecord++;
+    FSRecord->ID = 1;
+    FSRecord->ParentId = 0;
+    FSRecord->NameHash = CalcCheckSumm((BYTE*)FFName, sizeof(FFName));
+    FSRecord->SectorTable = 10;
+
+    // третья запись - файл освободивщегося места
+    FSRecord++;
+    FSRecord->ID = 2;
+    FSRecord->ParentId = 0;
+    FSRecord->NameHash = CalcCheckSumm((BYTE*)OFName, sizeof(OFName));
+    FSRecord->SectorTable = 12;
+
+    FS_WriteArray(0, TmpBuf, 256);
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
     
-    // корень файловой системы
-    FS_CreateFileHeader(TmpBuf, sizeof(TmpBuf), "FileSystem");
-    // первый сектор папки
-    fileHead->Sector[0] = 0x01; 
-    // записываем первый сектор
-    FS_WriteArray(0x000000, TmpBuf, sizeof(TmpBuf));
-    memset(TmpBuf,0xFF, sizeof(TmpBuf));
-    // указатель на первый сектор файла свободного места
-    folderData->Data[0] = 0x02;
-    // записываем сектор
-    FS_WriteArray(0x000100, TmpBuf, 2);
-    // создаём файл свободного места
-    FS_CreateFileHeader(TmpBuf, sizeof(TmpBuf),".free.sec");
-    // записываем файл свободного места
-    CreateFreeSpaceFile(0x000200, TmpBuf, sizeof(TmpBuf));
+    // таблица секторов ТФ
+    Sector = (WORD*)TmpBuf;
+    for(i = 0; i<8; i++){
+        *Sector = i;
+        Sector++;
+    }
+
+    FS_WriteArray(256*8, TmpBuf, 256);    
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+    
+    // ФСМ
+    memcpy(FS_Head->Name,FFName,sizeof(FFName));
+    FS_Head->dataSize = 16360; // 64*256 - 24
+    SecMask = (BYTE*)&TmpBuf[sizeof(FILE_HEAD)];
+    // заняты 13 секторов
+    *SecMask++ = 0x00;
+    *SecMask++ = 0xE0;
+
+    FS_WriteArray(256*9, TmpBuf, 256);
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+
+    // таблица секторов ФСМ
+    Sector = (WORD*)TmpBuf;
+    *Sector = 9;
+    b = 0xFE;
+    for(i = 1; i<64; i++){
+        Sector++;
+        *Sector = i*1024;
+        FS_WriteArray((*Sector)*PAGE_SIZE, &b, 1);
+    }
+
+    FS_WriteArray(256*10, TmpBuf, 256);
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+
+    // ФОМ
+    memcpy(FS_Head->Name,OFName,sizeof(OFName));
+    FS_Head->dataSize = 16360; // 64*256 - 24
+
+    FS_WriteArray(256*11, TmpBuf, 256);    
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+
+    // таблица секторов ФОМ
+    Sector = (WORD*)TmpBuf;
+    *Sector = 11;
+    //b = 0xFF;
+    for(i = 1; i<64; i++){
+        Sector++;
+        *Sector = i*1024+1;
+        //FS_WriteArray((*Sector)*PAGE_SIZE, &b, 1); // пишем 0xFF
+    }
+
+    FS_WriteArray(256*12, TmpBuf, 256);
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
 
 }
+/*
+ *        создать, если нет
+ *        | удалить файл, если есть/не удалять файл
+ *        | | текстовый(0)/бинарный(1)
+ *        | | | запись в конец/запись по указателю
+ *        | | | | чтение разрешено
+ *        | | | | | запись разрешена
+ *        | | | | | |
+ *   |7|6|5|4|3|2|1|0|
+ */
+typedef union {
+    BYTE Val;
+    //BYTE_VAL VAL;
+    struct {
+        unsigned RE:1;
+        unsigned WE:1;
+        unsigned WrToEnd:1;
+        unsigned Binary:1;
+        unsigned Renew:1;
+        unsigned New:1;
+        unsigned b6:1;
+        unsigned b7:1;
+    } FILESTATEbits;
+}FILESTATE;
 
-// пишет заголовок Файла по указанному адресу
-void FS_CreateFileHeader(BYTE *Buf, WORD BufSize, const char * Name)
+typedef struct _FS_STATE{
+    WORD ID;            // индекс файла
+    FILESTATE State;
+    DWORD FileRecord;   // адрес записи файла в таблице файлов
+    DWORD ReadPos;      // указатель чтения
+    DWORD WritePos;      // указатель записи
+    DWORD ReadSectorPos;    // указатель чтения в таблице секторов файла
+    DWORD WriteSectorPos;   // указатель записи в таблице секторов файла
+    DWORD FSize;
+    BYTE Buf[256];
+} FS_STATE;
+
+// нужны:
+// 1. указатель в таблице секторов
+// 2. указатель в текущем секторе
+//
+//
+
+// ID - индекс файла
+// From адрес блока внутри файла
+// Buf  буфер
+// Count количество байт
+int ReadFromFile(WORD ID, DWORD From, BYTE * Buf, WORD Count)
 {
-    FILE_HEADER * fileHead;
-    memset(Buf,0xFF, BufSize);
-    fileHead = (FILE_HEADER*)Buf;
-
-    fileHead->Flags = 0x00;                     // флаги (файл/директория и т.д)
-    memcpy(fileHead->Name, Name, strlen(Name) + 1); // имя папки
+    FS_ReadArray(ID * 8 + 24 + From, Buf, Count);
+    return 0;
 }
 
-DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
-DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
 
 //-------------------------------------------------------------------------
 // копирует в Name имя папки или файла из строки пути 
@@ -780,19 +803,12 @@ ab, ab+, a+b
 
 Если файл на запись, выделяем буфер
 */
-typedef enum _FS_MODE {
-    FS_NONE, FS_READ, FS_WRITE, FS_APPEND, FS_READ_UPDATE, FS_WRITE_UPDATE, FS_APPEND_UPDATE
-} FS_MODE;
-typedef enum _FS_RW_MODE {
-    RW_NONE, RW_TEXT, RW_BINARY
-}FS_RW_MODE;
 
 FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
 {
     int i;
-    FS_MODE fsmode = FS_NONE;
-    FS_RW_MODE fsrwmode = RW_NONE;
-
+    FILESTATE State;
+    State.Val = 0;
     if ((filename == NULL)||(mode == NULL)) {
         return NULL;
     }
@@ -803,25 +819,36 @@ FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
         {
         // взаимоисключающие
         case 'r':
-            if (fsmode == FS_NONE) fsmode = FS_READ;
+            State.FILESTATEbits.RE = 1;
+            State.FILESTATEbits.WE = 0;
+            State.FILESTATEbits.Renew = 0;
+            State.FILESTATEbits.WrToEnd = 0;
+            State.FILESTATEbits.New = 0;
             break;
         case 'w':
-            if (fsmode == FS_NONE) fsmode = FS_WRITE;
+            State.FILESTATEbits.WE = 1;
+            State.FILESTATEbits.RE = 0;
+            State.FILESTATEbits.Renew = 1;
+            State.FILESTATEbits.WrToEnd = 0;
+            State.FILESTATEbits.New = 1;
             break;
         case 'a':
-            if (fsmode == FS_NONE) fsmode = FS_APPEND;
+            State.FILESTATEbits.WE = 1;
+            State.FILESTATEbits.RE = 0;
+            State.FILESTATEbits.WrToEnd = 1;
+            State.FILESTATEbits.Renew = 0;
+            State.FILESTATEbits.New = 1;
             break;
         // модификаторы
         case '+':
-            if (fsmode == FS_READ) fsmode = FS_READ_UPDATE; else
-            if (fsmode == FS_WRITE) fsmode = FS_WRITE_UPDATE; else
-            if (fsmode == FS_APPEND) fsmode = FS_APPEND_UPDATE;
+            State.FILESTATEbits.WE = 1;
+            State.FILESTATEbits.RE = 1;
             break;
         case 'b':
-            if(fsrwmode == RW_NONE) fsrwmode = RW_BINARY;
+            State.FILESTATEbits.Binary = 1;
             break;
         case 't':
-            if(fsrwmode == RW_NONE) fsrwmode = RW_TEXT;
+            State.FILESTATEbits.Binary = 0;
             break;
         // конец строки
         case '\0':
@@ -891,8 +918,11 @@ void Calc()
     // работа от таймера TMR3(6.4us) от интервала 16777216(0.00074град/сек) до интервала 65536(0.2град/сек)
     // работа от таймера TMR2(25ns)  от интервала 65535(0.2град/сек) до интервала 1250(10град/сек)
     const char Name1[] = "RR1";
+    BYTE Buf[256];
     //OCSetup(); 
-    //CreateFileSystem();
+    CreateFileSystem();
+    ReadFromFile(0, 8, Buf, 8);
+
     char * r;
     char * r1;
     char * r2;
@@ -900,33 +930,33 @@ void Calc()
     char Fold[13];
     char path[] = "/style/style.css";
     FS_FILE * file;
-    r = getNameFromPath(path, Fold);
-    r1 = getNameFromPath(r, Fold);
+    FILESTATE State;
 
-    file = FS_fopen ( path, "r" );
-    file = FS_fopen ( path, "w" );
-    file = FS_fopen ( path, "a" );
-    file = FS_fopen ( path, "r+" );
-    file = FS_fopen ( path, "w+" );
-    file = FS_fopen ( path, "a+" );
-    file = FS_fopen ( path, "rb" );
-    file = FS_fopen ( path, "wb" );
-    file = FS_fopen ( path, "ab" );
-    file = FS_fopen ( path, "rb+" );
-    file = FS_fopen ( path, "wb+" );
-    file = FS_fopen ( path, "ab+" );
-    file = FS_fopen ( path, "r+b" );
-    file = FS_fopen ( path, "w+b" );
-    file = FS_fopen ( path, "a+b" );
-    file = FS_fopen ( path, "rt" );
-    file = FS_fopen ( path, "wt" );
-    file = FS_fopen ( path, "at" );
-    file = FS_fopen ( path, "rt+" );
-    file = FS_fopen ( path, "wt+" );
-    file = FS_fopen ( path, "at+" );
-    file = FS_fopen ( path, "r+t" );
-    file = FS_fopen ( path, "w+t" );
-    file = FS_fopen ( path, "a+t" );
+// 
+     /*file = FS_fopen ( path, "r" );
+     file = FS_fopen ( path, "w" );
+     file = FS_fopen ( path, "a" );
+     file = FS_fopen ( path, "r+" );
+     file = FS_fopen ( path, "w+" );
+     file = FS_fopen ( path, "a+" );
+     file = FS_fopen ( path, "rb" );
+     file = FS_fopen ( path, "wb" );
+     file = FS_fopen ( path, "ab" );
+     file = FS_fopen ( path, "rb+" );
+     file = FS_fopen ( path, "wb+" );
+     file = FS_fopen ( path, "ab+" );
+     file = FS_fopen ( path, "r+b" );
+     file = FS_fopen ( path, "w+b" );
+     file = FS_fopen ( path, "a+b" );
+     file = FS_fopen ( path, "rt" );
+     file = FS_fopen ( path, "wt" );
+     file = FS_fopen ( path, "at" );
+     file = FS_fopen ( path, "rt+" );
+     file = FS_fopen ( path, "wt+" );
+     file = FS_fopen ( path, "at+" );
+     file = FS_fopen ( path, "r+t" );
+     file = FS_fopen ( path, "w+t" );
+     file = FS_fopen ( path, "a+t" );*/
 
 
 

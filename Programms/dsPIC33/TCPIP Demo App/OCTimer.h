@@ -389,6 +389,7 @@ void FS_ClearSector(WORD Sector);
 void FS_ClearAll();
 void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
 void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
+DWORD CalcCheckSumm(BYTE* Buf, WORD len);
 
 #endif //__OC_TIMER_H_
 
