@@ -390,6 +390,10 @@ void FS_ClearAll();
 void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
 void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
 DWORD CalcCheckSumm(BYTE* Buf, WORD len);
+DWORD RoundShiftRight(BYTE x, BYTE count);
+unsigned char Crc8(unsigned char *pcBlock, unsigned int len);
+unsigned short Crc16(unsigned char *pcBlock, unsigned short len);
+DWORD Crc32(unsigned char *buf, size_t len);
 
 #endif //__OC_TIMER_H_
 
