@@ -529,16 +529,9 @@ char *  fgets ( char * str, int num, FILE * stream );   //Get string from stream
 int     fputs ( const char * str, FILE * stream );  //Write string to stream
 */
 
-#define PAGE_SIZE 256
+#define FS_SECTOR_SIZE  256
+#define FS_SECTOR_MASK  FS_SECTOR_SIZE-1
 #define SECTOR_SIZE 256*1024
-
-// Формат заголовка файла в первом секторе файла
-typedef struct _FILE_HEAD
-{
-    BYTE Name[16];                  // имя файла
-    DWORD dataSize;                  // размер данных у папок 0xFFFF
-    DWORD fileHash;                  // хеш сумма данных файла
-} FILE_HEAD;
 
 // формат записи файла в таблице файлов
 typedef struct _FILE_RECORD
@@ -547,6 +540,10 @@ typedef struct _FILE_RECORD
     WORD ParentId;
     WORD NameHash;
     WORD SectorTable;
+    //DWORD Date;
+    DWORD dataSize;                  // размер данных у папок 0xFFFF
+    DWORD fileHash;                  // хеш сумма данных файла
+    BYTE Name[16];                  // имя файла
 } FILE_RECORD;
 
 /*
@@ -579,9 +576,8 @@ typedef enum _FS_RW_MODE {
 DWORD CreateCheckSum(BYTE * val, WORD len);
 
 extern BYTE FileSystem[64*1024*256];
-char FSName[]   = "uFS";
-char FFName[]   = ".free";
-char OFName[]   = ".freed";
+char FSName[]   = "uFS ver 1.0";
+char FFName[]   = ".bitmap";
 DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
 DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
 
@@ -589,42 +585,52 @@ DWORD GetFreeSectors(WORD Count);  // возвращает первый сект
 void CreateFileSystem()
 {
 // формируем таблицу файлов
-    BYTE TmpBuf[256];
-    FILE_HEAD * FS_Head = (FILE_HEAD *)TmpBuf;
-    FILE_RECORD * FSRecord = (FILE_RECORD *)&TmpBuf[sizeof(FILE_HEAD)];
+    BYTE TmpBuf[FS_SECTOR_SIZE];
+    FILE_RECORD * FSRecord = (FILE_RECORD*)TmpBuf;
     WORD * Sector = NULL;
     WORD i;
     BYTE * SecMask = NULL;
     BYTE b = 0;
+    //DWORD Time = 0;
+#ifdef _WINDOWS_
+    //Time = GetCurrentTime();
+#endif
     memset(TmpBuf,0xff, sizeof(TmpBuf));
     FS_ClearAll();
 
     // имя ФС
-    memcpy(FS_Head->Name,FSName,sizeof(FSName));
-
     // первая запись-сам файл таблицы
-    FSRecord->ID = 0;
-    FSRecord->ParentId = 0;
-    FSRecord->NameHash = CalcCheckSumm((BYTE*)FSName, sizeof(FSName));
+    FSRecord->ID = 1;
+    FSRecord->ParentId = 1;
+    FSRecord->NameHash = Crc16((BYTE*)FSName, sizeof(FSName));
     FSRecord->SectorTable = 8;
+    memcpy(FSRecord->Name,FSName,sizeof(FSName));
+    //FSRecord->Date = Time;
+    FSRecord->dataSize = 0xFFFFFFFF;
+    FSRecord->fileHash = 0xFFFFFFFF;
+
 
     // вторая запись - файл свободного места
     FSRecord++;
-    FSRecord->ID = 1;
-    FSRecord->ParentId = 0;
-    FSRecord->NameHash = CalcCheckSumm((BYTE*)FFName, sizeof(FFName));
-    FSRecord->SectorTable = 10;
-
-    // третья запись - файл освободивщегося места
-    FSRecord++;
     FSRecord->ID = 2;
-    FSRecord->ParentId = 0;
-    FSRecord->NameHash = CalcCheckSumm((BYTE*)OFName, sizeof(OFName));
-    FSRecord->SectorTable = 12;
+    FSRecord->ParentId = 1;
+    FSRecord->NameHash = Crc16((BYTE*)FFName, sizeof(FFName));
+    FSRecord->SectorTable = 10;
+    memcpy(FSRecord->Name,FFName,sizeof(FFName));
+    //FSRecord->Date = Time;
+    FSRecord->dataSize = 16386;
+    FSRecord->fileHash = 0xFFFFFFFF;
 
-    FS_WriteArray(0, TmpBuf, 256);
+    FS_WriteArray(0, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
     
+    // таблица секторов таблицы ТФ
+    Sector = (WORD*)TmpBuf;
+    *Sector = 9;
+
+    FS_WriteArray(FS_SECTOR_SIZE*8, TmpBuf, FS_SECTOR_SIZE);    
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+
     // таблица секторов ТФ
     Sector = (WORD*)TmpBuf;
     for(i = 0; i<8; i++){
@@ -632,18 +638,23 @@ void CreateFileSystem()
         Sector++;
     }
 
-    FS_WriteArray(256*8, TmpBuf, 256);    
+    FS_WriteArray(FS_SECTOR_SIZE*9, TmpBuf, FS_SECTOR_SIZE);    
     memset(TmpBuf,0xff, sizeof(TmpBuf));
-    
-    // ФСМ
-    memcpy(FS_Head->Name,FFName,sizeof(FFName));
-    FS_Head->dataSize = 16360; // 64*256 - 24
-    SecMask = (BYTE*)&TmpBuf[sizeof(FILE_HEAD)];
-    // заняты 13 секторов
-    *SecMask++ = 0x00;
-    *SecMask++ = 0xE0;
 
-    FS_WriteArray(256*9, TmpBuf, 256);
+    // ФСМ
+    Sector = (WORD*)TmpBuf;
+    *Sector = 11;
+
+    FS_WriteArray(FS_SECTOR_SIZE*10, TmpBuf, FS_SECTOR_SIZE);
+    memset(TmpBuf,0xff, sizeof(TmpBuf));
+
+    // ФСМ
+    SecMask = (BYTE*)TmpBuf;
+    // заняты 11 секторов
+    *SecMask++ = 0x00;
+    *SecMask++ = 0xF8;
+
+    FS_WriteArray(FS_SECTOR_SIZE*11, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
 
     // таблица секторов ФСМ
@@ -653,32 +664,11 @@ void CreateFileSystem()
     for(i = 1; i<64; i++){
         Sector++;
         *Sector = i*1024;
-        FS_WriteArray((*Sector)*PAGE_SIZE, &b, 1);
+        FS_WriteArray((*Sector)*FS_SECTOR_SIZE, &b, 1);
     }
 
-    FS_WriteArray(256*10, TmpBuf, 256);
+    FS_WriteArray(FS_SECTOR_SIZE*12, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
-
-    // ФОМ
-    memcpy(FS_Head->Name,OFName,sizeof(OFName));
-    FS_Head->dataSize = 16360; // 64*256 - 24
-
-    FS_WriteArray(256*11, TmpBuf, 256);    
-    memset(TmpBuf,0xff, sizeof(TmpBuf));
-
-    // таблица секторов ФОМ
-    Sector = (WORD*)TmpBuf;
-    *Sector = 11;
-    //b = 0xFF;
-    for(i = 1; i<64; i++){
-        Sector++;
-        *Sector = i*1024+1;
-        //FS_WriteArray((*Sector)*PAGE_SIZE, &b, 1); // пишем 0xFF
-    }
-
-    FS_WriteArray(256*12, TmpBuf, 256);
-    memset(TmpBuf,0xff, sizeof(TmpBuf));
-
 }
 /*
  *        создать, если нет
@@ -705,17 +695,30 @@ typedef union {
     } FILESTATEbits;
 }FILESTATE;
 
-typedef struct _FS_STATE{
-    WORD ID;            // индекс файла
+typedef struct _FS_FILE{
+    WORD ID;                // индекс файла
     FILESTATE State;
-    DWORD FileRecord;   // адрес записи файла в таблице файлов
-    DWORD ReadPos;      // указатель чтения
-    DWORD WritePos;      // указатель записи
-    DWORD ReadSectorPos;    // указатель чтения в таблице секторов файла
+    DWORD FileRecordAddr;   // адрес файловой записи в таблице файлов
+    FILE_RECORD FileRecord; // файловая запись из таблицы файлов
+
+    DWORD TableAddr;        // адрес первой таблицы в таблице таблиц
+    DWORD FirstSectorAddr;  // адрес первого сектора в таблице секторов
+
+    DWORD ReadPos;          // указатель чтения (адрес в файле)
+    DWORD NextReadAddr;     // физический адрес
+    
+    DWORD ReadTablePos;     // адрес чтения в таблице таблиц
+    DWORD ReadSectorPos;    // адрес чтения в таблице секторов
+
+    DWORD WritePos;         // указатель записи
     DWORD WriteSectorPos;   // указатель записи в таблице секторов файла
-    DWORD FSize;
-    BYTE Buf[256];
-} FS_STATE;
+    DWORD NextWriteAddr;    // физический адрес
+
+    DWORD FSize;            // размер
+    BYTE *Buf;              // буфер записи
+} FS_FILE;
+#define MAX_FS_HANDLE 20
+FS_FILE FileHandles[MAX_FS_HANDLE];
 
 // нужны:
 // 1. указатель в таблице секторов
@@ -723,13 +726,112 @@ typedef struct _FS_STATE{
 //
 //
 
-// ID - индекс файла
+
+/* fsetpos
+ * 1. прочитать из записи файла номер сектора табицы таблиц 
+ * 2. прочитать из таблицы таблиц номер сектора таблицы секторов (127 записей на сектор)
+ * 3. прочитать из таблицы секторов номер сектора данных (128 записей на сектор)
+ * 4. установить абсолютный адрес
+ * 
+ * нужно хранить для каждого указателя файла (для четения и записи)
+ * 1. адрес записи файла (WORD) в файле таблицы файлов
+ * 2. номер сектора таблицы секторов файла (WORD)
+ * 3. номер сектора файла (WORD)
+ * 4.
+ */
+int FS_fsetpos ( FS_FILE * stream, const DWORD * pos )  //Set position indicator of stream
+{
+    //FS_SECTOR_SIZE*FS_SECTOR_SIZE/2*(FS_SECTOR_SIZE/2-1)
+    DWORD DataPos = *pos & (DWORD)FS_SECTOR_MASK;
+    DWORD SectorTablePos = *pos/FS_SECTOR_SIZE;
+    DWORD TableTablePos = SectorTablePos * 2/FS_SECTOR_SIZE;
+    return 0;
+}
+
+// вычисляет адрес данных в файле по смещению
+DWORD FS_GetAddr(FS_FILE * stream, const DWORD pos)
+{
+    DWORD DataPos = pos & (DWORD)FS_SECTOR_MASK;                // число, которое нужно прибавить к адресу сектора данных
+    DWORD SectorTablePos = pos/FS_SECTOR_SIZE;                  // число, которое нужно прибавить к адресу сектора таблицы секторов
+    DWORD TableTablePos = SectorTablePos * 2/FS_SECTOR_SIZE;    // число, которое нужно прибавить к адресу сектора таблицы таблиц
+    DWORD TableTableAddr = (stream->FileRecord.SectorTable) * FS_SECTOR_SIZE + TableTablePos;
+    DWORD SectorTableAddr = 0;
+    DWORD DataSectorAddr = 0;
+    WORD Tmp = 0;
+    FS_ReadArray(TableTableAddr , (BYTE*)&Tmp, sizeof(WORD));
+    SectorTableAddr = Tmp * FS_SECTOR_SIZE + SectorTablePos;
+    FS_ReadArray(SectorTableAddr , (BYTE*)&Tmp, sizeof(WORD));
+    DataSectorAddr = Tmp * FS_SECTOR_SIZE + DataPos;
+    return DataSectorAddr;
+}
+
+// внутреннее открытие существующего файла 
+// инициализация структуры FS_FILE
+// прочитать запись файла
+// прочитать первую запись из корневой таблицы
+// прочитать первую запись из таблицы секторов
+int FS_OpenFile( FS_FILE * stream, DWORD RecordAddr)
+{
+    WORD TAddr;
+    WORD SectorAddr;
+
+    // адрес файловой записи в таблице файлов
+    stream->FileRecordAddr = RecordAddr;   
+    
+    // файловая запись из таблицы файлов
+    FS_ReadArray( RecordAddr, (BYTE*)&stream->FileRecord, sizeof(FILE_RECORD));
+    
+    // адрес таблице таблиц
+    FS_ReadArray((stream->FileRecord.SectorTable) * FS_SECTOR_SIZE , (BYTE*)&TAddr, sizeof(WORD));
+    stream->TableAddr = TAddr * FS_SECTOR_SIZE;
+
+    // физический адрес данных
+    FS_ReadArray( stream->TableAddr, (BYTE*)&SectorAddr, sizeof(WORD));
+    stream->FirstSectorAddr = SectorAddr * FS_SECTOR_SIZE;
+    
+    return 0;
+}
+
+// создаёт файл и возвращает адрес файловой записи
+int FS_CreateFile( FS_FILE * stream, DWORD * RecordAddr)
+{
+    return 0;
+}
+
+// удаляет файл
+int FS_RemoveFile( FS_FILE * stream)
+{
+    return 0;
+}
+
 // From адрес блока внутри файла
 // Buf  буфер
 // Count количество байт
-int ReadFromFile(WORD ID, DWORD From, BYTE * Buf, WORD Count)
+int FS_ReadFile( FS_FILE * stream, DWORD Addr, BYTE * Buf, WORD Count)
 {
-    FS_ReadArray(ID * 8 + 24 + From, Buf, Count);
+    
+    //FS_ReadArray(, Buf, Count);
+    return 0;
+}
+
+int FS_GetFreeRecord(DWORD * RecordAddr)
+{
+    //FS_FILE * MFT = FileHandles[0];
+    //if(MFT->ID != 0x0001){
+    //    FS_OpenFile( MFT, 0);
+   // }
+    return 0;
+}   
+
+// возвращает первый свободный сектор и помечает его занятым в таблице
+DWORD GetFreeSector()
+{
+    return 0;
+}
+
+// возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
+DWORD GetFreeSectors(WORD Count)
+{
     return 0;
 }
 
@@ -762,7 +864,7 @@ DWORD fsearch(char * Name)
 {
     return 0;
 }
-
+/*
 typedef struct _FS_iobuf {
     char *_ptr;
     int   _cnt;
@@ -773,7 +875,7 @@ typedef struct _FS_iobuf {
     int   _bufsiz;
     char *_tmpfname;
 } FS_FILE;
-
+*/
 /*
 "r"     read: Open file for input operations. The file must exist.
 "w"     write: Create an empty file for output operations. If a file with the same name already exists, 
@@ -892,11 +994,17 @@ void Calc()
     BYTE * Value = NULL;
     BYTE * pPointer = NULL;
     //ST_ATTRIBUTE_TYPE  Attribute = STA_ALPHA;
-    
+    DWORD a = RoundShiftRight(35, 20);
 
     char Str[] = "All good!";
     BYTE * Str2 = NULL;
-    
+    BYTE FSName1[] = "qqqqqqqqqqqqqqqq";
+    BYTE FSName2[] = "wwwwwwwwwwwwwwww";
+    BYTE FSName3[] = "eeeeeeeeeeeeeeee";
+
+    WORD a1 = Crc16((BYTE*)FSName1, sizeof(FSName1));
+    WORD a2 = Crc16((BYTE*)FSName2, sizeof(FSName2));
+    WORD a3 = Crc16((BYTE*)FSName3, sizeof(FSName3));
     //CreateFileSystem(256, 256*1024);
     //WORD Config = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
     // //    double XX = 5.0 * Grad_to_Rad;
@@ -919,9 +1027,20 @@ void Calc()
     // работа от таймера TMR2(25ns)  от интервала 65535(0.2град/сек) до интервала 1250(10град/сек)
     const char Name1[] = "RR1";
     BYTE Buf[256];
+    FS_FILE stream;
+    DWORD pos = sizeof(FILE_RECORD);
+    
+    
     //OCSetup(); 
     CreateFileSystem();
-    ReadFromFile(0, 8, Buf, 8);
+    FS_OpenFile( &stream, 0);
+    DWORD Addr = FS_GetAddr(&stream, 1*pos);    
+    FS_OpenFile( &stream, 1*pos);
+    Addr = FS_GetAddr(&stream, 0);
+
+
+    //FS_fsetpos ( &stream, &pos );  //Set position indicator of stream
+    //ReadFromFile(0, 8, Buf, 8);
 
     char * r;
     char * r1;
