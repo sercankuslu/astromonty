@@ -537,13 +537,14 @@ int     fputs ( const char * str, FILE * stream );  //Write string to stream
 typedef struct _FILE_RECORD
 {
     WORD ID;
-    WORD ParentId;
-    WORD NameHash;
-    WORD SectorTable;
+    WORD ParentId;    
+    WORD Data;
+    WORD TableLv1;
+    WORD TableLv2;
     //DWORD Date;
     DWORD dataSize;                  // размер данных у папок 0xFFFF
-    DWORD fileHash;                  // хеш сумма данных файла
     BYTE Name[16];                  // имя файла
+    DWORD DataCRC;                  // хеш сумма данных файла
 } FILE_RECORD;
 
 /*
@@ -576,7 +577,7 @@ typedef enum _FS_RW_MODE {
 DWORD CreateCheckSum(BYTE * val, WORD len);
 
 extern BYTE FileSystem[64*1024*256];
-char FSName[]   = "uFS ver 1.0";
+char FSName[]   = "uExtFS1.0";
 char FFName[]   = ".bitmap";
 DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
 DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
@@ -602,12 +603,11 @@ void CreateFileSystem()
     // первая запись-сам файл таблицы
     FSRecord->ID = 1;
     FSRecord->ParentId = 1;
-    FSRecord->NameHash = Crc16((BYTE*)FSName, sizeof(FSName));
     FSRecord->SectorTable = 8;
     memcpy(FSRecord->Name,FSName,sizeof(FSName));
     //FSRecord->Date = Time;
     FSRecord->dataSize = 0xFFFFFFFF;
-    FSRecord->fileHash = 0xFFFFFFFF;
+    FSRecord->DataCRC = 0xFFFFFFFF;
 
 
     // вторая запись - файл свободного места
@@ -619,7 +619,7 @@ void CreateFileSystem()
     memcpy(FSRecord->Name,FFName,sizeof(FFName));
     //FSRecord->Date = Time;
     FSRecord->dataSize = 16386;
-    FSRecord->fileHash = 0xFFFFFFFF;
+    FSRecord->DataCRC = 0xFFFFFFFF;
 
     FS_WriteArray(0, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
@@ -807,7 +807,7 @@ int FS_RemoveFile( FS_FILE * stream)
 // From адрес блока внутри файла
 // Buf  буфер
 // Count количество байт
-int FS_ReadFile( FS_FILE * stream, DWORD Addr, BYTE * Buf, WORD Count)
+int FS_ReadFile( FS_FILE * stream, BYTE * Buf, WORD Count)
 {
     
     //FS_ReadArray(, Buf, Count);
