@@ -536,15 +536,14 @@ int     fputs ( const char * str, FILE * stream );  //Write string to stream
 // формат записи файла в таблице файлов
 typedef struct _FILE_RECORD
 {
-    WORD ID;
-    WORD ParentId;    
-    WORD Data;
-    WORD TableLv1;
-    WORD TableLv2;
-    //DWORD Date;
-    DWORD dataSize;                  // размер данных у папок 0xFFFF
+    WORD ID;                        // индекс (у корневой 1, 0 у удаленных файлов/папок)
+    WORD ParentId;                  // индекс папки
+    WORD Data;                      // прямая адресация данных (у папок 0xFFFF)
+    WORD TableLv1;                  // обычная косвенная адресация (у папок 0xFFFF)
+    WORD TableLv2;                  // двойная косвенная адресация (у папок 0xFFFF)
+    DWORD dataSize;                 // размер данных (у папок 0xFFFF)
+    DWORD DataCRC;                  // crc16 данных файла (у папок 0xFFFF)
     BYTE Name[16];                  // имя файла
-    DWORD DataCRC;                  // хеш сумма данных файла
 } FILE_RECORD;
 
 /*
@@ -577,7 +576,7 @@ typedef enum _FS_RW_MODE {
 DWORD CreateCheckSum(BYTE * val, WORD len);
 
 extern BYTE FileSystem[64*1024*256];
-char FSName[]   = "uExtFS1.0";
+char FSName[]   = "uFS";
 char FFName[]   = ".bitmap";
 DWORD GetFreeSector();  // возвращает первый свободный сектор и помечает его занятым в таблице
 DWORD GetFreeSectors(WORD Count);  // возвращает первый сектор из цепочки свободных секторов длинной Count и помечает их занятыми в таблице
