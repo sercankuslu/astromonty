@@ -532,6 +532,9 @@ int     fputs ( const char * str, FILE * stream );  //Write string to stream
 #define FS_SECTOR_SIZE  256
 #define FS_SECTOR_MASK  FS_SECTOR_SIZE-1
 #define SECTOR_SIZE 256*1024
+#define FS_INDERECT1_SIZE (FS_SECTOR_SIZE*FS_SECTOR_SIZE/sizeof(WORD))  // 32768 (32Kib)
+#define FS_INDERECT2_SIZE (FS_SECTOR_SIZE*FS_SECTOR_SIZE*FS_SECTOR_SIZE/sizeof(DWORD))  // 4194304 (4 Mib)
+#define FS_FILE_MAX_SIZE (FS_SECTOR_SIZE + FS_INDERECT1_SIZE + FS_INDERECT2_SIZE)    //4227328 (4.031 Mib)
 
 // формат записи файла в таблице файлов
 typedef struct _FILE_RECORD
@@ -602,9 +605,9 @@ void CreateFileSystem()
     // первая запись-сам файл таблицы
     FSRecord->ID = 1;
     FSRecord->ParentId = 1;
-    FSRecord->SectorTable = 8;
+    FSRecord->Data = 0;
+    FSRecord->TableLv1 = 8;
     memcpy(FSRecord->Name,FSName,sizeof(FSName));
-    //FSRecord->Date = Time;
     FSRecord->dataSize = 0xFFFFFFFF;
     FSRecord->DataCRC = 0xFFFFFFFF;
 
@@ -613,8 +616,8 @@ void CreateFileSystem()
     FSRecord++;
     FSRecord->ID = 2;
     FSRecord->ParentId = 1;
-    FSRecord->NameHash = Crc16((BYTE*)FFName, sizeof(FFName));
-    FSRecord->SectorTable = 10;
+    FSRecord->Data = 9;
+    FSRecord->TableLv1 = 10;
     memcpy(FSRecord->Name,FFName,sizeof(FFName));
     //FSRecord->Date = Time;
     FSRecord->dataSize = 16386;
@@ -623,29 +626,16 @@ void CreateFileSystem()
     FS_WriteArray(0, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
     
-    // таблица секторов таблицы ТФ
-    Sector = (WORD*)TmpBuf;
-    *Sector = 9;
-
-    FS_WriteArray(FS_SECTOR_SIZE*8, TmpBuf, FS_SECTOR_SIZE);    
-    memset(TmpBuf,0xff, sizeof(TmpBuf));
-
     // таблица секторов ТФ
     Sector = (WORD*)TmpBuf;
-    for(i = 0; i<8; i++){
+    for(i = 1; i<8; i++){
         *Sector = i;
         Sector++;
     }
 
-    FS_WriteArray(FS_SECTOR_SIZE*9, TmpBuf, FS_SECTOR_SIZE);    
+    FS_WriteArray(FS_SECTOR_SIZE*8, TmpBuf, FS_SECTOR_SIZE);    
     memset(TmpBuf,0xff, sizeof(TmpBuf));
 
-    // ФСМ
-    Sector = (WORD*)TmpBuf;
-    *Sector = 11;
-
-    FS_WriteArray(FS_SECTOR_SIZE*10, TmpBuf, FS_SECTOR_SIZE);
-    memset(TmpBuf,0xff, sizeof(TmpBuf));
 
     // ФСМ
     SecMask = (BYTE*)TmpBuf;
@@ -653,20 +643,19 @@ void CreateFileSystem()
     *SecMask++ = 0x00;
     *SecMask++ = 0xF8;
 
-    FS_WriteArray(FS_SECTOR_SIZE*11, TmpBuf, FS_SECTOR_SIZE);
+    FS_WriteArray(FS_SECTOR_SIZE*9, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
 
     // таблица секторов ФСМ
     Sector = (WORD*)TmpBuf;
-    *Sector = 9;
     b = 0xFE;
     for(i = 1; i<64; i++){
-        Sector++;
         *Sector = i*1024;
         FS_WriteArray((*Sector)*FS_SECTOR_SIZE, &b, 1);
+        Sector++;
     }
 
-    FS_WriteArray(FS_SECTOR_SIZE*12, TmpBuf, FS_SECTOR_SIZE);
+    FS_WriteArray(FS_SECTOR_SIZE*10, TmpBuf, FS_SECTOR_SIZE);
     memset(TmpBuf,0xff, sizeof(TmpBuf));
 }
 /*
@@ -700,18 +689,8 @@ typedef struct _FS_FILE{
     DWORD FileRecordAddr;   // адрес файловой записи в таблице файлов
     FILE_RECORD FileRecord; // файловая запись из таблицы файлов
 
-    DWORD TableAddr;        // адрес первой таблицы в таблице таблиц
-    DWORD FirstSectorAddr;  // адрес первого сектора в таблице секторов
-
-    DWORD ReadPos;          // указатель чтения (адрес в файле)
-    DWORD NextReadAddr;     // физический адрес
-    
-    DWORD ReadTablePos;     // адрес чтения в таблице таблиц
-    DWORD ReadSectorPos;    // адрес чтения в таблице секторов
-
-    DWORD WritePos;         // указатель записи
-    DWORD WriteSectorPos;   // указатель записи в таблице секторов файла
-    DWORD NextWriteAddr;    // физический адрес
+    DWORD FilePos;          // указатель файла
+    DWORD FilePosAddr;      // реальный адрес указателя файла
 
     DWORD FSize;            // размер
     BYTE *Buf;              // буфер записи
@@ -748,20 +727,43 @@ int FS_fsetpos ( FS_FILE * stream, const DWORD * pos )  //Set position indicator
 }
 
 // вычисляет адрес данных в файле по смещению
-DWORD FS_GetAddr(FS_FILE * stream, const DWORD pos)
+DWORD FS_GetAddr(FS_FILE * stream)
 {
-    DWORD DataPos = pos & (DWORD)FS_SECTOR_MASK;                // число, которое нужно прибавить к адресу сектора данных
-    DWORD SectorTablePos = pos/FS_SECTOR_SIZE;                  // число, которое нужно прибавить к адресу сектора таблицы секторов
-    DWORD TableTablePos = SectorTablePos * 2/FS_SECTOR_SIZE;    // число, которое нужно прибавить к адресу сектора таблицы таблиц
-    DWORD TableTableAddr = (stream->FileRecord.SectorTable) * FS_SECTOR_SIZE + TableTablePos;
-    DWORD SectorTableAddr = 0;
-    DWORD DataSectorAddr = 0;
-    WORD Tmp = 0;
-    FS_ReadArray(TableTableAddr , (BYTE*)&Tmp, sizeof(WORD));
-    SectorTableAddr = Tmp * FS_SECTOR_SIZE + SectorTablePos;
-    FS_ReadArray(SectorTableAddr , (BYTE*)&Tmp, sizeof(WORD));
-    DataSectorAddr = Tmp * FS_SECTOR_SIZE + DataPos;
-    return DataSectorAddr;
+    DWORD DataPos;                                          // число, которое нужно прибавить к адресу сектора данных
+    DWORD SectorTablePos;                                   // число, которое нужно прибавить к адресу сектора таблицы секторов
+    DWORD TableTablePos;                                    // число, которое нужно прибавить к адресу сектора таблицы таблиц
+    WORD SectorAddr;
+    WORD TableTableAddr;
+    DWORD Pos = stream->FilePos;
+    
+    if(Pos < FS_SECTOR_SIZE){
+        return (stream->FileRecord.Data * FS_SECTOR_SIZE) + Pos; // Адрес первого сектора лежит в записи файла
+    } else {
+        Pos -= FS_SECTOR_SIZE;
+    }
+
+    if(Pos < FS_INDERECT1_SIZE){ // 128*256 простая косвенная адресация
+        DataPos = Pos & (DWORD)FS_SECTOR_MASK;              // число, которое нужно прибавить к адресу сектора данных
+        SectorTablePos = Pos/FS_SECTOR_SIZE;                // число, которое нужно прибавить к адресу сектора таблицы секторов
+        // читаем адрес сектора данных. Адрес таблицы лежит в записи файла
+        FS_ReadArray( (stream->FileRecord.TableLv1 * FS_SECTOR_SIZE + SectorTablePos * sizeof(WORD)), (BYTE*)&SectorAddr, sizeof(SectorAddr));
+        return (SectorAddr * FS_SECTOR_SIZE + DataPos);
+    } else {
+        Pos -= FS_INDERECT1_SIZE;
+    }
+
+    if(Pos < FS_INDERECT2_SIZE){ // 128*128*256 ( двойная косвенная адресация)
+        DataPos = Pos & (DWORD)FS_SECTOR_MASK;              // число, которое нужно прибавить к адресу сектора данных
+        SectorTablePos = Pos * 2 / FS_SECTOR_SIZE;
+        TableTablePos  = SectorTablePos * 2 / FS_SECTOR_SIZE;
+        // читаем адрес сектора таблицы. Адрес таблицы лежит в записи файла
+        FS_ReadArray( (stream->FileRecord.TableLv2 * FS_SECTOR_SIZE + TableTablePos * sizeof(WORD)), (BYTE*)&TableTableAddr, sizeof(TableTableAddr));
+        // читаем адрес сектора данных
+        FS_ReadArray( (TableTableAddr * FS_SECTOR_SIZE + SectorTablePos * sizeof(WORD)), (BYTE*)&SectorAddr, sizeof(SectorAddr));
+        return (SectorAddr * FS_SECTOR_SIZE + DataPos);
+    }
+
+    return (DWORD)EOF;
 }
 
 // внутреннее открытие существующего файла 
@@ -779,15 +781,7 @@ int FS_OpenFile( FS_FILE * stream, DWORD RecordAddr)
     
     // файловая запись из таблицы файлов
     FS_ReadArray( RecordAddr, (BYTE*)&stream->FileRecord, sizeof(FILE_RECORD));
-    
-    // адрес таблице таблиц
-    FS_ReadArray((stream->FileRecord.SectorTable) * FS_SECTOR_SIZE , (BYTE*)&TAddr, sizeof(WORD));
-    stream->TableAddr = TAddr * FS_SECTOR_SIZE;
-
-    // физический адрес данных
-    FS_ReadArray( stream->TableAddr, (BYTE*)&SectorAddr, sizeof(WORD));
-    stream->FirstSectorAddr = SectorAddr * FS_SECTOR_SIZE;
-    
+    stream->FilePos = 0;
     return 0;
 }
 
@@ -1033,9 +1027,10 @@ void Calc()
     //OCSetup(); 
     CreateFileSystem();
     FS_OpenFile( &stream, 0);
-    DWORD Addr = FS_GetAddr(&stream, 1*pos);    
+    DWORD Addr = FS_GetAddr(&stream);    
     FS_OpenFile( &stream, 1*pos);
-    Addr = FS_GetAddr(&stream, 0);
+    stream.FilePos = 1024;
+    Addr = FS_GetAddr(&stream);
 
 
     //FS_fsetpos ( &stream, &pos );  //Set position indicator of stream
