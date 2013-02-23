@@ -692,7 +692,6 @@ typedef struct _FS_FILE{
     DWORD FilePos;          // указатель файла
     DWORD FilePosAddr;      // реальный адрес указателя файла
 
-    DWORD FSize;            // размер
     BYTE *Buf;              // буфер записи
 } FS_FILE;
 #define MAX_FS_HANDLE 20
@@ -737,22 +736,24 @@ DWORD FS_GetAddr(FS_FILE * stream)
     DWORD Pos = stream->FilePos;
     
     if(Pos < FS_SECTOR_SIZE){
-        return (stream->FileRecord.Data * FS_SECTOR_SIZE) + Pos; // Адрес первого сектора лежит в записи файла
+        return stream->FilePosAddr = (stream->FileRecord.Data * FS_SECTOR_SIZE) + Pos; // Адрес первого сектора лежит в записи файла
     } else {
         Pos -= FS_SECTOR_SIZE;
     }
-
-    if(Pos < FS_INDERECT1_SIZE){ // 128*256 простая косвенная адресация
+    
+    // 128*256 простая косвенная адресация
+    if(Pos < FS_INDERECT1_SIZE){
         DataPos = Pos & (DWORD)FS_SECTOR_MASK;              // число, которое нужно прибавить к адресу сектора данных
         SectorTablePos = Pos/FS_SECTOR_SIZE;                // число, которое нужно прибавить к адресу сектора таблицы секторов
         // читаем адрес сектора данных. Адрес таблицы лежит в записи файла
         FS_ReadArray( (stream->FileRecord.TableLv1 * FS_SECTOR_SIZE + SectorTablePos * sizeof(WORD)), (BYTE*)&SectorAddr, sizeof(SectorAddr));
-        return (SectorAddr * FS_SECTOR_SIZE + DataPos);
+        return stream->FilePosAddr = (SectorAddr * FS_SECTOR_SIZE + DataPos);
     } else {
         Pos -= FS_INDERECT1_SIZE;
     }
 
-    if(Pos < FS_INDERECT2_SIZE){ // 128*128*256 ( двойная косвенная адресация)
+    // 128*128*256 ( двойная косвенная адресация)
+    if(Pos < FS_INDERECT2_SIZE){ 
         DataPos = Pos & (DWORD)FS_SECTOR_MASK;              // число, которое нужно прибавить к адресу сектора данных
         SectorTablePos = Pos * 2 / FS_SECTOR_SIZE;
         TableTablePos  = SectorTablePos * 2 / FS_SECTOR_SIZE;
@@ -760,7 +761,7 @@ DWORD FS_GetAddr(FS_FILE * stream)
         FS_ReadArray( (stream->FileRecord.TableLv2 * FS_SECTOR_SIZE + TableTablePos * sizeof(WORD)), (BYTE*)&TableTableAddr, sizeof(TableTableAddr));
         // читаем адрес сектора данных
         FS_ReadArray( (TableTableAddr * FS_SECTOR_SIZE + SectorTablePos * sizeof(WORD)), (BYTE*)&SectorAddr, sizeof(SectorAddr));
-        return (SectorAddr * FS_SECTOR_SIZE + DataPos);
+        return stream->FilePosAddr = (SectorAddr * FS_SECTOR_SIZE + DataPos);
     }
 
     return (DWORD)EOF;
@@ -802,8 +803,18 @@ int FS_RemoveFile( FS_FILE * stream)
 // Count количество байт
 int FS_ReadFile( FS_FILE * stream, BYTE * Buf, WORD Count)
 {
-    
-    //FS_ReadArray(, Buf, Count);
+    DWORD DataPos = stream->FilePosAddr & (DWORD)FS_SECTOR_MASK;
+    DWORD DataLeft = Count;
+    while(DataLeft>0){
+        if(DataPos + Count < FS_SECTOR_SIZE){
+            FS_ReadArray( stream->FilePosAddr, Buf, Count);
+            stream->FilePos += Count;
+            FS_GetAddr(stream);
+            DataLeft -= Count;
+        } else {
+
+        }
+    }
     return 0;
 }
 
@@ -1024,10 +1035,14 @@ void Calc()
     DWORD pos = sizeof(FILE_RECORD);
     
     
+    
+    
     //OCSetup(); 
     CreateFileSystem();
     FS_OpenFile( &stream, 0);
     DWORD Addr = FS_GetAddr(&stream);    
+    FS_ReadFile( &stream, Buf, pos);
+    FS_ReadFile( &stream, Buf, pos);
     FS_OpenFile( &stream, 1*pos);
     stream.FilePos = 1024;
     Addr = FS_GetAddr(&stream);
