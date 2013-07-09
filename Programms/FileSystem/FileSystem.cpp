@@ -501,7 +501,7 @@ DWORD uFS_GetFreeSectorCount()
 // Wite block of data from stream
 int uFS_fwrite ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 {
-    if(stream->Flags.FILESTATEbits.WE == 1) 
+    if(stream->Flags.FILESTATEbits.WE == 0) 
         return -1;
 
     int Cnt = uFSWriteFile(&stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
@@ -515,7 +515,7 @@ int uFS_fwrite ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 // Read block of data from stream
 int uFS_fread ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 {
-    if(stream->Flags.FILESTATEbits.RE == 1) 
+    if(stream->Flags.FILESTATEbits.RE == 0) 
         return -1;
 
     int Cnt = uFSReadFile(stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
@@ -532,7 +532,7 @@ int uFS_fread ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 
 int uFS_fseek ( uFS_FILE * stream, int offset, int origin )
 {
-    if(stream->Flags == 0) 
+    if(stream->Flags.FILESTATEbits.RE == 1) 
         return -1;
 
     switch (origin) {
@@ -591,9 +591,10 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
         uFS_FILE file;
         //INODE_RECORD Inode;
         file.Inode.dwSize = 0;
-        file.Inode.wInodeID = 10;
+        file.Inode.wInodeID = 0;
         file.Inode.wFlags = 0;
-        file.Flags = 1;
+        file.Flags.FILESTATEbits.RE = 1;
+        file.Flags.FILESTATEbits.WE = 1;
         file.DataPointer = 0;
 
         
@@ -608,13 +609,21 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
         }
 
         Count = SECTORS_COUNT - uFS_GetFreeSectorCount();
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
+        file.Inode.wInodeID++;
         uFS_fwrite (  (BYTE*)&file.Inode, 1, sizeof(file.Inode), &file );
 
         //uFSReadFile(Inode, 0, (BYTE*)Data1, sizeof(Data1));
