@@ -1,6 +1,5 @@
 // FileSystem.cpp: определяет точку входа для консольного приложения.
 //
-
 #include "stdafx.h"
 #include "FileSystem.h"
 
@@ -21,6 +20,8 @@ using namespace std;
 #define SECTOR_MASK 0x00FF
 #define TABLE_SECTOR_MASK 0x007F
 #define TABLE_SECTOR_SIZE_BIT 7
+#define CLEAN_SECTOR_SIZE 256*1024
+#define CLEAN_SECTOR_COUNT 64
 #define DATA_SECTOR_SIZE_BIT 8
 #define INDERECT_ADDR_x1_SIZE TABLE_SECTOR_SIZE
 #define INDERECT_ADDR_x2_SIZE TABLE_SECTOR_SIZE*TABLE_SECTOR_SIZE
@@ -31,11 +32,32 @@ using namespace std;
 #define uFS_ERROR_FREE_RECORD 0xFF
 #define uFS_ERROR_NO_ERROR 0x00
 
+typedef struct _SUPERBLOCK 
+{
+    char Name[16];          // = "uFS";
+    WORD VersionMajor;      //0
+    WORD VersionMinor;      //1
+    DWORD SectorSize;       // 256*1024
+    DWORD SectorsCount;     //64
+    DWORD PageSize;         // 256
+    DWORD PageCount;        //65536
+    DWORD InodeTable;       // 256
+} SUPERBLOCK;
 
-typedef WORD IdAddrSectors[3]; 
+typedef enum _ADDRESSING_TYPE
+{
+    uFS_AT_DIRECT, uFS_AT_INDIRECT_1, uFS_AT_INDIRECT_2, uFS_AT_INDIRECT_3, uFS_AT_INVALID = 0xFF
+} ADDRESSING_TYPE;
+
+typedef struct _IdTable{
+    ADDRESSING_TYPE AD_Type;
+    WORD IdTable[3];            // номер таблицы
+    WORD IdAdress[3];           // адрес внутри таблицы
+} IdTable;
+
+
 
 BYTE FS[256*SECTORS_COUNT];
-
 
 //FS_FREE 
 typedef struct _FREE_SECTORS{
@@ -45,6 +67,12 @@ typedef struct _FREE_SECTORS{
 
 FREE_SECTORS    FreeSectors[SECTORS_COUNT/8];
 
+typedef struct _uFS_FREE_SECTOR_CONTROL {
+    FREE_SECTORS    FreeSectorsCache[16];
+    uFS_FILE*       FreeFile;
+} uFS_FREE_SECTOR_CONTROL;
+
+uFS_FREE_SECTOR_CONTROL uFS_FreeSectors;
 
 uFS_FILE OpenFileArray[uFS_MAX_OPENED_FILE + 3];
 
@@ -52,10 +80,10 @@ int uFS_Read(DWORD Addr, BYTE * Dest, DWORD Count);
 int uFS_Write(DWORD Addr, BYTE * Source, DWORD Count);
 WORD GetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition);
 int SetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition, WORD Number);
-int uFS_GetSectorAddr( INODE_RECORD Inode, DWORD Addr, DWORD * SectorAddr, IdAddrSectors Indirect  );
+int uFS_GetSectorAddr( INODE_RECORD Inode, WORD Addr, WORD * SectorAddr, IdTable * Indirect);
 int uFS_GetAddr(INODE_RECORD Inode, DWORD Addr, DWORD * DataAddr );
-int uFS_AddSector(INODE_RECORD * Inode, DWORD * SectorAddr);
-int uFS_AddSectorFromRange(INODE_RECORD * Inode, DWORD * SectorAddr, WORD BeginSector, WORD EndSector);
+int uFS_AddSector(INODE_RECORD * Inode, WORD * SectorAddr);
+int uFS_AddSectorFromRange(INODE_RECORD * Inode, WORD * SectorAddr, WORD BeginSector, WORD EndSector);
 int uFS_ReadData(DWORD Addr, BYTE * Dest, int Count);
 int uFS_WriteData(DWORD Addr, BYTE * Source, int Count);
 int uFSReadFile(INODE_RECORD Inode, DWORD Address, BYTE * Dest, int Count);
@@ -65,10 +93,10 @@ int uFS_ClaimFreeSector(WORD * ClaimedSector);
 int uFS_ReleaseSector(WORD ReleasedSector);
 BYTE bBitCount(BYTE x);
 BYTE wBitCount(WORD x);
-DWORD uFS_GetFreeSectorCount();
-DWORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector);
-DWORD uFS_GetReleasedSectorCount();
-DWORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector);
+WORD uFS_GetFreeSectorCount();
+WORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector);
+WORD uFS_GetReleasedSectorCount();
+WORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector);
 
 
 // ***************************************************************************
@@ -98,83 +126,99 @@ int SetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition, WORD Number)
 }
 
 // ***************************************************************************
-
-
-
-int uFS_GetSectorAddr( INODE_RECORD Inode, WORD Addr, WORD * SectorAddr, IdAddrSectors Indirect  )
+// INPUT
+// Inode        Инод файла
+// Addr         Номер сектора в файле
+// 
+// OUTPUT
+// SectorAddr   физический номер сектора
+// Indirect     массив физических адресов таблиц, использованных при адресации
+// Возвращает в переменной SectorAddr физический номер сектора данных для логического номера сектора файла, а в Indirect номера секторов таблиц, используемых для адресации этого сектора
+int uFS_GetSectorAddr( INODE_RECORD Inode, WORD Addr, WORD * SectorAddr, IdTable * Indirect)
 {
-    if(Addr << DATA_SECTOR_SIZE_BIT >= Inode.dwSize) 
+    if(Addr > Inode.dwSize) 
         return -1; // EOF
 
     if(Indirect != NULL){
-        Indirect[0] = INVALID_SECTOR_NUMBER;
-        Indirect[1] = INVALID_SECTOR_NUMBER;
-        Indirect[2] = INVALID_SECTOR_NUMBER;
+        Indirect->IdTable[0] = INVALID_SECTOR_NUMBER;
+        Indirect->IdTable[1] = INVALID_SECTOR_NUMBER;
+        Indirect->IdTable[2] = INVALID_SECTOR_NUMBER;
+        Indirect->IdAdress[0] = 0;
+        Indirect->IdAdress[1] = 0;
+        Indirect->IdAdress[2] = 0;
+        Indirect->AD_Type = uFS_AT_INVALID;
     }
-    WORD SectorNumber = Addr;
-    if(SectorNumber < 9){
+    if(Addr < 8){
         // Прямая адресация
-        if(Inode.pwTable[SectorNumber] == INVALID_SECTOR_NUMBER)
+        if(Inode.pwTable[Addr] == INVALID_SECTOR_NUMBER)
             return -1;
-        *SectorAddr = (Inode.pwTable[SectorNumber]);
-        if(*SectorAddr == INVALID_SECTOR_NUMBER)
-            return -1;
-        return 0;
-    } else SectorNumber -= 9;
-
-    if(SectorNumber < INDERECT_ADDR_x1_SIZE){
-
-        // Косвенная адресация
-        // Inode.pwTable[9]-->table1[128]-->data[256]
-
-        if(Inode.pwTable[9] == INVALID_SECTOR_NUMBER)
-            return -1;
-        *SectorAddr = (GetIndirectSectorNumber(Inode.pwTable[9], SectorNumber));
+        *SectorAddr = (Inode.pwTable[Addr]);
         if(*SectorAddr == INVALID_SECTOR_NUMBER)
             return -1;
         if(Indirect != NULL){
-            Indirect[0] = Inode.pwTable[9];
+            Indirect->AD_Type = uFS_AT_DIRECT;
+        }
+        return 0;
+    } else Addr -= 8;
+
+    if(Addr < INDERECT_ADDR_x1_SIZE){
+
+        // Косвенная адресация
+        // Inode.pwTable[8]-->table1[128]-->data[256]
+
+        if(Inode.pwTable[8] == INVALID_SECTOR_NUMBER)
+            return -1;
+        *SectorAddr = (GetIndirectSectorNumber(Inode.pwTable[8], Addr));
+        if(*SectorAddr == INVALID_SECTOR_NUMBER)
+            return -1;
+        if(Indirect != NULL){
+            Indirect->IdTable[0] = Inode.pwTable[8];
+            Indirect->IdAdress[0] = Addr;
+            Indirect->AD_Type = uFS_AT_INDIRECT_1;
         }
         return 0;
 
-    } else SectorNumber -= INDERECT_ADDR_x1_SIZE;
+    } else Addr -= INDERECT_ADDR_x1_SIZE;
 
-    if(SectorNumber < INDERECT_ADDR_x2_SIZE){ 
+    if(Addr < INDERECT_ADDR_x2_SIZE){ 
 
         // Двойная косвенная адресация
-        // Inode.pwTable[10]-->table1[128]-->table2[128]-->data[256]
+        // Inode.pwTable[9]-->table1[128]-->table2[128]-->data[256]
 
-        if(Inode.pwTable[10] == INVALID_SECTOR_NUMBER)
+        if(Inode.pwTable[9] == INVALID_SECTOR_NUMBER)
             return -1;
-        WORD Table1 = SectorNumber >> TABLE_SECTOR_SIZE_BIT;
-        WORD Table2 = SectorNumber & TABLE_SECTOR_MASK;
-        WORD Addr2 = GetIndirectSectorNumber(Inode.pwTable[10], Table1);
+        WORD Table1 = Addr >> TABLE_SECTOR_SIZE_BIT;
+        WORD Table2 = Addr & TABLE_SECTOR_MASK;
+        WORD Addr2 = GetIndirectSectorNumber(Inode.pwTable[9], Table1);
         if(Addr2 == INVALID_SECTOR_NUMBER)
             return -1;
         *SectorAddr = GetIndirectSectorNumber(Addr2, Table2);
         if(*SectorAddr == INVALID_SECTOR_NUMBER)
             return -1;
         if(Indirect != NULL){
-            Indirect[0] = Inode.pwTable[10];
-            Indirect[1] = Addr2;
+            Indirect->IdTable[0] = Inode.pwTable[9];
+            Indirect->IdTable[1] = Addr2;
+            Indirect->IdAdress[0] = Table1;
+            Indirect->IdAdress[1] = Table2;
+            Indirect->AD_Type = uFS_AT_INDIRECT_2;
         }
         return 0;
-    } else SectorNumber -= INDERECT_ADDR_x2_SIZE;
+    } else Addr -= INDERECT_ADDR_x2_SIZE;
 
-    if(SectorNumber < INDERECT_ADDR_x3_SIZE){
+    if(Addr < INDERECT_ADDR_x3_SIZE){
 
         // Тройная косвенная адресация
         // Inode.pwTable[10]-->table1[]-->table2[]-->table3[]-->data
         //               table1[128]  table2[128]  table3[128]  data[256]
-        // SectorNumber: 0000000      0000000      0000000      00000000
+        // Addr: 0000000      0000000      0000000      00000000
         //               0x7F         0x7F         0x7F         0xFF
 
-        WORD Table1 = SectorNumber >> (TABLE_SECTOR_SIZE_BIT * 2);
-        WORD Table2 = (SectorNumber >> TABLE_SECTOR_SIZE_BIT) & TABLE_SECTOR_MASK;
-        WORD Table3 = SectorNumber & TABLE_SECTOR_MASK;
-        if(Inode.pwTable[11] == INVALID_SECTOR_NUMBER)
+        WORD Table1 = Addr >> (TABLE_SECTOR_SIZE_BIT * 2);
+        WORD Table2 = (Addr >> TABLE_SECTOR_SIZE_BIT) & TABLE_SECTOR_MASK;
+        WORD Table3 = Addr & TABLE_SECTOR_MASK;
+        if(Inode.pwTable[10] == INVALID_SECTOR_NUMBER)
             return -1;
-        WORD Addr2 = GetIndirectSectorNumber(Inode.pwTable[11], Table1);
+        WORD Addr2 = GetIndirectSectorNumber(Inode.pwTable[10], Table1);
         if(Addr2 == INVALID_SECTOR_NUMBER)
             return -1;
         WORD Addr3 = GetIndirectSectorNumber(Addr2, Table2);
@@ -184,9 +228,13 @@ int uFS_GetSectorAddr( INODE_RECORD Inode, WORD Addr, WORD * SectorAddr, IdAddrS
         if(*SectorAddr == INVALID_SECTOR_NUMBER)
             return -1;
         if(Indirect != NULL){
-            Indirect[0] = Inode.pwTable[11];
-            Indirect[1] = Addr2;
-            Indirect[2] = Addr3;
+            Indirect->IdTable[0] = Inode.pwTable[10];
+            Indirect->IdTable[1] = Addr2;
+            Indirect->IdTable[2] = Addr3;
+            Indirect->IdAdress[0] = Table1;
+            Indirect->IdAdress[1] = Table2;
+            Indirect->IdAdress[2] = Table3;
+            Indirect->AD_Type = uFS_AT_INDIRECT_3;
         }
         return 0;
     }
@@ -199,8 +247,8 @@ int uFS_GetAddr(
     INODE_RECORD Inode,             // Inode файла
     DWORD Addr, DWORD * DataAddr )
 {
-    DWORD SectorAddr;
-    int Err = uFS_GetSectorAddr(Inode, Addr, &SectorAddr, NULL);
+    WORD SectorAddr;
+    int Err = uFS_GetSectorAddr(Inode, (WORD)(Addr >> DATA_SECTOR_SIZE_BIT), &SectorAddr, NULL);
     if(Err == 0){
         *DataAddr = (SectorAddr  << DATA_SECTOR_SIZE_BIT) | (Addr & SECTOR_MASK);
     }
@@ -209,67 +257,81 @@ int uFS_GetAddr(
 
 int uFS_ExpandFile(INODE_RECORD * Inode, DWORD NewSize)
 {
-    DWORD PhysicalAddr = 0;
+    WORD PhysicalAddr = 0;
     int Err = 0;
-    int WritedCnt = 0;
-    int Count = NewSize - Inode->dwSize;   
-    if (Count < 0)
+    
+    if(NewSize <= Inode->dwSize){
         return -1;
-    // TODO : сделать увеличение размеров файла без записи в каждый сектор
-    return WritedCnt;
+    }
+
+    DWORD Count = NewSize - Inode->dwSize;
+    DWORD SectorCount = (Count >> DATA_SECTOR_SIZE_BIT);
+    if((Count & SECTOR_MASK) > 0){
+        SectorCount++;
+    }
+
+    for(DWORD i = 0; i < SectorCount; i++){
+        Err = uFS_AddSector(Inode, &PhysicalAddr);
+        if(Err != 0) 
+            return Err;
+        Inode->dwSize += SECTOR_SIZE;
+    }
+    Inode->dwSize = NewSize;
+    return 0;
 }
 
 // ***************************************************************************
 // добавляет сектор к файлу
-int uFS_AddSector(INODE_RECORD * Inode, DWORD * SectorAddr)
+int uFS_AddSector(INODE_RECORD * Inode, WORD * SectorAddr)
 {
     return uFS_AddSectorFromRange(Inode, SectorAddr, 0, SECTORS_COUNT - 1 );
 }
 
 // ***************************************************************************
 // добавляет сектор к файлу из дапазона
-int uFS_AddSectorFromRange(INODE_RECORD * Inode, DWORD * SectorAddr, WORD BeginSector, WORD EndSector)             // Inode файла    
+int uFS_AddSectorFromRange(INODE_RECORD * Inode, WORD * SectorAddr, WORD BeginSector, WORD EndSector)             // Inode файла    
 {
-
-    if((Inode->dwSize & SECTOR_MASK) != 0 ){ // Если адрес не кратный сектору, то новый сектор не нужен
-        return 0;
-    }
-
+    
     // Определить текущее количество секторов в файле
-    WORD SectorNumber = (Inode->dwSize & (~SECTOR_MASK)) >> DATA_SECTOR_SIZE_BIT;
+    WORD SectorNumber = Inode->wSectorsCount;
 
     // Определить тип адресации    
-    if(SectorNumber < 9){
+    if(SectorNumber < 8){
 
         // Прямая адресация
         if(Inode->pwTable[SectorNumber] == INVALID_SECTOR_NUMBER){
             if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[SectorNumber], BeginSector, EndSector) != 0)
-                    return -1; // нет свободных секторов
-            *SectorAddr = (Inode->pwTable[SectorNumber] << DATA_SECTOR_SIZE_BIT);
-            return 0;
-        } else return 1;
+                return -1; // нет свободных секторов
+            Inode->wSectorsCount++;
+        }
+        if(SectorAddr != NULL)
+            *SectorAddr = Inode->pwTable[SectorNumber]; 
+        return 0;
 
-    } else SectorNumber -= 9;
+    } else SectorNumber -= 8;
 
     if(SectorNumber < INDERECT_ADDR_x1_SIZE){
 
         // Косвенная адресация
-        // Inode.pwTable[9]-->table1[]-->data
+        // Inode.pwTable[8]-->table1[]-->data
         //               table1[128]  data[256]
         // SectorNumber: 0000000      00000000
         // 
-        if((SectorNumber == 0) && (Inode->pwTable[9] == INVALID_SECTOR_NUMBER )){
-            if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[9], BeginSector, EndSector) != 0)
+        if((SectorNumber == 0) && (Inode->pwTable[8] == INVALID_SECTOR_NUMBER )){
+            if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[8], BeginSector, EndSector) != 0)
                 return -1; // нет свободных секторов
         }
-        DWORD Table1 = (GetIndirectSectorNumber(Inode->pwTable[9], SectorNumber));
+
+        WORD Table1 = (GetIndirectSectorNumber(Inode->pwTable[8], SectorNumber));
         if(Table1 == INVALID_SECTOR_NUMBER){
-            WORD Number = INVALID_SECTOR_NUMBER;
-            if(uFS_ClaimFreeSectorFromRange(&Number, BeginSector, EndSector) != 0)
-                return -1; // нет свободных секторов
-            SetIndirectSectorNumber(Inode->pwTable[9], SectorNumber, Number);
-            *SectorAddr = Number  << DATA_SECTOR_SIZE_BIT;
-        }
+
+            if(uFS_ClaimFreeSectorFromRange(&Table1, BeginSector, EndSector) != 0)
+                return -1; // нет свободных секторов            
+            SetIndirectSectorNumber(Inode->pwTable[8], SectorNumber, Table1);
+            Inode->wSectorsCount++;
+        } 
+        if(SectorAddr != NULL)
+            *SectorAddr = Table1;
         return 0;
 
     } else SectorNumber -= INDERECT_ADDR_x1_SIZE;
@@ -277,17 +339,56 @@ int uFS_AddSectorFromRange(INODE_RECORD * Inode, DWORD * SectorAddr, WORD BeginS
     if(SectorNumber < INDERECT_ADDR_x2_SIZE){ 
 
         // Двойная косвенная адресация
-        // Inode.pwTable[10]-->table1[]-->table2[]-->data
+        // Inode.pwTable[9]-->table1[]-->table2[]-->data
         //               table1[128]  table2[128]  data[256]
         // SectorNumber: 0000000      0000000      00000000
+
+        if((SectorNumber == 0) && (Inode->pwTable[9] == INVALID_SECTOR_NUMBER )){
+            if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[9], BeginSector, EndSector) != 0)
+                return -1; // нет свободных секторов
+        }
+
+        WORD Table1 = SectorNumber >> TABLE_SECTOR_SIZE_BIT;
+        WORD Table2 = SectorNumber & TABLE_SECTOR_MASK;
+
+        WORD Addr1 = (GetIndirectSectorNumber(Inode->pwTable[9], Table1));
+
+        if(Addr1 == INVALID_SECTOR_NUMBER){
+            if(uFS_ClaimFreeSectorFromRange(&Addr1, BeginSector, EndSector) != 0)
+                return -1; // нет свободных секторов
+            SetIndirectSectorNumber(Inode->pwTable[9], Table1, Addr1);
+        }
+
+        WORD Addr2 = (GetIndirectSectorNumber(Addr1, Table2));
+
+        if(Addr2 == INVALID_SECTOR_NUMBER){
+            if(uFS_ClaimFreeSectorFromRange(&Addr2, BeginSector, EndSector) != 0)
+                return -1; // нет свободных секторов
+            SetIndirectSectorNumber(Addr1, Table2, Addr2);
+            Inode->wSectorsCount++;
+        }
+        if(SectorAddr != NULL)
+            *SectorAddr = Addr2;
+        
+        return 0;
+
+    } else SectorNumber -= INDERECT_ADDR_x2_SIZE;
+
+    if(SectorNumber < INDERECT_ADDR_x3_SIZE){
+
+        // Тройная косвенная адресация
+        // Inode.pwTable[10]-->table1[]-->table2[]-->table3[]-->data
+        //               table1[128]  table2[128]  table3[128]  data[256]
+        // SectorNumber: 0000000      0000000      0000000      00000000
 
         if((SectorNumber == 0) && (Inode->pwTable[10] == INVALID_SECTOR_NUMBER )){
             if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[10], BeginSector, EndSector) != 0)
                 return -1; // нет свободных секторов
         }
 
-        WORD Table1 = SectorNumber >> TABLE_SECTOR_SIZE_BIT;
-        WORD Table2 = SectorNumber & TABLE_SECTOR_MASK;
+        WORD Table1 = SectorNumber >> (TABLE_SECTOR_SIZE_BIT * 2);
+        WORD Table2 = (SectorNumber >> TABLE_SECTOR_SIZE_BIT) & TABLE_SECTOR_MASK;
+        WORD Table3 = SectorNumber & TABLE_SECTOR_MASK;
 
         WORD Addr1 = (GetIndirectSectorNumber(Inode->pwTable[10], Table1));
 
@@ -303,49 +404,16 @@ int uFS_AddSectorFromRange(INODE_RECORD * Inode, DWORD * SectorAddr, WORD BeginS
                 return -1; // нет свободных секторов
             SetIndirectSectorNumber(Addr1, Table2, Addr2);
         }
-        *SectorAddr = Addr2  << DATA_SECTOR_SIZE_BIT;
-        return 0;
-
-    } else SectorNumber -= INDERECT_ADDR_x2_SIZE;
-
-    if(SectorNumber < INDERECT_ADDR_x3_SIZE){
-
-        // Тройная косвенная адресация
-        // Inode.pwTable[10]-->table1[]-->table2[]-->table3[]-->data
-        //               table1[128]  table2[128]  table3[128]  data[256]
-        // SectorNumber: 0000000      0000000      0000000      00000000
-
-        if((SectorNumber == 0) && (Inode->pwTable[11] == INVALID_SECTOR_NUMBER )){
-            if(uFS_ClaimFreeSectorFromRange(&Inode->pwTable[11], BeginSector, EndSector) != 0)
-                return -1; // нет свободных секторов
-        }
-
-        WORD Table1 = SectorNumber >> (TABLE_SECTOR_SIZE_BIT * 2);
-        WORD Table2 = (SectorNumber >> TABLE_SECTOR_SIZE_BIT) & TABLE_SECTOR_MASK;
-        WORD Table3 = SectorNumber & TABLE_SECTOR_MASK;
-
-        WORD Addr1 = (GetIndirectSectorNumber(Inode->pwTable[11], Table1));
-
-        if(Addr1 == INVALID_SECTOR_NUMBER){
-            if(uFS_ClaimFreeSectorFromRange(&Addr1, BeginSector, EndSector) != 0)
-                return -1; // нет свободных секторов
-            SetIndirectSectorNumber(Inode->pwTable[11], Table1, Addr1);
-        }
-
-        WORD Addr2 = (GetIndirectSectorNumber(Addr1, Table2));
-        if(Addr2 == INVALID_SECTOR_NUMBER){
-            if(uFS_ClaimFreeSectorFromRange(&Addr2, BeginSector, EndSector) != 0)
-                return -1; // нет свободных секторов
-            SetIndirectSectorNumber(Addr1, Table2, Addr2);
-        }
 
         WORD Addr3 = (GetIndirectSectorNumber(Addr2, Table3));
         if(Addr3 == INVALID_SECTOR_NUMBER){
             if(uFS_ClaimFreeSectorFromRange(&Addr3, BeginSector, EndSector) != 0)
                 return -1; // нет свободных секторов
             SetIndirectSectorNumber(Addr2, Table3, Addr3);
+            Inode->wSectorsCount++;
         }
-        *SectorAddr = Addr3  << DATA_SECTOR_SIZE_BIT;
+        if(SectorAddr != NULL)
+            *SectorAddr = Addr3;
 
         return 0;
     }
@@ -370,7 +438,7 @@ int uFS_ReadData(DWORD Addr, BYTE * Dest, int Count)
         uFS_Read(Addr, Dest, Count);
         return Count;
     }
-    return 0;
+    //return 0;
 }
 
 // Записывает данные с квантованием по размеру сектора.
@@ -390,7 +458,7 @@ int uFS_WriteData(DWORD Addr, BYTE * Source, int Count)
         uFS_Write(Addr, Source, Count);
         return Count;
     }
-    return 0;
+    //return 0;
 }
 
 // читает данные из файла
@@ -429,16 +497,17 @@ int uFSReadFile(
     return ReadedCnt;
 }
 
-// читает данные из файла
-// возвращает количество прочитанных байт в случае успеха или код ошибки
+// Записывает данные в файл
+// возвращает количество записаных байт в случае успеха или код ошибки
 int uFSWriteFile(
     INODE_RECORD * Inode,           // Inode файла
     DWORD Address,                  // Адрес внутри файла
     BYTE * Source,                  // Адрес буфера
     int Count                       // Количество в байтах
-    )                               // Возвращает количество реально считанных байт или значение < 0 при ошибке
+    )                               // Возвращает количество реально записанных байт или значение < 0 при ошибке
 {
     DWORD PhysicalAddr = 0;
+    WORD PhysicalSector = 0;
     int Err = 0;
     int WritedCnt = 0;
        
@@ -447,11 +516,13 @@ int uFSWriteFile(
 
     while(Count != WritedCnt){
 
-        Err = uFS_AddSector(Inode, &PhysicalAddr);
-        if(Err != 0){
-            return Err;
+        if(uFS_GetSectorAddr(*Inode, (WORD)(Address >> DATA_SECTOR_SIZE_BIT), &PhysicalSector, NULL) != 0){
+            Err = uFS_AddSector(Inode, &PhysicalSector);
+            if(Err != 0){
+                return Err;
+            }
         }
-        PhysicalAddr |= (Address & SECTOR_MASK);
+        PhysicalAddr = (PhysicalSector << DATA_SECTOR_SIZE_BIT) | (Address & SECTOR_MASK);
         int Cnt = uFS_WriteData(PhysicalAddr, &Source[WritedCnt], Count - WritedCnt);
         if(Cnt < 0 ){
             return Cnt;
@@ -463,25 +534,172 @@ int uFSWriteFile(
     return WritedCnt;
 }
 
+// Найти и сбросить единичку в массиве, начиная позиции Beg и заканчивая позицией End и вернуть в Pos
+int DropOneInAvailableSectors(FREE_SECTORS * Buf, WORD Size, WORD Beg, WORD End, WORD* Pos)
+{
+    WORD MaxOnesCount = Size << 3;
+    if((Beg > MaxOnesCount)||(Size == 0)||(End == Beg)||(Pos == NULL)||(Buf == NULL)||(Beg > End)){
+        return -1;
+    }
 
+    if(End > MaxOnesCount){
+        End = MaxOnesCount;    
+    }
+
+    WORD MinByte = Beg >> 3;
+    WORD MaxByte = End >> 3;
+    WORD MinBit = Beg & 0x07;
+    WORD MaxBit = End & 0x07;
+
+    WORD j = 0;
+    for(WORD i = MinByte; i <= MaxByte; i++){
+        if(Buf[i].AvailableSectors > 0){
+            if(i == MinByte)
+                j = MinBit;
+            else 
+                j = 0;
+            while(!((Buf[i].AvailableSectors >> j) & 0x1) && (j < 8)){
+                j++;
+            }            
+            if((i == MaxByte) && (j > MaxBit))
+                return 1; // нет свободных
+            else if(j > 7) 
+                continue;
+
+            Buf[i].AvailableSectors &= (~(1 << j));
+            *Pos = (i << 3) + j;
+
+            return 0;
+        }
+    }
+    return 1;
+}
 
 // резервирует свободный сектор из заданного диапазона
 int uFS_ClaimFreeSectorFromRange(WORD * ClaimedSector, WORD BeginSector, WORD EndSector)
 {
+    WORD CurrentEnd = (WORD)(uFS_FreeSectors.FreeFile->DataPointer * 8 / sizeof(FREE_SECTORS));
+    WORD CurrentBeg = CurrentEnd - 128;
+    
     WORD Beg = BeginSector >> 3;
-    WORD End = EndSector >> 3;
-    if(End > sizeof(FreeSectors)/sizeof(FREE_SECTORS)){
-        End = sizeof(FreeSectors)/sizeof(FREE_SECTORS);
-    }
-    for(int i = Beg >> 3; i < End >> 3; i++){
-        if(FreeSectors[i].AvailableSectors > 0){         
-            int j = 0;
-            while(!((FreeSectors[i].AvailableSectors >> j) & 0x1)){
-                j++;
-            }
-            FreeSectors[i].AvailableSectors &= (~(1 << j));
-            *ClaimedSector = (i << 3) + j;
+    //WORD End = EndSector >> 3;
+
+    // при смене текущего сектора записать изменения
+    // прочитать новые значения из файла
+    // если читаемый сектор больше размеров файла, создать новый кеш
+    
+    // положение CurrentPos указывает на окно 16 байт 
+    // 
+
+
+    
+    // 1. окно вне диапазона
+    //
+    //                 BeginSector
+    //                 |       EndSector
+    //                 V       V
+    //*****************+++++++++***************  
+    //---++++----------------------------------
+    //   ^  ^
+    //   |  CurrentEnd
+    //   CurrentBeg
+
+    // 2. окно перекрывает начало диапазона
+    //
+    //                 BeginSector
+    //                 |       EndSector
+    //                 V       V
+    //*****************+++++++++***************  
+    // -------------++++++---------------------
+    //              ^    ^
+    //              |    CurrentEnd
+    //              CurrentBeg
+
+    // 3. окно внутри диапазона
+    //
+    //                 BeginSector
+    //                 |       EndSector
+    //                 V       V
+    //*****************+++++++++***************  
+    //-------------------++++------------------
+    //                   ^  ^
+    //                   |  CurrentEnd
+    //                   CurrentBeg
+
+    // 4.окно перекрывает конец диапазона
+    //
+    //                 BeginSector
+    //                 |       EndSector
+    //                 V       V
+    //*****************+++++++++***************  
+    //------------------------++++-------------
+    //                        ^  ^
+    //                        |  CurrentEnd
+    //                        CurrentBeg
+    // 
+    int Err = 1;
+
+    if((CurrentBeg >= BeginSector) && ( CurrentEnd <= EndSector) && (uFS_FreeSectors.FreeFile->DataPointer > 0)){
+        // работаем из кеша
+        CurrentEnd = (WORD)(uFS_FreeSectors.FreeFile->DataPointer * 8 / sizeof(FREE_SECTORS));
+        CurrentBeg = CurrentEnd - 128;
+        WORD Count = CurrentEnd - CurrentBeg;
+        WORD b = 0;
+        if(CurrentBeg < BeginSector){
+            b = BeginSector & 0x07;
+        }
+        if(CurrentBeg >= EndSector){
+            return -1;
+        }
+        if(CurrentEnd > EndSector){
+            Count = EndSector - CurrentBeg;
+        }
+        Err = DropOneInAvailableSectors(uFS_FreeSectors.FreeSectorsCache, 16, b, Count, ClaimedSector);
+        if(Err == 0){
+            *ClaimedSector += CurrentBeg;
             return 0;
+        }
+    } 
+
+    {
+        // файл свободного места создан
+        if(uFS_FreeSectors.FreeFile->Inode.dwSize != 0){
+            
+            // записать кеш
+            if(uFS_FreeSectors.FreeFile->DataPointer > 0){
+                uFS_fseek(uFS_FreeSectors.FreeFile, -(int)sizeof(uFS_FreeSectors.FreeSectorsCache), SEEK_CUR);
+                uFS_fwrite((BYTE*)uFS_FreeSectors.FreeSectorsCache, sizeof(uFS_FreeSectors.FreeSectorsCache), 1, uFS_FreeSectors.FreeFile);
+            }
+            // пополнить кеш
+            // если окно не в диапазоне, передвигаем
+            if(!((CurrentBeg >= BeginSector) && ( CurrentEnd <= EndSector))){
+                if(uFS_fseek(uFS_FreeSectors.FreeFile, Beg, SEEK_SET) != 0)
+                    return -1;
+            }
+
+            while( Err > 0){
+
+                if(uFS_fread((BYTE*)uFS_FreeSectors.FreeSectorsCache, sizeof(uFS_FreeSectors.FreeSectorsCache), 1, uFS_FreeSectors.FreeFile) < 0 )
+                    return -1;
+                CurrentEnd = (WORD)(uFS_FreeSectors.FreeFile->DataPointer * 8 / sizeof(FREE_SECTORS));
+                CurrentBeg = CurrentEnd - 128;
+                WORD Count = CurrentEnd - CurrentBeg;
+                WORD b = 0;
+                if(CurrentBeg < BeginSector){
+                    b = BeginSector & 0x07;
+                }
+                if(CurrentBeg >= EndSector){
+                    return -1;
+                }
+                if(CurrentEnd > EndSector){
+                    Count = EndSector - CurrentBeg;
+                }
+                Err = DropOneInAvailableSectors(uFS_FreeSectors.FreeSectorsCache, 16, b, Count, ClaimedSector);
+                if(Err == 0){
+                    *ClaimedSector += CurrentBeg;
+                    return 0;
+                }
+            }
         }
     }
     return -1;
@@ -510,47 +728,57 @@ int uFS_ReleaseSector(WORD ReleasedSector)
 
 int uFS_ReleaseFileSector(INODE_RECORD Inode, WORD SectorIndex)
 {   
-    IdAddrSectors Indirect;
+    IdTable Indirect;
     WORD SectorAddr = 0;
+        
+    // получение информации о секторе
+    uFS_GetSectorAddr( Inode, SectorIndex, &SectorAddr, &Indirect );
 
-    uFS_GetSectorAddr( Inode, SectorIndex, &SectorAddr, Indirect );
+    // освобождение сектора данных
     if(uFS_ReleaseSector(SectorAddr) != 0)
         return -1;  // ошибка освобождения сектора   
-    
-    if(SectorAddr & SECTOR_MASK == 0){
-        // первый сектор. если удаляем с конца файла, то последий не удаленный. нужно удалить сектора таблиц        
-        if(Indirect[2] == INVALID_SECTOR_NUMBER){
-            // прямая, косвенная или двойная косвенная адресация
-            if(Indirect[1] == INVALID_SECTOR_NUMBER){
-                // прямая или косвенная адресация
-                if(Indirect[0] == INVALID_SECTOR_NUMBER){
-                    // прямая адресация
-                } else {
-                    // косвенная адресация
-                    uFS_ReleaseSector(Indirect[0]);
-                }
-            } else {
-                // двойная косвенная адресация
-                uFS_ReleaseSector(Indirect[1]);
-                if(Indirect[0] & TABLE_SECTOR_MASK ==0 ){
-                    uFS_ReleaseSector(Indirect[0]);
-                }
+
+    // освобождение секторов таблицы
+
+    switch (Indirect.AD_Type) {
+    case uFS_AT_DIRECT:     // прямая адресация
+        break;
+    case uFS_AT_INDIRECT_1: // косвенная адресация
+        if(Indirect.IdAdress[0] == 0){
+            if(uFS_ReleaseSector(Indirect.IdTable[0]) != 0)
+                return -1;  // ошибка освобождения сектора   
+        }
+        break;
+    case uFS_AT_INDIRECT_2: // двойная косвенная адресация
+        if(Indirect.IdAdress[1] == 0){
+            if(uFS_ReleaseSector(Indirect.IdTable[1]) != 0)
+                return -1;  // ошибка освобождения сектора   
+            if(Indirect.IdAdress[0] == 0){
+                if(uFS_ReleaseSector(Indirect.IdTable[0]) != 0)
+                    return -1;  // ошибка освобождения сектора   
             }
-        } else {
-            // тройная косвенная адресация
-            uFS_ReleaseSector(Indirect[2]);
-            if(Indirect[1] & TABLE_SECTOR_MASK ==0 ){
-                uFS_ReleaseSector(Indirect[1]);
-                if(Indirect[0] & TABLE_SECTOR_MASK ==0 ){
-                    uFS_ReleaseSector(Indirect[0]);
+        }
+        break;
+    case uFS_AT_INDIRECT_3: // тройная косвенная адресация
+        if(Indirect.IdAdress[2] == 0){
+            if(uFS_ReleaseSector(Indirect.IdTable[2]) != 0)
+                return -1;  // ошибка освобождения сектора   
+            if(Indirect.IdAdress[1] == 0){
+                if(uFS_ReleaseSector(Indirect.IdTable[1]) != 0)
+                    return -1;  // ошибка освобождения сектора   
+                if(Indirect.IdAdress[0] == 0){
+                    if(uFS_ReleaseSector(Indirect.IdTable[0]) != 0)
+                        return -1;  // ошибка освобождения сектора   
                 }
             }
         }
+        break;
+    default:
+        return -2;          // неизвестный тип адресации
+        break;
     }
-
+   
     return 0;
-
-
 }
 
 BYTE bc[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
@@ -564,33 +792,33 @@ BYTE wBitCount(WORD x)
     return  bc[x & 0x000F] + bc[(x >> 4) & 0x000F] + bc[(x >> 8) & 0x000F] + bc[(x >> 12) & 0x000F];
 }
 
-DWORD uFS_GetFreeSectorCount()
+WORD uFS_GetFreeSectorCount()
 {
     return uFS_GetFreeSectorCountInRange(0, SECTORS_COUNT - 1);
 }
 
-DWORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector)
+WORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector)
 {
-    DWORD count = 0;
+    WORD count = 0;
     WORD Beg = BeginSector >> 3;
     WORD End = EndSector >> 3;
     if(End > sizeof(FreeSectors)/sizeof(FREE_SECTORS)){
         End = sizeof(FreeSectors)/sizeof(FREE_SECTORS);
     }    
-    for(int i = Beg; i < End; i++){
+    for(int i = Beg; i <= End; i++){
         count += bBitCount(FreeSectors[i].AvailableSectors);
     }
     return count;
 }
 
-DWORD uFS_GetReleasedSectorCount()
+WORD uFS_GetReleasedSectorCount()
 {
     return uFS_GetReleasedSectorCountInRange(0, SECTORS_COUNT - 1);
 }
 
-DWORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector)
+WORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector)
 {
-    DWORD count = 0;
+    WORD count = 0;
     WORD Beg = BeginSector >> 3;
     WORD End = EndSector >> 3;
     if(End > sizeof(FreeSectors)/sizeof(FREE_SECTORS)){
@@ -601,6 +829,23 @@ DWORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector)
     }
     return count;
 }
+
+int uFS_RemoveFile(INODE_RECORD Inode)
+{
+    WORD SectorsCount = (WORD)(Inode.dwSize >> DATA_SECTOR_SIZE_BIT);
+    if((Inode.dwSize & SECTOR_MASK) > 0){
+        SectorsCount++;
+    }
+    // освободить сектора
+    for(WORD i = 0; i < SectorsCount; i++){
+        if(uFS_ReleaseFileSector(Inode, i) !=0 )
+            return -1;
+
+    }
+    // Освободить инод
+    return 0;
+}
+
 
 int uFS_Init()
 {
@@ -613,24 +858,40 @@ int uFS_Init()
         OpenFileArray[i].Inode.dwSize = 0;
         OpenFileArray[i].Inode.wFlags = 0;
         OpenFileArray[i].Inode.wInodeID = 0;
-        memset(OpenFileArray[i].Inode.pwTable, 0xFF, 12);
+        memset(OpenFileArray[i].Inode.pwTable, 0xFF, sizeof(OpenFileArray[i].Inode.pwTable));
         
         OpenFileArray[i].Dir.bNameLength = 0;
         memset(OpenFileArray[i].Dir.pcFileName, 0, MAX_FILE_NAME_LENGTH);
         OpenFileArray[i].Dir.wInodeID = 0;
     }
     uFS_FILE fs_root;
-    fs_root.Inode.dwSize = 0;
+    SUPERBLOCK SuperBlock;
+    fs_root.Inode.dwSize = sizeof(SuperBlock);
     fs_root.Inode.wInodeID = 1;
     fs_root.Inode.wFlags = 0;
     fs_root.Flags.bits.RE = 1;
     fs_root.Flags.bits.WE = 0;
     fs_root.DataPointer = 0;
+
     memset(fs_root.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_root.Inode.pwTable));
-    if(uFS_ReadData(0x000020, (BYTE*)&fs_root.Inode, sizeof(INODE_RECORD)) == 0){
+    fs_root.Inode.pwTable[0] = 0;
+
+    if(uFS_fread ( (BYTE*)&SuperBlock, sizeof(SuperBlock), 1, &fs_root ) != sizeof(SuperBlock)){
         return -1;
     }
-    uFS_fseek(&fs_root, 0x40, SEEK_SET);
+    
+    fs_root.Inode.dwSize = sizeof(INODE_RECORD);
+    fs_root.Inode.wInodeID = 1;
+    fs_root.Inode.wFlags = 0;
+    fs_root.Flags.bits.RE = 1;
+    fs_root.Flags.bits.WE = 0;
+    fs_root.DataPointer = 0;
+    fs_root.Inode.pwTable[0] = SuperBlock.InodeTable >> DATA_SECTOR_SIZE_BIT;
+
+    if(uFS_fread((BYTE*)&OpenFileArray[0].Inode, sizeof(INODE_RECORD), 1, &fs_root) < 0){
+        return -1;
+    }
+
 
     for(int i = 0; i < 3; i++)  {
         OpenFileArray[i].ErrorState = uFS_ERROR_NO_ERROR;
@@ -638,7 +899,7 @@ int uFS_Init()
         OpenFileArray[i].Flags.bits.RE = 1;
         OpenFileArray[i].Flags.bits.WE = 1;
         OpenFileArray[i].DataPointer = 0;
-        if(uFS_fread((BYTE*)&OpenFileArray[i].Inode, sizeof(INODE_RECORD), 1, &fs_root) < 0){
+        if(uFS_fread((BYTE*)&OpenFileArray[i].Inode, sizeof(INODE_RECORD), 1, &OpenFileArray[0]) < 0){
             return -1;
         }
         OpenFileArray[i].Dir.wInodeID = OpenFileArray[i].Inode.wInodeID;
@@ -653,9 +914,10 @@ int uFS_Init()
         strcpy (OpenFileArray[2].Dir.pcFileName,"/");
         OpenFileArray[2].Dir.bNameLength = strlen(OpenFileArray[2].Dir.pcFileName);        
     }
+    uFS_RemoveFile(OpenFileArray[0].Inode);
     //uFS_ReleaseFileSector(&OpenFileArray[0].Inode, 0);
     //DWORD SectorAddr;
-    //IdAddrSectors Indirect;
+    //IdTable Indirect;
 
     //uFS_GetSectorAddr( OpenFileArray[0].Inode, 32762, &SectorAddr, Indirect );
     //uFS_GetSectorAddr( OpenFileArray[0].Inode, 29000, &SectorAddr, NULL );
@@ -770,11 +1032,11 @@ int uFS_fwrite ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
         return -1;
 
     int Cnt = uFSWriteFile(&stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
-    if(Cnt != 0){
+    if(Cnt > 0){
         stream->DataPointer += Cnt;
         return Cnt;
     }
-    return -1;
+    return Cnt;
 }
 
 // Read block of data from stream
@@ -798,29 +1060,50 @@ int uFS_fread ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 
 int uFS_fseek ( uFS_FILE * stream, int offset, int origin )
 {
-    //if(stream->Flags.bits.RE == 1) 
-    //    return -1;
+    if(!(stream->Flags.bits.RE || stream->Flags.bits.WE)) 
+        return -1;
 
     switch (origin) {
     case SEEK_SET:
         if(offset <0)
             return -1;
         if(offset < (int)stream->Inode.dwSize){
-            stream->DataPointer = offset;
+            if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
+                stream->DataPointer = offset;
+            } else return -1;
         } else {
-           
+            if(stream->Flags.bits.WE) {
+                if(uFS_ExpandFile(&stream->Inode, offset) != 0)
+                    return -1;
+                stream->DataPointer = offset;
+            } else if(stream->Flags.bits.RE) {
+                stream->DataPointer = stream->Inode.dwSize;
+                return -1;
+            } else return -1;
+
         }
     	break;
     case SEEK_CUR: 
         {
             int res = stream->DataPointer + offset;
             if(res <= 0){
-                stream->DataPointer = 0;
+                if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
+                    stream->DataPointer = 0;
+                } else return -1;
             } else {
                 if(res > (int)stream->Inode.dwSize){
-                    stream->DataPointer = stream->Inode.dwSize;
+                    if(stream->Flags.bits.WE) {
+                        if(uFS_ExpandFile(&stream->Inode, res) != 0)
+                            return -1;
+                        stream->DataPointer = stream->Inode.dwSize;
+                    } else if(stream->Flags.bits.RE) {
+                        stream->DataPointer = stream->Inode.dwSize;
+                        return -1;
+                    } else return -1;
                 } else 
-                    stream->DataPointer = res;
+                    if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
+                        stream->DataPointer = res;
+                    } else return -1;
             }
             break;
         }
@@ -833,7 +1116,14 @@ int uFS_fseek ( uFS_FILE * stream, int offset, int origin )
                 stream->DataPointer = res;
             }
         } else {
-            // TODO: увеличение файла с помощью fseek
+            if(stream->Flags.bits.WE) {
+                if(uFS_ExpandFile(&stream->Inode, stream->Inode.dwSize + offset) != 0)
+                    return -1;
+                stream->DataPointer = stream->Inode.dwSize;
+            } else if(stream->Flags.bits.RE) {
+                stream->DataPointer = stream->Inode.dwSize;
+                return -1;
+            } else return -1;
         }
         break;
     default:
@@ -848,7 +1138,19 @@ int CreateFS()
     uFS_FILE fs_inode;
     uFS_FILE fs_free;
     uFS_FILE fs_dir;
-    BYTE Buf[256];
+    SUPERBLOCK SuperBlock;
+    //BYTE Buf[256];
+
+
+    strcpy(SuperBlock.Name, "uFS Version 0.1");
+    SuperBlock.VersionMajor = 0;      //0
+    SuperBlock.VersionMinor = 1;      //1
+    SuperBlock.SectorSize   = 256*1024;       // 256*1024
+    SuperBlock.SectorsCount = 64;     //64
+    SuperBlock.PageSize     = 256;         // 256
+    SuperBlock.PageCount    = 65536;        //65536
+    SuperBlock.InodeTable   = 0;       // 256
+
 
     fs_root.Inode.dwSize = 0;
     fs_root.Inode.wInodeID = 1;
@@ -856,6 +1158,7 @@ int CreateFS()
     fs_root.Flags.bits.RE = 1;
     fs_root.Flags.bits.WE = 1;
     fs_root.DataPointer = 0;
+    fs_root.Inode.wSectorsCount = 0;
     memset(fs_root.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_root.Inode.pwTable));
 
     fs_inode.Inode.dwSize = 0;
@@ -864,6 +1167,7 @@ int CreateFS()
     fs_inode.Flags.bits.RE = 1;
     fs_inode.Flags.bits.WE = 1;
     fs_inode.DataPointer = 0;
+    fs_inode.Inode.wSectorsCount = 0;
     memset(fs_inode.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_inode.Inode.pwTable));
 
     fs_free.Inode.dwSize = 0;
@@ -872,6 +1176,7 @@ int CreateFS()
     fs_free.Flags.bits.RE = 1;
     fs_free.Flags.bits.WE = 1;
     fs_free.DataPointer = 0;
+    fs_free.Inode.wSectorsCount = 0;
     memset(fs_free.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_free.Inode.pwTable));
 
     fs_dir.Inode.dwSize = 0;
@@ -880,43 +1185,89 @@ int CreateFS()
     fs_dir.Flags.bits.RE = 1;
     fs_dir.Flags.bits.WE = 1;
     fs_dir.DataPointer = 0;
+    fs_dir.Inode.wSectorsCount = 0;
     memset(fs_dir.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_dir.Inode.pwTable));
 
-    memset(Buf, 0xFF, sizeof(Buf));
+    memset(uFS_FreeSectors.FreeSectorsCache, 0xFF, sizeof(uFS_FreeSectors.FreeSectorsCache));
+    uFS_FreeSectors.FreeFile = &fs_free;
+    FS[256] = 0xFD;         // занят второй сектор в первом блоке
+    FS[1024*256] = 0xFE;    // занят первый сектор во втором блоке
+    FS[1024*256*2] = 0xFE;    // занят первый сектор в третьем блоке
+    FS[1024*256*3] = 0xFE;    // занят первый сектор в четвертом блоке
+    fs_free.Inode.pwTable[0] = 1;
+    fs_free.Inode.pwTable[1] = 1024;
+    fs_free.Inode.pwTable[2] = 1024 * 2;
+    fs_free.Inode.pwTable[3] = 1024 * 3;
+    fs_free.DataPointer = 0;
+    fs_free.Inode.dwSize = 256*4;
+
     
-    // создаём файл первого сектора
-    uFS_fwrite (  Buf, 1, 0x40, &fs_root );
+    //fs_root.Inode.pwTable[0] = 0;
+    //fs_root.Inode.dwSize = sizeof(SuperBlock);
+    //fs_root.DataPointer = 0;
     
+    // создаём файл свободного места
+    //uFS_AddSectorFromRange( &fs_free.Inode, NULL, 1, CLEAN_SECTOR_SIZE >> DATA_SECTOR_SIZE_BIT);
+
+    //for(WORD i = 1; i < CLEAN_SECTOR_COUNT; i++){
+    //    uFS_AddSectorFromRange( &fs_free.Inode, NULL, (i * CLEAN_SECTOR_SIZE) >> DATA_SECTOR_SIZE_BIT, ((i + 1) * CLEAN_SECTOR_SIZE) >> DATA_SECTOR_SIZE_BIT);
+    //}
+
+    // создаём файл первого сектора    
+    uFS_AddSectorFromRange( &fs_root.Inode, NULL, 0, 1);
+
+
     // создаём файл Инодов
-    for(int i = 0; i < 128; i++){
-        uFS_fwrite (  Buf, 256, 1, &fs_inode );
-    }
+    uFS_fseek( &fs_inode, 32*1024, SEEK_SET); 
+    uFS_fseek( &fs_inode, 0, SEEK_SET); 
+
+    //Записываем суперблок
+    SuperBlock.InodeTable = fs_inode.Inode.pwTable[0] << DATA_SECTOR_SIZE_BIT;
+    uFS_fwrite ( (BYTE*)&SuperBlock, sizeof(SuperBlock), 1, &fs_root );
         
     // создаём файл корневой директории
-    uFS_fwrite (  Buf, 1, 0, &fs_dir );
+    {
+        DIR_RECORD Dir;
+        Dir.wInodeID = 2;
+        strcpy(Dir.pcFileName,".Inode");
+        Dir.bNameLength = strlen(Dir.pcFileName) + 1;
+
+        uFS_fwrite ( (BYTE*)&Dir, sizeof(WORD)+sizeof(BYTE), 1, &fs_dir );
+        uFS_fwrite ( (BYTE*)Dir.pcFileName, Dir.bNameLength, 1, &fs_dir );
+
+        Dir.wInodeID = 3;
+        strcpy(Dir.pcFileName,".free");
+        Dir.bNameLength = strlen(Dir.pcFileName) + 1;
+
+        uFS_fwrite ( (BYTE*)&Dir, sizeof(WORD)+sizeof(BYTE), 1, &fs_dir );
+        uFS_fwrite ( (BYTE*)Dir.pcFileName, Dir.bNameLength, 1, &fs_dir );
+
+        //Dir.wInodeID = 4;
+        //strcpy(Dir.pcFileName,"/");
+        //Dir.bNameLength = strlen(Dir.pcFileName) + 1;
+
+        //uFS_fwrite ( (BYTE*)&Dir, sizeof(WORD)+sizeof(BYTE), 1, &fs_dir );
+        //uFS_fwrite ( (BYTE*)Dir.pcFileName, Dir.bNameLength, 1, &fs_dir );
+    }
 
     // создаём и записываем файл свободного места
-    uFS_fwrite (  (BYTE*)FreeSectors, 1, 256, &fs_free );    
+    //uFS_fwrite (  (BYTE*)uFS_FreeSectors.FreeSectorsCache, sizeof(uFS_FreeSectors.FreeSectorsCache), 1, &fs_free );    
 
     // пишем Inode таблицы инодов    
-    uFS_fwrite (  (BYTE*)&fs_inode.Inode, 1, sizeof(fs_inode.Inode), &fs_root );
+    uFS_fwrite (  (BYTE*)&fs_inode.Inode, 1, sizeof(fs_inode.Inode), &fs_inode );
     
     // пишем Inode файла свободного места    
-    uFS_fwrite (  (BYTE*)&fs_free.Inode, 1, sizeof(fs_free.Inode), &fs_root );
+    uFS_fwrite (  (BYTE*)&fs_free.Inode, 1, sizeof(fs_free.Inode), &fs_inode );
 
     // пишем Inode файла корневой директории
-    uFS_fwrite (  (BYTE*)&fs_dir.Inode, 1, sizeof(fs_dir.Inode), &fs_root );
+    uFS_fwrite (  (BYTE*)&fs_dir.Inode, 1, sizeof(fs_dir.Inode), &fs_inode );
     
-    uFS_fseek( &fs_root, 0x20, SEEK_SET);
-     // пишем Inode файла корневой директории
-    uFS_fwrite (  (BYTE*)&fs_root.Inode, 1, sizeof(fs_root.Inode), &fs_root );
 
     return 0;
 }
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
     int nRetCode = 0;
-    DWORD PhysicalAddr = 0;
     WORD Data[65536];
     WORD Data1[65536];
     int Count = 0;
@@ -932,9 +1283,6 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 
 
         uFS_FILE file;
-
-        int k =0;
-        int t = ~(k - 1) & k;
 
         //INODE_RECORD Inode;
         file.Inode.dwSize = 0;
@@ -955,7 +1303,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 
 
 
-        for(int i = 0; i < 12; i++){
+        for(int i = 0; i < 11; i++){
              file.Inode.pwTable[i] = INVALID_SECTOR_NUMBER;
         }
         for(DWORD i = 0; i < sizeof(Data)/sizeof(Data[0]); i++){
