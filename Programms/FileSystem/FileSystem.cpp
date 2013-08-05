@@ -31,6 +31,9 @@ using namespace std;
 #define uFS_INVALID_HANDLE 0xFFFF
 #define uFS_ERROR_FREE_RECORD 0xFF
 #define uFS_ERROR_NO_ERROR 0x00
+#define uFS_INODE_TABLE_ID 2
+#define uFS_FREE_FILE_ID 3
+#define uFS_ROOT_DIR_ID 4
 
 typedef struct _SUPERBLOCK 
 {
@@ -58,6 +61,7 @@ typedef struct _IdTable{
 
 
 BYTE FS[256*SECTORS_COUNT];
+WORD uFS_LastInodeID = 0;
 
 //FS_FREE 
 typedef struct _FREE_SECTORS{
@@ -76,6 +80,7 @@ uFS_FREE_SECTOR_CONTROL uFS_FreeSectors;
 
 uFS_FILE OpenFileArray[uFS_MAX_OPENED_FILE + 3];
 
+uFS_FILE *  uFS_FileOpen(WORD wInode, FILESTATE Flags);
 int uFS_Read(DWORD Addr, BYTE * Dest, DWORD Count);
 int uFS_Write(DWORD Addr, BYTE * Source, DWORD Count);
 WORD GetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition);
@@ -86,18 +91,27 @@ int uFS_AddSector(INODE_RECORD * Inode, WORD * SectorAddr);
 int uFS_AddSectorFromRange(INODE_RECORD * Inode, WORD * SectorAddr, WORD BeginSector, WORD EndSector);
 int uFS_ReadData(DWORD Addr, BYTE * Dest, int Count);
 int uFS_WriteData(DWORD Addr, BYTE * Source, int Count);
-int uFSReadFile(INODE_RECORD Inode, DWORD Address, BYTE * Dest, int Count);
-int uFSWriteFile(INODE_RECORD * Inode, DWORD Address, BYTE * Source, int Count);
+int uFS_ReadFile(INODE_RECORD Inode, DWORD Address, BYTE * Dest, int Count);
+int uFS_WriteFile(INODE_RECORD * Inode, DWORD Address, BYTE * Source, int Count);
 int uFS_ClaimFreeSectorFromRange(WORD * ClaimedSector, WORD BeginSector, WORD EndSector);
 int uFS_ClaimFreeSector(WORD * ClaimedSector);
 int uFS_ReleaseSector(WORD ReleasedSector);
+int uFS_ReleaseFileSector(INODE_RECORD Inode, WORD SectorIndex);
+int uFS_ExpandFile(INODE_RECORD * Inode, DWORD NewSize);
+int uFS_RemoveFile(INODE_RECORD Inode);
+
 BYTE bBitCount(BYTE x);
 BYTE wBitCount(WORD x);
 WORD uFS_GetFreeSectorCount();
 WORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector);
 WORD uFS_GetReleasedSectorCount();
 WORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector);
+// Поиск
 
+WORD uFS_SearchInodeInDir(WORD DirInode, const char * FileName, BYTE FileNameLen);
+WORD uFS_GetInodeByPath(const char * Path);
+
+WORD uFS_FindLastInodeID();
 
 // ***************************************************************************
 int uFS_Read(DWORD Addr, BYTE * Dest, DWORD Count)
@@ -105,11 +119,14 @@ int uFS_Read(DWORD Addr, BYTE * Dest, DWORD Count)
     memcpy(Dest, &FS[Addr],Count);
     return 0;
 }
+
+// ***************************************************************************
 int uFS_Write(DWORD Addr, BYTE * Source, DWORD Count)
 {
     memcpy(&FS[Addr], Source, Count);
     return 0;
 }
+
 // ***************************************************************************
 WORD GetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition)
 {   
@@ -118,6 +135,7 @@ WORD GetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition)
     uFS_Read(AddrInSector, (BYTE*)&DataAddr, sizeof(WORD));
     return DataAddr;
 }
+
 // ***************************************************************************
 int SetIndirectSectorNumber(WORD SectorNumber, WORD WordPosition, WORD Number)
 {   
@@ -255,6 +273,7 @@ int uFS_GetAddr(
     return Err;
 }
 
+// ***************************************************************************
 int uFS_ExpandFile(INODE_RECORD * Inode, DWORD NewSize)
 {
     WORD PhysicalAddr = 0;
@@ -421,6 +440,7 @@ int uFS_AddSectorFromRange(INODE_RECORD * Inode, WORD * SectorAddr, WORD BeginSe
 
 }
 
+// ***************************************************************************
 // читает данные с квантованием по размеру сектора.
 // возвращает количество реально прочитанных байт
 int uFS_ReadData(DWORD Addr, BYTE * Dest, int Count)
@@ -441,6 +461,7 @@ int uFS_ReadData(DWORD Addr, BYTE * Dest, int Count)
     //return 0;
 }
 
+// ***************************************************************************
 // Записывает данные с квантованием по размеру сектора.
 // возвращает количество реально записанных байт
 int uFS_WriteData(DWORD Addr, BYTE * Source, int Count)
@@ -461,9 +482,10 @@ int uFS_WriteData(DWORD Addr, BYTE * Source, int Count)
     //return 0;
 }
 
+// ***************************************************************************
 // читает данные из файла
 // возвращает количество прочитанных байт в случае успеха или код ошибки
-int uFSReadFile(
+int uFS_ReadFile(
     INODE_RECORD Inode,             // Inode файла
     DWORD Address,                  // Адрес внутри файла
     BYTE * Dest,                    // Адрес буфера
@@ -497,9 +519,10 @@ int uFSReadFile(
     return ReadedCnt;
 }
 
+// ***************************************************************************
 // Записывает данные в файл
 // возвращает количество записаных байт в случае успеха или код ошибки
-int uFSWriteFile(
+int uFS_WriteFile(
     INODE_RECORD * Inode,           // Inode файла
     DWORD Address,                  // Адрес внутри файла
     BYTE * Source,                  // Адрес буфера
@@ -528,12 +551,13 @@ int uFSWriteFile(
             return Cnt;
         } 
         WritedCnt += Cnt;
-        Inode->dwSize += Cnt;
+        //Inode->dwSize += Cnt;
     }
 
     return WritedCnt;
 }
 
+// ***************************************************************************
 // Найти и сбросить единичку в массиве, начиная позиции Beg и заканчивая позицией End и вернуть в Pos
 int DropOneInAvailableSectors(FREE_SECTORS * Buf, WORD Size, WORD Beg, WORD End, WORD* Pos)
 {
@@ -575,6 +599,7 @@ int DropOneInAvailableSectors(FREE_SECTORS * Buf, WORD Size, WORD Beg, WORD End,
     return 1;
 }
 
+// ***************************************************************************
 // резервирует свободный сектор из заданного диапазона
 int uFS_ClaimFreeSectorFromRange(WORD * ClaimedSector, WORD BeginSector, WORD EndSector)
 {
@@ -667,13 +692,13 @@ int uFS_ClaimFreeSectorFromRange(WORD * ClaimedSector, WORD BeginSector, WORD En
             
             // записать кеш
             if(uFS_FreeSectors.FreeFile->DataPointer > 0){
-                uFS_fseek(uFS_FreeSectors.FreeFile, -(int)sizeof(uFS_FreeSectors.FreeSectorsCache), SEEK_CUR);
+                uFS_fseek(uFS_FreeSectors.FreeFile, -(int)sizeof(uFS_FreeSectors.FreeSectorsCache), uFS_SEEK_CUR);
                 uFS_fwrite((BYTE*)uFS_FreeSectors.FreeSectorsCache, sizeof(uFS_FreeSectors.FreeSectorsCache), 1, uFS_FreeSectors.FreeFile);
             }
             // пополнить кеш
             // если окно не в диапазоне, передвигаем
             if(!((CurrentBeg >= BeginSector) && ( CurrentEnd <= EndSector))){
-                if(uFS_fseek(uFS_FreeSectors.FreeFile, Beg, SEEK_SET) != 0)
+                if(uFS_fseek(uFS_FreeSectors.FreeFile, Beg, uFS_SEEK_SET) != 0)
                     return -1;
             }
 
@@ -705,12 +730,14 @@ int uFS_ClaimFreeSectorFromRange(WORD * ClaimedSector, WORD BeginSector, WORD En
     return -1;
 }
 
+// ***************************************************************************
 // резервирует свободный сектор
 int uFS_ClaimFreeSector(WORD * ClaimedSector)
 {
     return uFS_ClaimFreeSectorFromRange(ClaimedSector, 0, sizeof(FreeSectors)/sizeof(FREE_SECTORS));
 }
 
+// ***************************************************************************
 // освобождает сектор
 int uFS_ReleaseSector(WORD ReleasedSector)
 {   
@@ -782,21 +809,25 @@ int uFS_ReleaseFileSector(INODE_RECORD Inode, WORD SectorIndex)
 }
 
 BYTE bc[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
+// ***************************************************************************
 BYTE bBitCount(BYTE x)
 {
     return  bc[x & 0x0F] + bc[(x >> 4) & 0x0F];
 }
 
+// ***************************************************************************
 BYTE wBitCount(WORD x)
 {
     return  bc[x & 0x000F] + bc[(x >> 4) & 0x000F] + bc[(x >> 8) & 0x000F] + bc[(x >> 12) & 0x000F];
 }
 
+// ***************************************************************************
 WORD uFS_GetFreeSectorCount()
 {
     return uFS_GetFreeSectorCountInRange(0, SECTORS_COUNT - 1);
 }
 
+// ***************************************************************************
 WORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector)
 {
     WORD count = 0;
@@ -811,11 +842,13 @@ WORD uFS_GetFreeSectorCountInRange(WORD BeginSector, WORD EndSector)
     return count;
 }
 
+// ***************************************************************************
 WORD uFS_GetReleasedSectorCount()
 {
     return uFS_GetReleasedSectorCountInRange(0, SECTORS_COUNT - 1);
 }
 
+// ***************************************************************************
 WORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector)
 {
     WORD count = 0;
@@ -830,6 +863,7 @@ WORD uFS_GetReleasedSectorCountInRange(WORD BeginSector, WORD EndSector)
     return count;
 }
 
+// ***************************************************************************
 int uFS_RemoveFile(INODE_RECORD Inode)
 {
     WORD SectorsCount = (WORD)(Inode.dwSize >> DATA_SECTOR_SIZE_BIT);
@@ -842,11 +876,20 @@ int uFS_RemoveFile(INODE_RECORD Inode)
             return -1;
 
     }
-    // Освободить инод
+    //TODO: Освободить инод
     return 0;
 }
 
-
+int uFS_remove ( const char * filename )
+{
+    // найти файл в каталоге.
+    // найти его Inode
+    // удалить Inode с помощью uFS_RemoveFile
+    // удалить запись из файла директории
+    
+    return 0;
+}
+// ***************************************************************************
 int uFS_Init()
 {
     for ( int i = 0; i < uFS_MAX_OPENED_FILE + 3; i++){
@@ -869,8 +912,7 @@ int uFS_Init()
     fs_root.Inode.dwSize = sizeof(SuperBlock);
     fs_root.Inode.wInodeID = 1;
     fs_root.Inode.wFlags = 0;
-    fs_root.Flags.bits.RE = 1;
-    fs_root.Flags.bits.WE = 0;
+    fs_root.Flags.Enums.Mode = uFS_MODE_READ;
     fs_root.DataPointer = 0;
 
     memset(fs_root.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_root.Inode.pwTable));
@@ -883,27 +925,32 @@ int uFS_Init()
     fs_root.Inode.dwSize = sizeof(INODE_RECORD);
     fs_root.Inode.wInodeID = 1;
     fs_root.Inode.wFlags = 0;
-    fs_root.Flags.bits.RE = 1;
-    fs_root.Flags.bits.WE = 0;
+    fs_root.Flags.Enums.Mode = uFS_MODE_READ;
     fs_root.DataPointer = 0;
-    fs_root.Inode.pwTable[0] = SuperBlock.InodeTable >> DATA_SECTOR_SIZE_BIT;
+    fs_root.Inode.pwTable[0] = (WORD)(SuperBlock.InodeTable >> DATA_SECTOR_SIZE_BIT);
 
     if(uFS_fread((BYTE*)&OpenFileArray[0].Inode, sizeof(INODE_RECORD), 1, &fs_root) < 0){
         return -1;
+    } else {
+        // файл инодов открываем для чтения. если надо записать, отдельно открываем для записи 
+        OpenFileArray[0].ErrorState = uFS_ERROR_NO_ERROR;
+        OpenFileArray[0].Flags.Enums.Binary = uFS_BINARY;
+        OpenFileArray[0].Flags.Enums.Mode = uFS_MODE_READ;
+        OpenFileArray[0].DataPointer = 0;        
     }
+    FILESTATE Flags;
+    Flags.Enums.Mode = uFS_MODE_READ;
+    Flags.Enums.Binary = uFS_BINARY;
+    Flags.Enums.Dir = uFS_RECORD_IS_FILE;
 
+    //uFS_FileOpen(uFS_INODE_TABLE_ID, Flags);
+    uFS_FileOpen(uFS_FREE_FILE_ID, Flags);
+    Flags.Enums.Dir = uFS_RECORD_IS_DIR;
+    uFS_FileOpen(uFS_ROOT_DIR_ID, Flags);
 
-    for(int i = 0; i < 3; i++)  {
-        OpenFileArray[i].ErrorState = uFS_ERROR_NO_ERROR;
-        OpenFileArray[i].Flags.bits.Binary = 1;
-        OpenFileArray[i].Flags.bits.RE = 1;
-        OpenFileArray[i].Flags.bits.WE = 1;
-        OpenFileArray[i].DataPointer = 0;
-        if(uFS_fread((BYTE*)&OpenFileArray[i].Inode, sizeof(INODE_RECORD), 1, &OpenFileArray[0]) < 0){
-            return -1;
-        }
-        OpenFileArray[i].Dir.wInodeID = OpenFileArray[i].Inode.wInodeID;
-    }
+    //uFS_SearchInodeInDir(uFS_ROOT_DIR_ID, ".free", 5);
+    //uFS_GetInodeByPath("/.free");
+    
     {
         strcpy (OpenFileArray[0].Dir.pcFileName,".inodes");
         OpenFileArray[0].Dir.bNameLength = strlen(OpenFileArray[0].Dir.pcFileName);        
@@ -914,7 +961,7 @@ int uFS_Init()
         strcpy (OpenFileArray[2].Dir.pcFileName,"/");
         OpenFileArray[2].Dir.bNameLength = strlen(OpenFileArray[2].Dir.pcFileName);        
     }
-    uFS_RemoveFile(OpenFileArray[0].Inode);
+    //uFS_RemoveFile(OpenFileArray[0].Inode);
     //uFS_ReleaseFileSector(&OpenFileArray[0].Inode, 0);
     //DWORD SectorAddr;
     //IdTable Indirect;
@@ -922,9 +969,199 @@ int uFS_Init()
     //uFS_GetSectorAddr( OpenFileArray[0].Inode, 32762, &SectorAddr, Indirect );
     //uFS_GetSectorAddr( OpenFileArray[0].Inode, 29000, &SectorAddr, NULL );
 
+    // вычислить наименьший свободный номер инода
+    uFS_LastInodeID = uFS_FindLastInodeID();
+ 
+    
     return 0;
 }
 
+
+WORD uFS_FindLastInodeID()
+{
+    WORD wInodeID = 0;
+    WORD wMAXInodeID = 0;
+    uFS_FILE * InodeFile = NULL;
+    
+    InodeFile = &OpenFileArray[0];
+
+    // Устанавливаем указатель на начало
+    if(uFS_fseek(InodeFile, 0, uFS_SEEK_SET) == 0){
+
+        while(uFS_fread((BYTE*)&wInodeID, sizeof(wInodeID), 1, InodeFile) == sizeof(wInodeID)){
+
+            if ((wInodeID > wMAXInodeID) && (wInodeID != uFS_INVALID_HANDLE)) {   
+                wMAXInodeID = wInodeID;
+            } 
+
+            if(uFS_fseek(InodeFile, sizeof(INODE_RECORD) - sizeof(WORD), uFS_SEEK_CUR) < 0){
+                break;
+            }
+        }
+    }
+    uFS_fseek(InodeFile, 0, uFS_SEEK_SET);
+
+    return ++wMAXInodeID;
+}
+
+WORD uFS_GetInodeByPath(const char * Path)
+{
+    char * BeginFName;
+    char * EndFName;
+    char * EndPath;
+    int PathLen = strlen(Path);
+    WORD DirInode = 4;
+
+    EndPath = (char*)&Path[PathLen];
+    EndFName = (char*)memchr(Path, '/', PathLen);
+    while (1) {        
+        if(EndFName < EndPath){
+            EndFName++;
+            BeginFName = EndFName;
+            EndFName = (char*)memchr(BeginFName, '/', PathLen);
+            if(EndFName == 0) {
+                EndFName = EndPath;
+            }
+            DirInode = uFS_SearchInodeInDir(DirInode, BeginFName, (BYTE)(EndFName - BeginFName));
+        } else 
+            break;
+
+    }
+    return DirInode;
+}
+
+WORD uFS_SearchInodeInDir(WORD DirInode, const char * FileName, BYTE FileNameLen)
+{
+    uFS_FILE * DirFile;
+    FILESTATE Flags;
+    DIR_RECORD Dir;
+
+    Flags.Enums.Binary = uFS_BINARY;
+    Flags.Enums.Mode = uFS_MODE_READ;
+    
+    DirFile = uFS_FileOpen(DirInode, Flags);
+    if(DirFile == NULL)
+        return uFS_INVALID_HANDLE;
+
+    while(uFS_fread((BYTE*)&Dir, 3, 1, DirFile) == 3){
+        if (FileNameLen == (Dir.bNameLength - 1)) {   
+            // читаем имя файла
+            if(uFS_fread((BYTE*)&Dir.pcFileName, Dir.bNameLength, 1, DirFile) < 0){
+                // ошибка чтения файла директории
+                return uFS_INVALID_HANDLE;
+            }
+            // сравниваем как кусок памяти
+            if(memcmp(FileName,Dir.pcFileName, FileNameLen) == 0){
+                // если нашли, закрываем текущий файл директории и 
+                // возвращаем Inode найденного файла или директории
+                uFS_fclose(DirFile);
+                return Dir.wInodeID;
+            }
+        } else {
+            if(uFS_fseek(DirFile, Dir.bNameLength, uFS_SEEK_CUR) < 0){
+                // ошибка чтения файла директории
+                return uFS_INVALID_HANDLE;
+            }
+        }
+    }
+    return uFS_INVALID_HANDLE;
+}
+
+// ***************************************************************************
+// закрытие файла
+int uFS_fclose( uFS_FILE * stream)
+{
+    stream->ErrorState = uFS_ERROR_FREE_RECORD;
+    return 0;
+}
+
+// ***************************************************************************
+// открытие файла по номеру Inode
+uFS_FILE *  uFS_FileOpen(WORD wInode, FILESTATE Flags)
+{
+    INODE_RECORD Inode;
+    BYTE bFreeRecordId = 0;
+    WORD wFoundInode = 0;
+    uFS_FILE * InodeFile = &OpenFileArray[0];
+    BYTE RecordFound = 0;
+
+    // Плохо =(
+//  если файл уже открыт вернём указатель 
+//     for ( int i = 0; i < uFS_MAX_OPENED_FILE + 3; i++){
+//         if((OpenFileArray[i].ErrorState == uFS_ERROR_NO_ERROR)&&(OpenFileArray[i].Inode.wInodeID == wInode)){
+//             return &OpenFileArray[i];
+//         }
+//     }
+
+    // ищем свободный хендл в таблице
+    for ( int i = 0; i < uFS_MAX_OPENED_FILE + 3; i++){
+        if(OpenFileArray[i].ErrorState == uFS_ERROR_FREE_RECORD){
+            bFreeRecordId = i;
+            break;
+        }        
+    }
+    if(bFreeRecordId == 0)
+        return NULL;
+
+    // ищем в файле инодов Inode с заданным ID
+    uFS_fseek( InodeFile, 0, uFS_SEEK_SET);
+
+    while(uFS_fread((BYTE*)&Inode, sizeof(WORD), 1, InodeFile) == sizeof(WORD)){
+
+        if(Inode.wInodeID == wInode) {
+            if(uFS_fread((BYTE*)&Inode.wFlags, sizeof(Inode) - sizeof(WORD), 1, InodeFile)< 0){
+                break;
+            }
+            RecordFound = 1;
+            break;
+        } else {
+            if(uFS_fseek(InodeFile, sizeof(Inode) - sizeof(WORD), uFS_SEEK_CUR) < 0){
+                break;
+            }
+        }     
+    }
+
+    
+    switch(Flags.Enums.Mode){
+
+    case uFS_MODE_READ: // Открываем для чтения
+        if (!RecordFound){
+            return NULL;
+        }
+        // файл с таким InodeID существует
+        memcpy(&OpenFileArray[bFreeRecordId].Inode, &Inode, sizeof(INODE_RECORD));
+        OpenFileArray[bFreeRecordId].ErrorState = uFS_ERROR_NO_ERROR;
+        OpenFileArray[bFreeRecordId].Flags.Val = Flags.Val;
+        // установить указатель в начало файла
+        OpenFileArray[bFreeRecordId].DataPointer = 0;
+        return &OpenFileArray[bFreeRecordId];
+        break;  
+
+    case uFS_MODE_WRITE: // Открываем его для записи            
+        if (RecordFound){
+            // удалить файл.
+        }
+        // создать новый.
+        // установить указатель в начало файла
+        break;
+
+    case uFS_MODE_APPEND:
+        if (RecordFound){
+            // открыть файл
+        }else{
+            // если нет создать новый
+        }
+        // установить указатель в конец файла
+        break;
+    default:
+        break;
+    }        
+    
+   return NULL;
+}
+
+
+// ***************************************************************************
 /*
 "r"     read: Open file for input operations. The file must exist.
 "w"     write: Create an empty file for output operations. If a file with the same name already exists, 
@@ -938,7 +1175,7 @@ int uFS_Init()
 "a+"    append/update: Open a file for update (both for input and output) with all output 
         operations writing data at the end of the file. Repositioning operations 
         (fseek, fsetpos, rewind) affects the next input operations, but output operations 
-        (move the position back to the end of file. The file is created if it does not exist.
+        move the position back to the end of file. The file is created if it does not exist.
 text:
 r, r+, rt, rt+, r+t
 w, w+, wt, wt+, w+t
@@ -954,160 +1191,188 @@ ab, ab+, a+b
 
 Если файл на запись, выделяем буфер
 */
-
-uFS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
+// ***************************************************************************
+uFS_FILE *  uFS_fopen ( const char * filename, const char * mode )   //Open file
 {
     int i;
-    //FILESTATE State;
-    uFS_FILE * Stream = NULL;
+    FILESTATE Flags;
+    WORD wInode;
+    uFS_FILE * Stream;
+
+    Flags.Val = 0;
     
     if ((filename == NULL)||(mode == NULL)) {
         return NULL;
     }
 
-    for (i = 0; i < uFS_MAX_OPENED_FILE + 3; i++){
-        if(OpenFileArray[i].ErrorState == uFS_ERROR_FREE_RECORD){
-            Stream = &OpenFileArray[i];
-        }
-    }
-
-    if(Stream == NULL)
-        return NULL;
-    
-    Stream->Flags.Val = 0;
-
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 4; i++)
     {
         switch (mode[i])
         {
         // взаимоисключающие
         case 'r':
-            Stream->Flags.bits.RE = 1;
-            Stream->Flags.bits.WE = 0;
-            Stream->Flags.bits.Renew = 0;
-            Stream->Flags.bits.WrToEnd = 0;
-            Stream->Flags.bits.New = 0;
+            Flags.Enums.Mode = uFS_MODE_READ;
             break;
         case 'w':
-            Stream->Flags.bits.WE = 1;
-            Stream->Flags.bits.RE = 0;
-            Stream->Flags.bits.Renew = 1;
-            Stream->Flags.bits.WrToEnd = 0;
-            Stream->Flags.bits.New = 1;
+            Flags.Enums.Mode = uFS_MODE_WRITE;
             break;
         case 'a':
-            Stream->Flags.bits.WE = 1;
-            Stream->Flags.bits.RE = 0;
-            Stream->Flags.bits.Renew = 0;
-            Stream->Flags.bits.WrToEnd = 1;
-            Stream->Flags.bits.New = 1;
+            Flags.Enums.Mode = uFS_MODE_APPEND;
             break;
         // модификаторы
         case '+':
-            Stream->Flags.bits.WE = 1;
-            Stream->Flags.bits.RE = 1;
+            switch (Flags.Enums.Mode)
+            {
+            case uFS_MODE_READ: 
+                Flags.Enums.Mode = uFS_MODE_READ_PLUS;
+            	break;
+            case uFS_MODE_WRITE: 
+                Flags.Enums.Mode = uFS_MODE_WRITE_PLUS;
+                break;
+            case uFS_MODE_APPEND: 
+                Flags.Enums.Mode = uFS_MODE_APPEND_PLUS;
+                break;
+            default:
+                break;
+            }
             break;
         case 'b':
-            Stream->Flags.bits.Binary = 1;
+            Flags.Enums.Binary = uFS_BINARY;
             break;
         case 't':
-            Stream->Flags.bits.Binary = 0;
+            Flags.Enums.Binary = uFS_TEXT;
+            break;
+        case 'd':
+            Flags.Enums.Dir = uFS_RECORD_IS_DIR;
             break;
         // конец строки
         case '\0':
-            i = 3;
+            i = 4;
             break;
         default:
             return NULL;
         }
     }
-    return NULL;
+
+    wInode = uFS_GetInodeByPath(filename);
+
+    if (wInode == uFS_INVALID_HANDLE) {
+        // файла нет 
+    } else {
+        // файл есть
+        
+    }
+       
+    Stream = uFS_FileOpen( wInode, Flags);
+    return Stream;
 }
 
 
+// ***************************************************************************
 // Wite block of data from stream
 int uFS_fwrite ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
 {
-    if(stream->Flags.bits.WE == 0) 
-        return -1;
+    if(stream->Flags.Enums.Mode > uFS_MODE_READ) {
+    
+        // дописываем в конец
+        if((stream->Flags.Enums.Mode == uFS_MODE_APPEND) || (stream->Flags.Enums.Mode == uFS_MODE_APPEND_PLUS)){
+            stream->DataPointer = stream->Inode.dwSize;
+        }
 
-    int Cnt = uFSWriteFile(&stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
-    if(Cnt > 0){
-        stream->DataPointer += Cnt;
-        return Cnt;
-    }
-    return Cnt;
-}
-
-// Read block of data from stream
-int uFS_fread ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
-{
-    if(stream->Flags.bits.RE == 0) 
-        return -1;
-
-    int Cnt = uFSReadFile(stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
-    if(Cnt != 0){
-        stream->DataPointer += Cnt;
+        int Cnt = uFS_WriteFile(&stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
+        if(Cnt > 0){
+            stream->DataPointer += Cnt;
+            if(stream->DataPointer > stream->Inode.dwSize){
+                stream->Inode.dwSize = stream->DataPointer;
+            }
+            return Cnt;
+        }
         return Cnt;
     }
     return -1;
 }
 
-#define SEEK_SET 0	// Beginning of file
-#define SEEK_CUR 1	// Current position of the file pointer
-#define SEEK_END 2	// End of file 
+// ***************************************************************************
+// Read block of data from stream
+int uFS_fread ( BYTE * ptr, DWORD size, DWORD count, uFS_FILE * stream )
+{
+    if(  (stream->Flags.Enums.Mode == uFS_MODE_READ) || 
+         (stream->Flags.Enums.Mode == uFS_MODE_WRITE_PLUS) || 
+         (stream->Flags.Enums.Mode == uFS_MODE_APPEND_PLUS))
+    {
 
 
+        int Cnt = uFS_ReadFile(stream->Inode, stream->DataPointer, (BYTE*)ptr, count*size);
+        if(Cnt != 0){
+            stream->DataPointer += Cnt;
+            return Cnt;
+        }
+    }
+    return -1;
+}
+
+/*
+"r"     read: Open file for input operations. The file must exist.
+"w"     write: Create an empty file for output operations. If a file with the same name already exists, 
+        its contents are discarded and the file is treated as a new empty file.
+"a"     append: Open file for output at the end of a file. Output operations always 
+        write data at the end of the file, expanding it. Repositioning operations (fseek, fsetpos, rewind) 
+        are ignored. The file is created if it does not exist.
+"r+"    read/update: Open a file for update (both for input and output). The file must exist.
+"w+"    write/update: Create an empty file and open it for update (both for input and output). 
+        If a file with the same name already exists its contents are discarded and the file is treated as a new empty file.
+"a+"    append/update: Open a file for update (both for input and output) with all output 
+        operations writing data at the end of the file. Repositioning operations 
+        (fseek, fsetpos, rewind) affects the next input operations, but output operations 
+        move the position back to the end of file. The file is created if it does not exist.
+*/
+
+// ***************************************************************************
 int uFS_fseek ( uFS_FILE * stream, int offset, int origin )
 {
-    if(!(stream->Flags.bits.RE || stream->Flags.bits.WE)) 
+    if(stream->Flags.Enums.Mode == uFS_MODE_NONE) 
         return -1;
 
     switch (origin) {
-    case SEEK_SET:
+    case uFS_SEEK_SET:
         if(offset <0)
             return -1;
         if(offset < (int)stream->Inode.dwSize){
-            if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
-                stream->DataPointer = offset;
-            } else return -1;
+            stream->DataPointer = offset;            
         } else {
-            if(stream->Flags.bits.WE) {
+            if(stream->Flags.Enums.Mode == uFS_MODE_READ) {
+                stream->DataPointer = stream->Inode.dwSize;
+                return -1;
+            } else {
                 if(uFS_ExpandFile(&stream->Inode, offset) != 0)
                     return -1;
                 stream->DataPointer = offset;
-            } else if(stream->Flags.bits.RE) {
-                stream->DataPointer = stream->Inode.dwSize;
-                return -1;
-            } else return -1;
+            }
 
         }
     	break;
-    case SEEK_CUR: 
+    case uFS_SEEK_CUR: 
         {
             int res = stream->DataPointer + offset;
             if(res <= 0){
-                if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
-                    stream->DataPointer = 0;
-                } else return -1;
+                stream->DataPointer = 0;                
             } else {
                 if(res > (int)stream->Inode.dwSize){
-                    if(stream->Flags.bits.WE) {
+                    if(stream->Flags.Enums.Mode > uFS_MODE_READ) {
                         if(uFS_ExpandFile(&stream->Inode, res) != 0)
                             return -1;
                         stream->DataPointer = stream->Inode.dwSize;
-                    } else if(stream->Flags.bits.RE) {
+                    } else {
                         stream->DataPointer = stream->Inode.dwSize;
                         return -1;
-                    } else return -1;
-                } else 
-                    if(stream->Flags.bits.RE || stream->Flags.bits.WE) {
-                        stream->DataPointer = res;
-                    } else return -1;
+                    }
+                } else {
+                    stream->DataPointer = res;
+                }
             }
             break;
         }
-    case SEEK_END:
+    case uFS_SEEK_END:
         if (offset < 0) {
             int res = stream->DataPointer + offset;
             if(res <= 0){
@@ -1116,14 +1381,14 @@ int uFS_fseek ( uFS_FILE * stream, int offset, int origin )
                 stream->DataPointer = res;
             }
         } else {
-            if(stream->Flags.bits.WE) {
+            if(stream->Flags.Enums.Mode > uFS_MODE_READ ) {
                 if(uFS_ExpandFile(&stream->Inode, stream->Inode.dwSize + offset) != 0)
                     return -1;
                 stream->DataPointer = stream->Inode.dwSize;
-            } else if(stream->Flags.bits.RE) {
+            } else {
                 stream->DataPointer = stream->Inode.dwSize;
                 return -1;
-            } else return -1;
+            } 
         }
         break;
     default:
@@ -1155,8 +1420,9 @@ int CreateFS()
     fs_root.Inode.dwSize = 0;
     fs_root.Inode.wInodeID = 1;
     fs_root.Inode.wFlags = 0;
-    fs_root.Flags.bits.RE = 1;
-    fs_root.Flags.bits.WE = 1;
+    fs_root.Flags.Enums.Mode = uFS_MODE_WRITE_PLUS;
+    fs_root.Flags.Enums.Binary = uFS_BINARY;
+    fs_root.Flags.Enums.Dir = uFS_RECORD_IS_FILE;
     fs_root.DataPointer = 0;
     fs_root.Inode.wSectorsCount = 0;
     memset(fs_root.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_root.Inode.pwTable));
@@ -1164,8 +1430,9 @@ int CreateFS()
     fs_inode.Inode.dwSize = 0;
     fs_inode.Inode.wInodeID = 2;
     fs_inode.Inode.wFlags = 0;
-    fs_inode.Flags.bits.RE = 1;
-    fs_inode.Flags.bits.WE = 1;
+    fs_inode.Flags.Enums.Mode = uFS_MODE_WRITE_PLUS; 
+    fs_inode.Flags.Enums.Binary = uFS_BINARY;
+    fs_inode.Flags.Enums.Dir = uFS_RECORD_IS_FILE;
     fs_inode.DataPointer = 0;
     fs_inode.Inode.wSectorsCount = 0;
     memset(fs_inode.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_inode.Inode.pwTable));
@@ -1173,8 +1440,9 @@ int CreateFS()
     fs_free.Inode.dwSize = 0;
     fs_free.Inode.wInodeID = 3;
     fs_free.Inode.wFlags = 0;
-    fs_free.Flags.bits.RE = 1;
-    fs_free.Flags.bits.WE = 1;
+    fs_free.Flags.Enums.Mode = uFS_MODE_WRITE_PLUS; 
+    fs_free.Flags.Enums.Binary = uFS_BINARY;
+    fs_free.Flags.Enums.Dir = uFS_RECORD_IS_FILE;
     fs_free.DataPointer = 0;
     fs_free.Inode.wSectorsCount = 0;
     memset(fs_free.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_free.Inode.pwTable));
@@ -1182,8 +1450,9 @@ int CreateFS()
     fs_dir.Inode.dwSize = 0;
     fs_dir.Inode.wInodeID = 4;
     fs_dir.Inode.wFlags = 0;
-    fs_dir.Flags.bits.RE = 1;
-    fs_dir.Flags.bits.WE = 1;
+    fs_dir.Flags.Enums.Mode = uFS_MODE_WRITE_PLUS; 
+    fs_dir.Flags.Enums.Binary = uFS_BINARY;
+    fs_dir.Flags.Enums.Dir = uFS_RECORD_IS_DIR;
     fs_dir.DataPointer = 0;
     fs_dir.Inode.wSectorsCount = 0;
     memset(fs_dir.Inode.pwTable, INVALID_SECTOR_NUMBER, sizeof(fs_dir.Inode.pwTable));
@@ -1218,8 +1487,8 @@ int CreateFS()
 
 
     // создаём файл Инодов
-    uFS_fseek( &fs_inode, 32*1024, SEEK_SET); 
-    uFS_fseek( &fs_inode, 0, SEEK_SET); 
+    uFS_fseek( &fs_inode, 32*1024, uFS_SEEK_SET); 
+    uFS_fseek( &fs_inode, 0, uFS_SEEK_SET); 
 
     //Записываем суперблок
     SuperBlock.InodeTable = fs_inode.Inode.pwTable[0] << DATA_SECTOR_SIZE_BIT;
@@ -1265,6 +1534,8 @@ int CreateFS()
 
     return 0;
 }
+
+// ***************************************************************************
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
     int nRetCode = 0;
@@ -1288,8 +1559,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
         file.Inode.dwSize = 0;
         file.Inode.wInodeID = 0;
         file.Inode.wFlags = 0;
-        file.Flags.bits.RE = 1;
-        file.Flags.bits.WE = 1;
+        file.Flags.Enums.Mode = uFS_MODE_WRITE_PLUS; 
         file.DataPointer = 0;
 
         
@@ -1303,12 +1573,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 
 
 
-        for(int i = 0; i < 11; i++){
-             file.Inode.pwTable[i] = INVALID_SECTOR_NUMBER;
-        }
-        for(DWORD i = 0; i < sizeof(Data)/sizeof(Data[0]); i++){
-            Data[i] = (WORD)i;
-        }
+        
 
         /*Count = SECTORS_COUNT - uFS_GetFreeSectorCount();
         file.Inode.wInodeID++;
