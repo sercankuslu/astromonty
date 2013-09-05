@@ -2,6 +2,26 @@
 
 #include "resource.h"
 
+#define SECTORS_COUNT 65536
+#define SECTOR_SIZE 256
+#define TABLE_SECTOR_SIZE 128
+#define SECTOR_MASK 0x00FF
+#define TABLE_SECTOR_MASK 0x007F
+#define TABLE_SECTOR_SIZE_BIT 7
+#define CLEAN_SECTOR_SIZE 256*1024
+#define CLEAN_SECTOR_COUNT 64
+#define DATA_SECTOR_SIZE_BIT 8
+#define INDERECT_ADDR_x1_SIZE TABLE_SECTOR_SIZE
+#define INDERECT_ADDR_x2_SIZE TABLE_SECTOR_SIZE*TABLE_SECTOR_SIZE
+#define INDERECT_ADDR_x3_SIZE TABLE_SECTOR_SIZE*TABLE_SECTOR_SIZE*TABLE_SECTOR_SIZE
+#define INVALID_SECTOR_NUMBER 0xFFFF
+#define uFS_MAX_OPENED_FILE 10
+#define uFS_INVALID_HANDLE 0xFFFF
+#define uFS_ERROR_FREE_RECORD 0xFF
+#define uFS_ERROR_NO_ERROR 0x00
+#define uFS_INODE_TABLE_ID 2
+#define uFS_FREE_FILE_ID 3
+#define uFS_ROOT_DIR_ID 4
 #define MAX_FILE_NAME_LENGTH 32
 #define uFS_SEEK_SET 0	// Beginning of file
 #define uFS_SEEK_CUR 1	// Current position of the file pointer
@@ -66,6 +86,7 @@ typedef struct _uFS_FILE
     DWORD DataPointer;
     FILESTATE Flags;
     BYTE ErrorState;
+    DWORD InodeOffset;
 } uFS_FILE;
 
 
