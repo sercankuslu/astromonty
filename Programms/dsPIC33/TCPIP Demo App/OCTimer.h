@@ -378,6 +378,7 @@ WORD CalculateMove(RR * rr, OC_RECORD* buf, WORD count);
 double GetAngle(WORD n);
 int GetStatus(WORD n);
 DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
+DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * NewV, double * Rev, double * AccSign);
 /*
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
@@ -385,7 +386,7 @@ int JDToGDate(double JD, DateTime * GDate );
 double JulDay (BYTE D, BYTE M,WORD Y,BYTE h, BYTE m, BYTE s);
 double LM_Sidereal_Time (double jd, double longitude);
 
-void FS_ClearSector(WORD Sector);
+void FS_ClearSector(DWORD Sector);
 void FS_ClearAll();
 void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
 void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);

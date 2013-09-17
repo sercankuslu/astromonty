@@ -196,7 +196,11 @@ void FS_ClearSector(DWORD Addr)
 void FS_ClearAll()
 //------------------------------------------------------------------------------------------------
 {
+#ifdef __C30__
+#else
     memset(FileSystem,0xFF,sizeof(FileSystem));
+#endif
+
 }
 
 //-------------------------------------------------------------------------
@@ -618,6 +622,38 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
 //         }
     }
     return R;
+}
+
+DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * NewV, double * Rev, double * AccSign)
+{
+    double D;
+    //double tx;
+    
+    double T1;
+    DWORD T3 = 0;
+    double U = 1.0;
+
+    if(AccSign != NULL) 
+        U = (*AccSign);
+
+    (*A) = U * (K * (*V) + B);
+
+    D = (*V) * (*V) + 2.0 * (*A) * Dx;
+    if(D >= 0.0){
+        T1 = (-(*V) + sqrt(D))/ (*A);
+        T3 = (DWORD)(T1 / Tstep);
+        //tx = T2 * Tstep;
+        if(NewV != NULL)
+            *NewV = Dx / T1;
+    } else {
+        if(NewV != NULL) 
+            *NewV = 0;
+        if(AccSign != NULL) 
+            *AccSign = -(*AccSign);
+        if(Rev != NULL) 
+            *Rev = -(*Rev);
+    } 
+    return T3;
 }
 
 
