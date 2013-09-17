@@ -49,7 +49,7 @@ typedef DWORD
 */
 DRAW_BUF;
 
-DWORD Buf1Size = 0;
+DWORD Buf1Size = 150;
 DWORD Buf2Size = 0;
 DWORD Buf3Size = 0;
 
@@ -298,13 +298,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 RECT rect;               
                 original = SelectObject(hdc,GetStockObject(DC_PEN)); 
                 GetClientRect(hWnd, &rect);    
-                MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
-                LineTo(hdc, rect.right - 9, rect.bottom - 9);
+                MoveToEx(hdc, rect.left+9, rect.bottom - 9 - rect.bottom /2, NULL);
+                LineTo(hdc, rect.right - 9, rect.bottom - 9 - rect.bottom /2);
                 MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
                 LineTo(hdc, rect.left+9, rect.top);  
                 Px = rect.left + 10 + 100;
-                Py = rect.bottom - 10 - 00 * SizeY ;//- (rect.bottom/4);
-                DrawRRGraph(hdc, rr1.dx, rr1.TimerStep, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
+                Py = rect.bottom - 10 - rect.bottom /2  ;//- (rect.bottom/4);
+                DrawRRGraph(hdc, PI / (360 * 200 * 16), 0.0000002, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
                 //DrawRRGraph(hdc, rr2.dx, rr2.TimerStep, DrawT2Buffer, Buf2Size, SizeX, SizeY, Px, Py); 
                 //DrawRRGraph(hdc, rr3.dx, rr3.TimerStep, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py);                 
                 SelectObject(hdc,original);
@@ -798,7 +798,7 @@ int FS_RemoveFile( FS_FILE * stream)
     return 0;
 }
 
-// From адрес блока внутри файла
+
 // Buf  буфер
 // Count количество байт
 int FS_ReadFile( FS_FILE * stream, BYTE * Buf, WORD Count)
@@ -941,8 +941,8 @@ FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
         case 'a':
             State.FILESTATEbits.WE = 1;
             State.FILESTATEbits.RE = 0;
-            State.FILESTATEbits.WrToEnd = 1;
             State.FILESTATEbits.Renew = 0;
+            State.FILESTATEbits.WrToEnd = 1;
             State.FILESTATEbits.New = 1;
             break;
         // модификаторы
@@ -988,7 +988,7 @@ FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
 
 void Calc()
 {
-    
+    /*
     //DisplayInit();
 
     //ST_COMMANDS Cmd = STC_REQEST_DATA;
@@ -1023,7 +1023,7 @@ void Calc()
     double XT = B * TC * TC / (1 - K * TC);
     //double XL = (XC - XT)- XX / 2;
     rr1.Xend = XT; // здесь удвоенная координата. т.к. после ускорения сразу идет торможение
-*/
+* /
     //WORD Buf[256];
     //WORD BufSize = 256;
 
@@ -1032,25 +1032,26 @@ void Calc()
     const char Name1[] = "RR1";
     BYTE Buf[256];
     FS_FILE stream;
+    FS_FILE stream2;
     DWORD pos = sizeof(FILE_RECORD);
-    
+    */
     
     
     
     //OCSetup(); 
-    CreateFileSystem();
-    FS_OpenFile( &stream, 0);
-    DWORD Addr = FS_GetAddr(&stream);    
-    FS_ReadFile( &stream, Buf, pos);
-    FS_ReadFile( &stream, Buf, pos);
-    FS_OpenFile( &stream, 1*pos);
-    stream.FilePos = 1024;
-    Addr = FS_GetAddr(&stream);
+//     CreateFileSystem();
+//     FS_OpenFile( &stream, 0);
+//     DWORD Addr = FS_GetAddr(&stream);    
+//     FS_ReadFile( &stream, Buf, pos);
+//     FS_ReadFile( &stream, Buf, pos);
+//     FS_OpenFile( &stream2, 1*pos);
+//     stream2.FilePos = 1024;
+//     Addr = FS_GetAddr(&stream2);
 
 
     //FS_fsetpos ( &stream, &pos );  //Set position indicator of stream
     //ReadFromFile(0, 8, Buf, 8);
-
+    /*
     char * r;
     char * r1;
     char * r2;
@@ -1182,6 +1183,7 @@ void Calc()
             }
         }
     }
+    / *
     if(rr2.CmdCount>0){
         Buf2Size = sizeof(DrawT2Buffer)/sizeof(DrawT2Buffer[0]);
         for(DWORD i = 0; i < Buf2Size;i++){         
@@ -1210,6 +1212,22 @@ void Calc()
             }
         }
     }*/
+    
+    double K = -3.384858359;
+    double B = 40.27981447;
+    double V = 0.0;
+    double X = 0;
+    double dx = PI / (360 * 200 * 16); //0.1125;
+    double A = K*V + B;
+    double Tx = (-V+sqrt(V * V + 2.0 * A * dx))/(A);
+    //Buf1Size = 3200 * 10;
+    for (int i = 0; i < sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);i++) {
+        DrawT1Buffer[i].r = Tx / 0.0000002;
+        V = dx / Tx;
+        A = K * V + B;
+        Tx = (-V + sqrt(V * V + 2.0 * A * dx))/(A);
+    }
+
 }
 void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
@@ -1233,104 +1251,107 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
     DWORD LV = 0;  
     DWORD KA = 0;
     DWORD LA = 0;  
-    DWORD T = 0;
-    DWORD T1 = 0;
-    DWORD T2 = 0;
-    double DX = 0;
-    double DY = 0;  
+    double T = 0;
+    double T1 = 0;
+    double T2 = 0;
+    DWORD T3 = 0;
+    //SizeY = 20;
+    //SizeX = 20;
+    double K = -3.384858359;
+    double B = 40.27981447;
     double V = 0;
-    double V1 = 0;
-    double dT = 0;
-    double A = 0;
-    double K = rr1.K;
-    double B = rr1.B;
-    double TT = 0;
-    double dV = 0;
-    SizeY = 20;
-    SizeX = 20;
+    double X = 0;
+    double U = 1.0;
+    DWORD StepsPerRound = 3200;
+    double Dx = 1.0/(double)StepsPerRound;//180.0 / (360.0 * 200.0 * 16.0); //0.1125;
+    double A;// = U * (K*V + B);
+    double tx;// = (-V+sqrt(V * V + 2.0 * A * Dx))/(A);
+    double R = 1.0;
+    double D ;
+
     MoveToEx(hdc, TX.x, TX.y, NULL);
-    for(DWORD i = 0; i < BufSize; i++)
+
+    DWORD M = 8;
+
+    for(DWORD i = 0; i <= StepsPerRound*80; i++)
     {  
-       
-        T2 = T1;
-        T1 = Buf[i].r;
-        //while(T1 <= T){
-        //    T1 += 65536;
-        //}
-        if(T2 == T1){
-            break;
+        if((i == StepsPerRound*20)||(i == StepsPerRound*60 )) 
+            U = -U;
+        
+        //A = U * (K * V + B); // A = U * f(V);
+        T3 = GetMinInterval( &V, &A, Dx, 0.0000002, K, B, &V, &R, &U);
+        tx = T3 * 0.0000002;
+        X += Dx * R;
+        T += tx;// / 0.0000002;
+        /*
+        A = U * (K * V + B); // A = U * f(V);
+        D = V * V + 2.0 * A * Dx;
+        if(D >= 0.0){
+            T1 = (-V + sqrt(D))/A;
+            T2 = T1 / 0.000000200;
+            T3 = (DWORD)T2;
+            tx = T2 * 0.000000200;
+        } else {
+            //tx = (-V + sqrt(-D))/(A);
+        }*/
+
+        TX.x = Px + T * M * 20;
+        TX.y = Py - X * M;
+
+        TV.x = Px + T * M * 20;
+        TV.y = Py - R * V * M;
+
+        TA.x = Px + T * M * 20;
+        TA.y = Py - A * M;
+        if(i == 0) TA1 = TA;
+
+        /*
+        V = Dx / tx;
+        T += tx;// / 0.0000002;
+        if(D < 0) {
+            V = 0;
+            U = -U;
+            R = -R;
+        } else {
+            X += Dx * R;
         }
-        T = T1;
-        DX = (T * TimerStep * 10000/ SizeX);
-        DY = (i * dx * 1000 / SizeY);
-        TX.x = Px + (int)DX;
-        TX.y = Py - (int)DY;
-        KX = TX.x;
-        TT = T * TimerStep;
-        Tx.x = Px + (int)DX;
-        Tx.y = Py - (int)(B*1000*TT * TT/((1-K*TT)*SizeY));
-        Tv.x = Px + (int)DX;
-        Tv.y = Py - (int)(B*1000*TT*(2-K*TT)/((1-K*TT)*(1-K*TT)*SizeY));
-        Ta.x = Px + (int)DX;
-        Ta.y = Py - (int)(B*2*1000/((1-K*TT)*(1-K*TT)*(1-K*TT)*SizeY));
-        //if(KX!=LX)
-        {
-            //LX = KX;
-            //SetPixel(hdc, TX->x, TX->y,RGB(0,150,150));
-            SetDCPenColor(hdc,RGB(0,0,250));
-            MoveToEx(hdc, TX1.x, TX1.y, NULL);
-            LineTo(hdc, TX.x, TX.y);
+        */
+
+        if((TX.x != TX1.x)||(TX.y != TX1.y)){
+            SetPixel(hdc, TX.x, TX.y, RGB(0,0,250));
+//             SetDCPenColor(hdc,RGB(0,0,250));
+//             MoveToEx(hdc, TX1.x, TX1.y, NULL);
+//             LineTo(hdc, TX.x, TX.y);
             TX1 = TX;
         }
 
-        //if(i>1)
-        {
-            dT = (T1 - T2) * TimerStep;
-            
-            if(dT > 0.0){
-                V1 = V;
-                V = dx / dT;
-                //dV = (V - V1);
-                //A = dV / dT;  
-            }
-                        
-            TV.x = Px + (int)DX;
-            TV.y = Py - (int)(V * 1000) / SizeY;
-
-           
-
-            //TA.x = Px + (int) DX;
-            //TA.y = Py - (int)(A * 1 / SizeY);
-
-            KV = TV.x;
-            if(KV!=LV)
-            {
-                LV = KV;
-                SetDCPenColor(hdc,RGB(0,250,0));
-                MoveToEx(hdc, TV1.x, TV1.y, NULL);
-                LineTo(hdc, TV.x, TV.y);
-                TV1 = TV;
-                //SetDCPenColor(hdc,RGB(250,0,0));
-                //MoveToEx(hdc, TA1.x, TA1.y, NULL);
-                //LineTo(hdc, TA.x, TA.y);
-                //TA1 = TA;
-                SetDCPenColor(hdc,RGB(0,0,128));
-                MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
-                LineTo(hdc, Tx.x, Tx.y);
-                Tx1 = Tx;
-                SetDCPenColor(hdc,RGB(0,128,0));
-                MoveToEx(hdc, Tv1.x, Tv1.y, NULL);
-                LineTo(hdc, Tv.x, Tv.y);
-                Tv1 = Tv;
-                SetDCPenColor(hdc,RGB(128,0,0));
-                MoveToEx(hdc, Ta1.x, Ta1.y, NULL);
-                LineTo(hdc, Ta.x, Ta.y);
-                Ta1 = Ta;
-            }
+        if((TV.x != TV1.x)||(TV.y != TV1.y)){
+            SetPixel(hdc, TV.x, TV.y, RGB(0,250,0));
+//             SetDCPenColor(hdc,RGB(0,250,0));
+//             MoveToEx(hdc, TV1.x, TV1.y, NULL);
+//             LineTo(hdc, TV.x, TV.y);
+            TV1 = TV;
         }
-       
+        if((TA.x != TA1.x)||(TA.y != TA1.y)){
+            SetPixel(hdc, TA.x, TA.y, RGB(250,0,0));
+//             SetDCPenColor(hdc,RGB(250,0,0));
+//             MoveToEx(hdc, TA1.x, TA1.y, NULL);
+//             LineTo(hdc, TA.x, TA.y);
+            TA1 = TA;
+        }
         
-        //T += Buf[i].R;
+//         SetDCPenColor(hdc,RGB(0,0,128));
+//         MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
+//         LineTo(hdc, Tx.x, Tx.y);
+//         Tx1 = Tx;
+//         SetDCPenColor(hdc,RGB(0,128,0));
+//         MoveToEx(hdc, Tv1.x, Tv1.y, NULL);
+//         LineTo(hdc, Tv.x, Tv.y);
+//         Tv1 = Tv;
+//         SetDCPenColor(hdc,RGB(128,0,0));
+//         MoveToEx(hdc, Ta1.x, Ta1.y, NULL);
+//         LineTo(hdc, Ta.x, Ta.y);
+//         Ta1 = Ta;
     }   
 }
 void GetItemRect(HWND hDlg, RECT * rect, int nIDDlgItem)
