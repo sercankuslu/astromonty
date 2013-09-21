@@ -66,6 +66,20 @@ typedef struct DateTimeStruct {
 #define Grad_to_Rad 0.017453292519943295
 #define Rad_to_Grad 57.295779513082323
 
+typedef struct _OC_INTERVAL_CALC{
+    double V;           // V        текущая скорость
+    double A;           // A        текущее ускорение
+    double Dx;          // Dx       шаг координаты
+    double Tstep;       // Tstep    шаг таймера
+    double K;           // K B      константы в функции зависимости A от V  A = KV+B
+    double B;
+    double Rev;         // Rev      знак направления
+    double AccSign;     // AccSign  знак ускорения
+    double MaxSpeed;    // MaxSpeed максимальная скорость
+    double T1;
+    DWORD Tx;           // количество интервалов Tstep в вычисленном промежутке времени
+} OC_INTERVAL_CALC;
+
 typedef union _STATE_VALUE{
     double Speed;
     double Angle;
@@ -378,7 +392,9 @@ WORD CalculateMove(RR * rr, OC_RECORD* buf, WORD count);
 double GetAngle(WORD n);
 int GetStatus(WORD n);
 DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
-DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * NewV, double * Rev, double * AccSign);
+DWORD GetMinInterval(OC_INTERVAL_CALC * Intreval);
+void GetAlgParams(double V, double K, double B, double dx, double * T, LONG * X);
+//DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * Rev, double * AccSign, double MaxSpeed);
 /*
 int GDateToJD(DateTime GDate, int * JDN, double * JD);
 int JDToGDate(double JD, DateTime * GDate );
