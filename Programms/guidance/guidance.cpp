@@ -28,9 +28,9 @@ extern RR rr3;
 #define FIRST_TIMER 1
 #define SECOND_TIMER 2
 #define TH_TIMER 3
-#define FIRST_TIMER_INTERVAL 200 
+#define FIRST_TIMER_INTERVAL 100 
 #define SECOND_TIMER_INTERVAL 1000 
-#define TH_TIMER_INTERVAL 1000 
+#define TH_TIMER_INTERVAL 100
 int nTimerID;
 HINSTANCE hInst;// текущий экземпляр
 HWND hWindow;
@@ -53,9 +53,11 @@ DWORD Buf1Size = 150;
 DWORD Buf2Size = 0;
 DWORD Buf3Size = 0;
 
-OC_RECORD DrawT1Buffer[576000];
-OC_RECORD DrawT2Buffer[576000];
-OC_RECORD DrawT3Buffer[576000];
+double CurrTime = 0.0;
+
+OC_RECORD DrawT1Buffer[500000];
+//OC_RECORD DrawT2Buffer[576000];
+//OC_RECORD DrawT3Buffer[576000];
 
 //double DrawVBuffer[576000];
 // Отправить объявления функций, включенных в этот модуль кода:
@@ -71,6 +73,21 @@ void Calc();
 void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py);
 void DrawIface( LPPAINTSTRUCT ps, RECT * rect);
 int BerkleyClient();
+
+
+TIMERPROC ThTimerProc(HWND hWnd, UINT a, UINT_PTR b, DWORD c)
+{
+    CurrTime += TH_TIMER_INTERVAL * 0.001;
+    if(CurrTime > 15.0){
+        CurrTime = 0.0;
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    InvalidateRect(hWnd, NULL, FALSE);
+    return 0;
+}
+
+
+
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                          HINSTANCE hPrevInstance,
@@ -96,12 +113,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GUIDANCE));
 
-    //SetTimer(hWindow, TH_TIMER, TH_TIMER_INTERVAL, (TIMERPROC) NULL);
+    SetTimer(hWindow, TH_TIMER, TH_TIMER_INTERVAL, (TIMERPROC) ThTimerProc);
     if (!IsWindow(hwndDialog)) { 
         // окно в немодальном режиме                        
         //hwndDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWindow, (DLGPROC)KeyDialog); 
         //ShowWindow(hwndDialog, SW_SHOW);
-        //SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
+       // SetTimer(hwndDialog, FIRST_TIMER, FIRST_TIMER_INTERVAL, (TIMERPROC) NULL);
         //SetTimer(hwndDialog, SECOND_TIMER, SECOND_TIMER_INTERVAL, (TIMERPROC) NULL);
     }
 
@@ -280,14 +297,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         return DefWindowProc(hWnd, message, wParam, lParam);
                 }
                 break;
-         case WM_TIMER:  
-                switch (wParam) { 
-                case TH_TIMER: 
-                    //Calc();	
-                    InvalidateRect(hWnd, NULL, TRUE);
-                    k = true;
-                }
-                break;
+//          case WM_TIMER:  
+//                 switch (wParam) { 
+//                 case TH_TIMER: 
+//                     CurrTime += TH_TIMER_INTERVAL * 0.001;
+//                     if(CurrTime > 15.0){
+//                         CurrTime = 0.0;
+//                         InvalidateRect(hWnd, NULL, TRUE);
+//                     }
+//                     //Calc();	
+//                     InvalidateRect(hWnd, NULL, FALSE);
+//                     //k = true;
+//                 }
+//                 break;
          case WM_PAINT:{
                 hdc = BeginPaint(hWnd, &ps);
                 static DWORD SizeX = 10;
@@ -297,14 +319,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 HGDIOBJ original = NULL;
                 RECT rect;               
                 original = SelectObject(hdc,GetStockObject(DC_PEN)); 
-                GetClientRect(hWnd, &rect);    
-                MoveToEx(hdc, rect.left+9, rect.bottom - 9 - rect.bottom /2, NULL);
-                LineTo(hdc, rect.right - 9, rect.bottom - 9 - rect.bottom /2);
-                MoveToEx(hdc, rect.left+9, rect.bottom - 9, NULL);
-                LineTo(hdc, rect.left+9, rect.top);  
-                Px = rect.left + 10 + 100;
+                GetClientRect(hWnd, &rect); 
+                Px = rect.left + 10;
                 Py = rect.bottom - 10 - rect.bottom /2  ;//- (rect.bottom/4);
-                DrawRRGraph(hdc, PI / (360 * 200 * 16), 0.0000002, DrawT1Buffer, Buf1Size, SizeX, SizeY, Px, Py);
+
+                MoveToEx(hdc, Px - 1, Py - 1, NULL);
+                LineTo(hdc, rect.right - 9, Py - 1);
+                MoveToEx(hdc, Px - 1, rect.bottom - 9, NULL);
+                LineTo(hdc, Px - 1, rect.top);  
+
+                DrawRRGraph(hdc, PI / (360 * 200 * 16), 0.0000002, DrawT1Buffer, Buf1Size, rect.right, rect.bottom, Px, Py);
                 //DrawRRGraph(hdc, rr2.dx, rr2.TimerStep, DrawT2Buffer, Buf2Size, SizeX, SizeY, Px, Py); 
                 //DrawRRGraph(hdc, rr3.dx, rr3.TimerStep, DrawT3Buffer, Buf3Size, SizeX, SizeY, Px, Py);                 
                 SelectObject(hdc,original);
@@ -1213,21 +1237,6 @@ void Calc()
         }
     }*/
     
-    double K = -3.384858359;
-    double B = 40.27981447;
-    double V = 0.0;
-    double X = 0;
-    double dx = PI / (360 * 200 * 16); //0.1125;
-    double A = K*V + B;
-    double Tx = (-V+sqrt(V * V + 2.0 * A * dx))/(A);
-    //Buf1Size = 3200 * 10;
-    for (int i = 0; i < sizeof(DrawT1Buffer)/sizeof(DrawT1Buffer[0]);i++) {
-        DrawT1Buffer[i].r = Tx / 0.0000002;
-        V = dx / Tx;
-        A = K * V + B;
-        Tx = (-V + sqrt(V * V + 2.0 * A * dx))/(A);
-    }
-
 }
 void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
@@ -1255,6 +1264,7 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
     double T1 = 0;
     double T2 = 0;
     DWORD T3 = 0;
+    LONG X1 = 0;
     //SizeY = 20;
     //SizeX = 20;
     double K = -3.384858359;
@@ -1262,87 +1272,130 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
     double V = 0;
     double X = 0;
     double U = 1.0;
+    double TmrStep = 0.0000002;
     DWORD StepsPerRound = 3200;
     double Dx = 1.0/(double)StepsPerRound;//180.0 / (360.0 * 200.0 * 16.0); //0.1125;
-    double A;// = U * (K*V + B);
-    double tx;// = (-V+sqrt(V * V + 2.0 * A * Dx))/(A);
+    double A = 0.0;// = U * (K*V + B);
+    double tx = 0.0;// = (-V+sqrt(V * V + 2.0 * A * Dx))/(A);
     double R = 1.0;
-    double D ;
+    double a = 0.0;
+    double a1 = 0.0;
+    bool Pixel = true;
 
     MoveToEx(hdc, TX.x, TX.y, NULL);
 
-    DWORD M = 8;
+    double Mx = 100;
+    double My = 9;
+    OC_INTERVAL_CALC Intrerval;
+    Intrerval.A = A;
+    Intrerval.V = V;
+    Intrerval.K = K;
+    Intrerval.B = B;
+    Intrerval.AccSign = U;
+    Intrerval.Rev = R;
+    Intrerval.Dx = Dx;
+    Intrerval.Tstep = TmrStep;
+    Intrerval.MaxSpeed = 100.0;
 
-    for(DWORD i = 0; i <= StepsPerRound*80; i++)
+
+    for(DWORD i = 0; i < StepsPerRound*120; i++)
     {  
-        if((i == StepsPerRound*20)||(i == StepsPerRound*60 )) 
-            U = -U;
-        
-        //A = U * (K * V + B); // A = U * f(V);
-        T3 = GetMinInterval( &V, &A, Dx, 0.0000002, K, B, &V, &R, &U);
-        tx = T3 * 0.0000002;
-        X += Dx * R;
+        if( (i == StepsPerRound*20)
+            //||(i == StepsPerRound*30)
+            //||(i == StepsPerRound*40)
+            //||(i == StepsPerRound*50)
+            ||(i == StepsPerRound*60)
+            //||(i == StepsPerRound*70)
+            //||(i == StepsPerRound*80)
+            //||(i == StepsPerRound*90)
+            ||(i == StepsPerRound*100)
+            ) 
+           Intrerval.AccSign = -Intrerval.AccSign;
+
+        T3 = GetMinInterval( &Intrerval);
+        if(T3 > 65535){
+            SetPixel(hdc, 50, 50, RGB(250,0,0));
+        }
+
+        if(Intrerval.A <= 0.1){
+            //Intrerval.AccSign = -Intrerval.AccSign;
+            //break;
+        }
+
+        if(Intrerval.V >= 10.0){
+            //break;
+        }
+        //DrawT1Buffer[i].r = T3;
+        tx = Intrerval.T1;//T3 * Intrerval.Tstep;
+        X += Intrerval.Dx * Intrerval.Rev;
         T += tx;// / 0.0000002;
-        /*
-        A = U * (K * V + B); // A = U * f(V);
-        D = V * V + 2.0 * A * Dx;
-        if(D >= 0.0){
-            T1 = (-V + sqrt(D))/A;
-            T2 = T1 / 0.000000200;
-            T3 = (DWORD)T2;
-            tx = T2 * 0.000000200;
-        } else {
-            //tx = (-V + sqrt(-D))/(A);
-        }*/
+        a = (Intrerval.A - a1)/tx;
+        a1 = Intrerval.A;
 
-        TX.x = Px + T * M * 20;
-        TX.y = Py - X * M;
+        TX.x = Px + T * Mx;
+        TX.y = Py - X * My;
 
-        TV.x = Px + T * M * 20;
-        TV.y = Py - R * V * M;
+        TV.x = Px + T * Mx;
+        TV.y = Py - Intrerval.Rev * Intrerval.V * My;
 
-        TA.x = Px + T * M * 20;
-        TA.y = Py - A * M;
+        TA.x = Px + T * Mx;
+        TA.y = Py - Intrerval.A * My;
+
+        Ta.x = Px + T * Mx;
+        Ta.y = Py - a * My;
+
         if(i == 0) TA1 = TA;
 
-        /*
-        V = Dx / tx;
-        T += tx;// / 0.0000002;
-        if(D < 0) {
-            V = 0;
-            U = -U;
-            R = -R;
-        } else {
-            X += Dx * R;
-        }
-        */
-
         if((TX.x != TX1.x)||(TX.y != TX1.y)){
-            SetPixel(hdc, TX.x, TX.y, RGB(0,0,250));
-//             SetDCPenColor(hdc,RGB(0,0,250));
-//             MoveToEx(hdc, TX1.x, TX1.y, NULL);
-//             LineTo(hdc, TX.x, TX.y);
+            if(Pixel)
+                SetPixel(hdc, TX.x, TX.y, RGB(0,0,250));
+            else{
+                SetDCPenColor(hdc,RGB(0,0,250));
+                MoveToEx(hdc, TX1.x, TX1.y, NULL);
+                LineTo(hdc, TX.x, TX.y);
+            }
             TX1 = TX;
         }
 
         if((TV.x != TV1.x)||(TV.y != TV1.y)){
-            SetPixel(hdc, TV.x, TV.y, RGB(0,250,0));
-//             SetDCPenColor(hdc,RGB(0,250,0));
-//             MoveToEx(hdc, TV1.x, TV1.y, NULL);
-//             LineTo(hdc, TV.x, TV.y);
+            if(Pixel)
+                SetPixel(hdc, TV.x, TV.y, RGB(0,250,0));
+            else {
+                SetDCPenColor(hdc,RGB(0,250,0));
+                MoveToEx(hdc, TV1.x, TV1.y, NULL);
+                LineTo(hdc, TV.x, TV.y);
+            }
             TV1 = TV;
         }
         if((TA.x != TA1.x)||(TA.y != TA1.y)){
-            SetPixel(hdc, TA.x, TA.y, RGB(250,0,0));
-//             SetDCPenColor(hdc,RGB(250,0,0));
-//             MoveToEx(hdc, TA1.x, TA1.y, NULL);
-//             LineTo(hdc, TA.x, TA.y);
+            if(Pixel)
+                SetPixel(hdc, TA.x, TA.y, RGB(250,0,0));
+            else {
+                SetDCPenColor(hdc,RGB(250,0,0));
+                MoveToEx(hdc, TA1.x, TA1.y, NULL);
+                LineTo(hdc, TA.x, TA.y);
+            }
             TA1 = TA;
         }
-        
-//         SetDCPenColor(hdc,RGB(0,0,128));
-//         MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
-//         LineTo(hdc, Tx.x, Tx.y);
+
+        if((Ta.x != Ta1.x)||(Ta.y != Ta1.y)){
+            if(Pixel)
+                SetPixel(hdc, Ta.x, Ta.y, RGB(128,0,0));
+            else {
+                SetDCPenColor(hdc,RGB(250,0,0));
+                MoveToEx(hdc, Ta1.x, Ta1.y, NULL);
+                LineTo(hdc, Ta.x, Ta.y);
+            }
+            Ta1 = Ta;
+        }
+        if(T >= CurrTime) {
+            break;
+        }
+
+
+//          SetDCPenColor(hdc,RGB(0,0,128));
+//          MoveToEx(hdc, Tx1.x, Tx1.y, NULL);
+//          LineTo(hdc, Tx.x, Tx.y);
 //         Tx1 = Tx;
 //         SetDCPenColor(hdc,RGB(0,128,0));
 //         MoveToEx(hdc, Tv1.x, Tv1.y, NULL);

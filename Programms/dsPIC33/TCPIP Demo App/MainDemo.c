@@ -334,6 +334,20 @@ int main(void)
     static DWORD d = 0;
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
+    
+    DWORD StepsPerRound = 3200;
+    OC_INTERVAL_CALC Intrerval;
+    DWORD T3 = 0;
+    Intrerval.A = 0.0;
+    Intrerval.V = 10.0;
+    Intrerval.K = -3.384858359;
+    Intrerval.B = 40.27981447;
+    Intrerval.AccSign = 1.0;
+    Intrerval.Rev = 1.0;
+    Intrerval.Dx = 1.0/(double)StepsPerRound;
+    Intrerval.Tstep = 0.0000002;
+    Intrerval.MaxSpeed = 5.0;
+    T3 = GetMinInterval( &Intrerval);
     //void (*mas[8])(WORD) = {f0,f1,f2,f3,f4,f5,f6,f7};    
     //WORD Count = 10;
     //DMA_ID id = 6;

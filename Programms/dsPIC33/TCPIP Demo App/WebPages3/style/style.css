@@ -112,7 +112,7 @@ body {
 	border-top: 1px dotted #666;
 }
 #leftboth {
-	width: 200px;
+	width: 250px;
 	float: right;	
 }
 #target {
@@ -265,6 +265,10 @@ canvas
 		background-color: #000;
 		cursor: crosshair ;
 	}
+#CanvasBox {
+    /*height: 100%;*/
+    overflow: auto;    
+}
 .tooltip {
     position:absolute;
     z-index:100; /* подсказка должна перекрывать другие элементы */

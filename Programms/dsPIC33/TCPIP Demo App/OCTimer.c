@@ -623,37 +623,50 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
     }
     return R;
 }
-
-DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * NewV, double * Rev, double * AccSign)
+//-----------------------------------------------------------------------------------------------
+// Вычисление интервала между шагами при ускоренном движении 
+// V        текущая скорость
+// A        текущее ускорение
+// Dx       шаг координаты
+// Tstep    шаг таймера
+// K B      константы в функции зависимости A от V  A = KV+B
+// Rev      знак направления
+// AccSign  знак ускорения
+// MaxSpeed максимальная скорость
+// 
+// возвращается количество интервалов Tstep в вычисленном промежутке времени
+//-----------------------------------------------------------------------------------------------
+DWORD GetMinInterval(OC_INTERVAL_CALC * Intrerval) // double * V, double * A, double Dx, double Tstep, double K, double B, double * Rev, double * AccSign, double MaxSpeed)
 {
     double D;
     //double tx;
     
-    double T1;
-    DWORD T3 = 0;
+    
     double U = 1.0;
-
-    if(AccSign != NULL) 
-        U = (*AccSign);
-
-    (*A) = U * (K * (*V) + B);
-
-    D = (*V) * (*V) + 2.0 * (*A) * Dx;
+    // A = AccSign * (K*V + B) = AccSign * f(V)
+    Intrerval->A = Intrerval->AccSign * (Intrerval->K * Intrerval->V + Intrerval->B);
+    // D = V^2 + 2 * A * Dx
+    D = Intrerval->V * Intrerval->V + 2.0 * Intrerval->A * Intrerval->Dx;
     if(D >= 0.0){
-        T1 = (-(*V) + sqrt(D))/ (*A);
-        T3 = (DWORD)(T1 / Tstep);
-        //tx = T2 * Tstep;
-        if(NewV != NULL)
-            *NewV = Dx / T1;
+        // T1 = (-V + sqrt(D))/A
+        Intrerval->T1 = (sqrt(D)-Intrerval->V)/ (Intrerval->A);
+        // V = Dx/T1
+        Intrerval->V = Intrerval->Dx / Intrerval->T1;
+        if(Intrerval->V >= Intrerval->MaxSpeed) {
+            Intrerval->V = Intrerval->MaxSpeed;
+            Intrerval->A = 0;
+            // T1 = Dx/MaxSpeed
+            Intrerval->T1 = Intrerval->Dx / Intrerval->MaxSpeed;
+        }
+        // Tx = T1/Tstep
+        Intrerval->Tx = (DWORD)(Intrerval->T1 / Intrerval->Tstep);
     } else {
-        if(NewV != NULL) 
-            *NewV = 0;
-        if(AccSign != NULL) 
-            *AccSign = -(*AccSign);
-        if(Rev != NULL) 
-            *Rev = -(*Rev);
+        Intrerval->V = 0;
+        Intrerval->A = 0;
+        Intrerval->AccSign = -Intrerval->AccSign;
+        Intrerval->Rev = -Intrerval->Rev;
     } 
-    return T3;
+    return Intrerval->Tx;
 }
 
 
@@ -923,23 +936,6 @@ int PushCmd(RR* rr, GD_STATE cmd, STATE_VALUE Value)
     return 0;
 }
 
-BOOL NeedBreakCmd(GD_STATE CurrentCmd, GD_STATE NextCmd){
-    switch(CurrentCmd){
-        case ST_CONTINOUS:
-            if(NextCmd != ST_CONTINOUS) return TRUE;
-            else return FALSE;
-        break;
-        case ST_STOP:
-        case ST_ACCELERATE:
-        case ST_DECELERATE:
-        case ST_RUN:
-            if(NextCmd == ST_EMERGENCY_STOP) return TRUE;
-            else return FALSE;
-        break;
-        //case 
-    }
-    return FALSE;
-}
 
 int ProcessCmd(RR * rr)
 {

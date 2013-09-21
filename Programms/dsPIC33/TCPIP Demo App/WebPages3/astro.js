@@ -15,7 +15,7 @@ var LocalStarTime = 0;
 var ViewXr;
 var ViewYr;
 var DrawingStar = 0;
-var Follow = false;
+var Follow = true;
 var Loading = false;
 var GeoPosition = {
     Lon : 37.6028,
@@ -280,7 +280,10 @@ function enableFollow(){
     Follow = document.getElementById('followbox').checked;
 }
 function loadCanvas() {
+    onResize();
     document.getElementById('gotobutton').disabled = true;
+
+    //document.getElementById('my_canvas').width = document.getElementById('page').clientWidth - 500;
     StarView = document.getElementById('my_canvas');
     StarView.onmousedown = onMouseDown;
     StarView.updateStars = updateStars;
@@ -290,7 +293,7 @@ function loadCanvas() {
     StarView.onclick = targetSelect;
     StarView.onmouseup = onMouseUp;
     StarView.updateCross = updateCross;
-    var elem = document.getElementById('CanvasBox');
+    var elem = document.getElementById('my_canvas');//('CanvasBox');
     document.getElementById('starScale').value = Scale;
     document.getElementById('starScaleN').value = Scale;
     document.getElementById('starMagn').value = Magnitude;
@@ -307,12 +310,24 @@ function loadCanvas() {
     } else { // IE<9
       elem.attachEvent ("onmousewheel", onMouseWheel);
     }
+    document.body.onresize = onResize;
     var timer = setInterval(UpdateTime, 1000);
     StarView.updateStars();
     updateTargetForm();
-    //загрузка и коррекция координат каталога
+    //загрузка и коррекция координат каталогаs
     correctCoordinate(Tycho2);
     setTimeout(LoadData,200);
+};
+function onResize(){
+    document.getElementById('shadow-one').style.width = document.body.clientWidth * 0.95 + "px";
+    document.getElementById('shadow-one').style.height = document.body.clientHeight + "px";
+    WSizeX = document.getElementById('CanvasBox').clientWidth;
+    WSizeY = document.getElementById('CanvasBox').clientHeight;
+    document.getElementById('my_canvas').width =  WSizeX - 2;
+    document.getElementById('my_canvas').height = WSizeX * 0.8;
+    WSizeY = document.getElementById('CanvasBox').clientHeight;
+    WSizeXd2 = WSizeX/(2*Scale);
+    WSizeYd2 = WSizeY/(2*Scale);
 };
 var NextCat=0;
 function LoadData(){
@@ -461,7 +476,7 @@ function drawStars(Catalog){
         var ArrsLength = Catalog.length;
         var elem = {RA:0,DE:0,mag:0};
         var Starsize;
-        DrawNetwork(ctx,"#003300");
+        DrawNetwork(ctx,"#005500");
         // Звёзды
         //if(0)
         for ( i = 0;i < ArrsLength; i++) {
@@ -473,7 +488,7 @@ function drawStars(Catalog){
             var D = ViewPosition.polarToDecart(elem.RA,elem.DE);
             if(D.V){
                 ctx.beginPath();
-                if(0)
+                if(1)
                 switch (elem.mag){
                     case -1.088: ctx.fillStyle = "blue"; // сириус
                                  ctx.strokeStyle = "blue";
@@ -609,7 +624,7 @@ function updateStars() {
             StarView.drawStars(ViewPosition.Catalog);
             //StarView.drawStars(Test);
             document.getElementById('StarCounter').innerHTML = "Загружено " + Tycho2.length + " звёзд.";
-            document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) + 'px';
+            document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) - 2 + 'px';
         }
         StarView.updateCross();
     }
@@ -700,7 +715,7 @@ function mousemoveCanv(e){
 }
 //поиск в каталоге имени звезды
 function SelectStars(element,index,array){
-    var length = 0.83/(Scale);
+    var length = 1.0/(Scale);
     // на Scale == 1, 0.83 градуса
     if(   (element[0] >= MousePositionStar.X - length)
         &&(element[0] <= MousePositionStar.X + length)
