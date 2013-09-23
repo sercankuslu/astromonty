@@ -61,7 +61,9 @@ function pollAJAX() {
         if(curAjax.ajaxReq.readyState == 4 && curAjax.ajaxReq.status == 200) {
             // If it has a container, write the result
             if(typeof(curAjax.container) == 'function'){
-                curAjax.container(curAjax.ajaxReq.responseXML.documentElement);
+                if(curAjax.ajaxReq.responseXML != null){
+                    curAjax.container(curAjax.ajaxReq.responseXML.documentElement);
+                }
             } else if(typeof(curAjax.container) == 'string') {
                 document.getElementById(curAjax.container).innerHTML = curAjax.ajaxReq.responseText;
             } // (otherwise do nothing for null values)
