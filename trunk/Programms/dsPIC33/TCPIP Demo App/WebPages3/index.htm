@@ -7,6 +7,7 @@
     <script src="./stars/Tycho2.js" type="text/javascript"></script>
     <script src="./astro.js" type="text/javascript"></script>
     <script src="./mchp.js" type="text/javascript"></script>
+    <script src="./stars/StarName.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -65,8 +66,13 @@
                     </span><br />
                     <input id="clock" class="chbox" type="checkbox" onclick="enableHM();" checked="true">Часовое ведение<br />
                     <!-- <output id="Speed" style="margin-left: 15px;">0</output><br /> -->
+                    <div>
                     <input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
                     <input id="stopbutton" type="button" value="Stop" onclick="Stop();">
+                    </div>
+                    <div>
+                    <input id="optionbtn" type="button" value="Option">
+                    </div>
                 </form>
             </div>
         </div>
@@ -83,11 +89,23 @@
                 </form>
             </div>
         </div>
+        <div id="info_Star">
+            <label>Выбрана звезда:</label><br />
+            <label>TYC: </label><output id="info_outTYC"></output><br />
+            <label>HIP: </label><output id="info_outHIP"></output><br />
+            <label>α: </label><output id="info_outSa"></output><br />
+            <label>δ: </label><output id="info_outSg"></output><br /> 
+            <label>BTmag: </label><output id="info_outBTmag"></output><br />
+            <label>VTmag: </label><output id="info_outVTmag"></output>
+        </div>
+        <div id="progressbar"> 
+            <div><label>Загружено:</label><output id="out_starCount"></output></div>
+            <div id="StarCounter"></div>
+            <div style="clear: both;"></div>
+        </div>
     </div>
     <div id="CanvasBox">
-        <canvas id="my_canvas" width="580" height="580"></canvas>    
-        <div id="StarCounter"></div>
-        <div style="clear: both;"></div>
+        <canvas id="my_canvas" width="580" height="580"></canvas> 
     </div>
     <!--X:<output id="X">55° 47' 29.17"</output>
     Y:<output id="Y">55° 47' 29.17"</output>
@@ -98,15 +116,24 @@
     // подсказка с координатами
     new Tooltip({
         elem: $('#my_canvas'),
-        html: "<output id=\"outXt\"></output><br />" +
-        "<output id=\"outYt\"></output>" +
+        html: "<label>α : </label><output id=\"outXt\"></output><br />" +
+        "<label>δ : </label><output id=\"outYt\"></output>" +
         "<div id=\"StarInfo\"> Found star:<br />"+
-        "<output id=\"outTYC\"></output><br />" +
-        "<output id=\"outSa\"></output><br />" +
-        "<output id=\"outSg\"></output><br />" + 
-        "<output id=\"outBTmag\"></output><br />" +
-        "<output id=\"outVTmag\"></output></div>"
+        "<label>TYC:</label><output id=\"outTYC\"></output><br />" +
+        "<label>HIP:</label><output id=\"outHIP\"></output><br />" +
+        "<div id=\"loutName\"><label>Name:</label><output id=\"outName\"></output></div>" +
+        "<label>α : </label><output id=\"outSa\"></output><br />" +
+        "<label>δ : </label><output id=\"outSg\"></output><br />" + 
+        "<label>BTmag : </label><output id=\"outBTmag\"></output><br />" +
+        "<label>VTmag : </label><output id=\"outVTmag\"></output></div>"
     });
+    // Опции
+    //new Tooltip({
+    //    elem: $('#my_canvas'),
+    //    html: "<div>" +
+    //            "<input id=\"optionbtn\" type=\"button\" value=\"Option\">" + 
+    //        "</div>"
+    //});
     <!--
 // Parses the xmlResponse from status.xml and updates the status box
 function updateStatus(xmlData) {

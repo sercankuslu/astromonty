@@ -123,6 +123,15 @@ body {
 	border: 1px dotted #666;
 	font-weight: bold;
 }
+#info_Star{
+	width: 185px;
+	float: right;
+	padding: 10px;
+	margin: 10px;
+	border: 1px dotted #666;
+	font-weight: bold;
+    display:none;
+}
 #control {
 	width: 185px;
 	float: right;
@@ -132,6 +141,14 @@ body {
 	font-weight: bold;
 }
 #status {
+	width: 185px;
+	float: right;
+	padding: 10px;
+	margin: 10px;
+	border: 1px dotted #666;
+	font-weight: bold;
+}
+#progressbar{
 	width: 185px;
 	float: right;
 	padding: 10px;
@@ -283,7 +300,11 @@ canvas
     background: #666;
     box-shadow: 3px 3px 3px rgba(0,0,0,.3);
   }
- 
+.tooltip label {
+    text-align: left;
+    font: italic 14px/1.3 arial, sans-serif; 
+    color: #AAF;
+} 
  #StarCounter{
 	float:left;
 	height: 18px; 

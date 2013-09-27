@@ -625,70 +625,76 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
     float A2;
     float A3;
     int command = 0;
-	
-	if(curHTTP.byteCount > TCPIsGetReady(sktHTTP) + TCPGetRxFIFOFree(sktHTTP))
-		goto ConfigFailure;
-	
-	// Ensure that all data is waiting to be parsed.  If not, keep waiting for 
-	// all of it to arrive.
-	if(TCPIsGetReady(sktHTTP) < curHTTP.byteCount)
-		return HTTP_IO_NEED_DATA;
-	
-	
-	// Read all browser POST data
-	while(curHTTP.byteCount)
-	{
-		// Read a form field name
-		if(HTTPReadPostName(curHTTP.data, 6) != HTTP_READ_OK)
-			goto ConfigFailure;
-			
-		// Read a form field value
-		if(HTTPReadPostValue(curHTTP.data + 6, sizeof(curHTTP.data)-6-2) != HTTP_READ_OK)
-			goto ConfigFailure;
-			
-		// Parse the value that was read
-		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
-		{// 0.004166667 1.0027389629079429924330346780558
-			if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
-    			//GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
-			}else
-			goto ConfigFailure;
-		}
-		else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
-		{// 
-			if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
-    			//GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
-			}else
-				goto ConfigFailure;
-		}
-		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
-		{
-			if(!sscanf((char*)(curHTTP.data+6),"%f", &A3))
-				goto ConfigFailure;
-		}
-		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"stop"))
-		{
-			if(sscanf((char*)(curHTTP.data+6),"%d", &command)){
-				if(command == 1){
-					//BreakCurrentCmd(&rr1);
-					//BreakCurrentCmd(&rr2);	
-					//BreakCurrentCmd(&rr3);
-				}
-			}else
-				goto ConfigFailure;
-		}
-		
-    }   		
-	curHTTP.httpStatus = HTTP_REDIRECT;	
-	
-	return HTTP_IO_DONE;
+    int Errors = 0;
+
+    if(curHTTP.byteCount > TCPIsGetReady(sktHTTP) + TCPGetRxFIFOFree(sktHTTP)){
+        lastFailure = TRUE;
+    }
+    // Ensure that all data is waiting to be parsed.  If not, keep waiting for 
+    // all of it to arrive.
+    if(TCPIsGetReady(sktHTTP) < curHTTP.byteCount)
+        return HTTP_IO_NEED_DATA;
 
 
-ConfigFailure:
-	lastFailure = TRUE;	
-	curHTTP.httpStatus = HTTP_REDIRECT;		
+    // Read all browser POST data
+    while(curHTTP.byteCount)
+    {
+        // Read a form field name
+        if(HTTPReadPostName(curHTTP.data, 6) != HTTP_READ_OK) {
+            lastFailure = TRUE;	
+            break;
+        }
+        // Read a form field value
+        if(HTTPReadPostValue(curHTTP.data + 6, sizeof(curHTTP.data)-6-2) != HTTP_READ_OK) {
+            lastFailure = TRUE;	
+            break;
+        }
 
-	return HTTP_IO_DONE;
+        // Parse the value that was read
+        if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
+        {// 0.004166667 1.0027389629079429924330346780558
+            if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
+                //GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
+            }else {
+                lastFailure = TRUE;	
+                break;
+            }
+        }
+        else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
+        {// 
+            if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
+                //GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
+            }else {
+                lastFailure = TRUE;	
+                break;
+            }
+        }
+        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
+        {
+            if(!sscanf((char*)(curHTTP.data+6),"%f", &A3)) {
+                lastFailure = TRUE;	
+                break;
+            }
+        }
+        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"stop"))
+        {
+            if(sscanf((char*)(curHTTP.data+6),"%d", &command)) {
+                lastFailure = TRUE;	
+                break;
+            }
+            if(command == 1){
+                //BreakCurrentCmd(&rr1);
+                //BreakCurrentCmd(&rr2);	
+                //BreakCurrentCmd(&rr3);
+            }
+        }
+    } 
+    curHTTP.httpStatus = HTTP_REDIRECT;	
+
+    return HTTP_IO_DONE;
+
+
+
 }
 
 
