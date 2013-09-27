@@ -26,13 +26,13 @@ function newAJAXCommand(url, container, repeat, data)
     // Create and send the request
     if(window.XMLHttpRequest) {
         newAjax.ajaxReq = new XMLHttpRequest();
-        newAjax.ajaxReq.open((data==null)?"GET":"POST", newAjax.url, true);
+        newAjax.ajaxReq.open((data==null)?"GET":"POST", newAjax.url + "?r="+Math.random(), true);
         newAjax.ajaxReq.send(data);
     // If we're using IE6 style (maybe 5.5 compatible too)
     } else if(window.ActiveXObject) {
         newAjax.ajaxReq = new ActiveXObject("Microsoft.XMLHTTP");
         if(newAjax.ajaxReq) {
-            newAjax.ajaxReq.open((data==null)?"GET":"POST", newAjax.url, true);
+            newAjax.ajaxReq.open((data==null)?"GET":"POST", newAjax.url + "?r="+Math.random(), true);
             newAjax.ajaxReq.send(data);
         }
     }
@@ -101,7 +101,7 @@ function pollAJAX() {
     }
 
     // Call ourselves again in 10ms
-    setTimeout("pollAJAX()",10);
+    setTimeout("pollAJAX()",100);
 
 }
 
