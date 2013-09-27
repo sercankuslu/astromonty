@@ -343,7 +343,7 @@ function onResize(){
     WSizeX = document.getElementById('page').clientWidth;
     WSizeY = document.getElementById('page').clientHeight;
     document.getElementById('my_canvas').width =  (document.getElementById('page').clientWidth - 430);
-    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*3/5;//document.getElementById('page').clientHeight * 0.7;    
+    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*5/8;//   document.getElementById('page').clientHeight * 0.7; //
     WSizeY = document.getElementById('my_canvas').clientHeight;
     WSizeX = document.getElementById('my_canvas').clientWidth;
     
@@ -382,6 +382,7 @@ function LoadData(){
             // break;
         default : document.getElementById('gotobutton').disabled = false;
                   Loading = false;
+                  document.getElementById('progressbar').style.display = 'none';
         }
     } catch (e) {
         document.getElementById('gotobutton').disabled = false;
@@ -563,14 +564,14 @@ function DrawNetwork(ctx,color)
                 ctx.moveTo(N[j][i].D.X,N[j][i].D.Z);
                 ctx.lineTo(N[j][0].D.X,N[j][0].D.Z);
             }
-            ctx.stroke();
-            ctx.beginPath();
-             // вертикальные
-            //if(j<18){
-                ctx.moveTo(N[j][i].D.X,N[j][i].D.Z);
-                ctx.lineTo(N[j+1][i].D.X,N[j+1][i].D.Z);
-            //}
-            ctx.stroke();
+                ctx.stroke();
+                ctx.beginPath();
+                // вертикальные
+                //if(j<18){
+                    ctx.moveTo(N[j][i].D.X,N[j][i].D.Z);
+                    ctx.lineTo(N[j+1][i].D.X,N[j+1][i].D.Z);
+                //}
+                ctx.stroke();
             }
         }
     }
@@ -620,8 +621,9 @@ function updateStars() {
         if(Tycho2) {
             StarView.drawStars(ViewPosition.Catalog);
             //StarView.drawStars(Test);
-            document.getElementById('StarCounter').innerHTML = "Загружено " + Tycho2.length + " звёзд.";
-            document.getElementById('StarCounter').style.width = WSizeX*(Tycho2.length)/(120552) - 2 + 'px';
+            document.getElementById('out_starCount').innerHTML = Tycho2.length + " звёзд.";
+            document.getElementById('StarCounter').innerHTML = Math.floor(100*(Tycho2.length)/(120552)) + '%';
+            document.getElementById('StarCounter').style.width = 100*(Tycho2.length)/(120552) + '%';
         }
         StarView.updateCross();
     }
@@ -694,8 +696,8 @@ function mousemoveCanv(e){
         var P = ViewPosition.decartToPolar(D1);
         MousePositionStar.X = P.a * radToGrad;
         MousePositionStar.Y = P.d * radToGrad;
-        document.getElementById('outXt').value = "α : " + AngleToString(MousePositionStar.X,true);
-        document.getElementById('outYt').value = "δ : " + AngleToString(MousePositionStar.Y,false);      
+        document.getElementById('outXt').value = AngleToString(MousePositionStar.X,true);
+        document.getElementById('outYt').value = AngleToString(MousePositionStar.Y,false);      
         
     } else {
         var dX = (e.pageX - pos.x -1) - MousePosition.X;
@@ -732,15 +734,34 @@ function ShowStarNumber(){
             if(document.getElementById('StarInfo'))
                 document.getElementById('StarInfo').style.display = 'block';
             if(document.getElementById('outTYC'))
-                document.getElementById('outTYC').value = "TYC:" + TmpCat[0][4] + "-" + TmpCat[0][5] + "-" + TmpCat[0][6];
+                document.getElementById('outTYC').value = TmpCat[0][4] + "-" + TmpCat[0][5] + "-" + TmpCat[0][6];
+            if(document.getElementById('outHIP')){
+                var o = TmpCat[0][9];
+                if(o === undefined) o = '';
+                document.getElementById('outHIP').value = o;            
+            }
             if(document.getElementById('outSa'))
-                document.getElementById('outSa').value = "α : " + AngleToString(TmpCat[0][0],true);
+                document.getElementById('outSa').value = AngleToString(TmpCat[0][0],true);
             if(document.getElementById('outSg'))
-                document.getElementById('outSg').value = "δ : " + AngleToString(TmpCat[0][1],false);
+                document.getElementById('outSg').value = AngleToString(TmpCat[0][1],false);
             if(document.getElementById('outBTmag'))
-                document.getElementById('outBTmag').value = "BTmag : " + TmpCat[0][2];
+                document.getElementById('outBTmag').value = TmpCat[0][2];
             if(document.getElementById('outVTmag'))
-                document.getElementById('outVTmag').value = "VTmag : " + TmpCat[0][3];
+                document.getElementById('outVTmag').value = TmpCat[0][3];
+            if(document.getElementById('outName')){
+                document.getElementById('outName').value = '';                
+                document.getElementById('loutName').style.display = 'none';
+            }
+            for(var i = 0; i< StarName.length; i++){
+                if(document.getElementById('outTYC')){
+                    if(StarName[i].TYC == document.getElementById('outTYC').value){
+                        if(document.getElementById('outName'))                        
+                            document.getElementById('loutName').style.display = 'block';                        
+                            document.getElementById('outName').value = StarName[i].Name;
+                        break;
+                    }
+                }
+            }
         } else {
             if(document.getElementById('StarInfo')) document.getElementById('StarInfo').style.display = 'none';
         }
@@ -790,6 +811,24 @@ function targetSelect(e){
     updateTargetForm();
     updateTargetCrosPos();
     if(!DrawingStar) StarView.updateStars();
+    if(document.getElementById('StarInfo').style.display == 'block'){
+        document.getElementById('info_Star').style.display = 'block';        
+        if(document.getElementById('outTYC'))
+            document.getElementById('info_outTYC').value = document.getElementById('outTYC').value;
+        if(document.getElementById('outHIP')){
+            document.getElementById('info_outHIP').value = document.getElementById('outHIP').value;
+        }
+        if(document.getElementById('outSa'))
+            document.getElementById('info_outSa').value = document.getElementById('outSa').value;
+        if(document.getElementById('outSg'))
+            document.getElementById('info_outSg').value = document.getElementById('outSg').value;
+        if(document.getElementById('outBTmag'))
+            document.getElementById('info_outBTmag').value = document.getElementById('outBTmag').value;
+        if(document.getElementById('outVTmag'))
+            document.getElementById('info_outVTmag').value = document.getElementById('outVTmag').value;
+    } else {
+        document.getElementById('info_Star').style.display = 'none';
+    }
 }
 function updateTargetCrosPos(){
     var aR = TargetPosition.X * gradToRad;
