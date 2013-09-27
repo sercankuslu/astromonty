@@ -24,8 +24,8 @@ var GeoPosition = {
 }
 // текущие координаты телескопа(зелёный крестик)
 var CurrentPosition = {
-    X : 84.053,
-    Y : -1.201,
+    X : 101.287155,
+    Y : -16.716116,
 };
 var MousePosition = {
     X : 0,
@@ -42,8 +42,12 @@ var AbsolutePosition = {
     visible : false
 };
 function filterStars(element,index,array){
-    if((element[2] < Magnitude) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
+    if(((element[2] < Magnitude)||(element[3] < Magnitude)) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
     return false;
+};
+
+function enableHM(){
+    return true;
 };
 
 // текущее положение просмотра
@@ -82,6 +86,9 @@ var ViewPosition = {
     },
     inRadius:function(RAr,DEr){
         var L = Math.acos(this.SinViewYr*Math.sin(DEr)+this.CosViewYr*Math.cos(DEr)*Math.cos(this.ViewXr-RAr));
+        if(isNaN(L)){
+            return true;
+        }
         if(L < 2*Math.PI/Scale) {
             return true;
         }else{
@@ -213,7 +220,7 @@ function onMouseWheel(e) {
         e.wheelDelta = -40*e.detail; // Firefox
     }
     var info = document.getElementById('delta');
-	Scale += Math.floor(e.wheelDelta*Scale/1200);
+	Scale += Math.floor(e.wheelDelta/120 + e.wheelDelta*Scale/1000);
 	
     if(Scale < 3) {Scale = 3;};
     if(Scale > 1000) {Scale = 1000;};
@@ -242,6 +249,9 @@ function ISODateString(d,UTC){
               + pad(d.getSeconds());
     }
 }
+var speed = 0.0;
+var angle1 = 0.0;
+//LocalStarTime*15,GeoPosition.Lat
 function UpdateTime(){
     var now = new Date();
     var E2012 = new Date(Date.UTC(2012, 0, 1));
@@ -264,9 +274,17 @@ function UpdateTime(){
     if (utYear<1900) utYear=utYear+1900;
 
     UT = utHours + (utMinutes + ( utSeconds + utmSeconds/1000)/60)/60;
-
+    
     var JD = JulDay (utDay, utMonth, utYear, UT);
     var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
+    
+    //speed = (speed + LocalStarTime*15 - angle1)/2;       
+    //if(speed > 0.005)
+    //    speed = LocalStarTime*15 - angle1;
+    //angle1 = LocalStarTime*15;
+        
+    //document.getElementById('Speed').value = speed;
+    
     document.getElementById('LST').value =  LST;
     if(Follow){
         ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);
@@ -302,14 +320,15 @@ function loadCanvas() {
         return false;
     };
     ViewPosition.SetPosition(CoordX,CoordY);
-    if (elem.addEventListener) {
+    //if (elem.addEventListener) {
       // IE9+, Opera, Chrome/Safari
-        elem.addEventListener ("mousewheel", onMouseWheel, false);
+        //elem.addEventListener ("mousewheel", onMouseWheel, false);
       // Firefox
-        elem.addEventListener ("DOMMouseScroll", onMouseWheel, false);
-    } else { // IE<9
-      elem.attachEvent ("onmousewheel", onMouseWheel);
-    }
+        //elem.addEventListener ("DOMMouseScroll", onMouseWheel, false);
+    //} else { // IE<9
+    //  elem.attachEvent ("onmousewheel", onMouseWheel);
+   // }
+    elem.onmousewheel = onMouseWheel;
     document.body.onresize = onResize;
     var timer = setInterval(UpdateTime, 1000);
     StarView.updateStars();
@@ -320,12 +339,14 @@ function loadCanvas() {
 };
 function onResize(){
     document.getElementById('shadow-one').style.width = document.body.clientWidth * 0.95 + "px";
-    document.getElementById('shadow-one').style.height = document.body.clientHeight + "px";
-    WSizeX = document.getElementById('CanvasBox').clientWidth;
-    WSizeY = document.getElementById('CanvasBox').clientHeight;
-    document.getElementById('my_canvas').width =  WSizeX - 2;
-    document.getElementById('my_canvas').height = WSizeX * 0.8;
-    WSizeY = document.getElementById('CanvasBox').clientHeight;
+    document.getElementById('shadow-one').style.height = document.body.clientHeight * 0.95 + "px";
+    WSizeX = document.getElementById('page').clientWidth;
+    WSizeY = document.getElementById('page').clientHeight;
+    document.getElementById('my_canvas').width =  (document.getElementById('page').clientWidth - 430);
+    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*3/5;//document.getElementById('page').clientHeight * 0.7;    
+    WSizeY = document.getElementById('my_canvas').clientHeight;
+    WSizeX = document.getElementById('my_canvas').clientWidth;
+    
     WSizeXd2 = WSizeX/(2*Scale);
     WSizeYd2 = WSizeY/(2*Scale);
 };
@@ -333,32 +354,32 @@ var NextCat=0;
 function LoadData(){
     try{
         switch(NextCat){
-        case 0: loadScript("stars/Tycho2_5.js", function(){scriptCallback(Tycho2_5);}, 0 );
+        case 0: loadScript("stars/Tycho2_5_6.js", function(){scriptCallback(Tycho2_5_6);}, 0 );
             break;
-        case 1:    loadScript("stars/Tycho2_6.js", function(){scriptCallback(Tycho2_6);}, 0 );
+        case 1: loadScript("stars/Tycho2_6_7.js", function(){scriptCallback(Tycho2_6_7);}, 0 );
             break;
-        case 2:    loadScript("stars/Tycho2_71.js", function(){scriptCallback(Tycho2_71);}, 0 );
+        case 2: loadScript("stars/Tycho2_7_8.js", function(){scriptCallback(Tycho2_7_8);}, 0 );
             break;
-        case 3:    loadScript("stars/Tycho2_72.js", function(){scriptCallback(Tycho2_72);}, 0 );
+        case 3: loadScript("stars/Tycho2_8_9.js", function(){scriptCallback(Tycho2_8_9);}, 0 );
             break;
-        case 4:    loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
-            break;
-        case 5:    loadScript("stars/Tycho2_81.js", function(){scriptCallback(Tycho2_81);}, 0 );
-            break;
-        case 6:    loadScript("stars/Tycho2_82.js", function(){scriptCallback(Tycho2_82);}, 0 );
-            break;
-        case 7:    loadScript("stars/Tycho2_83.js", function(){scriptCallback(Tycho2_83);}, 0 );
-            break;
-        case 8:    loadScript("stars/Tycho2_84.js", function(){scriptCallback(Tycho2_84);}, 0 );
-            break;
-        case 9:    loadScript("stars/Tycho2_85.js", function(){scriptCallback(Tycho2_85);}, 0 );
-            break;
-        case 10: loadScript("stars/Tycho2_86.js", function(){scriptCallback(Tycho2_86);}, 0 );
-            break;
-        case 11: loadScript("stars/Tycho2_87.js", function(){scriptCallback(Tycho2_87);}, 0 );
-            break;
-        case 12: loadScript("stars/Tycho2_88.js", function(){scriptCallback(Tycho2_88);}, 0 );
-            break;
+        // case 4:    loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
+            // break;
+        // case 5:    loadScript("stars/Tycho2_81.js", function(){scriptCallback(Tycho2_81);}, 0 );
+            // break;
+        // case 6:    loadScript("stars/Tycho2_82.js", function(){scriptCallback(Tycho2_82);}, 0 );
+            // break;
+        // case 7:    loadScript("stars/Tycho2_83.js", function(){scriptCallback(Tycho2_83);}, 0 );
+            // break;
+        // case 8:    loadScript("stars/Tycho2_84.js", function(){scriptCallback(Tycho2_84);}, 0 );
+            // break;
+        // case 9:    loadScript("stars/Tycho2_85.js", function(){scriptCallback(Tycho2_85);}, 0 );
+            // break;
+        // case 10: loadScript("stars/Tycho2_86.js", function(){scriptCallback(Tycho2_86);}, 0 );
+            // break;
+        // case 11: loadScript("stars/Tycho2_87.js", function(){scriptCallback(Tycho2_87);}, 0 );
+            // break;
+        // case 12: loadScript("stars/Tycho2_88.js", function(){scriptCallback(Tycho2_88);}, 0 );
+            // break;
         default : document.getElementById('gotobutton').disabled = false;
                   Loading = false;
         }
@@ -482,49 +503,25 @@ function drawStars(Catalog){
         for ( i = 0;i < ArrsLength; i++) {
             elem.RA = Catalog[i][0];
             elem.DE = Catalog[i][1];
-            elem.mag = Catalog[i][2];
+            elem.BTmag = Catalog[i][2];
+            elem.VTmag = Catalog[i][3];
+            if(elem.BTmag === undefined) elem.BTmag = elem.VTmag;
+            if(elem.VTmag === undefined) elem.VTmag = elem.BTmag;
+            
+            elem.mag = (elem.BTmag >= elem.VTmag)?elem.VTmag:elem.BTmag;
             if(elem.mag > Magnitude) break;
             if(elem.mag < maxMag) continue;
             var D = ViewPosition.polarToDecart(elem.RA,elem.DE);
             if(D.V){
                 ctx.beginPath();
-                if(1)
-                switch (elem.mag){
-                    case -1.088: ctx.fillStyle = "blue"; // сириус
-                                 ctx.strokeStyle = "blue";
-                    break;
-                    case 0.283 : ctx.fillStyle = "cyan"; //Ригель
-                                 ctx.strokeStyle = "cyan";
-                    break;
-                    case 0.769 : ctx.fillStyle = "red"; // бетельгейзе
-                        ctx.strokeStyle = "red";
-                    break;
-                    default :    ctx.fillStyle = "white";
-                        ctx.strokeStyle = "white";
-                    break;
-                }
-                // спец звезды
-                if(0)
-                switch (Catalog[i][3]){
-                    case 0:ctx.fillStyle = "red";
-                        break;
-                    case 1:ctx.fillStyle = "red";
-                        break;
-                    case 2:ctx.fillStyle = "green";
-                        break;
-                    case 3:ctx.fillStyle = "blue";
-                        break;
-                    case 4:ctx.fillStyle = "cyan";
-                        break;
-                    case 5:ctx.fillStyle = "yellow";
-                        break;
-                    case 6:ctx.fillStyle = "white";
-                        break;
-                }
-                var R = (9 - elem.mag);
-                Starsize = R*2/10+0.5;
-                var r = Math.floor(R*15+90);
-                var color = 'rgb(' + r + ',' + r + ',' + r + ');';
+                var R = (9 - elem.mag);//*((Scale/3));
+                var BTR = (9 - elem.BTmag);
+                var VTR = (9 - elem.VTmag);
+                Starsize = (R * 3/10) + (Scale/50);
+                var r = Math.floor((R) * 15 + 100 + (Scale/10)) ;
+                var g = Math.floor(VTR * 15 + 100 + (Scale/10)) ;
+                var b = Math.floor(BTR * 15 + 100 + (Scale/10)) ;
+                var color = 'rgb(' + r + ',' + g + ',' + b + ');';
                 ctx.fillStyle = color;
 				if(ctx.fillStyle == "#000000") ctx.fillStyle = "#FFFFFF";
                 ctx.strokeStyle = color;
@@ -630,6 +627,7 @@ function updateStars() {
     }
     DrawingStar = 0;
 };
+
 function updateCross(){
     var canvas = this;
     if(canvas.getContext) {
@@ -697,7 +695,8 @@ function mousemoveCanv(e){
         MousePositionStar.X = P.a * radToGrad;
         MousePositionStar.Y = P.d * radToGrad;
         document.getElementById('outXt').value = "α : " + AngleToString(MousePositionStar.X,true);
-        document.getElementById('outYt').value = "δ : " + AngleToString(MousePositionStar.Y,false);
+        document.getElementById('outYt').value = "δ : " + AngleToString(MousePositionStar.Y,false);      
+        
     } else {
         var dX = (e.pageX - pos.x -1) - MousePosition.X;
         var dY = (e.pageY - pos.y -1) - MousePosition.Y;
@@ -715,7 +714,7 @@ function mousemoveCanv(e){
 }
 //поиск в каталоге имени звезды
 function SelectStars(element,index,array){
-    var length = 1.0/(Scale);
+    var length = 2.0/(Scale);
     // на Scale == 1, 0.83 градуса
     if(   (element[0] >= MousePositionStar.X - length)
         &&(element[0] <= MousePositionStar.X + length)
@@ -733,11 +732,15 @@ function ShowStarNumber(){
             if(document.getElementById('StarInfo'))
                 document.getElementById('StarInfo').style.display = 'block';
             if(document.getElementById('outTYC'))
-                document.getElementById('outTYC').value = "TYC:" + TmpCat[0][3] + "-" + TmpCat[0][4] + "-" + TmpCat[0][5];
+                document.getElementById('outTYC').value = "TYC:" + TmpCat[0][4] + "-" + TmpCat[0][5] + "-" + TmpCat[0][6];
             if(document.getElementById('outSa'))
                 document.getElementById('outSa').value = "α : " + AngleToString(TmpCat[0][0],true);
             if(document.getElementById('outSg'))
                 document.getElementById('outSg').value = "δ : " + AngleToString(TmpCat[0][1],false);
+            if(document.getElementById('outBTmag'))
+                document.getElementById('outBTmag').value = "BTmag : " + TmpCat[0][2];
+            if(document.getElementById('outVTmag'))
+                document.getElementById('outVTmag').value = "VTmag : " + TmpCat[0][3];
         } else {
             if(document.getElementById('StarInfo')) document.getElementById('StarInfo').style.display = 'none';
         }
@@ -775,6 +778,14 @@ function targetSelect(e){
     var D = {X:e.pageX - pos.x-1,Y:0,Z:e.pageY - pos.y-1};
     var D1 = ViewPosition.unRotate(D);
     var P = ViewPosition.decartToPolar(D1);
+    var TmpCat;
+    if(Tycho2) {
+        TmpCat = ViewPosition.Catalog.filter(SelectStars);
+        if(TmpCat[0]){
+            P.a = TmpCat[0][0] * gradToRad;
+            P.d = TmpCat[0][1] * gradToRad;
+        }
+    }
     TargetPosition.SetPosition(P.a * radToGrad,P.d * radToGrad);
     updateTargetForm();
     updateTargetCrosPos();
@@ -897,10 +908,17 @@ function correctCoordinate(Catalog){
     var j2000 = new Date(Date.UTC(2000, 0, 1, 11, 58, 55, 816));// 11:58:55,816 1 января 2000 года по UTC
     var ddd = now - j2000;
     var YearsFromJ2000 = ddd/(3600000*24*365);
+    // pmRA, pmDE в миллисекундах дуги в год
+    if(0)
     for (var i = 0;i < ArrsLength; i++) {
-        Catalog[i][0] += Catalog[i][6]/3600;
-        Catalog[i][1] += Catalog[i][7]/3600;
-        //Catalog[i][2] = (9 - Catalog[i][2])/4+0.5;
+        var ra = Catalog[i][7];
+        var de = Catalog[i][8];
+        if((ra === undefined) || (de === undefined)) continue;
+        ra = ra/3600000;
+        de = de/3600000;
+        Catalog[i][0] += ra*YearsFromJ2000;
+        Catalog[i][1] += de*YearsFromJ2000;
+       //Catalog[i][2] = (9 - Catalog[i][2])/4+0.5;
     }
 }
 

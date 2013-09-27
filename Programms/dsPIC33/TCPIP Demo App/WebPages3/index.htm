@@ -64,6 +64,7 @@
                         <input type="text" name="DE_s" id="DEs" value="00" min="-1" max="60" onchange="updateTarget(2);"style="width:40px;">"
                     </span><br />
                     <input id="clock" class="chbox" type="checkbox" onclick="enableHM();" checked="true">Часовое ведение<br />
+                    <!-- <output id="Speed" style="margin-left: 15px;">0</output><br /> -->
                     <input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
                     <input id="stopbutton" type="button" value="Stop" onclick="Stop();">
                 </form>
@@ -102,7 +103,9 @@
         "<div id=\"StarInfo\"> Found star:<br />"+
         "<output id=\"outTYC\"></output><br />" +
         "<output id=\"outSa\"></output><br />" +
-        "<output id=\"outSg\"></output></div>"
+        "<output id=\"outSg\"></output><br />" + 
+        "<output id=\"outBTmag\"></output><br />" +
+        "<output id=\"outVTmag\"></output></div>"
     });
     <!--
 // Parses the xmlResponse from status.xml and updates the status box
@@ -175,7 +178,7 @@ function updateStatus(xmlData) {
     if(needUpdateStar)
         if(!DrawingStar) StarView.updateStars();
 }
-setTimeout("newAJAXCommand('status.xml', updateStatus, true)",1000);
+setTimeout("newAJAXCommand('status.xml', updateStatus, true)", 2000);
 
 </script>
 <div class="spacer">&nbsp;</div>
