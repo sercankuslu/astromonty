@@ -42,7 +42,11 @@ var AbsolutePosition = {
     visible : false
 };
 function filterStars(element,index,array){
-    if(((element[2] < Magnitude)||(element[3] < Magnitude)) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
+	var BTmag = element[7];
+	var VTmag = element[8];
+	if(BTmag === undefined) BTmag = VTmag;
+	if(VTmag === undefined) VTmag = BTmag;
+    if(((BTmag < Magnitude)||(VTmag < Magnitude)) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
     return false;
 };
 
@@ -343,7 +347,7 @@ function onResize(){
     WSizeX = document.getElementById('page').clientWidth;
     WSizeY = document.getElementById('page').clientHeight;
     document.getElementById('my_canvas').width =  (document.getElementById('page').clientWidth - 430);
-    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*5/8;//   document.getElementById('page').clientHeight * 0.7; //
+    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*3/4;//   document.getElementById('page').clientHeight * 0.7; //
     WSizeY = document.getElementById('my_canvas').clientHeight;
     WSizeX = document.getElementById('my_canvas').clientWidth;
     
@@ -362,7 +366,7 @@ function LoadData(){
             break;
         case 3: loadScript("stars/Tycho2_8_9.js", function(){scriptCallback(Tycho2_8_9);}, 0 );
             break;
-        // case 4:    loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
+        //case 4:    loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
             // break;
         // case 5:    loadScript("stars/Tycho2_81.js", function(){scriptCallback(Tycho2_81);}, 0 );
             // break;
@@ -504,8 +508,8 @@ function drawStars(Catalog){
         for ( i = 0;i < ArrsLength; i++) {
             elem.RA = Catalog[i][0];
             elem.DE = Catalog[i][1];
-            elem.BTmag = Catalog[i][2];
-            elem.VTmag = Catalog[i][3];
+            elem.BTmag = Catalog[i][7];
+            elem.VTmag = Catalog[i][8];
             if(elem.BTmag === undefined) elem.BTmag = elem.VTmag;
             if(elem.VTmag === undefined) elem.VTmag = elem.BTmag;
             
@@ -621,9 +625,14 @@ function updateStars() {
         if(Tycho2) {
             StarView.drawStars(ViewPosition.Catalog);
             //StarView.drawStars(Test);
-            document.getElementById('out_starCount').innerHTML = Tycho2.length + " звёзд.";
-            document.getElementById('StarCounter').innerHTML = Math.floor(100*(Tycho2.length)/(120552)) + '%';
-            document.getElementById('StarCounter').style.width = 100*(Tycho2.length)/(120552) + '%';
+			//if(document.getElementById('progressbar').style.display == 'block'){
+				if(document.getElementById('out_starCount'))
+					document.getElementById('out_starCount').innerHTML = Tycho2.length + " звёзд.";
+				if(document.getElementById('StarCounter')){
+					document.getElementById('StarCounter').innerHTML = Math.floor(100*(Tycho2.length)/(120552)) + '%';
+					document.getElementById('StarCounter').style.width = 100*(Tycho2.length)/(120552) + '%';
+				}
+			//}
         }
         StarView.updateCross();
     }
@@ -734,7 +743,7 @@ function ShowStarNumber(){
             if(document.getElementById('StarInfo'))
                 document.getElementById('StarInfo').style.display = 'block';
             if(document.getElementById('outTYC'))
-                document.getElementById('outTYC').value = TmpCat[0][4] + "-" + TmpCat[0][5] + "-" + TmpCat[0][6];
+                document.getElementById('outTYC').value = TmpCat[0][2] + "-" + TmpCat[0][3] + "-" + TmpCat[0][4];
             if(document.getElementById('outHIP')){
                 var o = TmpCat[0][9];
                 if(o === undefined) o = '';
@@ -744,10 +753,22 @@ function ShowStarNumber(){
                 document.getElementById('outSa').value = AngleToString(TmpCat[0][0],true);
             if(document.getElementById('outSg'))
                 document.getElementById('outSg').value = AngleToString(TmpCat[0][1],false);
-            if(document.getElementById('outBTmag'))
-                document.getElementById('outBTmag').value = TmpCat[0][2];
-            if(document.getElementById('outVTmag'))
-                document.getElementById('outVTmag').value = TmpCat[0][3];
+            if(document.getElementById('outBTmag')){
+				if(TmpCat[0][7] === undefined){
+					document.getElementById('loutBTmag').style.display = 'none';
+				} else {
+					document.getElementById('loutBTmag').style.display = 'block';
+					document.getElementById('outBTmag').value = TmpCat[0][7];
+				}				
+			}
+            if(document.getElementById('outVTmag')){
+				if(TmpCat[0][8] === undefined){
+					document.getElementById('loutVTmag').style.display = 'none';
+				} else {
+					document.getElementById('loutVTmag').style.display = 'block';
+					document.getElementById('outVTmag').value = TmpCat[0][8];
+				}				
+			}
             if(document.getElementById('outName')){
                 document.getElementById('outName').value = '';                
                 document.getElementById('loutName').style.display = 'none';
@@ -755,9 +776,10 @@ function ShowStarNumber(){
             for(var i = 0; i< StarName.length; i++){
                 if(document.getElementById('outTYC')){
                     if(StarName[i].TYC == document.getElementById('outTYC').value){
-                        if(document.getElementById('outName'))                        
+                        if(document.getElementById('outName')){                        
                             document.getElementById('loutName').style.display = 'block';                        
                             document.getElementById('outName').value = StarName[i].Name;
+						}
                         break;
                     }
                 }
@@ -823,9 +845,29 @@ function targetSelect(e){
         if(document.getElementById('outSg'))
             document.getElementById('info_outSg').value = document.getElementById('outSg').value;
         if(document.getElementById('outBTmag'))
-            document.getElementById('info_outBTmag').value = document.getElementById('outBTmag').value;
+			if(document.getElementById('outBTmag').value == ''){
+				document.getElementById('info_loutBTmag').style.display = 'none';
+			} else {
+				document.getElementById('info_loutBTmag').style.display = 'block';
+				document.getElementById('info_outBTmag').value = document.getElementById('outBTmag').value;
+			}            
         if(document.getElementById('outVTmag'))
-            document.getElementById('info_outVTmag').value = document.getElementById('outVTmag').value;
+			if(document.getElementById('outVTmag').value == ''){
+				document.getElementById('info_loutVTmag').style.display = 'none';
+			} else {
+				document.getElementById('info_loutVTmag').style.display = 'block';
+				document.getElementById('info_outVTmag').value = document.getElementById('outVTmag').value;
+			}             
+		if(document.getElementById('outName')){
+			if(document.getElementById('outName').value == ''){
+				document.getElementById('info_loutName').style.display = 'none';
+			} else {
+				document.getElementById('info_loutName').style.display = 'block';
+				document.getElementById('info_outName').value = document.getElementById('outName').value;			
+			}
+		} else {
+			document.getElementById('info_loutName').style.display = 'none';
+		}
     } else {
         document.getElementById('info_Star').style.display = 'none';
     }
@@ -950,8 +992,8 @@ function correctCoordinate(Catalog){
     // pmRA, pmDE в миллисекундах дуги в год
     if(0)
     for (var i = 0;i < ArrsLength; i++) {
-        var ra = Catalog[i][7];
-        var de = Catalog[i][8];
+        var ra = Catalog[i][5];
+        var de = Catalog[i][6];
         if((ra === undefined) || (de === undefined)) continue;
         ra = ra/3600000;
         de = de/3600000;
