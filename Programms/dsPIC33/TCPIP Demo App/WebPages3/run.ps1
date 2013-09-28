@@ -1,4 +1,4 @@
-$filename =  "C:\Apache24\htdocs\status.xml"
+$filename =  "D:\Program Files (x86)\Apache Software Foundation\Apache2.2\htdocs\status.xml" 
 [xml]$status = Get-Content $filename
 $angle0 = 90.0;
 $angle1 = 90.0;
@@ -13,7 +13,7 @@ $da0 = -0.00417807934636275010445197530291 / 2
 $da1 = 0.0
 
 $speed = 0;
-$angle1 = 0;
+#$angle1 = 0;
 $LocalStarTime = 0;
 
 # Вычисление звездного времени
@@ -80,7 +80,7 @@ function JulDay ($d, $m, $y, $u){
     return $JD;
 }
 
-
+$aa = 0;
 while(1){
     
     for($i = 0; $i -lt 360; $i++){
@@ -90,11 +90,14 @@ while(1){
         $JD = JulDay $day.Day.ToString() $day.Month.ToString() $day.Year.ToString() $UT
         $LocalStarTime = LM_Sidereal_Time $JD 37.6028
         
+		if($aa -eq 0) {
+			$aa = $LocalStarTime*15;
+		}
         $speed = ($speed + $LocalStarTime*15 - $aa)/2;       
         if($speed > 0.005) {
             $speed = $LocalStarTime*15 - $aa;
         }
-        $aa = $LocalStarTime*15 - $angle1;
+        $aa = $LocalStarTime*15;
         
         $da0 = -$speed
 

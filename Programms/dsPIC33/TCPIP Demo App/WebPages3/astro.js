@@ -347,7 +347,7 @@ function onResize(){
     WSizeX = document.getElementById('page').clientWidth;
     WSizeY = document.getElementById('page').clientHeight;
     document.getElementById('my_canvas').width =  (document.getElementById('page').clientWidth - 430);
-    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width*3/4;//   document.getElementById('page').clientHeight * 0.7; //
+    document.getElementById('my_canvas').height = document.getElementById('my_canvas').width ;//   document.getElementById('page').clientHeight * 0.7; //
     WSizeY = document.getElementById('my_canvas').clientHeight;
     WSizeX = document.getElementById('my_canvas').clientWidth;
     
@@ -711,6 +711,8 @@ function mousemoveCanv(e){
     } else {
         var dX = (e.pageX - pos.x -1) - MousePosition.X;
         var dY = (e.pageY - pos.y -1) - MousePosition.Y;
+		if(Math.abs(ViewPosition.Y) >80) dX *= Scale/10;
+		//dX *= 1 + (1 - Math.cos(Math.abs(ViewPosition.Y)*gradToRad)) * Scale/100;
         ViewPosition.SetPosition(ViewPosition.X+(dX/Scale)*(1+Math.sin(Math.abs(ViewPosition.Y*gradToRad))),ViewPosition.Y+dY/Scale);
         if(!DrawingStar) this.updateStars();
         MousePosition.X = e.pageX - pos.x -1;
@@ -745,9 +747,12 @@ function ShowStarNumber(){
             if(document.getElementById('outTYC'))
                 document.getElementById('outTYC').value = TmpCat[0][2] + "-" + TmpCat[0][3] + "-" + TmpCat[0][4];
             if(document.getElementById('outHIP')){
-                var o = TmpCat[0][9];
-                if(o === undefined) o = '';
-                document.getElementById('outHIP').value = o;            
+				if((TmpCat[0][9] === undefined)||(TmpCat[0][9] == '')) {
+					document.getElementById('loutHIP').style.display = 'none';
+				} else {
+					document.getElementById('loutHIP').style.display = 'block';
+					document.getElementById('outHIP').value = TmpCat[0][9];
+				}          
             }
             if(document.getElementById('outSa'))
                 document.getElementById('outSa').value = AngleToString(TmpCat[0][0],true);
@@ -789,7 +794,63 @@ function ShowStarNumber(){
         }
     }
 }
-
+function ShowTargetStarInfo(){
+    var TmpCat;
+    if(Tycho2) {
+        TmpCat = ViewPosition.Catalog.filter(SelectStars);
+        if(TmpCat[0]){
+            if(document.getElementById('info_Star'))
+                document.getElementById('info_Star').style.display = 'block';
+            if(document.getElementById('info_outTYC'))
+                document.getElementById('info_outTYC').value = TmpCat[0][2] + "-" + TmpCat[0][3] + "-" + TmpCat[0][4];
+            if(document.getElementById('info_outHIP')){
+                if((TmpCat[0][9] === undefined)||(TmpCat[0][9] == '')) {
+					document.getElementById('info_loutHIP').style.display = 'none';
+				} else {
+					document.getElementById('info_loutHIP').style.display = 'block';
+					document.getElementById('info_outHIP').value = TmpCat[0][9];
+				}	     
+            }
+            if(document.getElementById('info_outSa'))
+                document.getElementById('info_outSa').value = AngleToString(TmpCat[0][0],true);
+            if(document.getElementById('info_outSg'))
+                document.getElementById('info_outSg').value = AngleToString(TmpCat[0][1],false);
+            if(document.getElementById('info_outBTmag')){
+				if(TmpCat[0][7] === undefined){
+					document.getElementById('info_loutBTmag').style.display = 'none';
+				} else {
+					document.getElementById('info_loutBTmag').style.display = 'block';
+					document.getElementById('info_outBTmag').value = TmpCat[0][7];
+				}				
+			}
+            if(document.getElementById('info_outVTmag')){
+				if(TmpCat[0][8] === undefined){
+					document.getElementById('info_loutVTmag').style.display = 'none';
+				} else {
+					document.getElementById('info_loutVTmag').style.display = 'block';
+					document.getElementById('info_outVTmag').value = TmpCat[0][8];
+				}				
+			}
+            if(document.getElementById('info_outName')){
+                document.getElementById('info_outName').value = '';                
+                document.getElementById('info_loutName').style.display = 'none';
+            }
+            for(var i = 0; i< StarName.length; i++){
+                if(document.getElementById('info_outTYC')){
+                    if(StarName[i].TYC == document.getElementById('info_outTYC').value){
+                        if(document.getElementById('info_outName')){                        
+                            document.getElementById('info_loutName').style.display = 'block';                        
+                            document.getElementById('info_outName').value = StarName[i].Name;
+						}
+                        break;
+                    }
+                }
+            }
+        } else {
+            if(document.getElementById('info_Star')) document.getElementById('info_Star').style.display = 'none';
+        }
+    }
+}
 function getPosition(e){
     var left = 0;
     var top  = 0;
@@ -833,44 +894,7 @@ function targetSelect(e){
     updateTargetForm();
     updateTargetCrosPos();
     if(!DrawingStar) StarView.updateStars();
-    if(document.getElementById('StarInfo').style.display == 'block'){
-        document.getElementById('info_Star').style.display = 'block';        
-        if(document.getElementById('outTYC'))
-            document.getElementById('info_outTYC').value = document.getElementById('outTYC').value;
-        if(document.getElementById('outHIP')){
-            document.getElementById('info_outHIP').value = document.getElementById('outHIP').value;
-        }
-        if(document.getElementById('outSa'))
-            document.getElementById('info_outSa').value = document.getElementById('outSa').value;
-        if(document.getElementById('outSg'))
-            document.getElementById('info_outSg').value = document.getElementById('outSg').value;
-        if(document.getElementById('outBTmag'))
-			if(document.getElementById('outBTmag').value == ''){
-				document.getElementById('info_loutBTmag').style.display = 'none';
-			} else {
-				document.getElementById('info_loutBTmag').style.display = 'block';
-				document.getElementById('info_outBTmag').value = document.getElementById('outBTmag').value;
-			}            
-        if(document.getElementById('outVTmag'))
-			if(document.getElementById('outVTmag').value == ''){
-				document.getElementById('info_loutVTmag').style.display = 'none';
-			} else {
-				document.getElementById('info_loutVTmag').style.display = 'block';
-				document.getElementById('info_outVTmag').value = document.getElementById('outVTmag').value;
-			}             
-		if(document.getElementById('outName')){
-			if(document.getElementById('outName').value == ''){
-				document.getElementById('info_loutName').style.display = 'none';
-			} else {
-				document.getElementById('info_loutName').style.display = 'block';
-				document.getElementById('info_outName').value = document.getElementById('outName').value;			
-			}
-		} else {
-			document.getElementById('info_loutName').style.display = 'none';
-		}
-    } else {
-        document.getElementById('info_Star').style.display = 'none';
-    }
+    ShowTargetStarInfo();
 }
 function updateTargetCrosPos(){
     var aR = TargetPosition.X * gradToRad;
