@@ -42,10 +42,10 @@ var AbsolutePosition = {
     visible : false
 };
 function filterStars(element,index,array){
-	var BTmag = element[7];
-	var VTmag = element[8];
-	if(BTmag === undefined) BTmag = VTmag;
-	if(VTmag === undefined) VTmag = BTmag;
+    var BTmag = element[7];
+    var VTmag = element[8];
+    if(BTmag === undefined) BTmag = VTmag;
+    if(VTmag === undefined) VTmag = BTmag;
     if(((BTmag < Magnitude)||(VTmag < Magnitude)) && ViewPosition.inRadius(element[0]*gradToRad,element[1]*gradToRad)) return true;
     return false;
 };
@@ -224,8 +224,8 @@ function onMouseWheel(e) {
         e.wheelDelta = -40*e.detail; // Firefox
     }
     var info = document.getElementById('delta');
-	Scale += Math.floor(e.wheelDelta/120 + e.wheelDelta*Scale/1000);
-	
+    Scale += Math.floor(e.wheelDelta/120 + e.wheelDelta*Scale/1000);
+    
     if(Scale < 3) {Scale = 3;};
     if(Scale > 1000) {Scale = 1000;};
     e.preventDefault ? e.preventDefault() : (e.returnValue = false);
@@ -528,7 +528,7 @@ function drawStars(Catalog){
                 var b = Math.floor(BTR * 15 + 100 + (Scale/10)) ;
                 var color = 'rgb(' + r + ',' + g + ',' + b + ');';
                 ctx.fillStyle = color;
-				if(ctx.fillStyle == "#000000") ctx.fillStyle = "#FFFFFF";
+                if(ctx.fillStyle == "#000000") ctx.fillStyle = "#FFFFFF";
                 ctx.strokeStyle = color;
                 ctx.arc(D.X,D.Z, Starsize,0,PI2,true);
                 ctx.fill();
@@ -625,14 +625,14 @@ function updateStars() {
         if(Tycho2) {
             StarView.drawStars(ViewPosition.Catalog);
             //StarView.drawStars(Test);
-			//if(document.getElementById('progressbar').style.display == 'block'){
-				if(document.getElementById('out_starCount'))
-					document.getElementById('out_starCount').innerHTML = Tycho2.length + " звёзд.";
-				if(document.getElementById('StarCounter')){
-					document.getElementById('StarCounter').innerHTML = Math.floor(100*(Tycho2.length)/(120552)) + '%';
-					document.getElementById('StarCounter').style.width = 100*(Tycho2.length)/(120552) + '%';
-				}
-			//}
+            //if(document.getElementById('progressbar').style.display == 'block'){
+                if(document.getElementById('out_starCount'))
+                    document.getElementById('out_starCount').innerHTML = Tycho2.length + " звёзд.";
+                if(document.getElementById('StarCounter')){
+                    document.getElementById('StarCounter').innerHTML = Math.floor(100*(Tycho2.length)/(120552)) + '%';
+                    document.getElementById('StarCounter').style.width = 100*(Tycho2.length)/(120552) + '%';
+                }
+            //}
         }
         StarView.updateCross();
     }
@@ -711,8 +711,8 @@ function mousemoveCanv(e){
     } else {
         var dX = (e.pageX - pos.x -1) - MousePosition.X;
         var dY = (e.pageY - pos.y -1) - MousePosition.Y;
-		if(Math.abs(ViewPosition.Y) >80) dX *= Scale/10;
-		//dX *= 1 + (1 - Math.cos(Math.abs(ViewPosition.Y)*gradToRad)) * Scale/100;
+        if(Math.abs(ViewPosition.Y) >80) dX *= Scale/10;
+        //dX *= 1 + (1 - Math.cos(Math.abs(ViewPosition.Y)*gradToRad)) * Scale/100;
         ViewPosition.SetPosition(ViewPosition.X+(dX/Scale)*(1+Math.sin(Math.abs(ViewPosition.Y*gradToRad))),ViewPosition.Y+dY/Scale);
         if(!DrawingStar) this.updateStars();
         MousePosition.X = e.pageX - pos.x -1;
@@ -747,33 +747,33 @@ function ShowStarNumber(){
             if(document.getElementById('outTYC'))
                 document.getElementById('outTYC').value = TmpCat[0][2] + "-" + TmpCat[0][3] + "-" + TmpCat[0][4];
             if(document.getElementById('outHIP')){
-				if((TmpCat[0][9] === undefined)||(TmpCat[0][9] == '')) {
-					document.getElementById('loutHIP').style.display = 'none';
-				} else {
-					document.getElementById('loutHIP').style.display = 'block';
-					document.getElementById('outHIP').value = TmpCat[0][9];
-				}          
+                if((TmpCat[0][9] === undefined)||(TmpCat[0][9] == '')) {
+                    document.getElementById('loutHIP').style.display = 'none';
+                } else {
+                    document.getElementById('loutHIP').style.display = 'block';
+                    document.getElementById('outHIP').value = TmpCat[0][9];
+                }          
             }
             if(document.getElementById('outSa'))
                 document.getElementById('outSa').value = AngleToString(TmpCat[0][0],true);
             if(document.getElementById('outSg'))
                 document.getElementById('outSg').value = AngleToString(TmpCat[0][1],false);
             if(document.getElementById('outBTmag')){
-				if(TmpCat[0][7] === undefined){
-					document.getElementById('loutBTmag').style.display = 'none';
-				} else {
-					document.getElementById('loutBTmag').style.display = 'block';
-					document.getElementById('outBTmag').value = TmpCat[0][7];
-				}				
-			}
+                if(TmpCat[0][7] === undefined){
+                    document.getElementById('loutBTmag').style.display = 'none';
+                } else {
+                    document.getElementById('loutBTmag').style.display = 'block';
+                    document.getElementById('outBTmag').value = TmpCat[0][7];
+                }               
+            }
             if(document.getElementById('outVTmag')){
-				if(TmpCat[0][8] === undefined){
-					document.getElementById('loutVTmag').style.display = 'none';
-				} else {
-					document.getElementById('loutVTmag').style.display = 'block';
-					document.getElementById('outVTmag').value = TmpCat[0][8];
-				}				
-			}
+                if(TmpCat[0][8] === undefined){
+                    document.getElementById('loutVTmag').style.display = 'none';
+                } else {
+                    document.getElementById('loutVTmag').style.display = 'block';
+                    document.getElementById('outVTmag').value = TmpCat[0][8];
+                }               
+            }
             if(document.getElementById('outName')){
                 document.getElementById('outName').value = '';                
                 document.getElementById('loutName').style.display = 'none';
@@ -784,7 +784,7 @@ function ShowStarNumber(){
                         if(document.getElementById('outName')){                        
                             document.getElementById('loutName').style.display = 'block';                        
                             document.getElementById('outName').value = StarName[i].Name;
-						}
+                        }
                         break;
                     }
                 }
@@ -805,32 +805,32 @@ function ShowTargetStarInfo(){
                 document.getElementById('info_outTYC').value = TmpCat[0][2] + "-" + TmpCat[0][3] + "-" + TmpCat[0][4];
             if(document.getElementById('info_outHIP')){
                 if((TmpCat[0][9] === undefined)||(TmpCat[0][9] == '')) {
-					document.getElementById('info_loutHIP').style.display = 'none';
-				} else {
-					document.getElementById('info_loutHIP').style.display = 'block';
-					document.getElementById('info_outHIP').value = TmpCat[0][9];
-				}	     
+                    document.getElementById('info_loutHIP').style.display = 'none';
+                } else {
+                    document.getElementById('info_loutHIP').style.display = 'block';
+                    document.getElementById('info_outHIP').value = TmpCat[0][9];
+                }        
             }
             if(document.getElementById('info_outSa'))
                 document.getElementById('info_outSa').value = AngleToString(TmpCat[0][0],true);
             if(document.getElementById('info_outSg'))
                 document.getElementById('info_outSg').value = AngleToString(TmpCat[0][1],false);
             if(document.getElementById('info_outBTmag')){
-				if(TmpCat[0][7] === undefined){
-					document.getElementById('info_loutBTmag').style.display = 'none';
-				} else {
-					document.getElementById('info_loutBTmag').style.display = 'block';
-					document.getElementById('info_outBTmag').value = TmpCat[0][7];
-				}				
-			}
+                if(TmpCat[0][7] === undefined){
+                    document.getElementById('info_loutBTmag').style.display = 'none';
+                } else {
+                    document.getElementById('info_loutBTmag').style.display = 'block';
+                    document.getElementById('info_outBTmag').value = TmpCat[0][7];
+                }               
+            }
             if(document.getElementById('info_outVTmag')){
-				if(TmpCat[0][8] === undefined){
-					document.getElementById('info_loutVTmag').style.display = 'none';
-				} else {
-					document.getElementById('info_loutVTmag').style.display = 'block';
-					document.getElementById('info_outVTmag').value = TmpCat[0][8];
-				}				
-			}
+                if(TmpCat[0][8] === undefined){
+                    document.getElementById('info_loutVTmag').style.display = 'none';
+                } else {
+                    document.getElementById('info_loutVTmag').style.display = 'block';
+                    document.getElementById('info_outVTmag').value = TmpCat[0][8];
+                }               
+            }
             if(document.getElementById('info_outName')){
                 document.getElementById('info_outName').value = '';                
                 document.getElementById('info_loutName').style.display = 'none';
@@ -841,7 +841,7 @@ function ShowTargetStarInfo(){
                         if(document.getElementById('info_outName')){                        
                             document.getElementById('info_loutName').style.display = 'block';                        
                             document.getElementById('info_outName').value = StarName[i].Name;
-						}
+                        }
                         break;
                     }
                 }
