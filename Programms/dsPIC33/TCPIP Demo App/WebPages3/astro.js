@@ -17,6 +17,7 @@ var ViewYr;
 var DrawingStar = 0;
 var Follow = true;
 var Loading = false;
+var ServerDate = 0;
 var GeoPosition = {
     Lon : 37.6028,
     //Lon : 217.6028,
@@ -257,14 +258,7 @@ var speed = 0.0;
 var angle1 = 0.0;
 //LocalStarTime*15,GeoPosition.Lat
 function UpdateTime(){
-    var now = new Date();
-    var E2012 = new Date(Date.UTC(2012, 0, 1));
-    var dt = now - E2012;
-    var days = Math.floor(dt/(3600*24*1000));
-
-    //var Utctime = new Date(1344782676000);
-    var B = PI2*(days-81)/365;
-    var T = 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
+    var now = new Date(ServerDate);
     document.getElementById('UTCTime').value = ISODateString(now,true);
     //document.getElementById('EqEq').value = T.toFixed(2);
 
@@ -1014,7 +1008,7 @@ function correctCoordinate(Catalog){
     var ddd = now - j2000;
     var YearsFromJ2000 = ddd/(3600000*24*365);
     // pmRA, pmDE в миллисекундах дуги в год
-    if(0)
+    if(1)
     for (var i = 0;i < ArrsLength; i++) {
         var ra = Catalog[i][5];
         var de = Catalog[i][6];
