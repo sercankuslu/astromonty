@@ -1,6 +1,5 @@
 <response>
-<led0>~led(0)~</led0>
-<led1>~led(1)~</led1>
+<time0>~time(0)~</time0>
 <ang0>~ang(0)~</ang0>
 <ang1>~ang(1)~</ang1>
 <ang2>~ang(2)~</ang2>

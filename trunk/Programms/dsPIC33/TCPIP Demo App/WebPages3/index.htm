@@ -67,11 +67,11 @@
                     <input id="clock" class="chbox" type="checkbox" onclick="enableHM();" checked="true">Часовое ведение<br />
                     <!-- <output id="Speed" style="margin-left: 15px;">0</output><br /> -->
                     <div>
-                    <input id="gotobutton" type="button" value="GoTo!" onclick="GoTo();">
-                    <input id="stopbutton" type="button" value="Stop" onclick="Stop();">
+                    <input id="gotobutton" type="button" value="Старт" onclick="GoTo();">
+                    <input id="stopbutton" type="button" value="Стоп" onclick="Stop();">
                     </div>
                     <div>
-                    <input id="optionbtn" type="button" value="Option">
+                    <input id="optionbtn" type="button" value="Настройки">
                     </div>
                 </form>
             </div>
@@ -119,10 +119,10 @@
         elem: $('#my_canvas'),
         html: "<label>α : </label><output id=\"outXt\"></output><br />" +
         "<label>δ : </label><output id=\"outYt\"></output>" +
-        "<div id=\"StarInfo\"> Found star:<br />"+
+        "<div id=\"StarInfo\"> Найдена звезда:<br />"+
+        "<div id=\"loutName\"><label>Имя:</label><output id=\"outName\"></output></div>" +
         "<label>TYC:</label><output id=\"outTYC\"></output><br />" +
-        "<div id=\"loutHIP\"><label>HIP:</label><output id=\"outHIP\"></output></div>" +
-        "<div id=\"loutName\"><label>Name:</label><output id=\"outName\"></output></div>" +
+        "<div id=\"loutHIP\"><label>HIP:</label><output id=\"outHIP\"></output></div>" +        
         "<label>α : </label><output id=\"outSa\"></output><br />" +
         "<label>δ : </label><output id=\"outSg\"></output><br />" + 
         "<div id=\"loutBTmag\"><label>BTmag : </label><output id=\"outBTmag\"></output></div>" +
@@ -153,25 +153,17 @@ function updateStatus(xmlData) {
     loadstat = 'none';
     var needUpdateStar = false;
     // 55.791437,37.6028
+    for(i = 0; i < 1; i++){
+        var time = +getXMLValue(xmlData, 'time' + i);//*180/Math.PI;
+        if(i==0) {
+            ServerDate = time * 1000;
+            UpdateTime()
+        }
+    }
     for(i = 0; i < 2; i++){
         var angle = +getXMLValue(xmlData, 'ang' + i);//*180/Math.PI;
         if(i==0) {
             if(angle){
-                var now = new Date();
-                var utDay = now.getUTCDate();
-                var utMonth = now.getUTCMonth()+1;
-                var utYear = now.getUTCFullYear();
-                var utHours = now.getUTCHours();
-                var utMinutes = now.getUTCMinutes();
-                var utSeconds = now.getUTCSeconds();
-                var utmSeconds = now.getUTCMilliseconds();
-                if (utYear<1900) utYear=utYear+1900;
-
-                UT = utHours + (utMinutes + ( utSeconds + utmSeconds/1000)/60)/60;
-
-                var JD = JulDay (utDay, utMonth, utYear, UT);
-                var LST = LM_Sidereal_Time(JD, GeoPosition.Lon);
-                document.getElementById('LST').value =  LST;
 
                 correctAngle = angle - 90 + LocalStarTime * 15;
                 if(correctAngle>=360) correctAngle-=360;

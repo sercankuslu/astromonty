@@ -1,7 +1,9 @@
-$filename =  "D:\Program Files (x86)\Apache Software Foundation\Apache2.2\htdocs\status.xml" 
+$filename =  "C:\Apache24\htdocs\status.xml" 
 [xml]$status = Get-Content $filename
 $angle0 = 90.0;
 $angle1 = 90.0;
+$filename | write-host
+
 
 #0,00416666666666666666666666666667
 #$da0 = -0.000417807934636275010445197530291
@@ -79,11 +81,14 @@ function JulDay ($d, $m, $y, $u){
     $JD += $d - 13 - 1524.5 + $u/24.0;
     return $JD;
 }
-
+$status.response.angR0 = "1"
+$status.response.angR1 = "1"
 $aa = 0;
 while(1){
     
     for($i = 0; $i -lt 360; $i++){
+        
+        $unixDate = get-date -UFormat %s
         $day = (date).ToUniversalTime()
         $UT = $day.Hour + ($day.Minute + ( $day.Second + $day.Millisecond/1000)/60)/60;
         
@@ -94,7 +99,7 @@ while(1){
 			$aa = $LocalStarTime*15;
 		}
         $speed = ($speed + $LocalStarTime*15 - $aa)/2;       
-        if($speed > 0.005) {
+        if($speed -gt 0.005) {
             $speed = $LocalStarTime*15 - $aa;
         }
         $aa = $LocalStarTime*15;
@@ -111,6 +116,7 @@ while(1){
         }
         $status.response.ang0 = "$angle0"
         $status.response.ang1 = "$angle1"
+        $status.response.time0 = "$unixDate" -replace ",","."
         $status.Save($filename)
         "a: " + $status.response.ang0 + " d: " +  $status.response.ang1 + " speed: " + $da0 | write-host
         start-sleep -Milliseconds 100
