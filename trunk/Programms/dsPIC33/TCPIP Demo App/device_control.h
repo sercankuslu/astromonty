@@ -77,7 +77,7 @@ typedef enum _DMA_OPERATION_MODE {
 }DMA_OPERATION_MODE;
 
 typedef enum _DMA_DEVICE_IRQ {
-    IRQ_INT0 = 0, IRQ_IC1=1, IRQ_IC2=5, IRQ_OC1=2, IRQ_OC2=6, IRQ_TMR2=7, IRQ_TMR3=8, IRQ_SPI1=10, IRQ_SPI2=33, IRQ_UART1_RX, IRQ_UART1_TX, IRQ_UART2_RX, IRQ_UART2_TX, IRQ_ADC1, IRQ_ADC2
+    IRQ_INT0 = 0, IRQ_IC1=1, IRQ_OC1=2, IRQ_IC2=5,  IRQ_OC2=6, IRQ_TMR2=7, IRQ_TMR3=8, IRQ_SPI1=10, IRQ_SPI2=33, IRQ_UART1_RX, IRQ_UART1_TX, IRQ_UART2_RX, IRQ_UART2_TX, IRQ_ADC1, IRQ_ADC2
 } DMA_DEVICE_IRQ;
 
 typedef struct _DMAConfigType{
@@ -118,13 +118,14 @@ typedef enum _OC_TMR_SELECT {
 } OC_TMR_SELECT;
 
 typedef struct _OCConfigType{
-    int (*CallbackFunc)(void);
+    int (*CallbackFunc)(void * );
+    void* _This;
 } OCConfigType;
 
 int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm);
 int OCSetInt(OC_ID id, BYTE Level, BOOL enabled);
 int OCSetMode(OC_ID id,OC_WORK_MODE ocm);
-int OCSetCallback(OC_ID id, int (*CallbackFunc)(void));
+int OCSetCallback(OC_ID id, void* _This,  int (*CallbackFunc)(void*));
 int OCSetValue(OC_ID id, WORD ocr, WORD ocrs);
 int OCSetTmr(OC_ID id, OC_TMR_SELECT tmr);
 

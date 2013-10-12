@@ -348,6 +348,7 @@ int main(void)
     Intrerval.Tstep = 0.0000002;
     Intrerval.MaxSpeed = 5.0;
     T3 = GetMinInterval( &Intrerval);
+
     //void (*mas[8])(WORD) = {f0,f1,f2,f3,f4,f5,f6,f7};    
     //WORD Count = 10;
     //DMA_ID id = 6;

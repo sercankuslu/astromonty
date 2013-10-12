@@ -7,6 +7,8 @@
 #include <winsock2.h>
 #include <stdio.h>
 #include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
+#include "Queue.h"
+#include "uCmdProcess.h"
 //#include "..\dsPIC33\protocol.h"
 // #include "..\PIC18F97J60\TCPIP Demo App\DisplayBuffer.h"
 //#include "..\PIC18F97J60\TCPIP Demo App\Control.h"
@@ -1009,9 +1011,18 @@ FS_FILE *  FS_fopen ( const char * filename, const char * mode )   //Open file
 
 
 // от скорости 0 до 0.2 градуса в сек делитель на 256
+extern OC_CHANEL_STATE OC1;
 
 void Calc()
 {
+
+    /* 
+    // QUEUE TEST
+    // QUEUE TEST
+    */ 
+
+    //Queue_Selftest ();
+    uCmd_Init();
     /*
     //DisplayInit();
 
@@ -1236,7 +1247,45 @@ void Calc()
             }
         }
     }*/
-    
+    double K = -3.384858359;
+    double B = 40.27981447; 
+    DWORD StepsPerRound = 3200;
+    double Dx = 1.0/(double)StepsPerRound;
+
+    OC_INTERVAL_CALC Interval;
+    Interval.A = 0.0;
+    Interval.V = 0.0;
+    Interval.K = K;
+    Interval.B = B;
+    Interval.AccSign = 1;
+    Interval.Rev = 1;
+    Interval.Dx = Dx;
+    Interval.Tstep = 0.0000002;
+    Interval.MaxSpeed = 100.0;
+    Interval.Xi = 0;
+    Interval.dT = 0.0;
+    Interval.T0 = 0.0;
+    Interval.T1 = 0.0;
+    Interval.Tx = 0;
+    DWORD T3 = 0;
+    DWORD uS = 0.000002/Interval.Tstep;
+    WORD BufSize = 256/sizeof(OC_RECORD);
+    DWORD Addr = 0;
+
+    OC_RECORD Buf[256/sizeof(OC_RECORD)];
+    for(DWORD j = 0; j < 32000/BufSize; j++ ){
+        for(DWORD i = 0; i < BufSize; i++){
+            T3 = GetMinInterval2( &Interval);
+            Interval.Xi++;
+            Buf[i].r = Interval.Tx;
+            Buf[i].rs = Interval.Tx + uS;
+        }
+        FS_WriteArray(Addr, (BYTE*)&Buf, 256);
+        Addr += 256;
+    }
+
+
+
 }
 void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD BufSize, DWORD SizeX, DWORD SizeY, DWORD Px, DWORD Py)
 {
@@ -1280,22 +1329,26 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
     double R = 1.0;
     double a = 0.0;
     double a1 = 0.0;
-    bool Pixel = true;
+    bool Pixel = false;
 
     MoveToEx(hdc, TX.x, TX.y, NULL);
 
     double Mx = 100;
     double My = 9;
-    OC_INTERVAL_CALC Intrerval;
-    Intrerval.A = A;
-    Intrerval.V = V;
-    Intrerval.K = K;
-    Intrerval.B = B;
-    Intrerval.AccSign = U;
-    Intrerval.Rev = R;
-    Intrerval.Dx = Dx;
-    Intrerval.Tstep = TmrStep;
-    Intrerval.MaxSpeed = 100.0;
+    OC_INTERVAL_CALC Interval;
+    Interval.A = A;
+    Interval.V = V;
+    Interval.K = K;
+    Interval.B = B;
+    Interval.AccSign = U;
+    Interval.Rev = R;
+    Interval.Dx = Dx;
+    Interval.Tstep = TmrStep;
+    Interval.MaxSpeed = 100.0;
+    Interval.Xi = 0;
+    Interval.dT = 0.0;
+    Interval.T0 = 0.0;
+    Interval.T1 = 0.0;
 
 
     for(DWORD i = 0; i < StepsPerRound*120; i++)
@@ -1309,37 +1362,40 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
             //||(i == StepsPerRound*80)
             //||(i == StepsPerRound*90)
             ||(i == StepsPerRound*100)
-            ) 
-           Intrerval.AccSign = -Intrerval.AccSign;
+            ) {
+           //Interval.AccSign = -Interval.AccSign;
+        }
 
-        T3 = GetMinInterval( &Intrerval);
+        T3 = GetMinInterval2( &Interval);
+        //GetInterval2( &T3, T3, WORD Xa, double dx, double k2, double b, double Ts)
         if(T3 > 65535){
             SetPixel(hdc, 50, 50, RGB(250,0,0));
         }
 
-        if(Intrerval.A <= 0.1){
+        if(Interval.A <= 0.1){
             //Intrerval.AccSign = -Intrerval.AccSign;
             //break;
         }
 
-        if(Intrerval.V >= 10.0){
+        if(Interval.V >= 10.0){
             //break;
         }
         //DrawT1Buffer[i].r = T3;
-        tx = Intrerval.T1;//T3 * Intrerval.Tstep;
-        X += Intrerval.Dx * Intrerval.Rev;
+        tx = Interval.dT;//T3 * Intrerval.Tstep;
+        X += Interval.Dx * Interval.Rev;
+        Interval.Xi++;
         T += tx;// / 0.0000002;
-        a = (Intrerval.A - a1)/tx;
-        a1 = Intrerval.A;
+        a = (Interval.A - a1)/tx;
+        a1 = Interval.A;
 
         TX.x = Px + T * Mx;
         TX.y = Py - X * My;
 
         TV.x = Px + T * Mx;
-        TV.y = Py - Intrerval.Rev * Intrerval.V * My;
+        TV.y = Py - Interval.Rev * Interval.V * My;
 
         TA.x = Px + T * Mx;
-        TA.y = Py - Intrerval.A * My;
+        TA.y = Py - Interval.A * My;
 
         Ta.x = Px + T * Mx;
         Ta.y = Py - a * My;
@@ -1377,7 +1433,7 @@ void DrawRRGraph(HDC hdc, double dx, double TimerStep, OC_RECORD * Buf, DWORD Bu
             }
             TA1 = TA;
         }
-
+        if(0)
         if((Ta.x != Ta1.x)||(Ta.y != Ta1.y)){
             if(Pixel)
                 SetPixel(hdc, Ta.x, Ta.y, RGB(128,0,0));
