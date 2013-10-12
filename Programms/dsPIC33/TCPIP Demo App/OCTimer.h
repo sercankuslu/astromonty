@@ -77,7 +77,10 @@ typedef struct _OC_INTERVAL_CALC{
     double AccSign;     // AccSign  знак ускорения
     double MaxSpeed;    // MaxSpeed максимальная скорость
     double T1;
+    double T0;          // предыдущее значение времени
+    double dT;
     DWORD Tx;           // количество интервалов Tstep в вычисленном промежутке времени
+    DWORD Xi;           // номер шага
 } OC_INTERVAL_CALC;
 
 typedef union _STATE_VALUE{
@@ -90,6 +93,22 @@ typedef union _STATE_VALUE{
 }STATE_VALUE;
 
 // параметры 
+
+typedef enum _COMMANDS { 
+    CMD_STOP,                               // остановка ( прерывание режима GUIDE )
+    CMD_GO_TO_POSITION,                     // перейти на позицию; параметры: a, d, runspeed
+    CMD_GO_TO_POSITION_AND_GUIDE_STAR,      // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d, runspeed
+    CMD_GO_TO_POSITION_AND_GUIDE_SAT,       // перейти на позицию и сопровождать спутник ( нужны параметры движения спутника) a, d, a1, d1, runspeed, guidespeed
+    CMD_GO_HOME,                            // перевести телескоп в положение парковки  
+    CMD_OPEN_ROOF,                          // открыть купол ( посылает пакет на заданный URL) 
+    CMD_CLOSE_ROOF,                         // закрыть купол
+    CMD_CREATE_SNAPSHOT,                    // подает команду на камеру
+    CMD_GET_SNAPSHOT,                       // запрашивает фотографию у камеры 
+    CMD_SLOW_GO_HOME,                       // медленное возвращение на парковочную позицию после возобновления электропитания
+    CMD_CALIBRATE,                          // калибровка ( устанавливает параметры, как текущее положение телескопа) a, d
+    CMD_EMG_STOP = 0xFF,                    // аварийная остановка
+
+} COMMANDS;
 
 typedef enum GD_STATE { // состояния
     ST_STOP,            // остановлен
@@ -142,7 +161,7 @@ typedef struct _HEADER{
     TABLE_ADDR FastAcc;
     TABLE_ADDR SlowDec;
     TABLE_ADDR FastDec;
-    //double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощьности двигателя от скорости вращения
+    //double K;                                           // Kx + B ( K - тангенс угла наклона графика зависимости мощности двигателя от скорости вращения
     //double B;                                           // B - константа, мощьность двигателя в Hm скорость в радианах в сек 
     double Mass;                                        // масса монтировки
     double Radius;                                      // радиус оси/трубы телескопа
@@ -393,6 +412,7 @@ double GetAngle(WORD n);
 int GetStatus(WORD n);
 DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d);
 DWORD GetMinInterval(OC_INTERVAL_CALC * Intreval);
+DWORD GetMinInterval2(OC_INTERVAL_CALC * Intreval);
 void GetAlgParams(double V, double K, double B, double dx, double * T, LONG * X);
 //DWORD GetMinInterval(double * V, double * A, double Dx, double Tstep, double K, double B, double * Rev, double * AccSign, double MaxSpeed);
 /*

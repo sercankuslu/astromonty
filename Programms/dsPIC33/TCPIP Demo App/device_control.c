@@ -1798,90 +1798,91 @@ int OCSetMode(OC_ID id, OC_WORK_MODE ocm)
     return 0;
 }
 //------------------------------------------------------------------------------------------------
-int OCSetCallback(OC_ID id, int (*CallbackFunc)(void))
+int OCSetCallback(OC_ID id, void* _This,  int (*CallbackFunc)(void*))
 //------------------------------------------------------------------------------------------------
 {
     OCConfig[id].CallbackFunc = CallbackFunc;
+    OCConfig[id]._This = _This;
     return 0;
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC1Interrupt( void )
 //------------------------------------------------------------------------------------------------
-{
-    int id = ID_OC1;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+{    
+    OCConfigType *OCConfig = &OCConfig[ID_OC1];
+    if(OCConfig->CallbackFunc){
+            OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC2;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC2];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC3Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC3;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC3];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC4Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC4;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC4];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS1bits.OC4IF = 0; // Clear OC4 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC5Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC5;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC5];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS2bits.OC5IF = 0; // Clear OC5 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC6Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC6;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC6];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS2bits.OC6IF = 0; // Clear OC6 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC7Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC7;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC7];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS2bits.OC7IF = 0; // Clear OC7 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC8Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    int id = ID_OC8;
-    if(OCConfig[id].CallbackFunc){
-        OCConfig[id].CallbackFunc();
-    }
+    OCConfigType *OCConfig = &OCConfig[ID_OC8];
+    if(OCConfig->CallbackFunc){
+        OCConfig->CallbackFunc(OCConfig->_This);
+    }   
     IFS2bits.OC8IF = 0; // Clear OC8 interrupt flag
 }
 /************************************************************************************************

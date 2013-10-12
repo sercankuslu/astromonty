@@ -596,6 +596,84 @@ double GetSpeed(double T, double K, double B)
     double U = 1.0/(1.0 - K * T);
     return (U *(B * T * U + 1.0));
 }
+// k2 = k/2;
+// b2 = b/2;
+// D = k2*X*k2*X+4*b2*x
+// T =(-k2*X+sqrt(D))/(2*b)
+int GetInterval2( WORD * dT, WORD T, WORD Xa, double dx, double k2, double b, double Ts)
+{
+    double D;
+    DWORD T1;
+    double X = Xa * dx;
+    double k2x = k2 * X;
+
+    D = k2x * k2x + 2 * b * X;
+    if(D >= 0){
+        T1 = ((sqrt(D) - k2x) / (b * Ts));
+        *dT = T1 - T;
+    } else 
+        return -1;
+    return 0;
+}
+
+
+//-----------------------------------------------------------------------------------------------
+// ¬ычисление интервала между шагами при ускоренном движении 
+// V        текуща€ скорость
+// A        текущее ускорение
+// Dx       шаг координаты
+// Tstep    шаг таймера
+// K B      константы в функции зависимости A от V  A = KV+B
+// Rev      знак направлени€
+// AccSign  знак ускорени€
+// MaxSpeed максимальна€ скорость
+// Xi       координата
+// dT       интервал времени
+// T0       предыдущее значение времени
+// T1       текущее значение времени
+// Tx       интервал в шагах таймера
+// возвращаетс€ количество интервалов Tstep в вычисленном промежутке времени
+//-----------------------------------------------------------------------------------------------
+DWORD GetMinInterval2(OC_INTERVAL_CALC * Intrerval)
+{
+    double D;
+    //double tx;
+    double X = Intrerval->Xi * Intrerval->Dx;
+    double k2x = X * Intrerval->K / 2.0;
+    double U = 1.0;
+    // A = AccSign * (K*V + B) = AccSign * f(V)
+    //Intrerval->A = Intrerval->AccSign * (Intrerval->K * Intrerval->V + Intrerval->B);   
+    // D = V^2 + 2 * A * Dx
+    D = k2x * k2x + 2.0 * Intrerval->B * X;
+    if(D >= 0.0){
+        // T1 = (-V + sqrt(D))/A
+        Intrerval->T1 = (sqrt(D) - k2x)/ (Intrerval->B); 
+        Intrerval->dT =  (Intrerval->T1 - Intrerval->T0);
+        Intrerval->T0 = Intrerval->T1;
+        // V = Dx/T1
+        if(Intrerval->dT != 0.0)
+            Intrerval->V = Intrerval->Dx / Intrerval->dT;
+        if(Intrerval->V >= Intrerval->MaxSpeed) {
+            Intrerval->V = Intrerval->MaxSpeed;
+            Intrerval->A = 0;
+            // T1 = Dx/MaxSpeed
+            Intrerval->dT = Intrerval->Dx / Intrerval->MaxSpeed;
+        }
+        // Tx = T1/Tstep
+        Intrerval->Tx = (DWORD)(Intrerval->dT / Intrerval->Tstep);
+        //Intrerval->A = Intrerval->B/((1-Intrerval->K * Intrerval->T1)*(1-Intrerval->K * Intrerval->T1)*(1-Intrerval->K * Intrerval->T1));
+        
+    } else {
+        Intrerval->V = 0;
+        Intrerval->A = 0;
+        Intrerval->AccSign = -Intrerval->AccSign;
+        Intrerval->Rev = -Intrerval->Rev;
+    } 
+    return Intrerval->Tx;
+}
+
+
+
 //------------------------------------------------------------------------------------------------
 // ¬ычисление интервала между значением T и значением функции, вычесленной на основании X
 // T                        предыдущее значение функции ускорени€ T=(-Kx+sqrt((Kx)^2+4Bx))/2B оптимиз: 
@@ -623,6 +701,7 @@ DWORD GetInterval(DWORD T, DWORD Xa, double dx, double a, double d)
     }
     return R;
 }
+
 //-----------------------------------------------------------------------------------------------
 // ¬ычисление интервала между шагами при ускоренном движении 
 // V        текуща€ скорость
@@ -650,6 +729,7 @@ DWORD GetMinInterval(OC_INTERVAL_CALC * Intrerval) // double * V, double * A, do
     if(D >= 0.0){
         // T1 = (-V + sqrt(D))/A
         Intrerval->T1 = (sqrt(D)-Intrerval->V)/ (Intrerval->A);
+        Intrerval->dT =  (Intrerval->T1);
         // V = Dx/T1
         Intrerval->V = Intrerval->Dx / Intrerval->T1;
         if(Intrerval->V >= Intrerval->MaxSpeed) {
