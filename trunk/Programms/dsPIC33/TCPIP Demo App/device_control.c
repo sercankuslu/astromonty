@@ -1944,6 +1944,9 @@ typedef struct _SPI_STATUS
     BYTE* DMAReceiveBuf;
     WORD DMASendBufLen;
     WORD DMAReceiveBufLen;
+    BYTE* DataReceiveBuf;
+    WORD DataReceiveLen;
+    BYTE * DataReceiveSource;
 }SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
@@ -2034,6 +2037,9 @@ int SPIInit()
         Status->TransferComplete = 0;
         Status->DMASendCfg    = DMACreateConfig(SIZE_BYTE, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
         Status->DMAReceiveCfg = DMACreateConfig(SIZE_BYTE, DEVICE_TO_RAM, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, ONE_SHOT);
+        Status->DataReceiveBuf = NULL;
+        Status->DataReceiveLen = 0;
+        Status->DataReceiveSource = NULL;
     }
     Status = &SPIStatus[ID_SPI2];
     // один общий буфер для отправки и получения
@@ -2125,6 +2131,10 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
             Status->Flag = RECEIVE_END;
             break;
         case RECEIVE_END:
+            if(Status->DataReceiveBuf){
+                memcpy(Status->DataReceiveBuf, Status->DataReceiveSource, Status->DataReceiveLen);
+            }
+            break;
         case SEND_END:
         default:
             break;
@@ -2360,7 +2370,7 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     SPIUnlock(SPI_id);
     return DataLen;
 }
-WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen )
+WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData = 1 )
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
@@ -2370,7 +2380,8 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
 
     // проверка размеров
     if(CmdLen + DataLen > Status->DMASendBufLen){
-        while(1);
+        return 0;
+        //while(1);
     }
 
     // Захват шины SPI
@@ -2395,13 +2406,16 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             Device->DeviceSelect();
             DMA2Enable;
             DMA3Enable;
+            Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
+            Status->DataReceiveLen = DataLen;
+            Status->DataReceiveBuf = Data;
             DMA2ForceTransfer;
-            if(Data){
+
+            if(WaitData) {
                 while(Status->TransferComplete == 0){
                     Nop();
                     Nop();
                 }
-                memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
             }            
             break;
         case ID_SPI1:
@@ -2419,14 +2433,16 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
             Device->DeviceSelect();
             DMA4Enable;
             DMA5Enable;
+            Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
+            Status->DataReceiveLen = DataLen;
+            Status->DataReceiveBuf = Data;
             DMA4ForceTransfer;
-            if(Data){
+            if(WaitData) {
                 while(Status->TransferComplete == 0){
                     Nop();
                     Nop();
-                }
-                memcpy(Data, &(Status->DMAReceiveBuf)[CmdLen], DataLen);
-            }    
+                }                    
+            }
             break;
         default:
             SPIRelease(SPI_id);
@@ -2446,7 +2462,8 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
 
     // проверка размеров
     if(CmdLen > Status->DMASendBufLen){
-        while(1);
+        return 0;
+        //while(1);
     }
     // Захват шины SPI
     SPILock(SPI_id);
@@ -2470,10 +2487,6 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
-//             while(Status->TransferComplete == 0){
-//                 Nop();
-//                 Nop();
-//             }
             break;
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
@@ -2490,10 +2503,6 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
-//             while(Status->TransferComplete == 0){
-//                 Nop();
-//                 Nop();
-//             }
             break;
         default:
             SPIRelease(SPI_id);
@@ -2503,4 +2512,5 @@ WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
     SPIUnlock(SPI_id);
     return 0;
 }
+
 
