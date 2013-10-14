@@ -162,7 +162,7 @@ SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD Device
 int SPIInit();
 BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
 WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
-WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
+WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData = 1 );
 WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen);
 void SPILock(SPI_ID id);
 void SPIUnlock(SPI_ID id);
