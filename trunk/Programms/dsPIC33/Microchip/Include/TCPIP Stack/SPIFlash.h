@@ -66,6 +66,7 @@
 #if defined(SPIFLASH_CS_TRIS)
 	void SPIFlashInit(void);		
 	void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen);
+        void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen, BYTE WaitData);
 	void SPIFlashBeginWrite(DWORD dwAddr);
 	void SPIFlashWrite(BYTE vData);
 	void SPIFlashWriteArray(BYTE *vData, WORD wLen);
@@ -89,6 +90,7 @@
 	void You_cannot_call_the_SPIFlashEraseSector_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
 	#define SPIFlashInit()				You_cannot_call_the_SPIFlashInit_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
 	#define SPIFlashReadArray(a,b,c)	You_cannot_call_the_SPIFlashReadArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
+        #define SPIFlashReadArray(a,b,c,d)	You_cannot_call_the_SPIFlashReadArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
 	#define SPIFlashBeginWrite(a)		You_cannot_call_the_SPIFlashBeginWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
 	#define SPIFlashWrite(a)			You_cannot_call_the_SPIFlashWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
 	#define SPIFlashWriteArray(a,b)		You_cannot_call_the_SPIFlashWriteArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()

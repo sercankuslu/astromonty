@@ -180,7 +180,7 @@ void SPIFlashInit(void)
     Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1;
     Config.SPICON2 = 0;
     Config.SPISTAT = 0;
-    FlashDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, FlashSelect, FlashRelease);
+    FlashDeviceHandle = SPIRegisterDevice(ID_SPI1, Config, FlashSelect, FlashRelease);
 
     // Read Device ID code to determine supported device capabilities/instructions
     {
@@ -265,8 +265,23 @@ void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     Cmd[1] = ((BYTE*)&dwAddress)[2];
     Cmd[2] = ((BYTE*)&dwAddress)[1];
     Cmd[3] = ((BYTE*)&dwAddress)[0];
-    SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength);
+    SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength, 1);
 }
+
+void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength, BYTE WaitData = 1)
+{
+    BYTE Cmd[4];
+    // Ignore operations when the destination is NULL or nothing to read
+    if(vData == NULL || wLength == 0)
+        return;
+
+    Cmd[0] = READ;
+    Cmd[1] = ((BYTE*)&dwAddress)[2];
+    Cmd[2] = ((BYTE*)&dwAddress)[1];
+    Cmd[3] = ((BYTE*)&dwAddress)[0];
+    SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength, WaitData);
+}
+
 
 /*****************************************************************************
   Function:
