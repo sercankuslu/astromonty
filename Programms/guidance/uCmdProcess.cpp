@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Queue.h"
 #include "uCmdProcess.h"
+#define SPIFLASH_CS_TRIS 
+#include "..\dsPIC33\Microchip\Include\TCPIP Stack\SPIFlash.h"
 
 
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
@@ -146,7 +148,8 @@ int uCmd_OCCallback( void * _This )
     }
     return 0;
 }
-
+#define WAIT_READ_COMPLETE 0
+#define NO_WAIT_READ_COMPLETE 0
 int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 {
     OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
@@ -154,8 +157,14 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
     BYTE ProcessCmd = 1;
     BYTE Priority = 0;
     xCMD_QUEUE Command;
-    WORD TmpBuf[64];
-
+    WORD TmpBuf1[8];
+    WORD TmpBuf2[8];
+    WORD * TmpBufPtr = TmpBuf1;
+    WORD Addr = 0;
+    WORD i = 0;
+    WORD j = 0;
+    WORD Pulse = OCN->Config.wSTEPPulseWidth;
+    OC_BUF * BufPtr = (OC_BUF*)Buf;
     Command.State = xCMD_STOP;
     Command.Value = (DWORD)0x0000;    
 
@@ -171,6 +180,25 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 
         case xCMD_ACCELERATE:
             Value->Value;  // тут номер AccX до которого надо дойти
+            OCN->mCMD_Status.AccX; // тут текущий номер AccX
+            OCN->Config.AccBaseAddress; // адрес таблицы разгона
+            OCN->Config.AccRecordCount; // количество записей в таблице разгона
+            SPIFlashReadArray(Addr , (BYTE*)TmpBuf1, 16, WAIT_READ_COMPLETE);
+            for (i = 0; i < 8; i++) {
+                if(i & 1 == 0){
+                    SPIFlashReadArray(Addr , (BYTE*)TmpBuf2, 16, NO_WAIT_READ_COMPLETE);
+                    TmpBufPtr = TmpBuf1;
+                } else {
+                    SPIFlashReadArray(Addr , (BYTE*)TmpBuf1, 16, NO_WAIT_READ_COMPLETE);
+                    TmpBufPtr = TmpBuf2;
+                }
+                for(j = 0; j< 8; j++){
+                    BufPtr->r = *TmpBufPtr;
+                    BufPtr->rs = *TmpBufPtr + Pulse;
+                    BufPtr++;
+                    TmpBufPtr++;
+                }
+            }
             break;
         case xCMD_RUN:
             break;

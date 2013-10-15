@@ -2073,7 +2073,7 @@ int SPIInit()
     DMASelectDevice(DMA5, IRQ_SPI1, (int)&SPI1BUF);
     DMASetCallback(DMA4, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
     DMASetCallback(DMA5, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
-    DMASetInt(DMA4, 5, 1);
+    //DMASetInt(DMA4, 5, 1);
     DMASetInt(DMA5, 5, 1);
 
     DeviceCount = 0;
@@ -2370,7 +2370,7 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     SPIUnlock(SPI_id);
     return DataLen;
 }
-WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData = 1 )
+WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData)
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
