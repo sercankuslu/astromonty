@@ -528,7 +528,7 @@ BOOL MPFSGet(MPFS_HANDLE hMPFS, BYTE* c)
 		lastRead = MPFSStubs[hMPFS].addr;
 		MPFSStubs[hMPFS].addr++;
 	#elif defined(MPFS_USE_SPI_FLASH)
-		SPIFlashReadArray(MPFSStubs[hMPFS].addr + MPFS_HEAD, c, 1);
+		SPIFlashReadArray(MPFSStubs[hMPFS].addr + MPFS_HEAD, c, 1, 1);
 		MPFSStubs[hMPFS].addr++;
 	#else
 		#if defined(__C30__)
@@ -629,7 +629,7 @@ WORD MPFSGetArray(MPFS_HANDLE hMPFS, BYTE* cData, WORD wLen)
 		MPFSStubs[hMPFS].bytesRem -= wLen;
 		lastRead = MPFS_INVALID;
 	#elif defined(MPFS_USE_SPI_FLASH)
-		SPIFlashReadArray(MPFSStubs[hMPFS].addr+MPFS_HEAD, cData, wLen);
+		SPIFlashReadArray(MPFSStubs[hMPFS].addr+MPFS_HEAD, cData, wLen, 1);
 		MPFSStubs[hMPFS].addr += wLen;
 		MPFSStubs[hMPFS].bytesRem -= wLen;
 	#else

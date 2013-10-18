@@ -185,7 +185,7 @@ void SPIFlashInit(void)
     // Read Device ID code to determine supported device capabilities/instructions
     {
             
-        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3 );
+        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3, 1);
 
         // Decode Device Capabilities Flags from Device ID
         deviceCaps.v = 0x00;
@@ -254,7 +254,7 @@ void SPIFlashInit(void)
   Returns:
     None
   ***************************************************************************/
-void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
+/* void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
 {
     BYTE Cmd[4];
     // Ignore operations when the destination is NULL or nothing to read
@@ -267,8 +267,8 @@ void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength)
     Cmd[3] = ((BYTE*)&dwAddress)[0];
     SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength, 1);
 }
-
-void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength, BYTE WaitData = 1)
+*/
+void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength, BYTE WaitData)
 {
     BYTE Cmd[4];
     // Ignore operations when the destination is NULL or nothing to read
@@ -550,7 +550,7 @@ static void _WaitWhileBusy(void)
     // Poll the BUSY bit
     do
     {
-        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, &Data, 1);
+        SPIReceiveData( FlashDeviceHandle, &Cmd, 1, &Data, 1, 1);
     } while(Data & BUSY);
 }
 

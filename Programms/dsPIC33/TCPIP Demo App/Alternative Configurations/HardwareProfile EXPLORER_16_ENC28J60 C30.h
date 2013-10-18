@@ -99,7 +99,7 @@
 #define GetInstructionClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Might need changing if using Doze modes.
 #define GetPeripheralClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Divisor may be different if using a PIC32 since it's configurable.
 
-#define VER_1
+#define VER_2
 // Hardware I/O pin mappings
 
 // LEDs
@@ -165,6 +165,127 @@
 	#define ENC_INT_TRIS		(TRISAbits.TRISA12)
 	#define ENC_INT_IF  		
 #endif
+
+#define MS1_Tris            TRISGbits.TRISG12   // выход MS1
+#define MS2_Tris            TRISGbits.TRISG13   // выход MS2
+#define SLEEP_Tris          TRISGbits.TRISG14   // выход SLEEP
+#define RESET_Tris          TRISGbits.TRISG15   // выход RESET
+#define MS1                 LATGbits.LATG12     // выход MS1
+#define MS2                 LATGbits.LATG13     // выход MS2
+#define SLEEP               LATGbits.LATG14     // выход SLEEP
+#define RESET               LATGbits.LATG15     // выход RESET
+
+//описание выводов port1
+#define PORT1_NULL_Tris     TRISAbits.TRISA0    // вход NULL
+#define PORT1_POS_Tris      TRISDbits.TRISD8    // вход POS
+#define PORT1_POS2_Tris     TRISEbits.TRISE0    // вход POS2
+#define PORT1_NULL          PORTAbits.RA0       // вход NULL
+#define PORT1_POS           PORTDbits.RD8       // вход POS
+#define PORT1_POS2          PORTEbits.RE0       // вход POS2
+#define PORT1_ENABLE_Tris   TRISAbits.TRISA9    // выход ENABLE
+#define PORT1_DIR_Tris      TRISBbits.TRISB8    // выход DIR
+#define PORT1_STEP_Tris     TRISDbits.TRISD0    // выход STEP
+#define PORT1_ENABLE        LATAbits.LATA9      // выход ENABLE
+#define PORT1_DIR           LATBbits.LATB8      // выход DIR
+#define PORT1_STEP          LATDbits.LATD0      // выход STEP
+
+//инициализация выводов port2
+#define PORT2_NULL_Tris TRISAbits.TRISA1 // вход NULL
+#define PORT2_POS_Tris TRISDbits.TRISD9 // вход POS
+#define PORT2_POS2_Tris TRISEbits.TRISE1 // вход POS2
+#define PORT2_NULL PORTAbits.RA1 // вход NULL
+#define PORT2_POS PORTDbits.RD9 // вход POS
+#define PORT2_POS2 PORTEbits.RE1 // вход POS2
+#define PORT2_ENABLE_Tris TRISAbits.TRISA10 // выход ENABLE
+#define PORT2_DIR_Tris TRISBbits.TRISB9 // выход DIR
+#define PORT2_STEP_Tris TRISDbits.TRISD1 // выход STEP
+#define PORT2_ENABLE LATAbits.LATA10 // выход ENABLE
+#define PORT2_DIR LATBbits.LATB9 // выход DIR
+#define PORT2_STEP LATDbits.LATD1 // выход STEP
+
+//инициализация выводов port3
+#define PORT3_NULL_Tris TRISAbits.TRISA2 // вход NULL
+#define PORT3_POS_Tris TRISDbits.TRISD10 // вход POS
+#define PORT3_POS2_Tris TRISEbits.TRISE2 // вход POS2
+#define PORT3_NULL PORTAbits.RA2 // вход NULL
+#define PORT3_POS PORTDbits.RD10 // вход POS
+#define PORT3_POS2 PORTEbits.RE2 // вход POS2
+#define PORT3_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT3_DIR_Tris TRISBbits.TRISB10 // выход DIR
+#define PORT3_STEP_Tris TRISDbits.TRISD2 // выход STEP
+#define PORT3_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT3_DIR LATBbits.LATB10 // выход DIR
+#define PORT3_STEP LATDbits.LATD2 // выход STEP
+
+//инициализация выводов port4
+#define PORT4_NULL_Tris TRISAbits.TRISA3 // вход NULL
+#define PORT4_POS_Tris TRISDbits.TRISD11 // вход POS
+#define PORT4_POS2_Tris TRISEbits.TRISE3 // вход POS2
+#define PORT4_NULL PORTAbits.RA3 // вход NULL
+#define PORT4_POS PORTDbits.RD11 // вход POS
+#define PORT4_POS2 PORTEbits.RE3 // вход POS2
+#define PORT4_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT4_DIR_Tris TRISBbits.TRISB11 // выход DIR
+#define PORT4_STEP_Tris TRISDbits.TRISD3 // выход STEP
+#define PORT4_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT4_DIR LATBbits.LATB11 // выход DIR
+#define PORT4_STEP LATDbits.LATD3 // выход STEP
+
+//инициализация выводов port5
+#define PORT5_NULL_Tris TRISAbits.TRISA4 // вход NULL
+#define PORT5_POS_Tris TRISDbits.TRISD12 // вход POS
+#define PORT5_POS2_Tris TRISEbits.TRISE4 // вход POS2
+#define PORT5_NULL PORTAbits.RA4 // вход NULL
+#define PORT5_POS PORTDbits.RD12 // вход POS
+#define PORT5_POS2 PORTEbits.RE4 // вход POS2
+#define PORT5_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT5_DIR_Tris TRISBbits.TRISB12 // выход DIR
+#define PORT5_STEP_Tris TRISDbits.TRISD4 // выход STEP
+#define PORT5_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT5_DIR LATBbits.LATB12 // выход DIR
+#define PORT5_STEP LATDbits.LATD4 // выход STEP
+
+//инициализация выводов port6
+#define PORT6_NULL_Tris TRISAbits.TRISA5 // вход NULL
+#define PORT6_POS_Tris TRISDbits.TRISD13 // вход POS
+#define PORT6_POS2_Tris TRISEbits.TRISE5 // вход POS2
+#define PORT6_NULL PORTAbits.RA5 // вход NULL
+#define PORT6_POS PORTDbits.RD13 // вход POS
+#define PORT6_POS2 PORTEbits.RE5 // вход POS2
+#define PORT6_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT6_DIR_Tris TRISBbits.TRISB13 // выход DIR
+#define PORT6_STEP_Tris TRISDbits.TRISD5 // выход STEP
+#define PORT6_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT6_DIR LATBbits.LATB13 // выход DIR
+#define PORT6_STEP LATDbits.LATD5 // выход STEP
+
+//инициализация выводов port7
+#define PORT7_NULL_Tris TRISAbits.TRISA6 // вход NULL
+#define PORT7_POS_Tris TRISDbits.TRISD14 // вход POS
+#define PORT7_POS2_Tris TRISEbits.TRISE6 // вход POS2
+#define PORT7_NULL PORTAbits.RA6 // вход NULL
+#define PORT7_POS PORTDbits.RD14 // вход POS
+#define PORT7_POS2 PORTEbits.RE6 // вход POS2
+#define PORT7_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT7_DIR_Tris TRISBbits.TRISB14 // выход DIR
+#define PORT7_STEP_Tris TRISDbits.TRISD6 // выход STEP
+#define PORT7_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT7_DIR LATBbits.LATB14 // выход DIR
+#define PORT7_STEP LATDbits.LATD6 // выход STEP
+
+//инициализация выводов port8
+#define PORT8_NULL_Tris TRISAbits.TRISA7 // вход NULL
+#define PORT8_POS_Tris TRISDbits.TRISD15 // вход POS
+#define PORT8_POS2_Tris TRISEbits.TRISE7 // вход POS2
+#define PORT8_NULL PORTAbits.RA7 // вход NULL
+#define PORT8_POS PORTDbits.RD15 // вход POS
+#define PORT8_POS2 PORTEbits.RE7 // вход POS2
+#define PORT8_ENABLE_Tris TRISAbits.TRISA9 // выход ENABLE
+#define PORT8_DIR_Tris TRISBbits.TRISB15 // выход DIR
+#define PORT8_STEP_Tris TRISDbits.TRISD7 // выход STEP
+#define PORT8_ENABLE LATAbits.LATA9 // выход ENABLE
+#define PORT8_DIR LATBbits.LATB15 // выход DIR
+#define PORT8_STEP LATDbits.LATD7 // выход STEP
 
 
 //// ENC624J600 Interface Configuration

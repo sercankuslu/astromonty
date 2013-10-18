@@ -20,7 +20,6 @@ extern BYTE curHTTPID;
 void HTTPPrint(DWORD callbackID);
 void HTTPPrint_hellomsg(void);
 void HTTPPrint_cookiename(void);
-void HTTPPrint_led(WORD);
 void HTTPPrint_uploadedmd5(void);
 void HTTPPrint_status_fail(void);
 void HTTPPrint_config_mac(void);
@@ -35,6 +34,7 @@ void HTTPPrint_reboot(void);
 void HTTPPrint_rebootaddr(void);
 void HTTPPrint_ang(WORD);
 void HTTPPrint_angR(WORD);
+void HTTPPrint_time(WORD);
 
 void HTTPPrint(DWORD callbackID)
 {
@@ -48,12 +48,6 @@ void HTTPPrint(DWORD callbackID)
 			break;
         case 0x00000003:
 			HTTPPrint_cookiename();
-			break;
-        case 0x0000000c:
-			HTTPPrint_led(1);
-			break;
-        case 0x00000017:
-			HTTPPrint_led(0);
 			break;
         case 0x0000001d:
 			HTTPPrint_uploadedmd5();
@@ -111,6 +105,9 @@ void HTTPPrint(DWORD callbackID)
 			break;
         case 0x00000050:
 			HTTPPrint_angR(2);
+			break;
+        case 0x00000051:
+			HTTPPrint_time(0);
 			break;
 		default:
 			// Output notification for undefined values
