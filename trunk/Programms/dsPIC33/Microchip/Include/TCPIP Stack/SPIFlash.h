@@ -65,8 +65,8 @@
 
 #if defined(SPIFLASH_CS_TRIS)
 	void SPIFlashInit(void);		
-	void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen);
-        void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen, BYTE WaitData);
+	//void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen);
+    void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen, BYTE WaitData);
 	void SPIFlashBeginWrite(DWORD dwAddr);
 	void SPIFlashWrite(BYTE vData);
 	void SPIFlashWriteArray(BYTE *vData, WORD wLen);

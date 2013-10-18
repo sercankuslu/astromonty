@@ -120,10 +120,10 @@ static unsigned short wOriginalAppConfigChecksum;    // Checksum of the ROM defa
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
 
-extern RR rr1;
-extern RR rr2;
-extern RR rr3;
-extern RAMSaveConfig RRConfigRAM;
+//extern RR rr1;
+//extern RR rr2;
+//extern RR rr3;
+//extern RAMSaveConfig RRConfigRAM;
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
@@ -335,6 +335,7 @@ int main(void)
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
     
+    /*
     DWORD StepsPerRound = 3200;
     OC_INTERVAL_CALC Intrerval;
     DWORD T3 = 0;
@@ -348,7 +349,7 @@ int main(void)
     Intrerval.Tstep = 0.0000002;
     Intrerval.MaxSpeed = 5.0;
     T3 = GetMinInterval( &Intrerval);
-
+    */
     //void (*mas[8])(WORD) = {f0,f1,f2,f3,f4,f5,f6,f7};    
     //WORD Count = 10;
     //DMA_ID id = 6;
@@ -518,7 +519,7 @@ int main(void)
         IPC12bits.T7IP = 4;    
         T7CONbits.TON = 1;
     } 
-     OCSetup();
+    // OCSetup();
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
     // execute all stack-related tasks, as well as your own
@@ -1414,8 +1415,8 @@ static void InitAppConfig(void)
             //}
             #elif defined(SPIFLASH_CS_TRIS)
             {
-                SPIFlashReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
-                SPIFlashReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig));
+                SPIFlashReadArray(0x0000, (BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct), 1);
+                SPIFlashReadArray(sizeof(NVMValidationStruct), (BYTE*)&AppConfig, sizeof(AppConfig), 1);
             }            
             #endif
     

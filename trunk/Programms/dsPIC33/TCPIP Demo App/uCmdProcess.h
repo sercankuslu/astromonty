@@ -7,8 +7,8 @@
 #   include "stdafx.h"
 #endif
 
-#include "..\dsPIC33\TCPIP Demo App\device_control.h"
-#include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
+#include "device_control.h"
+//#include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 
 
 // структура DMA буфера для режима Delayed One-Shot в OC

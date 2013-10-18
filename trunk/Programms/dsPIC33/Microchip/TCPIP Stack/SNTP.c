@@ -180,6 +180,7 @@ void SNTPClient(void)
 	switch(SNTPState)
 	{
 		case SM_HOME:
+            bIsTimeValid = 0;
 			// Obtain ownership of the DNS resolution module
 			if(!DNSBeginUsage())
 				break;
@@ -248,6 +249,7 @@ void SNTPClient(void)
 			break;
 
 		case SM_UDP_SEND:
+            bIsTimeValid = 0;
 			// Open up the sending UDP socket
 			MySocket = UDPOpen(0, &Server, NTP_SERVER_PORT);
 			if(MySocket == INVALID_UDP_SOCKET)
@@ -272,7 +274,7 @@ void SNTPClient(void)
 			SNTPState = SM_UDP_RECV;		
 			break;
 
-		case SM_UDP_RECV:
+		case SM_UDP_RECV:        
 			// Look for a response time packet
 			if(!UDPIsGetReady(MySocket)) 
 			{
@@ -305,7 +307,7 @@ void SNTPClient(void)
 			// Do rounding.  If the partial seconds is > 0.5 then add 1 to the seconds count.
 			if(((BYTE*)&pkt.tx_ts_fraq)[0] & 0x80)
 				dwSNTPSeconds++;
-            bIsTimeValid = 1;
+                bIsTimeValid = 1;
 			break;
 
 		case SM_SHORT_WAIT:

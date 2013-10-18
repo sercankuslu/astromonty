@@ -1809,9 +1809,9 @@ int OCSetCallback(OC_ID id, void* _This,  int (*CallbackFunc)(void*))
 INTERRUPT _OC1Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {    
-    OCConfigType *OCConfig = &OCConfig[ID_OC1];
-    if(OCConfig->CallbackFunc){
-            OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC1];
+    if(OCCfg->CallbackFunc){
+            OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
 }
@@ -1819,9 +1819,9 @@ INTERRUPT _OC1Interrupt( void )
 INTERRUPT _OC2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC2];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC2];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
 }
@@ -1829,9 +1829,9 @@ INTERRUPT _OC2Interrupt( void )
 INTERRUPT _OC3Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC3];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC3];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS1bits.OC3IF = 0; // Clear OC3 interrupt flag
 }
@@ -1839,9 +1839,9 @@ INTERRUPT _OC3Interrupt( void )
 INTERRUPT _OC4Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC4];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC4];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS1bits.OC4IF = 0; // Clear OC4 interrupt flag
 }
@@ -1849,9 +1849,9 @@ INTERRUPT _OC4Interrupt( void )
 INTERRUPT _OC5Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC5];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC5];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS2bits.OC5IF = 0; // Clear OC5 interrupt flag
 }
@@ -1859,9 +1859,9 @@ INTERRUPT _OC5Interrupt( void )
 INTERRUPT _OC6Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC6];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC6];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS2bits.OC6IF = 0; // Clear OC6 interrupt flag
 }
@@ -1869,9 +1869,9 @@ INTERRUPT _OC6Interrupt( void )
 INTERRUPT _OC7Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC7];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC7];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS2bits.OC7IF = 0; // Clear OC7 interrupt flag
 }
@@ -1879,9 +1879,9 @@ INTERRUPT _OC7Interrupt( void )
 INTERRUPT _OC8Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
-    OCConfigType *OCConfig = &OCConfig[ID_OC8];
-    if(OCConfig->CallbackFunc){
-        OCConfig->CallbackFunc(OCConfig->_This);
+    OCConfigType *OCCfg = &OCConfig[ID_OC8];
+    if(OCCfg->CallbackFunc){
+        OCCfg->CallbackFunc(OCCfg->_This);
     }   
     IFS2bits.OC8IF = 0; // Clear OC8 interrupt flag
 }

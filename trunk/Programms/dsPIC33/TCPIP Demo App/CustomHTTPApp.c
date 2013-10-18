@@ -1984,13 +1984,19 @@ void HTTPPrint_status_fail(void)
 void HTTPPrint_ang(WORD i)
 {
 	char buf[16];
-	sprintf(buf,"%f",GetAngle(i));
+	sprintf(buf,"%f", 0.00000/*GetAngle(i)*/);
 	TCPPutString(sktHTTP,(BYTE*)buf);
 }
 void HTTPPrint_angR(WORD i)
 {
     char buf[4];
-	sprintf(buf,"%d",GetStatus(i));
+	sprintf(buf,"%d", 0/*GetStatus(i)*/);
 	TCPPutString(sktHTTP,(BYTE*)buf);
+}
+void HTTPPrint_time(WORD i)
+{
+    char buf[4];
+    sprintf(buf,"%d",0);
+    TCPPutString(sktHTTP,(BYTE*)buf);
 }
 #endif

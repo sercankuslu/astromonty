@@ -221,7 +221,7 @@ void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
 //------------------------------------------------------------------------------------------------
 {
 #ifdef __C30__
-    SPIFlashReadArray(Addr, val, len);
+    SPIFlashReadArray(Addr, val, len, 1);
 #else
     memcpy(val, &FileSystem[Addr], len);
 #endif

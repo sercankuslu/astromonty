@@ -1,15 +1,19 @@
 #include "stdafx.h"
 #include "Queue.h"
 #include "uCmdProcess.h"
-#define SPIFLASH_CS_TRIS 
-#include "..\dsPIC33\Microchip\Include\TCPIP Stack\SPIFlash.h"
-
+#ifdef __C30__
+#   include "TCPIP Stack/TCPIP.h"
+#else
+#   define SPIFlashReadArray(dwAddress, vData, wLen)  FS_ReadArray(dwAddress, vData, wLen, 1)
+#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData) FS_ReadArray(dwAddress, vData, wLen, 1)
+extern BYTE FileSystem[64*1024*256];
+#endif
 
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   uCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
 xCMD_QUEUE      mCmdQueueValues1[mCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   mCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
-OC_CHANEL_STATE OC1;
+//OC_CHANEL_STATE OC1;
 
 
 
@@ -20,15 +24,16 @@ int uCmd_Init()
     //                              
     // команда -> очередь команд -> мини команда -> очередь выборки -> микрокоманда -> очередь микрокоманд -> исполнение
     // 0. настроить очередь
-    Queue_Init(&OC1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
-    Queue_Init(&OC1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
+    //Queue_Init(&OC1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
+    //Queue_Init(&OC1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
     // 1. считать настройки из flash
     // 2. настроить OC, DMA
     // 3. 
     // 
 
     // для тестов
-    xCMD_QUEUE command;
+    //xCMD_QUEUE command;
+    /*
     command.State = xCMD_STOP;
     command.Value = (DWORD)0x0000;    
     Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
@@ -71,8 +76,31 @@ int uCmd_Init()
     uCmd_OCCallback((void*)&OC1);
     uCmd_OCCallback((void*)&OC1);
     uCmd_OCCallback((void*)&OC1);
+    */
+    /*
+    BYTE Buf[256];
+    WORD * k = (WORD*)FileSystem;
+    for (int i = 0; i < 256; i++) {
+        *k++ = i;
+    }
+    OC1.Config.wSTEPPulseWidth = 10;
+    OC1.Config.AccRecordCount = 256;
 
-    
+    command.State = xCMD_START;
+    command.Value = (DWORD)0x0000;    
+    Queue_Insert(&OC1.mCmdQueue, 10, (BYTE*)&command);
+    command.State = xCMD_ACCELERATE;
+    command.Value = (DWORD)32;    
+    Queue_Insert(&OC1.mCmdQueue, 10, (BYTE*)&command);
+    command.State = xCMD_DECELERATE;
+    command.Value = (DWORD)0;    
+    Queue_Insert(&OC1.mCmdQueue, 10, (BYTE*)&command);
+    command.State = xCMD_STOP;
+    command.Value = (DWORD)0x0000;    
+    Queue_Insert(&OC1.mCmdQueue, 10, (BYTE*)&command);
+
+    uCmd_DMACallback( (void*)&OC1, Buf, 256);
+    */
     return 0;
 }
 
@@ -152,26 +180,33 @@ int uCmd_OCCallback( void * _This )
 #define NO_WAIT_READ_COMPLETE 0
 int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 {
+#define TMP_SIZE 8
+#define TMP_SIZE_MASK 7
+#define bTMP_SIZE 16
     OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
     xCMD_QUEUE * Value = NULL;
     BYTE ProcessCmd = 1;
     BYTE Priority = 0;
     xCMD_QUEUE Command;
-    WORD TmpBuf1[8];
-    WORD TmpBuf2[8];
-    WORD * TmpBufPtr = TmpBuf1;
-    WORD Addr = 0;
+    WORD TmpBuf1[TMP_SIZE];
+    WORD TmpBuf2[TMP_SIZE];
+    WORD * TmpBufPtr = NULL;
+    DWORD Addr = 0;
     WORD i = 0;
-    WORD j = 0;
+    //WORD j = 0;
     WORD Pulse = OCN->Config.wSTEPPulseWidth;
-    OC_BUF * BufPtr = (OC_BUF*)Buf;
-    Command.State = xCMD_STOP;
-    Command.Value = (DWORD)0x0000;    
+    OC_BUF * BufPtr;
+    WORD DataSize = 0;
+    BYTE Buf1 = 0;
+
+    BufPtr = (OC_BUF*)Buf;
 
     while (ProcessCmd){
 
         if(Queue_ExtractAllToMin( &OCN->mCmdQueue, &Priority, (BYTE**)&Value ) != 0){
             // если нет команды, то останов
+            Command.State = xCMD_STOP;
+            Command.Value = (DWORD)0x0000; 
             Value = &Command;
             ProcessCmd = 0;
         }
@@ -179,42 +214,89 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
         switch (Value->State) {
 
         case xCMD_ACCELERATE:
-            Value->Value;  // тут номер AccX до которого надо дойти
-            OCN->mCMD_Status.AccX; // тут текущий номер AccX
-            OCN->Config.AccBaseAddress; // адрес таблицы разгона
-            OCN->Config.AccRecordCount; // количество записей в таблице разгона
-            SPIFlashReadArray(Addr , (BYTE*)TmpBuf1, 16, WAIT_READ_COMPLETE);
-            for (i = 0; i < 8; i++) {
-                if(i & 1 == 0){
-                    SPIFlashReadArray(Addr , (BYTE*)TmpBuf2, 16, NO_WAIT_READ_COMPLETE);
-                    TmpBufPtr = TmpBuf1;
-                } else {
-                    SPIFlashReadArray(Addr , (BYTE*)TmpBuf1, 16, NO_WAIT_READ_COMPLETE);
-                    TmpBufPtr = TmpBuf2;
+//             Value->Value;  // тут номер AccX до которого надо дойти
+//             OCN->mCMD_Status.AccX; // тут текущий номер AccX
+//             OCN->Config.AccBaseAddress; // адрес таблицы разгона
+//             OCN->Config.AccRecordCount; // количество записей в таблице разгона
+
+            // проверка на некорректные данные
+            if(OCN->mCMD_Status.AccX > OCN->Config.AccRecordCount){
+                OCN->mCMD_Status.AccX = OCN->Config.AccRecordCount;
+            }
+            if(Value->Value > OCN->Config.AccRecordCount){
+                Value->Value = OCN->Config.AccRecordCount;
+            }
+            // получение размеров данных
+            DataSize = (WORD)Value->Value - (WORD)OCN->mCMD_Status.AccX;
+            if (DataSize > BufLen / 4) {
+                DataSize = BufLen / 4;
+            }
+
+            Addr = OCN->Config.AccBaseAddress + OCN->mCMD_Status.AccX * sizeof(WORD);
+
+            // получили данные в буфер1
+            SPIFlashReadArray(Addr , (BYTE*)TmpBuf1, bTMP_SIZE, WAIT_READ_COMPLETE);
+            Buf1 = 0;
+            for (i = 0; i < DataSize; i++) {
+
+                if((i & TMP_SIZE_MASK) == 0 ){
+
+                    if(Buf1 == 0){
+                        Addr += bTMP_SIZE;
+                        // запросили следующие данные в буфер2
+                        SPIFlashReadArray(Addr, (BYTE*)TmpBuf2, bTMP_SIZE, NO_WAIT_READ_COMPLETE);
+                        TmpBufPtr = TmpBuf1;
+                        Buf1 = 1;
+                    } else {
+                        Addr += bTMP_SIZE;
+                        // запросили следующие данные в буфер1
+                        SPIFlashReadArray(Addr, (BYTE*)TmpBuf1, bTMP_SIZE, NO_WAIT_READ_COMPLETE);
+                        TmpBufPtr = TmpBuf2;
+                        Buf1 = 0;
+                    }
                 }
-                for(j = 0; j< 8; j++){
-                    BufPtr->r = *TmpBufPtr;
-                    BufPtr->rs = *TmpBufPtr + Pulse;
-                    BufPtr++;
-                    TmpBufPtr++;
-                }
+                BufPtr->r = *TmpBufPtr + OCN->T.Val;
+                BufPtr->rs = BufPtr->r + Pulse;
+                BufPtr++;
+                TmpBufPtr++;
+            }
+            if(DataSize > 0){
+                OCN->mCMD_Status.AccX += DataSize;
+                Command.State = xCMD_ACCELERATE;
+                Command.Value = (DWORD)DataSize; 
+                Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command);
+                BufLen -= DataSize * 4;
+            } 
+            if(OCN->mCMD_Status.AccX >= Value->Value) {
+                Queue_Delete(&OCN->mCmdQueue);
+            }
+            
+            if(BufLen == 0){
+                ProcessCmd = 0; // буфер заполнен ( следующую команду выбирать не нужно)
             }
             break;
         case xCMD_RUN:
             break;
         case xCMD_DECELERATE:
+            Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+            Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_SET_TIMER:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+            Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_SET_DIRECTION:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+            Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_STOP:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+            Queue_Delete(&OCN->mCmdQueue);
+            ProcessCmd = 0;
             break;
         case xCMD_START:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+            Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_EMERGENCY_STOP:
             // все вырубить

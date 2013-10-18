@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "Queue.h"
+#ifdef __C30__
+#   include "TCPIP Stack/TCPIP.h"
+#endif
 
 int Queue_Insert( PRIORITY_QUEUE * Queue, BYTE Key, BYTE * Value )
 {
@@ -33,6 +36,7 @@ int Queue_Min( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
     QUEUE_ELEMENT * j = NULL;
     BYTE MinKey = 255;
     QUEUE_ELEMENT * MinIndex = NULL;
+    BYTE i;
 
     if(Queue->Count == 0)
         return -1;
@@ -41,7 +45,7 @@ int Queue_Min( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
 
     j = Queue->Start;
 
-    for(BYTE i = 0; i < Queue->Count; i++) {
+    for(i = 0; i < Queue->Count; i++) {
         if (MinKey > j->Key) {
             MinKey = j->Key;
             MinIndex = j;

@@ -237,7 +237,7 @@ void MACInit(void)
     Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1
     Config.SPICON2 = 0;
     Config.SPISTAT = 0;
-    ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect1, ENCRelease1);
+    ENCDeviceHandle = SPIRegisterDevice(ID_SPI1, Config, ENCSelect1, ENCRelease1);
     
     // RESET the entire ENC28J60, clearing all registers
     // Also wait for CLKRDY to become set.
@@ -1187,7 +1187,7 @@ BYTE MACGet()
 WORD MACGetArray(BYTE *val, WORD len)
 {
     BYTE Cmd = RBM;
-    return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len );
+    return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len, 1 );
   
 }//end MACGetArray
 
