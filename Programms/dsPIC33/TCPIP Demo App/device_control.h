@@ -3,7 +3,7 @@
 #ifdef __C30__
 #   include "GenericTypeDefs.h"
 #else
-#   include "..\..\guidance\stdafx.h"
+#   include "stdafx.h"
 #endif 
 // блокировки
 #define SET_INT_LOCK(x) SRbits.IPL = x
@@ -80,7 +80,7 @@ typedef enum _DMA_DEVICE_IRQ {
     IRQ_INT0 = 0, IRQ_IC1=1, IRQ_OC1=2, IRQ_IC2=5,  IRQ_OC2=6, IRQ_TMR2=7, IRQ_TMR3=8, IRQ_SPI1=10, IRQ_SPI2=33, IRQ_UART1_RX, IRQ_UART1_TX, IRQ_UART2_RX, IRQ_UART2_TX, IRQ_ADC1, IRQ_ADC2
 } DMA_DEVICE_IRQ;
 
-typedef struct _DMAConfigType{
+typedef struct _DMAConfigType {
     int (*fillingBufferAFunc)(void*, BYTE*, WORD);
     int (*fillingBufferBFunc)(void*, BYTE*, WORD);
     BYTE* BufA;

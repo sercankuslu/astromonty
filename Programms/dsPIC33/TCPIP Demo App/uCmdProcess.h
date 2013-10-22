@@ -3,22 +3,26 @@
 
 #ifdef __C30__
 #   include "GenericTypeDefs.h"
+#include "device_control.h"
+#include "Queue.h"
 #else
 #   include "stdafx.h"
+#include "Queue.h"
+#include "device_control.h"
 #endif
 
-#include "device_control.h"
+
 //#include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 
 
 // структура DMA буфера для режима Delayed One-Shot в OC
-typedef struct OC_BUF {
+typedef struct _OC_BUF {
     WORD r;
     WORD rs;
 } OC_BUF;
 
 
- typedef enum xCMD_STATE { // состояния
+ typedef enum _xCMD_STATE { // состояния
                            // приоритет|описание
      xCMD_STOP,            //10 остановлен
      xCMD_START,           //10 включение канала
@@ -37,7 +41,7 @@ typedef struct OC_BUF {
 
 // элемент очереди микрокоманд (сопровождает данные в буфере DMA)
 // одновременно в одном буфере может быть несколько команд
-typedef struct xCMD_QUEUE{
+typedef struct _xCMD_QUEUE{
     xCMD_STATE  State;                                  // команда
     DWORD       Value;                                  // параметры команды (количество шагов на выполнение команды)
 } xCMD_QUEUE;

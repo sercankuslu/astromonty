@@ -1707,7 +1707,7 @@ static HTTP_READ_STATUS HTTPReadTo(BYTE cDelim, BYTE* cData, WORD wLen)
 #if defined(HTTP_MPFS_UPLOAD)
 static HTTP_IO_RESULT HTTPMPFSUpload(void)
 {
-	BYTE c[16];
+	BYTE c[256];
 	WORD lenA, lenB;
 	
 	switch(curHTTP.httpStatus)
@@ -1775,7 +1775,7 @@ static HTTP_IO_RESULT HTTPMPFSUpload(void)
 				
 			while(lenA > 0u)
 			{
-				lenB = TCPGetArray(sktHTTP, c, mMIN(lenA,16u));
+				lenB = TCPGetArray(sktHTTP, c, mMIN(lenA,256u));
 				curHTTP.byteCount -= lenB;
 				lenA -= lenB;
 				MPFSPutArray(curHTTP.file, c, lenB);
