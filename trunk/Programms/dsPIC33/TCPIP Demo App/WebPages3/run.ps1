@@ -1,4 +1,5 @@
-$filename =  "C:\Apache24\htdocs\status.xml" 
+$PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
+$filename =  "$PSScriptRoot\status.xml" 
 [xml]$status = Get-Content $filename
 $angle0 = 90.0;
 $angle1 = 90.0;

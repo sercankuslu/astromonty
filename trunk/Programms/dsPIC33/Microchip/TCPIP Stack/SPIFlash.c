@@ -180,7 +180,7 @@ void SPIFlashInit(void)
     Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1;
     Config.SPICON2 = 0;
     Config.SPISTAT = 0;
-    FlashDeviceHandle = SPIRegisterDevice(ID_SPI1, Config, FlashSelect, FlashRelease);
+    FlashDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, FlashSelect, FlashRelease);
 
     // Read Device ID code to determine supported device capabilities/instructions
     {

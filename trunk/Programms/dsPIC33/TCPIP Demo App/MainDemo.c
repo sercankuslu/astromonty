@@ -201,10 +201,10 @@ void HighVector(void){_asm goto HighISR _endasm}
 #elif defined(__C30__)
 void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
 {
-    while(1){
+    //while(1){
         Nop();
         Nop();
-    }
+    //}
 }
 void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 {
@@ -367,8 +367,8 @@ int main(void)
                   //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
     //SPIConfig Config;
     //BYTE EncHandle = 0;
-        
-    SPIInit();
+    //uCmd_Init();    
+    
  
     // указатель на функцию
     //int (*p)(void); // объ€вление
@@ -1233,7 +1233,7 @@ static void InitializeBoard(void)
     CODEC_RST_TRIS = 0;
     CODEC_RST_IO = 0;
 #endif
-
+SPIInit();
 #if defined(SPIRAM_CS_TRIS)
     SPIRAMInit();
 #endif
@@ -1486,7 +1486,7 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
     //    SPISRAMWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));        
     #else
         SPIFlashBeginWrite(0x0000);
-        SPIFlashEraseSector(0x0000);
+        //SPIFlashEraseSector(0x0000);
         SPIFlashWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
         SPIFlashWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));
         

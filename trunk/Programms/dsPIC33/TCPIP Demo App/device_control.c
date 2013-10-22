@@ -5,14 +5,15 @@
 #include "TCPIP Stack/TCPIP.h"
 #   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
 //#   define DMAOFFSET(x) (WORD)__builtin_dmaoffset(x)
+#define DMAOFFSET(x) (unsigned int)x - 0x4000
 #endif
 #ifdef _WIN32
 #   define INTERRUPT void
 BYTE _DMA_BASE[1];
-#   define DMAOFFSET(x) (unsigned int)&x - (unsigned int)&_DMA_BASE
+#   define DMAOFFSET(x) (unsigned int)&x
 #   define Nop()
 #endif
-#define DMAOFFSET(x) (unsigned int)x - 0x4000
+
 
 #ifdef _WIN32
 WORD T1CON;
@@ -1509,8 +1510,8 @@ int DMAForceTransfer(DMA_ID id)
 INTERRUPT _DMA0Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA0];
+    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag    
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST0){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1523,8 +1524,8 @@ INTERRUPT _DMA0Interrupt(void)
 INTERRUPT _DMA1Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    IFS0bits.DMA1IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA1];
+    IFS0bits.DMA1IF = 0; // Clear the DMA1 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST1){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1537,8 +1538,8 @@ INTERRUPT _DMA1Interrupt(void)
 INTERRUPT _DMA2Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    IFS1bits.DMA2IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA2];
+    IFS1bits.DMA2IF = 0; // Clear the DMA2 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST2){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1551,8 +1552,8 @@ INTERRUPT _DMA2Interrupt(void)
 INTERRUPT _DMA3Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {    
-    IFS2bits.DMA3IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA3];
+    IFS2bits.DMA3IF = 0; // Clear the DMA3 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST3){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1565,8 +1566,8 @@ INTERRUPT _DMA3Interrupt(void)
 INTERRUPT _DMA4Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    IFS2bits.DMA4IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA4];
+    IFS2bits.DMA4IF = 0; // Clear the DMA4 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST4){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1579,8 +1580,8 @@ INTERRUPT _DMA4Interrupt(void)
 INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 //------------------------------------------------------------------------------------------------
 {    
-    IFS3bits.DMA5IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA5];
+    IFS3bits.DMA5IF = 0; // Clear the DMA5 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST5){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1593,8 +1594,8 @@ INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
 INTERRUPT _DMA6Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    IFS4bits.DMA6IF = 0; // Clear the DMA0 Interrupt Flag
     DMAConfigType *DMACfg = &DMAConfig[DMA6];
+    IFS4bits.DMA6IF = 0; // Clear the DMA6 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST6){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1607,8 +1608,8 @@ INTERRUPT _DMA6Interrupt(void)
 INTERRUPT _DMA7Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
-    IFS4bits.DMA7IF = 0; // Clear the DMA0 Interrupt Flag
-    DMAConfigType *DMACfg = &DMAConfig[DMA6];
+    DMAConfigType *DMACfg = &DMAConfig[DMA7];
+    IFS4bits.DMA7IF = 0; // Clear the DMA7 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
         if(DMACS1bits.PPST6){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
@@ -1970,8 +1971,8 @@ static void WaitForDataReadySPI2( void )
 }
 #endif
 #ifdef _WIN32
-#define WaitForDataReadySPI1( void )     
-#define WaitForDataReadySPI2( void )     
+#define WaitForDataReadySPI1(  )     
+#define WaitForDataReadySPI2(  )     
 #endif
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize);
 // блокировка SPI
@@ -2129,11 +2130,11 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
             break;
         case RECEIVE_DATA:
             Status->Flag = RECEIVE_END;
-            break;
-        case RECEIVE_END:
             if(Status->DataReceiveBuf){
                 memcpy(Status->DataReceiveBuf, Status->DataReceiveSource, Status->DataReceiveLen);
             }
+            break;
+        case RECEIVE_END:
             break;
         case SEND_END:
         default:
@@ -2182,7 +2183,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
     volatile BYTE Dummy;
     BYTE MODE16 = SPI1CON1bits.MODE16;
     WaitForDataReadySPI1();
-    Dummy = SPI1BUF;
+    Dummy = (BYTE)SPI1BUF;
     if(!val) return 0;
     if(MODE16) {
         WORD_VAL wv;
@@ -2208,7 +2209,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
         SPI1BUF = 0x00;    // Send a dummy BYTE to generate 16 clocks
         while( len ) {
             WaitForDataReadySPI1();      // Wait until BYTE is transmitted
-            *(val++) = SPI1BUF;            
+            *(val++) = (BYTE)SPI1BUF;            
             len--;
             if(len >= 1)
                 SPI1BUF = 0x00;    // Send a dummy WORD to generate 32 clocks
@@ -2228,7 +2229,7 @@ WORD SPI1GetArray(BYTE *val, WORD len)
 WORD SPI1SendArray(BYTE *val, WORD len)
 //------------------------------------------------------------------------------------------------
 {    
-    volatile BYTE Dummy;
+    volatile WORD Dummy;
     BYTE MODE16 = SPI1CON1bits.MODE16;
     if(MODE16) {
         WORD_VAL wv;
@@ -2333,11 +2334,6 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
-//             while(Status->TransferComplete == 0){
-//                 Nop();
-//                 Nop();
-//             }
-
             break;
         case ID_SPI1:
             SPI1STATbits.SPIEN = 0;
@@ -2357,10 +2353,6 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
-//             while(Status->TransferComplete == 0){
-//                 Nop();
-//                 Nop();
-//             }
             break;
         default:
             SPIRelease(SPI_id);

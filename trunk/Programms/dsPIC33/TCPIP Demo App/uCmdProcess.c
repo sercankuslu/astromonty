@@ -1,19 +1,39 @@
 #include "stdafx.h"
+
+
+
+#ifdef __C30__
+
+#   include "TCPIP Stack/TCPIP.h"
 #include "Queue.h"
 #include "uCmdProcess.h"
-#ifdef __C30__
-#   include "TCPIP Stack/TCPIP.h"
+#include "device_control.h"
 #else
-#   define SPIFlashReadArray(dwAddress, vData, wLen)  FS_ReadArray(dwAddress, vData, wLen, 1)
-#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData) FS_ReadArray(dwAddress, vData, wLen, 1)
-extern BYTE FileSystem[64*1024*256];
+#include "device_control.h"
+#include "Queue.h"
+#include "uCmdProcess.h"
+
+//#include "..\..\guidance\stdafx.h"
+//#include "..\..\dsPIC33\TCPIP Demo App\device_control.h"
+//#include "..\..\dsPIC33\TCPIP Demo App\uCmdProcess.h"
+//#include "..\..\dsPIC33\TCPIP Demo App\Queue.h"
+
+void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
+void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
+
+#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData)  FS_ReadArray(dwAddress, vData, wLen)
+//#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData) FS_ReadArray(dwAddress, vData, wLen)
+
+unsigned char FileSystem[64*1024*256];
+
 #endif
+
 
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   uCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
 xCMD_QUEUE      mCmdQueueValues1[mCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   mCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
-//OC_CHANEL_STATE OC1;
+OC_CHANEL_STATE OControll1;
 
 
 
@@ -21,62 +41,63 @@ int SetDirection(OC_ID id, BYTE Dir);
 
 int uCmd_Init()
 {
+    // для тестов
+    xCMD_QUEUE command;
+
     //                              
     // команда -> очередь команд -> мини команда -> очередь выборки -> микрокоманда -> очередь микрокоманд -> исполнение
     // 0. настроить очередь
-    //Queue_Init(&OC1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
-    //Queue_Init(&OC1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
     // 1. считать настройки из flash
     // 2. настроить OC, DMA
     // 3. 
     // 
 
-    // для тестов
-    //xCMD_QUEUE command;
-    /*
+    
     command.State = xCMD_STOP;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_SET_TIMER;
     command.Value = (DWORD)OC_TMR3;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_START;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_ACCELERATE;
     command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_RUN;
     command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_DECELERATE;
     command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_STOP;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
 
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
     command.State = xCMD_START;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_ACCELERATE;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_DECELERATE;
     command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
     command.State = xCMD_STOP;
     command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OC1.uCmdQueue, 10, (BYTE*)&command);
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
-    uCmd_OCCallback((void*)&OC1);
-    */
+    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
+    uCmd_OCCallback((void*)&OControll1);
+    
     /*
     BYTE Buf[256];
     WORD * k = (WORD*)FileSystem;
@@ -341,4 +362,29 @@ int SetDirection(OC_ID id, BYTE Dir)
     }
 #endif
     return 0;
+}
+
+
+//-------------------------------------------------------------------------
+void FS_WriteArray(DWORD Addr, BYTE* val, WORD len)
+    //------------------------------------------------------------------------------------------------
+{
+#ifdef __C30__
+    SPIFlashBeginWrite(Addr);
+    SPIFlashWriteArray(val, len);
+#else
+    memcpy(&FileSystem[Addr], val, len);
+#endif
+
+}
+
+//------------------------------------------------------------------------------------------------
+void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
+    //------------------------------------------------------------------------------------------------
+{
+#ifdef __C30__
+    SPIFlashReadArray(Addr, val, len, 1);
+#else
+    memcpy(val, &FileSystem[Addr], len);
+#endif
 }

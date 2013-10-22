@@ -352,16 +352,16 @@ var NextCat=0;
 function LoadData(){
     try{
         switch(NextCat){
-        case 0: loadScript("stars/Tycho2_5_6.js", function(){scriptCallback(Tycho2_5_6);}, 0 );
+        case 0: loadScript("./stars/Tycho2_5_6.js", function(){scriptCallback(Tycho2_5_6);}, 0 );
             break;
-        case 1: loadScript("stars/Tycho2_6_7.js", function(){scriptCallback(Tycho2_6_7);}, 0 );
+        case 1: loadScript("./stars/Tycho2_6_7.js", function(){scriptCallback(Tycho2_6_7);}, 0 );
             break;
-        case 2: loadScript("stars/Tycho2_7_8.js", function(){scriptCallback(Tycho2_7_8);}, 0 );
+        case 2: loadScript("./stars/Tycho2_7_8.js", function(){scriptCallback(Tycho2_7_8);}, 0 );
             break;
-        case 3: loadScript("stars/Tycho2_8_9.js", function(){scriptCallback(Tycho2_8_9);}, 0 );
+        case 3: loadScript("./stars/Tycho2_8_9_1.js", function(){scriptCallback(Tycho2_8_9_1);}, 0 );
             break;
-        //case 4:    loadScript("stars/Tycho2_73.js", function(){scriptCallback(Tycho2_73);}, 0 );
-            // break;
+        case 4: loadScript("./stars/Tycho2_8_9_2.js", function(){scriptCallback(Tycho2_8_9_2);}, 0 );
+            break;
         // case 5:    loadScript("stars/Tycho2_81.js", function(){scriptCallback(Tycho2_81);}, 0 );
             // break;
         // case 6:    loadScript("stars/Tycho2_82.js", function(){scriptCallback(Tycho2_82);}, 0 );
