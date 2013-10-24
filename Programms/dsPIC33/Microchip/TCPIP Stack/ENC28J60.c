@@ -1142,23 +1142,24 @@ BYTE MACGet()
 {
     BYTE Result;
 
-    ENCSelect();
-
-    ClearSPIDoneFlag();
-
-    // Send the opcode and read a byte in two 8-bit operations
-    ENC_SSPBUF = RBM;
-    WaitForDataByte();      // Wait until opcode/address is transmitted.
-    Result = ENC_SSPBUF;
-
-    ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
-                            //   contents.
-    WaitForDataByte();      // Wait until register is received.
-
-    Result = ENC_SSPBUF;
-
-    ENCRelease();
-
+//     ENCSelect();
+// 
+//     ClearSPIDoneFlag();
+// 
+//     // Send the opcode and read a byte in two 8-bit operations
+//     ENC_SSPBUF = RBM;
+//     WaitForDataByte();      // Wait until opcode/address is transmitted.
+//     Result = ENC_SSPBUF;
+// 
+//     ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
+//                             //   contents.
+//     WaitForDataByte();      // Wait until register is received.
+// 
+//     Result = ENC_SSPBUF;
+// 
+//     ENCRelease();
+    BYTE Cmd = RBM;
+    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, &Result, 1, 0 ); // не ждем, всего один байт
     return Result;
 }//end MACGet
 
@@ -1187,7 +1188,7 @@ BYTE MACGet()
 WORD MACGetArray(BYTE *val, WORD len)
 {
     BYTE Cmd = RBM;
-    return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len, 1 );
+    return SPIReceiveData(ENCDeviceHandle, &Cmd, 1, val, len, 1 ); //Надо ждать. буфер может быть большим
   
 }//end MACGetArray
 
@@ -1212,20 +1213,22 @@ WORD MACGetArray(BYTE *val, WORD len)
  *****************************************************************************/
 void MACPut(BYTE val)
 {
-    volatile BYTE Dummy;
-
-    ENCSelect();
-    ClearSPIDoneFlag();
-
-    ENC_SSPBUF = WBM;       // Send the opcode and constant.
-    WaitForDataByte();      // Wait until opcode/constant is transmitted.
-    Dummy = ENC_SSPBUF;
-
-    ENC_SSPBUF = val;       // Send the byte to be writen.
-    WaitForDataByte();      // Wait until finished transmitting
-    Dummy = ENC_SSPBUF;
-
-    ENCRelease();
+//     volatile BYTE Dummy;
+// 
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+// 
+//     ENC_SSPBUF = WBM;       // Send the opcode and constant.
+//     WaitForDataByte();      // Wait until opcode/constant is transmitted.
+//     Dummy = ENC_SSPBUF;
+// 
+//     ENC_SSPBUF = val;       // Send the byte to be writen.
+//     WaitForDataByte();      // Wait until finished transmitting
+//     Dummy = ENC_SSPBUF;
+// 
+//     ENCRelease();
+    BYTE Cmd = WBM;
+    SPISendData(ENCDeviceHandle, &Cmd, 1, &val, 1 ); 
 }//end MACPut
 
 
@@ -1287,13 +1290,14 @@ static void SendSystemReset(void)
     DelayMs(2);
 
     // Execute the System Reset command
-    ENCSelect();
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = SR;
-    WaitForDataByte();      // Wait until the command is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENCRelease();
-
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+//     ENC_SSPBUF = SR;
+//     WaitForDataByte();      // Wait until the command is transmitted.
+//     Dummy = ENC_SSPBUF;
+//     ENCRelease();
+    BYTE Cmd = SR;
+    SPISendCmd(ENCDeviceHandle, &Cmd, 1);
     // Wait for the oscillator start up timer and PHY to become ready
     DelayMs(2);
 }//end SendSystemReset
@@ -1326,18 +1330,19 @@ static REG ReadETHReg(BYTE Address)
     REG r;
 
     // Select the chip and send the Read Control Register opcode/address
-    ENCSelect();
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RCR | Address;
-
-    WaitForDataByte();      // Wait until the opcode/address is transmitted
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
-                            //   contents
-    WaitForDataByte();      // Wait until the register is received
-    r.Val = ENC_SSPBUF;
-    ENCRelease();
-
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+//     ENC_SSPBUF = RCR | Address;
+// 
+//     WaitForDataByte();      // Wait until the opcode/address is transmitted
+//     r.Val = ENC_SSPBUF;
+//     ENC_SSPBUF = 0;         // Send a dummy byte to receive the register
+//                             //   contents
+//     WaitForDataByte();      // Wait until the register is received
+//     r.Val = ENC_SSPBUF;
+//     ENCRelease();
+    BYTE Cmd = RCR | Address;
+    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&r, 1, 0 );
     return r;
 }//end ReadETHReg
 
@@ -1368,21 +1373,24 @@ static REG ReadMACReg(BYTE Address)
 {
     REG r;
 
-    ENCSelect();
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = RCR | Address; // Send the Read Control Register opcode and
-                                //   address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;             // Send a dummy byte
-    WaitForDataByte();          // Wait for the dummy byte to be transmitted
-    r.Val = ENC_SSPBUF;
-    ENC_SSPBUF = 0;             // Send another dummy byte to receive the register
-                                //   contents.
-    WaitForDataByte();          // Wait until register is received.
-    r.Val = ENC_SSPBUF;
-    ENCRelease();
-
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+//     ENC_SSPBUF = RCR | Address; // Send the Read Control Register opcode and
+//                                 //   address.
+//     WaitForDataByte();          // Wait until opcode/address is transmitted.
+//     r.Val = ENC_SSPBUF;
+//     ENC_SSPBUF = 0;             // Send a dummy byte
+//     WaitForDataByte();          // Wait for the dummy byte to be transmitted
+//     r.Val = ENC_SSPBUF;
+//     ENC_SSPBUF = 0;             // Send another dummy byte to receive the register
+//                                 //   contents.
+//     WaitForDataByte();          // Wait until register is received.
+//     r.Val = ENC_SSPBUF;
+//     ENCRelease();
+    BYTE Cmd[2];
+    Cmd[0] = RCR | Address;
+    Cmd[1] = 0;
+    SPIReceiveData(ENCDeviceHandle, &Cmd, 2, (BYTE*)&r, 1, 0 );
     return r;
 }//end ReadMACReg
 
@@ -1458,34 +1466,39 @@ PHYREG ReadPHYReg(BYTE Register)
  *****************************************************************************/
 static void WriteReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
+//     volatile BYTE Dummy;
+// 
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+// 
+//     ENC_SSPBUF = WCR | Address; // Send the opcode and address.
+//     WaitForDataByte();          // Wait until opcode/constant is transmitted.
+//     Dummy = ENC_SSPBUF;
+//     ENC_SSPBUF = Data;          // Send the byte to be writen.
+//     WaitForDataByte();          // Wait until finished transmitting
+//     Dummy = ENC_SSPBUF;
+// 
+// 	// For faster processors (dsPIC), delay for a few clock cycles to ensure 
+// 	// the MAC/MII register write Chip Select hold time minimum of 210ns is met.
+// 	#if (GetInstructionClock() > 30000000)
+// 		Nop();
+// 		Nop();
+// 	#endif
+// 	#if (GetInstructionClock() > 40000000)
+// 		Nop();
+// 		Nop();
+// 	#endif
+// 	#if (GetInstructionClock() > 50000000)
+// 		Nop();
+// 		Nop();
+// 	#endif
+// 
+// 	ENCRelease();
 
-    ENCSelect();
-    ClearSPIDoneFlag();
+    BYTE Cmd;
+    Cmd = WCR | Address;    
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждём!!!
 
-    ENC_SSPBUF = WCR | Address; // Send the opcode and address.
-    WaitForDataByte();          // Wait until opcode/constant is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_SSPBUF = Data;          // Send the byte to be writen.
-    WaitForDataByte();          // Wait until finished transmitting
-    Dummy = ENC_SSPBUF;
-
-	// For faster processors (dsPIC), delay for a few clock cycles to ensure 
-	// the MAC/MII register write Chip Select hold time minimum of 210ns is met.
-	#if (GetInstructionClock() > 30000000)
-		Nop();
-		Nop();
-	#endif
-	#if (GetInstructionClock() > 40000000)
-		Nop();
-		Nop();
-	#endif
-	#if (GetInstructionClock() > 50000000)
-		Nop();
-		Nop();
-	#endif
-
-	ENCRelease();
 }//end WriteReg
 
 
@@ -1513,17 +1526,20 @@ static void WriteReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFCReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
-
-    ENCSelect();
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = BFC | Address; // Send the opcode and address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_SSPBUF = Data;          // Send the byte to be writen.
-    WaitForDataByte();          // Wait until register is written.
-    Dummy = ENC_SSPBUF;
-    ENCRelease();
+//     volatile BYTE Dummy;
+// 
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+//     ENC_SSPBUF = BFC | Address; // Send the opcode and address.
+//     WaitForDataByte();          // Wait until opcode/address is transmitted.
+//     Dummy = ENC_SSPBUF;
+//     ENC_SSPBUF = Data;          // Send the byte to be writen.
+//     WaitForDataByte();          // Wait until register is written.
+//     Dummy = ENC_SSPBUF;
+//     ENCRelease();
+    BYTE Cmd;
+    Cmd = BFC | Address;    
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждём!!!
 }//end BFCReg
 
 
@@ -1551,17 +1567,20 @@ static void BFCReg(BYTE Address, BYTE Data)
  *****************************************************************************/
 static void BFSReg(BYTE Address, BYTE Data)
 {
-    volatile BYTE Dummy;
-
-    ENCSelect();
-    ClearSPIDoneFlag();
-    ENC_SSPBUF = BFS | Address; // Send the opcode and address.
-    WaitForDataByte();          // Wait until opcode/address is transmitted.
-    Dummy = ENC_SSPBUF;
-    ENC_SSPBUF = Data;          // Send the byte to be writen.
-    WaitForDataByte();          // Wait until register is written.
-    Dummy = ENC_SSPBUF;
-    ENCRelease();
+//     volatile BYTE Dummy;
+// 
+//     ENCSelect();
+//     ClearSPIDoneFlag();
+//     ENC_SSPBUF = BFS | Address; // Send the opcode and address.
+//     WaitForDataByte();          // Wait until opcode/address is transmitted.
+//     Dummy = ENC_SSPBUF;
+//     ENC_SSPBUF = Data;          // Send the byte to be writen.
+//     WaitForDataByte();          // Wait until register is written.
+//     Dummy = ENC_SSPBUF;
+//     ENCRelease();
+    BYTE Cmd;
+    Cmd = BFS | Address;    
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждём!!!
 }//end BFSReg
 
 
