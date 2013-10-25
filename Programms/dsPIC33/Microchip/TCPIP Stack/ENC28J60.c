@@ -164,7 +164,7 @@ static BYTE ENCRevID;
 static BYTE ENCDeviceHandle;
 int ENCSelect()
 {
-    SPILock(ID_SPI2); 
+    //SPILock(ID_SPI2); 
     ENC_CS_IO = 0;
     LED1_IO = 1;
     return 0;
@@ -173,10 +173,11 @@ int ENCRelease()
 {
     ENC_CS_IO = 1;
     LED1_IO = 0;
-    SPIRelease(ID_SPI2);
-    SPIUnlock(ID_SPI2);    
+    //SPIRelease(ID_SPI2);
+    //SPIUnlock(ID_SPI2);    
     return 0;
 }
+/*
 int ENCSelect1()
 {
     ENC_CS_IO = 0;
@@ -188,7 +189,7 @@ int ENCRelease1()
     ENC_CS_IO = 1;
     LED1_IO = 0;
     return 0;
-}
+}*/
 //NOTE: All code in this module expects Bank 0 to be currently selected.  If code ever changes the bank, it must restore it to Bank 0 before returning.
 
 /******************************************************************************
@@ -213,9 +214,9 @@ int ENCRelease1()
 void MACInit(void)
 {
     volatile BYTE i;
-    volatile PHYREG w;
+    //volatile PHYREG w;
     SPIConfig Config;    
-    WORD j = 0;
+    //WORD j = 0;
     // Set up the SPI module on the PIC for communications with the ENC28J60
     ENC_CS_IO = 1;
     ENC_CS_TRIS = 0;        // Make the Chip Select pin an output
@@ -233,11 +234,10 @@ void MACInit(void)
 #endif
 
     // Set up SPI
-    ClearSPIDoneFlag();
-    Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1
-    Config.SPICON2 = 0;
-    Config.SPISTAT = 0;
-    ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect1, ENCRelease1);
+    ClearSPIDoneFlag(); 
+    // частота 8ћ√ц
+    Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_1_1, SPRE_5_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
+    ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
     
     // RESET the entire ENC28J60, clearing all registers
     // Also wait for CLKRDY to become set.
@@ -337,7 +337,8 @@ void MACInit(void)
     WritePHYReg(PHCON2, PHCON2_HDLDIS);
 
     // Configure LEDA to display LINK status, LEDB to display TX/RX activity
-    SetLEDConfig(0x3D32);
+    //SetLEDConfig(0x3D32);
+    SetLEDConfig(0x3212);
 
     // Set the MAC and PHY into the proper duplex state
 #if defined(FULL_DUPLEX)
@@ -1159,7 +1160,7 @@ BYTE MACGet()
 // 
 //     ENCRelease();
     BYTE Cmd = RBM;
-    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, &Result, 1, 0 ); // не ждем, всего один байт
+    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, &Result, 1, 1 ); // не ждем, всего один байт
     return Result;
 }//end MACGet
 
@@ -1278,7 +1279,7 @@ void MACPutArray(BYTE *val, WORD len)
  *****************************************************************************/
 static void SendSystemReset(void)
 {
-    volatile BYTE Dummy;
+    //volatile BYTE Dummy;
 
     // Note: The power save feature may prevent the reset from executing, so
     // we must make sure that the device is not in power save before issuing
@@ -1342,7 +1343,7 @@ static REG ReadETHReg(BYTE Address)
 //     r.Val = ENC_SSPBUF;
 //     ENCRelease();
     BYTE Cmd = RCR | Address;
-    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&r, 1, 0 );
+    SPIReceiveData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&r, 1, 1 );
     return r;
 }//end ReadETHReg
 
@@ -1390,7 +1391,7 @@ static REG ReadMACReg(BYTE Address)
     BYTE Cmd[2];
     Cmd[0] = RCR | Address;
     Cmd[1] = 0;
-    SPIReceiveData(ENCDeviceHandle, &Cmd, 2, (BYTE*)&r, 1, 0 );
+    SPIReceiveData(ENCDeviceHandle, Cmd, 2, (BYTE*)&r, 1, 1 );
     return r;
 }//end ReadMACReg
 
@@ -1497,7 +1498,7 @@ static void WriteReg(BYTE Address, BYTE Data)
 
     BYTE Cmd;
     Cmd = WCR | Address;    
-    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждЄм!!!
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1 );
 
 }//end WriteReg
 
@@ -1539,7 +1540,7 @@ static void BFCReg(BYTE Address, BYTE Data)
 //     ENCRelease();
     BYTE Cmd;
     Cmd = BFC | Address;    
-    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждЄм!!!
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1);
 }//end BFCReg
 
 
@@ -1580,7 +1581,7 @@ static void BFSReg(BYTE Address, BYTE Data)
 //     ENCRelease();
     BYTE Cmd;
     Cmd = BFS | Address;    
-    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1, 0 ); // всеравно не ждЄм!!!
+    SPISendData(ENCDeviceHandle, &Cmd, 1, (BYTE*)&Data, 1);
 }//end BFSReg
 
 
