@@ -161,18 +161,18 @@ static WORD_VAL NextPacketLocation;
 static WORD_VAL CurrentPacketLocation;
 static BOOL WasDiscarded;
 static BYTE ENCRevID;
-static BYTE ENCDeviceHandle;
+static DEVICE_REG * ENCDeviceHandle;
 int ENCSelect()
 {
     //SPILock(ID_SPI2); 
     ENC_CS_IO = 0;
-    LED1_IO = 1;
+    //LED1_IO = 1;
     return 0;
 }
 int ENCRelease()
 {
     ENC_CS_IO = 1;
-    LED1_IO = 0;
+    //LED1_IO = 0;
     //SPIRelease(ID_SPI2);
     //SPIUnlock(ID_SPI2);    
     return 0;

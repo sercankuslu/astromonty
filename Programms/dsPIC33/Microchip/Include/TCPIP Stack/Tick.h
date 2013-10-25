@@ -84,5 +84,7 @@ DWORD TickGetDiv256(void);
 DWORD TickGetDiv64K(void);
 DWORD TickConvertToMilliseconds(DWORD dwTickValue);
 void TickUpdate(void);
+int GetTickInSeconds(DWORD * Seconds, WORD * Milliseconds);
+int SetTickInSeconds(DWORD Seconds, WORD Milliseconds);
 
 #endif

@@ -87,7 +87,8 @@
 // if you use the global pool.ntp.org address or choose the wrong 
 // one or ship your embedded device to another geography.
 //#define NTP_SERVER	"nrepus.cp.ru"
-#define NTP_SERVER	"ntp.mobatime.ru"
+//#define NTP_SERVER	"ntp.mobatime.ru"
+#define NTP_SERVER	"ntpcp1.cp.ru"
 //#define NTP_SERVER	"europe.pool.ntp.org"
 //#define NTP_SERVER	"asia.pool.ntp.org"
 //#define NTP_SERVER	"oceania.pool.ntp.org"
@@ -307,7 +308,22 @@ void SNTPClient(void)
 			// Do rounding.  If the partial seconds is > 0.5 then add 1 to the seconds count.
 			if(((BYTE*)&pkt.tx_ts_fraq)[0] & 0x80)
 				dwSNTPSeconds++;
-                bIsTimeValid = 1;
+            bIsTimeValid = 1;
+            {
+                DWORD S = 0;
+                WORD m = 0;
+                // Если время отличается менее, чем на 5 секунд, то ничего не делаем
+                GetTickInSeconds(&S, &m);
+                if(S > dwSNTPSeconds){
+                    if((S - dwSNTPSeconds) > 5){
+                        SetTickInSeconds(dwSNTPSeconds, 0);
+                    }
+                } else if(S < dwSNTPSeconds){
+                    if((dwSNTPSeconds - S) > 5){
+                        SetTickInSeconds(dwSNTPSeconds, 0);
+                    }
+                }
+            }
 			break;
 
 		case SM_SHORT_WAIT:

@@ -23,147 +23,123 @@
 
 #include "HardwareProfile.h"
 
-//#define SPI_FLASH_SECTOR_SIZE		(262144ul)
-//#define SPI_FLASH_PAGE_SIZE			(256ul)		// SST has no page boundary requirements
-
-//#define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 typedef union
 {
-    UINT8 Val;
-    struct  __PACKED
-    {
-         UINT8 Sec:4;
-         UINT8 Sec10:4;
-    } seconds;
+    BYTE Val;
+    struct  _SECONDS {
+        BYTE Sec:4;
+        BYTE Sec10:3;
+        BYTE Alarm:1;
+    } bits;
 } SECONDS;
 
 typedef union
 {
-    UINT8 Val;
-    struct  __PACKED
-    {
-         UINT8 Min:4;
-         UINT8 Min10:4;
-    } minutes;
+    BYTE Val;
+    struct  _MINUTES {
+        BYTE Min:4;
+        BYTE Min10:3;
+        BYTE Alarm:1;
+    } bits;
 } MINUTES;
 
 typedef union
 {
-    UINT8 Val;
-    struct __PACKED
-    {
-         UINT8 Hour:4;
-         UINT8 Hour10:2; //AM/PM  (0/1)
-         UINT8 Mode:1; //12/24  (1/0)
-         UINT8 :1;
-    } hours;
+    BYTE Val;
+    struct _HOURS {
+        BYTE Hour:4;
+        BYTE Hour10:2; //AM/PM  (0/1)
+        BYTE Mode:1; //12/24  (1/0)
+        BYTE Alarm:1;
+    } bits;
 } HOURS;
 
 typedef union
 {
-    UINT8 Val;
-    struct __PACKED
-    {
-         UINT8 Day:3;
-        
-    } day;
+    BYTE Val;
+    struct _DAY {
+        BYTE Day:3;
+        BYTE b3:2;
+        BYTE AlarmDY_DT:1;
+        BYTE Alarm:1;
+    } bits;
 } DAY;
 
 typedef union
-{    
-    UINT8 Val;
-    struct __PACKED
-    {
-         UINT8 Date:4;
-         UINT8 Date10:4;
-    } date;
+{
+    BYTE Val;
+    struct _DATE{
+        BYTE Date:4;
+        BYTE Date10:2;
+        BYTE AlarmDY_DT:1;
+        BYTE Alarm:1;
+    } bits;
 } DATE;
 
 typedef union
-{    
-    UINT8 Val;
-    struct __PACKED
-    {
-         UINT8 Month:4;
-         UINT8 Month10:1;
-         UINT8 :2;            //12/24  (1/0)
-         UINT8 Century:1;
-    } month;
+{
+    BYTE Val;
+    struct _MONTH {
+        BYTE Month:4;
+        BYTE Month10:1;
+        BYTE :2;            //12/24  (1/0)
+        BYTE Century:1;
+    } bits;
 } MONTH;
 
 typedef union
-{    
-    UINT8 Val;
-    struct __PACKED
-    {
-         UINT8 Year:4;
-         UINT8 Year10:4;
-    } years;
+{
+    BYTE Val;
+    struct _YEARS {
+        BYTE Year:4;
+        BYTE Year10:4;
+    } bits;
 } YEARS;
 
-typedef struct
+typedef struct _RTC_TIME
 {
-    SECONDS b0;
-    MINUTES b1;
-    HOURS   b2;
-    DAY     b3;
-    DATE    b4;
-    MONTH   b5;
-    YEARS   b6;
+    SECONDS Seconds;
+    MINUTES Minutes;
+    HOURS   Hours;
+    DAY     Day;
+    DATE    Date;
+    MONTH   Month;
+    YEARS   Years;
 } RTC_TIME;
 
-typedef struct
+typedef struct _RTC_ALARM1
 {
-    SECONDS b0;
-    MINUTES b1;
-    HOURS   b2;
-    DAY     b3;
-    DATE    b4;
-    MONTH   b5;
-    YEARS   b6;
+    SECONDS Seconds;
+    MINUTES Minutes;
+    HOURS   Hours;
+    DATE    Date;
 } RTC_ALARM1;
 
+typedef struct _RTC_ALARM2
+{
+
+    MINUTES Minutes;
+    HOURS   Hours;
+    DATE    Date;
+} RTC_ALARM2;
+
+
+
 #if defined(SPIRTCSRAM_CS_TRIS)
-	void SPIRTCSRAMInit(void);	
-	//SRAM
-	void SPISRAMReadArray(DWORD dwAddress, BYTE *vData, WORD wLength);
-	void SPISRAMBeginWrite(DWORD dwAddr);
-	void SPISRAMWrite(BYTE vData);
-	void SPISRAMWriteArray(BYTE *vData, WORD wLength);	
-	//RTC
-	void SPIRTCWriteTime(void);    
-	void SPIRTCReadTime(void);
-    DWORD GetTimeFromRTC(void);
-    void SetTimeFromUTC(DWORD Seconds);
-    DWORD RTCGetUTCSeconds(void);
-    void SPIRTCSetAlarm1PerSec(void);
-    void RTCGetFormatTime(BYTE* time);
-    
+    void SPIRTCSRAMInit(void);
+    void SPI_RTCReadRegister(BYTE bAddress, BYTE *vData);
+    void SPI_RTCWriteRegister(BYTE bAddress, BYTE vData);
+    //SRAM
+    void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, BYTE bLength, BYTE WaitData);
+    void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, BYTE bLength);
+    //RTC    
+    void SPI_RTCReadTime(RTC_TIME * Time);
+    void SPI_RTCWriteTime(RTC_TIME Time);
+    DWORD SPI_RTCGetUTCSeconds(void);
     
     void SetTime();
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
     //void SPIRTCReadAlarm(RTC_ALARM *vData);
-#else
-	// If you get any of these linker errors, it means that you either have an 
-	// error in your HardwareProfile.h or TCPIPConfig.h definitions.  The code 
-	// is attempting to call a function that can't possibly work because you 
-	// have not specified what pins and SPI module the physical SPI Flash chip 
-	// is connected to.  Alternatively, if you don't have an SPI Flash chip, it 
-	// means you have enabled a stack feature that requires SPI Flash hardware.
-	// In this case, you need to edit TCPIPConfig.h and disable this stack 
-	// feature.  The linker error tells you which object file this error was 
-	// generated from.  It should be a clue as to what feature you need to 
-	// disable.
-	void You_cannot_call_the_SPISRAMInit_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
-	void You_cannot_call_the_SPISRAMReadArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
-	void You_cannot_call_the_SPISRAMBeginWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
-	void You_cannot_call_the_SPISRAMWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
-	void You_cannot_call_the_SPISRAMWriteArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first(void);
-	#define SPISRAMInit()				You_cannot_call_the_SPIFlashInit_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
-	#define SPISRAMReadArray(a,b,c)	You_cannot_call_the_SPIFlashReadArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
-	#define SPISRAMBeginWrite(a)		You_cannot_call_the_SPIFlashBeginWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
-	#define SPISRAMWrite(a)			You_cannot_call_the_SPIFlashWrite_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
-	#define SPISRAMWriteArray(a,b)		You_cannot_call_the_SPIFlashWriteArray_function_without_defining_SPIFLASH_CS_TRIS_in_HardwareProfile_h_first()
 #endif
 
 #endif

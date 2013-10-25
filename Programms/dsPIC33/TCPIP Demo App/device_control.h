@@ -139,6 +139,14 @@ typedef enum _SPI_CLOCK_MODE{
     MODE0, MODE1, MODE2, MODE3
 }SPI_CLOCK_MODE;
 
+typedef enum _SPI_CLOCK_POLARITY{
+    ACTIVE_HIGH, ACTIVE_LOW
+} SPI_CLOCK_POLARITY;
+
+typedef enum _SPI_CLOCK_EDGE{
+    IDLE_TO_ACTIVE, ACTIVE_TO_IDLE
+} SPI_CLOCK_EDGE;
+
 typedef enum _SPI_MODE{
     SLAVE = 0, MASTER = 1
 }SPI_MODE;
@@ -157,13 +165,60 @@ typedef struct _SPIConfig{
     WORD SPICON2; //фреймы не поддерживаем
 } SPIConfig;
 
+typedef enum _SPI_CLOCK_PRIMARY_PRESCALER{
+    PPRE_64_1, PPRE_16_1, PPRE_4_1,PPRE_1_1
+} SPI_CLOCK_PRIMARY_PRESCALER;
 
-SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD DeviceSpeed,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase);
+typedef enum _SPI_CLOCK_SECONDARY_PRESCALER{
+    SPRE_8_1, SPRE_7_1, SPRE_6_1, SPRE_5_1, SPRE_4_1, SPRE_3_1, SPRE_2_1, SPRE_1_1,
+} SPI_CLOCK_SECONDARY_PRESCALER;
+
+typedef enum _Eflag
+{
+    TRANSFER_STOP = 0,
+    SEND_DATA,
+    SEND_CMD,
+    SEND_END,
+    RECEIVE_DATA,
+    RECEIVE_CONTINUE,
+    RECEIVE_END,
+} EFlag;
+
+typedef struct _SPI_STATUS 
+{
+    BYTE Busy;              // флаг занятости устройства
+    BYTE TransferComplete;
+    BYTE CurrentDevice;     
+    BYTE LastIntLevel;
+    int SPIDataCount;       // количество получаемых данных
+    EFlag Flag;
+    WORD DMASendCfg;
+    WORD DMAReceiveCfg;
+    BYTE* DMASendBuf;
+    BYTE* DMAReceiveBuf;
+    WORD DMASendBufLen;
+    WORD DMAReceiveBufLen;
+    BYTE* DataReceiveBuf;
+    WORD DataReceiveLen;
+    BYTE * DataReceiveSource;
+}SPI_STATUS;
+
+typedef struct _DEVICE_REG{
+    BYTE DeviceId;
+    SPI_ID id;
+    SPI_STATUS * SPIStatus;
+    SPIConfig Config;
+    int (*DeviceSelect)(void);
+    int (*DeviceRelease)(void);
+    BYTE OldIntLevel;
+} DEVICE_REG;
+
+SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_POLARITY CKP, SPI_CLOCK_EDGE CKE, SPI_CLOCK_PRIMARY_PRESCALER PPRE, SPI_CLOCK_SECONDARY_PRESCALER SPRE,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase);
 int SPIInit();
-BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
-WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
-WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData);
-WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen);
+DEVICE_REG * SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void));
+WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen );
+WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData);
+WORD SPISendCmd( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen);
 void SPILock(SPI_ID id);
 void SPIUnlock(SPI_ID id);
 void SPIRelease(SPI_ID id);

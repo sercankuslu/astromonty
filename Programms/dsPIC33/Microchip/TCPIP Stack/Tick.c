@@ -56,18 +56,20 @@
 #define __TICK_C
 
 #include "TCPIP Stack/tick.h"
+#include "device_control.h"
 //#include "TCPIP Stack/TCPIP.h"
 
 // Internal counter to store Ticks.  This variable is incremented in an ISR and 
 // therefore must be marked volatile to prevent the compiler optimizer from 
 // reordering code to use this value in the main context while interrupts are 
 // disabled.
-static volatile DWORD dwInternalTicks = 0;
+static volatile DWORD dwInternalTicks = 1382621155/2;
 
 // 6-byte value to store Ticks.  Allows for use over longer periods of time.
 static BYTE vTickReading[6];
 
 static void GetTickCopy(void);
+int Timer1Callback(void);
 
 
 /*****************************************************************************
@@ -109,6 +111,8 @@ void TickInit(void)
     T0CON = 0x87;
 
 #else
+
+/*
 	// Use Timer 1 for 16-bit and 32-bit processors
 	// 1:1 prescale
 	T1CONbits.TCKPS = 0;
@@ -132,6 +136,15 @@ void TickInit(void)
 
 	// Start timer
 	T1CONbits.TON = 1;
+*/
+    TimerInit(TIMER1, CLOCK_SOURCE_EXTERNAL, GATED_DISABLE, PRE_1_1, IDLE_ENABLE, BIT_16, SYNC_ENABLE);
+    TimerSetValue(TIMER1, 0x0000, 0xFFFF);
+    TimerSetCallback(TIMER1, Timer1Callback);
+    TimerSetInt(TIMER1, 7, TRUE);
+    TimerSetState(TIMER1, TRUE);
+
+
+
 #endif
 }
 
@@ -175,6 +188,8 @@ static void GetTickCopy(void)
 	{
 		DWORD dwTempTicks;
 		
+                //TimerSetInt(TIMER1, 7, TRUE);
+                //TimerSetInt(TIMER1, 7, FALSE);
 		IEC0bits.T1IE = 1;			// Enable interrupt
 		Nop();
 		IEC0bits.T1IE = 0;			// Disable interrupt
@@ -372,7 +387,39 @@ DWORD TickConvertToMilliseconds(DWORD dwTickValue)
 	return (dwTickValue+(TICKS_PER_SECOND/2000ul))/((DWORD)(TICKS_PER_SECOND/1000ul));
 }
 
+int GetTickInSeconds(DWORD * Seconds, WORD * Milliseconds)
+{
+    volatile DWORD S = 0;
+    volatile DWORD m = 0;
+    GetTickCopy();
+    S = *((DWORD*)&vTickReading[2]);
+    S = S << 1;
+    m = *((WORD*)&vTickReading[0]);
+    m *= 1000ul;
+    m = m / TICKS_PER_SECOND;
+    
+    if(m >= 1000ul){
+        S += 1;
+        m -= 1000ul;
+    }
+    *Seconds = S;
+    *Milliseconds = (WORD)m;
+    return 0;
+}
 
+int SetTickInSeconds(DWORD Seconds, WORD Milliseconds)
+{
+    volatile DWORD S = 0;
+    volatile DWORD m = 0;
+    m = Milliseconds * TICKS_PER_SECOND;
+    m = m / 1000ul;
+    S = Seconds;
+    m += S & 1;
+    S = S >> 1;
+    TimerSetValue(TIMER1, (WORD)m, 0xFFFF);
+    dwInternalTicks = S;
+    return 0;
+}
 /*****************************************************************************
   Function:
 	void TickUpdate(void)
@@ -389,6 +436,14 @@ DWORD TickConvertToMilliseconds(DWORD dwTickValue)
   Returns:
   	None
   ***************************************************************************/
+
+int Timer1Callback(void)
+{
+    // Increment internal high tick counter
+    dwInternalTicks++;
+    return 0;
+}
+/*
 #if defined(__18CXX)
 void TickUpdate(void)
 {
@@ -404,7 +459,7 @@ void TickUpdate(void)
     }
 }
 
-/*****************************************************************************
+/ *****************************************************************************
   Function:
 	void _ISR _T1Interrupt(void)
 
@@ -419,7 +474,9 @@ void TickUpdate(void)
 
   Returns:
   	None
-  ***************************************************************************/
+  *************************************************************************** /
+
+
 #elif defined(__PIC32MX__)
 void __attribute((interrupt(ipl2), vector(_TIMER_1_VECTOR), nomips16)) _T1Interrupt(void)
 {
@@ -443,3 +500,4 @@ void _ISR _T1Interrupt(void)
 	IFS0bits.T1IF = 0;
 }
 #endif
+*/

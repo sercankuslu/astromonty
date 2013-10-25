@@ -948,7 +948,7 @@ int TimerSetCallback(TIMERS_ID id, int (*CallbackFunc)(void))
     TMRConfig[id].CallbackFunc = CallbackFunc;
     return 0;
 }
-/*
+
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T1Interrupt( void )
 //------------------------------------------------------------------------------------------------
@@ -959,7 +959,7 @@ INTERRUPT _T1Interrupt( void )
     }
     IFS0bits.T1IF = 0; // Clear TIMER1 interrupt flag
 }
-*/
+
 //------------------------------------------------------------------------------------------------
 INTERRUPT _T2Interrupt( void )
 //------------------------------------------------------------------------------------------------
@@ -1913,42 +1913,42 @@ INTERRUPT _OC8Interrupt( void )
 
 
 
-typedef enum _Eflag
-{
-    SEND_DATA = 0,
-    SEND_CMD,
-    SEND_END,
-    RECEIVE_DATA,
-    RECEIVE_CONTINUE,
-    RECEIVE_END,
-} EFlag;
+// typedef enum _Eflag
+// {
+//     SEND_DATA = 0,
+//     SEND_CMD,
+//     SEND_END,
+//     RECEIVE_DATA,
+//     RECEIVE_CONTINUE,
+//     RECEIVE_END,
+// } EFlag;
 
-typedef struct _DEVICE_REG{
-    SPI_ID id;
-    SPIConfig Config;
-    int (*DeviceSelect)(void);
-    int (*DeviceRelease)(void);
-    BYTE OldIntLevel;
-} DEVICE_REG;
+// typedef struct _DEVICE_REG{
+//     SPI_ID id;
+//     SPIConfig Config;
+//     int (*DeviceSelect)(void);
+//     int (*DeviceRelease)(void);
+//     BYTE OldIntLevel;
+// } DEVICE_REG;
 
-typedef struct _SPI_STATUS 
-{
-    BYTE Busy;              // флаг занятости устройства
-    BYTE TransferComplete;
-    BYTE CurrentDevice;     
-    BYTE LastIntLevel;
-    int SPIDataCount;       // количество получаемых данных
-    EFlag Flag;
-    WORD DMASendCfg;
-    WORD DMAReceiveCfg;
-    BYTE* DMASendBuf;
-    BYTE* DMAReceiveBuf;
-    WORD DMASendBufLen;
-    WORD DMAReceiveBufLen;
-    BYTE* DataReceiveBuf;
-    WORD DataReceiveLen;
-    BYTE * DataReceiveSource;
-}SPI_STATUS;
+// typedef struct _SPI_STATUS 
+// {
+//     BYTE Busy;              // флаг занятости устройства
+//     BYTE TransferComplete;
+//     BYTE CurrentDevice;     
+//     BYTE LastIntLevel;
+//     int SPIDataCount;       // количество получаемых данных
+//     EFlag Flag;
+//     WORD DMASendCfg;
+//     WORD DMAReceiveCfg;
+//     BYTE* DMASendBuf;
+//     BYTE* DMAReceiveBuf;
+//     WORD DMASendBufLen;
+//     WORD DMAReceiveBufLen;
+//     BYTE* DataReceiveBuf;
+//     WORD DataReceiveLen;
+//     BYTE * DataReceiveSource;
+// }SPI_STATUS;
 #define MAX_SPI_DEVICES 10
 DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
 static BYTE DeviceCount = 0;
@@ -2004,7 +2004,7 @@ void SPIRelease(SPI_ID id)
     SPIStatus[id].Busy = 0;
 }
 
-BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
+DEVICE_REG * SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), int (*DeviceRelease)(void))
 {
     DEVICE_REG* Device = &SPIDeviceList[DeviceCount];
     Device->Config.SPICON1 = Config.SPICON1;
@@ -2013,10 +2013,13 @@ BYTE SPIRegisterDevice(SPI_ID id, SPIConfig Config, int (*DeviceSelect)(void), i
     Device->DeviceSelect = DeviceSelect;
     Device->DeviceRelease = DeviceRelease;
     Device->id = id;
+    Device->SPIStatus = (SPI_STATUS *)&SPIStatus[id];
     Device->OldIntLevel = 0;
     DeviceRelease();
-    return DeviceCount++;
+    DeviceCount++;
+    return Device;
 }
+
 static BYTE SPIInitialized = 0;
 //------------------------------------------------------------------------------------------------
 int SPIInit()
@@ -2041,6 +2044,7 @@ int SPIInit()
         Status->DataReceiveBuf = NULL;
         Status->DataReceiveLen = 0;
         Status->DataReceiveSource = NULL;
+        Status->Flag = TRANSFER_STOP;
     }
     Status = &SPIStatus[ID_SPI2];
     // один общий буфер для отправки и получения
@@ -2086,7 +2090,9 @@ int SPIInit()
         Device->DeviceSelect = NULL;
         Device->DeviceRelease = NULL;
         Device->id = ID_SPI1;
+        Device->SPIStatus = (SPI_STATUS *)&SPIStatus[ID_SPI1];
         Device->OldIntLevel = 0;
+        Device->DeviceId = i;
     }
     // SPI2
 
@@ -2142,7 +2148,7 @@ int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize)
     }
     if((Status->Flag == SEND_END) || (Status->Flag == RECEIVE_END)){
         Status->TransferComplete = 1;
-        SPIDeviceList[Status->CurrentDevice].DeviceRelease();
+        Device->DeviceRelease();
         SPIRelease(Device->id);
     }    
     return 0;
@@ -2269,18 +2275,19 @@ WORD SPI1SendArray(BYTE *val, WORD len)
     return len;
 }
 
-SPIConfig SPI_CreateParams( SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD DeviceSpeed,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase)
+SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_POLARITY CKP, SPI_CLOCK_EDGE CKE, SPI_CLOCK_PRIMARY_PRESCALER PPRE, SPI_CLOCK_SECONDARY_PRESCALER SPRE,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase)
 {
     SPIConfig Config;
     Config.SPISTAT = 0;
     Config.SPISTAT |= ((WORD)Idle) << 13;
     Config.SPICON1 = 0;
+    Config.SPICON1 |= ((WORD)PPRE);
+    Config.SPICON1 |= ((WORD)SPRE) << 2;
     Config.SPICON1 |= ((WORD)Mode) << 5;
-    Config.SPICON1 |= ((WORD)ClockMode & 1) << 6;
-    Config.SPICON1 |= ((WORD)ClockMode & 2) << 8;
+    Config.SPICON1 |= ((WORD)CKP) << 6;
+    Config.SPICON1 |= ((WORD)CKE) << 8;
     Config.SPICON1 |= ((WORD)InputPhase) << 9;
     Config.SPICON1 |= ((WORD)DataSize) << 10;
-    Config.SPICON1 |= 0x1E;
     Config.SPICON2 = 0;
     return Config;
 }
@@ -2297,59 +2304,57 @@ SPIConfig SPI_CreateParams( SPI_MODE Mode, SPI_CLOCK_MODE ClockMode, DWORD Devic
 // 8. снятие блокировки прерывания выполняется счетчиком SPIxDataCounter()
 // 9. выход.
 
-WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen )
+WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen )
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
-    SPI_ID SPI_id = Device->id;
-    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
+    //DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
+    SPI_ID SPI_id = DeviceHandle->id;
+    SPI_STATUS* Status = DeviceHandle->SPIStatus;
 
-	
+
     // проверка размеров
-    if(CmdLen + DataLen > Status->DMASendBufLen){
-        while(1);
-    }
+    //if(CmdLen + DataLen > Status->DMASendBufLen){
+    //    while(1);
+    //}
     // Захват шины SPI
     SPILock(SPI_id);
-    Status->CurrentDevice = DeviceHandle;
+    Status->CurrentDevice = DeviceHandle->DeviceId;
     Status->Flag = SEND_DATA;
     Status->TransferComplete = 0;
     switch(SPI_id){
         case ID_SPI2:
-            SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = Device->Config.SPICON1;
-            SPI2CON2 = Device->Config.SPICON2;
-            SPI2STAT = Device->Config.SPISTAT;
+            SPI2STAT = DeviceHandle->Config.SPISTAT;
+            SPI2CON1 = DeviceHandle->Config.SPICON1;
+            SPI2CON2 = DeviceHandle->Config.SPICON2;            
             // буфер для отправки
-            DMA2Disable;
+            //DMA2Disable;
             DMA2SetDataCount(CmdLen + DataLen);
             // буфер для приёма
-            DMA3Disable;
+            //DMA3Disable;
             DMA3SetDataCount(CmdLen + DataLen);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
             SPI2STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
             break;
         case ID_SPI1:
-            SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = Device->Config.SPICON1;
-            SPI1CON2 = Device->Config.SPICON2;
-            SPI1STAT = Device->Config.SPISTAT;
+            SPI1STAT = DeviceHandle->Config.SPISTAT;
+            SPI1CON1 = DeviceHandle->Config.SPICON1;
+            SPI1CON2 = DeviceHandle->Config.SPICON2;
             // буфер для отправки
-            DMA4Disable;
+            //DMA4Disable;
             DMA4SetDataCount(CmdLen + DataLen);
             // буфер для приёма
-            DMA5Disable;
+            //DMA5Disable;
             DMA5SetDataCount(CmdLen + DataLen);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
             SPI1STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;
@@ -2362,40 +2367,39 @@ WORD SPISendData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD Da
     SPIUnlock(SPI_id);
     return DataLen;
 }
-WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData)
+WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData)
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
-    SPI_ID SPI_id = Device->id;
-    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
+    //DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
+    SPI_ID SPI_id = DeviceHandle->id;
+    SPI_STATUS* Status = DeviceHandle->SPIStatus;
 
     // проверка размеров
-    if(CmdLen + DataLen > Status->DMASendBufLen){
-        return 0;
+    //if(CmdLen + DataLen > Status->DMASendBufLen){
+    //    return 0;
         //while(1);
-    }
+    //}
 
     // Захват шины SPI
     SPILock(SPI_id);
-    Status->CurrentDevice = DeviceHandle;
+    Status->CurrentDevice = DeviceHandle->DeviceId;
     Status->Flag = RECEIVE_DATA;
     Status->SPIDataCount = DataLen;
     Status->TransferComplete = 0;
     switch(SPI_id){
         case ID_SPI2:
-            SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = Device->Config.SPICON1;
-            SPI2CON2 = Device->Config.SPICON2;
-            SPI2STAT = Device->Config.SPISTAT;
-            DMA2Disable; //send
-            DMA3Disable; //receive
+            SPI2STAT = DeviceHandle->Config.SPISTAT;
+            SPI2CON1 = DeviceHandle->Config.SPICON1;
+            SPI2CON2 = DeviceHandle->Config.SPICON2;
+            //DMA2Disable; //send
+            //DMA3Disable; //receive
             DMA2SetDataCount(CmdLen + DataLen);
             DMA3SetDataCount(CmdLen + DataLen);
-            memset(Status->DMASendBuf,0,Status->DMASendBufLen);
+            //memset(Status->DMASendBuf,0,Status->DMASendBufLen);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA2Enable;
             DMA3Enable;
             Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
@@ -2408,21 +2412,20 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
                     Nop();
                     Nop();
                 }
-            }            
+            }
             break;
         case ID_SPI1:
-            SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = Device->Config.SPICON1;
-            SPI1CON2 = Device->Config.SPICON2;
-            SPI1STAT = Device->Config.SPISTAT;
-            DMA4Disable; //send
-            DMA5Disable; //receive
+            SPI1STAT = DeviceHandle->Config.SPISTAT;
+            SPI1CON1 = DeviceHandle->Config.SPICON1;
+            SPI1CON2 = DeviceHandle->Config.SPICON2;
+            //DMA4Disable; //send
+            //DMA5Disable; //receive
             DMA4SetDataCount(CmdLen + DataLen);
             DMA5SetDataCount(CmdLen + DataLen);
             //memset(Status->DMASendBuf,0, Status->DMASendBufLen);
             memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
             SPI1STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA4Enable;
             DMA5Enable;
             Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
@@ -2433,7 +2436,7 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
                 while(Status->TransferComplete == 0){
                     Nop();
                     Nop();
-                }                    
+                }
             }
             break;
         default:
@@ -2444,54 +2447,52 @@ WORD SPIReceiveData( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD
     SPIUnlock(SPI_id);
     return DataLen;
 }
-WORD SPISendCmd( BYTE DeviceHandle, BYTE* Cmd, WORD CmdLen)
+WORD SPISendCmd( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen)
 {
     // TODO: проверка DeviceHandle
     // 1. Определить порт SPI
-    DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
-    SPI_ID SPI_id = Device->id;
-    volatile SPI_STATUS* Status = &SPIStatus[SPI_id];
+    SPI_ID SPI_id = DeviceHandle->id;
+    SPI_STATUS* Status = DeviceHandle->SPIStatus;
 
     // проверка размеров
-    if(CmdLen > Status->DMASendBufLen){
-        return 0;
+    //if(CmdLen > Status->DMASendBufLen){
+    //    return 0;
         //while(1);
-    }
+    //}
     // Захват шины SPI
     SPILock(SPI_id);
-    Status->CurrentDevice = DeviceHandle;
-    Status->Flag = RECEIVE_DATA;
+    Status->CurrentDevice = DeviceHandle->DeviceId;
+    Status->Flag = SEND_CMD;
     Status->SPIDataCount = 0;
     Status->TransferComplete = 0;
     switch(SPI_id){
         case ID_SPI2:
-            SPI2STATbits.SPIEN = 0;
-            SPI2CON1 = Device->Config.SPICON1;
-            SPI2CON2 = Device->Config.SPICON2;
-            SPI2STAT = Device->Config.SPISTAT;
-            DMA2Disable; //send
-            DMA3Disable; //receive
+            SPI2STAT = DeviceHandle->Config.SPISTAT;
+            SPI2CON1 = DeviceHandle->Config.SPICON1;
+            SPI2CON2 = DeviceHandle->Config.SPICON2;
+            //DMA2Disable; //send
+            //DMA3Disable; //receive
             DMA2SetDataCount(CmdLen);
             DMA3SetDataCount(CmdLen);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA2Enable;
             DMA3Enable;
             DMA2ForceTransfer;
             break;
         case ID_SPI1:
-            SPI1STATbits.SPIEN = 0;
-            SPI1CON1 = Device->Config.SPICON1;
-            SPI1CON2 = Device->Config.SPICON2;
-            SPI1STAT = Device->Config.SPISTAT;
-            DMA4Disable; //send
-            DMA5Disable; //receive
+            SPI1STAT = DeviceHandle->Config.SPISTAT;
+            SPI1CON1 = DeviceHandle->Config.SPICON1;
+            SPI1CON2 = DeviceHandle->Config.SPICON2;
+
+            //DMA4Disable; //send
+            //DMA5Disable; //receive
             DMA4SetDataCount(CmdLen);
             DMA5SetDataCount(CmdLen);
             memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
             SPI1STATbits.SPIEN = 1;
-            Device->DeviceSelect();
+            DeviceHandle->DeviceSelect();
             DMA4Enable;
             DMA5Enable;
             DMA4ForceTransfer;

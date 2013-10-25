@@ -119,6 +119,9 @@ APP_CONFIG AppConfig;
 static unsigned short wOriginalAppConfigChecksum;    // Checksum of the ROM defaults for AppConfig
 BYTE AN0String[8];
 DWORD_VAL CPUSPEED;
+RTC_TIME Time;
+volatile BYTE Second;
+
 
 //extern RR rr1;
 //extern RR rr2;
@@ -334,7 +337,12 @@ int main(void)
     static DWORD d = 0;
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
-    
+    DWORD X = 0;
+    WORD mSec = 0;
+    TMR1 = 3277ul;
+    X = TMR1;
+    mSec = X*1000ul/32768ul;
+    TMR1 = mSec;
     /*
     DWORD StepsPerRound = 3200;
     OC_INTERVAL_CALC Intrerval;
@@ -509,7 +517,7 @@ int main(void)
     #endif
 
      //Вентиляторы        
-    {
+    /*{
         TRISBbits.TRISB4 = 0;
         T7CON = 0x0030; //0.000000025*256 = 0.0000064
         TMR7 = 0x0000;
@@ -518,7 +526,7 @@ int main(void)
         IEC3bits.T7IE = 1;
         IPC12bits.T7IP = 4;    
         T7CONbits.TON = 1;
-    } 
+    } */
     // OCSetup();
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
@@ -533,6 +541,7 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
+        
         //Control(&rr1);
         //Control(&rr2);
         //Control(&rr3);
@@ -562,7 +571,8 @@ int main(void)
         // for incoming packet, type of packet and calling
         // appropriate stack entity to process it.
         StackTask();
-
+        //SPI_RTCReadTime(&Time);
+        SPI_RTCReadRegister(00, &Second);
         // This tasks invokes each of the core stack application tasks
         StackApplications();
 
@@ -658,9 +668,9 @@ int AdjustLocalRTCTime()
     if(SNTPIsTimeValid())
     {
         //RTCSeconds = RTCGetUTCSeconds();  
-        SNTPSeconds = SNTPGetUTCSeconds();
+        //SNTPSeconds = SNTPGetUTCSeconds();
         //if((RTCSeconds>SNTPSeconds+2)||(RTCSeconds<SNTPSeconds-2)){
-            SetTimeFromUTC(SNTPSeconds); 
+            //SetTimeFromUTC(SNTPSeconds); 
         //}
         return 1;
     }    
@@ -674,12 +684,12 @@ DWORD UTCGetTime(void)
     //if(RTCIsTimeValid()){
     //    return RTCGetUTCSeconds();
     //} else
-    if(SNTPIsTimeValid()) {
+    //if(SNTPIsTimeValid()) {
         //получаем время из SNTP модуля
-        return SNTPGetUTCSeconds();
-    } else {
-        return RTCGetUTCSeconds();
-    }
+    //    return SNTPGetUTCSeconds();
+    //} else {
+    //    return RTCGetUTCSeconds();
+    //}
 #endif
 }
 
@@ -1244,7 +1254,7 @@ SPIInit();
     SPIFlashInit();
 #endif
 #if defined(SPIRTCSRAM_CS_TRIS)
-    //SPIRTCSRAMInit();
+    SPIRTCSRAMInit();
 #endif
 }
 
