@@ -492,10 +492,10 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 	// Use current config in non-volatile memory as defaults
 	#if defined(EEPROM_CS_TRIS)
 		XEEReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
-	#elif defined(SPIRTCSRAM_CS_TRIS)
-		SPISRAMReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
+	//#elif defined(SPIRTCSRAM_CS_TRIS)
+	//	SPISRAMReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
 	#elif defined(SPIFLASH_CS_TRIS)
-		SPIFlashReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig));
+		SPIFlashReadArray(sizeof(NVM_VALIDATION_STRUCT), (BYTE*)&newAppConfig, sizeof(newAppConfig), 1);
 	#endif
 	
 	// Start out assuming that DHCP is disabled.  This is necessary since the 
@@ -1995,8 +1995,14 @@ void HTTPPrint_angR(WORD i)
 }
 void HTTPPrint_time(WORD i)
 {
-    char buf[4];
-    sprintf(buf,"%d",0);
+    char buf[20];
+    DWORD Seconds;
+    WORD Milliseconds;
+    //double Time = 0.0;
+    GetTickInSeconds(&Seconds, &Milliseconds);
+    //Time = Seconds + Milliseconds / 1000.f;
+    sprintf(buf,"%010lu", Seconds);
+    sprintf(&buf[10],".%03d", Milliseconds);
     TCPPutString(sktHTTP,(BYTE*)buf);
 }
 #endif

@@ -110,7 +110,7 @@
 
 // Internal pointer to address being written
 static DWORD dwWriteAddr;
-static BYTE FlashDeviceHandle;
+static DEVICE_REG * FlashDeviceHandle;
 
 // SPI Flash device capabilities
 static union
@@ -169,22 +169,20 @@ int FlashRelease()
 static int SPIFlashInitialized = 0;  
 void SPIFlashInit(void)
 {
-	BYTE Cmd = JEDEC_ID;
-	BYTE Data[3];
+    BYTE Cmd = JEDEC_ID;
+    BYTE Data[3];
     if(SPIFlashInitialized) return;
     SPIFlashInitialized = 1;
-    SPIFLASH_CS_TRIS = 0;   // Drive SPI Flash chip select pin
+    //SPIFLASH_CS_TRIS = 0;   // Drive SPI Flash chip select pin
 
     // Configure SPI
-    SPIConfig Config;
-    Config.SPICON1 = 0x17 | 0x100 | 0x20; // CKE = 1 MSTEB = 1;
-    Config.SPICON2 = 0;
-    Config.SPISTAT = 0;
+    SPIConfig Config; 
+    // частота 10ћ√ц
+    Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_1_1, SPRE_4_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
     FlashDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, FlashSelect, FlashRelease);
 
     // Read Device ID code to determine supported device capabilities/instructions
     {
-            
         SPIReceiveData( FlashDeviceHandle, &Cmd, 1, Data, 3, 1);
 
         // Decode Device Capabilities Flags from Device ID
