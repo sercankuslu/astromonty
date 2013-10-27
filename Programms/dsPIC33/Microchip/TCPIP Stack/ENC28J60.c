@@ -119,7 +119,7 @@ typedef struct  __attribute__((aligned(2), packed))
     WORD_VAL        Type;
 } ENC_PREAMBLE;
 
-
+/*
 #if defined (__18CXX)
     #define ClearSPIDoneFlag()  {ENC_SPI_IF = 0;}
     #define WaitForDataByte()   {while(!ENC_SPI_IF); ENC_SPI_IF = 0;}
@@ -143,7 +143,7 @@ typedef struct  __attribute__((aligned(2), packed))
 #else
     #error Determine SPI flag mechanism
 #endif
-
+*/
 
 // Prototypes of functions intended for MAC layer use only.
 static void BankSel(WORD Register);
@@ -234,10 +234,10 @@ void MACInit(void)
 #endif
 
     // Set up SPI
-    ClearSPIDoneFlag(); 
+    //ClearSPIDoneFlag(); 
     // частота 8ћ√ц
     Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_1_1, SPRE_5_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
-    ENCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, ENCSelect, ENCRelease);
+    ENCDeviceHandle = SPIRegisterDevice(ENC_SPI_ID, Config, ENCSelect, ENCRelease);
     
     // RESET the entire ENC28J60, clearing all registers
     // Also wait for CLKRDY to become set.

@@ -143,6 +143,12 @@ typedef union _WORD_VAL
 #define MY_DEFAULT_RR_PARA_XParkPos		(0ul)
 #define MY_DEFAULT_RR_PARA_VMax			(10.0)
 
+
+   
+#define SPIFlashReadArray(a, b, c) FS_ReadArray(a, b, c)
+#define SPIFlashReadArray(a, b, c, d) FS_ReadArray(a, b, c)
+
+
 #if !defined _APP_CONFIG_TYPE
 #define _APP_CONFIG_TYPE
 typedef struct { 
