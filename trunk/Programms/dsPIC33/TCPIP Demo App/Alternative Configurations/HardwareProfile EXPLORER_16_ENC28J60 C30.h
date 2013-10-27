@@ -153,17 +153,18 @@
 #else	// SPI1 for all other processors
 	#define ENC_CS_TRIS			(TRISGbits.TRISG9)	// Comment this line out if you are using the ENC424J600/624J600, MRF24WB0M, or other network controller.
 	#define ENC_CS_IO			(LATGbits.LATG9)
+	#define ENC_SPI_ID			ID_SPI2
 	// SPI SCK, SDI, SDO pins are automatically controlled by the 
 	// PIC24/dsPIC SPI module 
-	#define ENC_SPI_IF			(IFS2bits.SPI2IF)
-	#define ENC_SSPBUF			(SPI2BUF)
-	#define ENC_SPISTAT			(SPI2STAT)
-	#define ENC_SPISTATbits		(SPI2STATbits)
-	#define ENC_SPICON1			(SPI2CON1)
-	#define ENC_SPICON1bits		(SPI2CON1bits)
-	#define ENC_SPICON2			(SPI2CON2)
-	#define ENC_INT_TRIS		(TRISAbits.TRISA12)
-	#define ENC_INT_IF  		
+	//#define ENC_SPI_IF			(IFS2bits.SPI2IF)
+	//#define ENC_SSPBUF			(SPI2BUF)
+	//#define ENC_SPISTAT			(SPI2STAT)
+	//#define ENC_SPISTATbits		(SPI2STATbits)
+	//#define ENC_SPICON1			(SPI2CON1)
+	//#define ENC_SPICON1bits		(SPI2CON1bits)
+	//#define ENC_SPICON2			(SPI2CON2)
+	//#define ENC_INT_TRIS		(TRISAbits.TRISA12)
+	//#define ENC_INT_IF  		
 #endif
 
 #define MS1_Tris            TRISGbits.TRISG12   // выход MS1
@@ -547,6 +548,7 @@
 	//#define EEPROM_CS_TRIS		(TRISDbits.TRISD12)
 	//#define EEPROM_CS_IO		(LATDbits.LATD12)
 #endif
+/*
 #define EEPROM_SCK_TRIS		(TRISGbits.TRISG6)
 #define EEPROM_SDI_TRIS		(TRISGbits.TRISG7)
 #define EEPROM_SDO_TRIS		(TRISGbits.TRISG8)
@@ -557,7 +559,7 @@
 #define EEPROM_SPICON2		(SPI2CON2)
 #define EEPROM_SPISTAT		(SPI2STAT)
 #define EEPROM_SPISTATbits	(SPI2STATbits)
-
+*/
 // LCD Module I/O pins.  NOTE: On the Explorer 16, the LCD is wired to the 
 // same PMP lines required to communicate with an ENCX24J600 in parallel 
 // mode.  Since the LCD does not have a chip select wire, if you are using 
@@ -593,61 +595,21 @@
 #ifdef VER_1 //исходная
 #define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
 #define SPIFLASH_CS_IO			(LATFbits.LATF5)
-#define SPIFLASH_SCK_TRIS		(TRISGbits.TRISG6)
-#define SPIFLASH_SDI_TRIS		(TRISGbits.TRISG7)
-#define SPIFLASH_SDI_IO			(PORTGbits.RG7)
-#define SPIFLASH_SDO_TRIS		(TRISGbits.TRISG8)
-#define SPIFLASH_SPI_IF			(IFS2bits.SPI1IF)
-#define SPIFLASH_SSPBUF			(SPI2BUF)
-#define SPIFLASH_SPICON1		(SPI2CON1)
-#define SPIFLASH_SPICON1bits	(SPI2CON1bits)
-#define SPIFLASH_SPICON2		(SPI2CON2)
-#define SPIFLASH_SPISTAT		(SPI2STAT)
-#define SPIFLASH_SPISTATbits	(SPI2STATbits)
+#define SPIFLASH_SPI_ID			ID_SPI2
 
 #define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
 #define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
-#define SPIRTCSRAM_SCK_TRIS		(TRISGbits.TRISG6)
-#define SPIRTCSRAM_SDI_TRIS		(TRISGbits.TRISG7)
-#define SPIRTCSRAM_SDI_IO		(PORTGbits.RG7)
-#define SPIRTCSRAM_SDO_TRIS		(TRISGbits.TRISG8)
-#define SPIRTCSRAM_SPI_IF		(IFS2bits.SPI2IF)
-#define SPIRTCSRAM_SSPBUF		(SPI2BUF)
-#define SPIRTCSRAM_SPICON1		(SPI2CON1)
-#define SPIRTCSRAM_SPICON1bits	(SPI2CON1bits)
-#define SPIRTCSRAM_SPICON2		(SPI2CON2)
-#define SPIRTCSRAM_SPISTAT		(SPI2STAT)
-#define SPIRTCSRAM_SPISTATbits	(SPI2STATbits)
+#define SPIRTCSRAM_SPI_ID		ID_SPI2
 #endif
 
 #ifdef VER_2
 #define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
 #define SPIFLASH_CS_IO			(LATFbits.LATF5)
-#define SPIFLASH_SCK_TRIS		(TRISFbits.TRISF6)
-#define SPIFLASH_SDI_TRIS		(TRISFbits.TRISF7)
-#define SPIFLASH_SDI_IO			(PORTFbits.RF7)
-#define SPIFLASH_SDO_TRIS		(TRISFbits.TRISF8)
-#define SPIFLASH_SPI_IF			(IFS1bits.SPI1IF)
-#define SPIFLASH_SSPBUF			(SPI1BUF)
-#define SPIFLASH_SPICON1		(SPI1CON1)
-#define SPIFLASH_SPICON1bits	(SPI1CON1bits)
-#define SPIFLASH_SPICON2		(SPI1CON2)
-#define SPIFLASH_SPISTAT		(SPI1STAT)
-#define SPIFLASH_SPISTATbits	(SPI1STATbits)
+#define SPIFLASH_SPI_ID			ID_SPI1
 
 #define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
 #define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
-#define SPIRTCSRAM_SCK_TRIS		(TRISFbits.TRISF6)
-#define SPIRTCSRAM_SDI_TRIS		(TRISFbits.TRISF7)
-#define SPIRTCSRAM_SDI_IO		(PORTFbits.RF7)
-#define SPIRTCSRAM_SDO_TRIS		(TRISFbits.TRISF8)
-#define SPIRTCSRAM_SPI_IF		(IFS1bits.SPI1IF)
-#define SPIRTCSRAM_SSPBUF		(SPI1BUF)
-#define SPIRTCSRAM_SPICON1		(SPI1CON1)
-#define SPIRTCSRAM_SPICON1bits	(SPI1CON1bits)
-#define SPIRTCSRAM_SPICON2		(SPI1CON2)
-#define SPIRTCSRAM_SPISTAT		(SPI1STAT)
-#define SPIRTCSRAM_SPISTATbits	(SPI1STATbits)
+#define SPIRTCSRAM_SPI_ID		ID_SPI1
 #endif
 ////----------------------------
 //// MRF24WB0M WiFi I/O pins

@@ -135,7 +135,7 @@ void SPIRTCSRAMInit(void)
     
     // частота 2ћ√ц 0x0016 | 0x0020
     Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_4_1, SPRE_5_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
-    RTCDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, RTCSelect, RTCRelease);
+    RTCDeviceHandle = SPIRegisterDevice(SPIRTCSRAM_SPI_ID, Config, RTCSelect, RTCRelease);
 
 
     //SPIRTCSRAM_CS_IO = 1;

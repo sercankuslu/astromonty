@@ -179,7 +179,7 @@ void SPIFlashInit(void)
     SPIConfig Config; 
     // частота 10ћ√ц
     Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_1_1, SPRE_4_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
-    FlashDeviceHandle = SPIRegisterDevice(ID_SPI2, Config, FlashSelect, FlashRelease);
+    FlashDeviceHandle = SPIRegisterDevice(SPIFLASH_SPI_ID, Config, FlashSelect, FlashRelease);
 
     // Read Device ID code to determine supported device capabilities/instructions
     {
