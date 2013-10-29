@@ -167,9 +167,16 @@
  *   To clear EEPROM, hold BUTTON0, reset the board, and continue
  *   holding until the LEDs flash.  Release, and reset again.
  */
-#define MY_DEFAULT_HOST_NAME            "ASTROMONTY"
+#ifdef VER_1
+#define MY_DEFAULT_HOST_NAME            "ASTROMONTY1"
+#define MY_DEFAULT_MAC_BYTE1            (0x01)  // Use the default of 00-04-A3-00-00-00
+#endif
 
-#define MY_DEFAULT_MAC_BYTE1            (0x00)  // Use the default of 00-04-A3-00-00-00
+#ifdef VER_2
+#define MY_DEFAULT_HOST_NAME            "ASTROMONTY2"
+#define MY_DEFAULT_MAC_BYTE1            (0x02)  // Use the default of 00-04-A3-00-00-00
+#endif
+
 #define MY_DEFAULT_MAC_BYTE2            (0x04)  // if using an ENCX24J600, MRF24WB0M, or
 #define MY_DEFAULT_MAC_BYTE3            (0xA3)  // PIC32MX6XX/7XX internal Ethernet
 #define MY_DEFAULT_MAC_BYTE4            (0xF3)  // controller and wish to use the
@@ -200,6 +207,9 @@
 #define MY_DEFAULT_SECONDARY_DNS_BYTE2  (0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE3  (0ul)
 #define MY_DEFAULT_SECONDARY_DNS_BYTE4  (0ul)
+
+#define MY_DEFAULT_NTP1_NAME            "ntpcp1.cp.ru"
+#define MY_DEFAULT_NTP2_NAME            "ntp.mobatime.ru"
 
 // =======================================================================
 //   PIC32MX7XX/6XX MAC Layer Options

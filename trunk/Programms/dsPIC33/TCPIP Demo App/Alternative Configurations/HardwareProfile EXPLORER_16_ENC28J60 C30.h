@@ -99,7 +99,7 @@
 #define GetInstructionClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Might need changing if using Doze modes.
 #define GetPeripheralClock()	(GetSystemClock()/2)	// Normally GetSystemClock()/4 for PIC18, GetSystemClock()/2 for PIC24/dsPIC, and GetSystemClock()/1 for PIC32.  Divisor may be different if using a PIC32 since it's configurable.
 
-#define VER_1
+#define VER_2
 // Hardware I/O pin mappings
 
 // LEDs
@@ -154,6 +154,9 @@
 	#define ENC_CS_TRIS			(TRISGbits.TRISG9)	// Comment this line out if you are using the ENC424J600/624J600, MRF24WB0M, or other network controller.
 	#define ENC_CS_IO			(LATGbits.LATG9)
 	#define ENC_SPI_ID			ID_SPI2
+    #define ENC_RST_TRIS        (TRISFbits.TRISF0)
+    #define ENC_RST_IO          (LATFbits.LATF0)
+
 	// SPI SCK, SDI, SDO pins are automatically controlled by the 
 	// PIC24/dsPIC SPI module 
 	//#define ENC_SPI_IF			(IFS2bits.SPI2IF)
@@ -166,6 +169,9 @@
 	//#define ENC_INT_TRIS		(TRISAbits.TRISA12)
 	//#define ENC_INT_IF  		
 #endif
+
+
+
 
 #define MS1_Tris            TRISGbits.TRISG12   // выход MS1
 #define MS2_Tris            TRISGbits.TRISG13   // выход MS2
@@ -592,24 +598,20 @@
 //#define SPIRAM_SPICON2			(SPI2CON2)
 //#define SPIRAM_SPISTAT			(SPI2STAT)
 //#define SPIRAM_SPISTATbits		(SPI2STATbits)
-#ifdef VER_1 //исходная
+
 #define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
 #define SPIFLASH_CS_IO			(LATFbits.LATF5)
-#define SPIFLASH_SPI_ID			ID_SPI2
-
 #define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
 #define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
-#define SPIRTCSRAM_SPI_ID		ID_SPI2
+
+#ifdef VER_1 //исходная
+#   define SPIRTCSRAM_SPI_ID		ID_SPI2
+#   define SPIFLASH_SPI_ID			ID_SPI2
 #endif
 
 #ifdef VER_2
-#define SPIFLASH_CS_TRIS		(TRISFbits.TRISF5)
-#define SPIFLASH_CS_IO			(LATFbits.LATF5)
-#define SPIFLASH_SPI_ID			ID_SPI1
-
-#define SPIRTCSRAM_CS_TRIS		(TRISFbits.TRISF13)
-#define SPIRTCSRAM_CS_IO		(LATFbits.LATF13)
-#define SPIRTCSRAM_SPI_ID		ID_SPI1
+#   define SPIFLASH_SPI_ID			ID_SPI1
+#   define SPIRTCSRAM_SPI_ID		ID_SPI1
 #endif
 ////----------------------------
 //// MRF24WB0M WiFi I/O pins

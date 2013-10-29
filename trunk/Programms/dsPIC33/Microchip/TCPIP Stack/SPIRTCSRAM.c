@@ -76,8 +76,8 @@ static DWORD dwRTCSeconds = 0;
 // Tick count of last update
 static DWORD dwRTCLastUpdateTick = 0;
 // Time Struct
-static volatile RTC_TIME Time;
-//static DWORD EPOCH2000 = (86400ul * (365ul * 30ul + 7ul));
+
+static DWORD EPOCH2000 = (86400ul * (365ul * 30ul + 7ul));
 
 static BYTE bIsRTCTimeValid = 0;
 //static int SPIRTCInitialized = 0;
@@ -127,65 +127,31 @@ void SPI_RTCReadAll(BYTE * Value, BYTE Len);
     This function sends WRDI to clear any pending write operation, and also
     clears the software write-protect on all memory locations.
   ***************************************************************************/
+static int SPIRTCSRAMInitialized = 0;
 void SPIRTCSRAMInit(void)
 {
-    RTC_TIME Time;
     SPIConfig Config;  
-    BYTE vData[13];
-    
+    BYTE vData = 0xFF;
+    if(SPIRTCSRAMInitialized) return;
+    SPIRTCSRAMInitialized = 1;
+
+    SPIRTCSRAM_CS_TRIS = 0;
+    SPIRTCSRAM_CS_IO = 1;
     // частота 2ћ√ц 0x0016 | 0x0020
-    Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, ACTIVE_TO_IDLE, PPRE_4_1, SPRE_5_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
+    Config = SPI_CreateParams(MASTER, ACTIVE_HIGH, IDLE_TO_ACTIVE, PPRE_4_1, SPRE_3_1, IDLE_ENABLE, SPI_SIZE_BYTE, MIDDLE_PHASE);
     RTCDeviceHandle = SPIRegisterDevice(SPIRTCSRAM_SPI_ID, Config, RTCSelect, RTCRelease);
 
-
-    //SPIRTCSRAM_CS_IO = 1;
-    //SPIRTCSRAM_CS_TRIS = 0;   // Drive SPI Flash chip select pin
-    //while(1){
-        SPI_RTCReadAll(vData, 13);
-        //SPI_RTCReadRegister(RTC_STATUS, vData);
-        //Wait400ns(); 
-        //SPI_RTCWriteRegister(RTC_STATUS, 0x88);
-        //Wait400ns();   
-    //}
+    while(vData & 0x80){
+        SPI_RTCReadRegister(RTC_STATUS, &vData);
+        SPI_RTCWriteRegister(RTC_STATUS, 0x38);
+    }
     
-    SPI_RTCWriteRegister(RTC_CONTROL, 0x00);
+    SPI_RTCWriteRegister(RTC_CONTROL, 0x18);
     Wait400ns();
 
-    SPI_RTCReadTime(&Time);
-    Time.Seconds.Val = 0x49;
-    Time.Minutes.Val = 0x14;
-    Wait400ns();
-    SPI_RTCWriteTime(Time);
-    Wait400ns();
-    SPI_RTCReadTime(&Time);
-    Time.Seconds.Val = 0x49;
-    Time.Minutes.Val = 0x14;
-    Wait400ns();
-    SPI_RTCReadTime(&Time);
-/*
-    GetTimeFromRTC();   
-      
-    _WaitWhileBusy();         //check busy flag till clear        
-    Dummy = SPIRTCReadReg(RTC_CONTROL);
-    Wait400ns();
-    Dummy = SPIRTCReadReg(RTC_STATUS);
-    Wait400ns();
-    SPIRTCWriteReg(RTC_CONTROL, 0x00);            
-    //interrupt every second
-    //SPIRTCSetAlarm1PerSec();
-    TRISAbits.TRISA13 = 1;
-    INTCON2bits.INT2EP = 1; //1 = Interrupt on negative edge; 0 = Interrupt on positive edge
-    IPC7bits.INT2IP = 2; //111 = Interrupt is priority 7 (highest priority interrupt)
-    IEC1bits.INT2IE = 1; //1 = Interrupt request enabled
-    IFS1bits.INT2IF =  0;
-    //SPIRTCWriteReg(RTC_STATUS, 0x08);           
+    //SPI_RTCReadTime(&Time);
+    GetTimeFromRTC();
     
-    SPIRTCSRAM_CS_IO = 1;   
-    // Restore SPI state
-    SPI_ON_BIT = 0;
-    SPIRTCSRAM_SPICON1 = SPICON1Save;
-    SPI_ON_BIT = vSPIONSave;
-*/
 }
 
 
@@ -208,11 +174,11 @@ void SPIRTCSRAMInit(void)
   Returns:
     None
   ***************************************************************************/
-void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, BYTE bLength, BYTE WaitData)
+void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, WORD wLength, BYTE WaitData)
 {
     BYTE Cmd[2];
     // Ignore operations when the destination is NULL or nothing to read
-    if(vData == NULL || bLength == 0)
+    if(vData == NULL || wLength == 0)
         return;
 
     Cmd[0] = SRAM_ADDRES | WRITEMASK;
@@ -220,7 +186,7 @@ void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, BYTE bLength, BYTE WaitDa
     SPISendCmd(RTCDeviceHandle, Cmd, 2);
 
     Cmd[0] = SRAM_DATA;
-    SPIReceiveData(RTCDeviceHandle, Cmd, 1, vData, (WORD)bLength, WaitData);
+    SPIReceiveData(RTCDeviceHandle, Cmd, 1, vData, wLength, WaitData);
 }
 /*****************************************************************************
   Function:
@@ -285,11 +251,11 @@ void SPI_RTCWriteRegister(BYTE bAddress, BYTE vData)
     See Remarks in SPIRTCSRAMBeginWrite for important information about Flash
     memory parts.
   ***************************************************************************/
-void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, BYTE bLength)
+void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, WORD wLength)
 {
     BYTE Cmd[2];
     // Ignore operations when the destination is NULL or nothing to read
-    if(vData == NULL || bLength == 0)
+    if(vData == NULL || wLength == 0)
         return;
 
     Cmd[0] = SRAM_ADDRES | WRITEMASK;
@@ -297,7 +263,7 @@ void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, BYTE bLength)
     SPISendCmd(RTCDeviceHandle, Cmd, 2);
 
     Cmd[0] = SRAM_DATA | WRITEMASK;
-    SPISendData(RTCDeviceHandle, Cmd, 1, vData, (WORD)bLength);
+    SPISendData(RTCDeviceHandle, Cmd, 1, vData, wLength);
 }
 
 /*****************************************************************************
@@ -367,49 +333,7 @@ void SPI_RTCReadAll(BYTE * Value, BYTE Len)
     Cmd = RTC_SECONDS;
     SPIReceiveData(RTCDeviceHandle, &Cmd, 1, Value, Len, 1);
 }
-/*****************************************************************************
-  Function:
-    DWORD RTCGetUTCSeconds(void)
 
-  Summary:
-    Obtains the current time from the RTC module.
-
-  Description:
-    This function obtains the current time as reported by the SNTP module.  
-    Use this value for absolute time stamping.  The value returned is (by
-    default) the number of seconds since 01-Jan-1970 00:00:00.
-
-  Precondition:
-    None
-
-  Parameters:
-    None
-
-  Returns:
-    The number of seconds since the Epoch.  (Default 01-Jan-1970 00:00:00)
-    
-  Remarks:
-    Do not use this function for time difference measurements.  The Tick
-    module is more appropriate for those requirements.
-  ***************************************************************************/
-DWORD SPI_RTCGetUTCSeconds(void)
-{
-    DWORD dwTickDelta;
-    DWORD dwTick;
-    
-    // Update the dwRTCSeconds variable with the number of seconds 
-    // that has elapsed
-    dwTick = TickGet();
-    dwTickDelta = dwTick - dwRTCLastUpdateTick;
-    while(dwTickDelta > TICK_SECOND)
-    {
-        dwRTCSeconds++;
-        dwTickDelta -= TICK_SECOND;
-    }   
-    // Save the tick and residual fractional seconds for the next call
-    dwRTCLastUpdateTick = dwTick - dwTickDelta;
-    return dwRTCSeconds;
-}    
 /*****************************************************************************
   Function:
     DWORD GetTimeFromRTC(void)
@@ -430,7 +354,7 @@ DWORD SPI_RTCGetUTCSeconds(void)
   Remarks:   
   ***************************************************************************/
 DWORD GetTimeFromRTC()
-{ /*
+{ 
     BYTE Y;
     BYTE M;
     BYTE D;
@@ -440,15 +364,15 @@ DWORD GetTimeFromRTC()
     BYTE i;
     DWORD DY = 0;
     DWORD DM = 0;   
+    RTC_TIME Time;
 
-    SPIRTCReadTime();
-        
-    Y = Time.b5.month.Century * 100 + Time.b6.years.Year10   * 10 + Time.b6.years.Year;
-    M = Time.b5.month.Month10  * 10 + Time.b5.month.Month;
-    D = Time.b4.date.Date10    * 10 + Time.b4.date.Date;
-    h = Time.b2.hours.Hour10   * 10 + Time.b2.hours.Hour;
-    m = Time.b1.minutes.Min10  * 10 + Time.b1.minutes.Min;
-    s = Time.b0.seconds.Sec10  * 10 + Time.b0.seconds.Sec;
+    SPI_RTCReadTime(&Time);
+    Y = Time.Month.bits.Century * 100 + Time.Years.bits.Year10 * 10 + Time.Years.bits.Year;
+    M = Time.Month.bits.Month10 * 10 + Time.Month.bits.Month;
+    D = Time.Date.bits.Date10    * 10 + Time.Date.bits.Date;
+    h = Time.Hours.bits.Hour10   * 10 + Time.Hours.bits.Hour;
+    m = Time.Minutes.bits.Min10  * 10 + Time.Minutes.bits.Min;
+    s = Time.Seconds.bits.Sec10  * 10 + Time.Seconds.bits.Sec;
     
     for(i = 1;i<M;i++){
         switch (i){        
@@ -458,16 +382,16 @@ DWORD GetTimeFromRTC()
             case 2:
                 DM += 28;
                 if((Y % 4) == 0){
-                    DM++;                    
+                    DM++;
                 }
             break;
             default:
-            DM += 31;        
+            DM += 31;
         }
     }
-    for(i=0;i < Y;i++){        
+    for(i=0;i < Y;i++){
         if((i % 4) == 0){
-            DY+=366;                    
+            DY+=366;
         } else {
             DY+=365;
         }
@@ -475,7 +399,7 @@ DWORD GetTimeFromRTC()
     DY = DY + DM + D - 1;
     dwRTCSeconds = ((DY * 24 + h) * 60 + m)*60 + s + EPOCH2000;
     //dwRTCLastUpdateTick = TickGet();*/
-    return 0; //dwRTCSeconds;
+    return dwRTCSeconds; //dwRTCSeconds;
 }
 /*****************************************************************************
   Function:
@@ -495,8 +419,8 @@ DWORD GetTimeFromRTC()
 
   Remarks:
  ***************************************************************************/
-void SetTimeFromUTC(DWORD Seconds)
-{ /*
+void SetRTCTimeFromUTC(DWORD Seconds)
+{ 
     //01-Jan-2000 00:00:00
     
     DWORD Y = 0;
@@ -508,6 +432,7 @@ void SetTimeFromUTC(DWORD Seconds)
     BYTE s = 0;
     DWORD Days; 
     DWORD Secs = Seconds - EPOCH2000;
+    RTC_TIME Time;
 
     // узнаем количество дней, прошедших с 2000 года
     Days = Secs/86400;
@@ -549,33 +474,24 @@ void SetTimeFromUTC(DWORD Seconds)
     h = (BYTE)(Secs / 3600);
     Secs = Secs % 3600;
     m = (BYTE)(Secs / 60);
-    Secs = Secs % 60;
-    / *
-    Date->Sec = (BYTE)Secs;
-    Date->Min = m;
-    Date->Hour = h;
-    Date->DayOfWeak = 0;
-    Date->Day = (BYTE)Days;
-    Date->Month = M;
-    Date->Year = (WORD)Y + 70;
- * /
+    s = Secs % 60;
    
    
-    Time.b0.seconds.Sec10 = s / 10;
-    Time.b0.seconds.Sec =   s % 10;
-    Time.b1.minutes.Min10 = m / 10;
-    Time.b1.minutes.Min =   m % 10;
-    Time.b2.hours.Hour10  = h / 10;
-    Time.b2.hours.Hour  =   h % 10;
-    Time.b3.day.Day       = d;
-    Time.b4.date.Date10   = D / 10;
-    Time.b4.date.Date   =   D % 10;
-    Time.b5.month.Month10 = M / 10;
-    Time.b5.month.Month =   M % 10;
-    Time.b5.month.Century = Y / 100;    
-    Time.b6.years.Year10 =  (Y % 100) / 10;
-    Time.b6.years.Year =    (Y % 100) % 10; 
-    SPIRTCWriteTime();   */
+    Time.Seconds.bits.Sec10 = s / 10;
+    Time.Seconds.bits.Sec =   s % 10;
+    Time.Minutes.bits.Min10 = m / 10;
+    Time.Minutes.bits.Min =   m % 10;
+    Time.Hours.bits.Hour10  = h / 10;
+    Time.Hours.bits.Hour  =   h % 10;
+    Time.Day.bits.Day       = d;
+    Time.Date.bits.Date10   = D / 10;
+    Time.Date.bits.Date   =   D % 10;
+    Time.Month.bits.Month10 = M / 10;
+    Time.Month.bits.Month =   M % 10;
+    Time.Month.bits.Century = Y / 100;    
+    Time.Years.bits.Year10 =  (Y % 100) / 10;
+    Time.Years.bits.Year =    (Y % 100) % 10; 
+    SPI_RTCWriteTime(Time);
 }
      
 

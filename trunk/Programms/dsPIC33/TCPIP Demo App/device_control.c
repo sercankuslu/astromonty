@@ -2048,38 +2048,38 @@ int SPIInit()
     }
     Status = &SPIStatus[ID_SPI2];
     // один общий буфер для отправки и получения
-    Status->DMAReceiveBufLen = 1008;
+    Status->DMAReceiveBufLen = SPI2_DMA_BUF_LEN;
     Status->DMASendBufLen = Status->DMAReceiveBufLen;
     Status->DMASendBuf = DMAGetBuffer(Status->DMAReceiveBufLen);
     Status->DMAReceiveBuf = Status->DMASendBuf;
     
-    DMASetBuffers(DMA2, Status->DMASendBuf, Status->DMASendBuf);
-    DMASetBuffers(DMA3, Status->DMASendBuf, Status->DMASendBuf);
-    DMA2SetConfig(Status->DMASendCfg); //Send
-    DMA3SetConfig(Status->DMAReceiveCfg); //Receive
-    DMASelectDevice(DMA2, IRQ_SPI2, (int)&SPI2BUF);
-    DMASelectDevice(DMA3, IRQ_SPI2, (int)&SPI2BUF);
-    DMASetCallback(DMA2, (void*)&(SPIStatus[ID_SPI2]), NULL, NULL);
-    DMASetCallback(DMA3, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
+    DMASetBuffers(SPI2_DMA_SEND_ID, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetBuffers(SPI2_DMA_RECEIVE_ID, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetConfig(SPI2_DMA_SEND_ID, Status->DMASendCfg); //Send
+    DMASetConfig(SPI2_DMA_RECEIVE_ID, Status->DMAReceiveCfg); //Receive
+    DMASelectDevice(SPI2_DMA_SEND_ID, IRQ_SPI2, (int)&SPI2BUF);
+    DMASelectDevice(SPI2_DMA_RECEIVE_ID, IRQ_SPI2, (int)&SPI2BUF);
+    DMASetCallback(SPI2_DMA_SEND_ID, (void*)&(SPIStatus[ID_SPI2]), NULL, NULL);
+    DMASetCallback(SPI2_DMA_RECEIVE_ID, (void*)&(SPIStatus[ID_SPI2]), SPIDMACallBack, SPIDMACallBack);
     //DMASetInt(DMA2, 5, 1);
-    DMASetInt(DMA3, 5, 1);
+    DMASetInt(SPI2_DMA_RECEIVE_ID, SPI2_DMA_INT_LEVEL, 1);
 
     Status = &SPIStatus[ID_SPI1];
-    Status->DMAReceiveBufLen = 16;
+    Status->DMAReceiveBufLen = SPI1_DMA_BUF_LEN;
     Status->DMASendBufLen = Status->DMAReceiveBufLen;
     Status->DMASendBuf = DMAGetBuffer(Status->DMAReceiveBufLen);
     Status->DMAReceiveBuf = Status->DMASendBuf;
 
-    DMASetBuffers(DMA4, Status->DMASendBuf, Status->DMASendBuf);
-    DMASetBuffers(DMA5, Status->DMASendBuf, Status->DMASendBuf);
-    DMA4SetConfig(Status->DMASendCfg);
-    DMA5SetConfig(Status->DMAReceiveCfg);
-    DMASelectDevice(DMA4, IRQ_SPI1, (int)&SPI1BUF);
-    DMASelectDevice(DMA5, IRQ_SPI1, (int)&SPI1BUF);
-    DMASetCallback(DMA4, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
-    DMASetCallback(DMA5, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
+    DMASetBuffers(SPI1_DMA_SEND_ID, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetBuffers(SPI1_DMA_RECEIVE_ID, Status->DMASendBuf, Status->DMASendBuf);
+    DMASetConfig(SPI1_DMA_SEND_ID, Status->DMASendCfg); //Send
+    DMASetConfig(SPI1_DMA_RECEIVE_ID, Status->DMAReceiveCfg); //Receive
+    DMASelectDevice(SPI1_DMA_SEND_ID, IRQ_SPI1, (int)&SPI1BUF);
+    DMASelectDevice(SPI1_DMA_RECEIVE_ID, IRQ_SPI1, (int)&SPI1BUF);
+    DMASetCallback(SPI1_DMA_SEND_ID, (void*)&(SPIStatus[ID_SPI1]), NULL, NULL);
+    DMASetCallback(SPI1_DMA_RECEIVE_ID, (void*)&(SPIStatus[ID_SPI1]), SPIDMACallBack, SPIDMACallBack);
     //DMASetInt(DMA4, 5, 1);
-    DMASetInt(DMA5, 5, 1);
+    DMASetInt(SPI1_DMA_RECEIVE_ID, SPI1_DMA_INT_LEVEL, 1);
 
     DeviceCount = 0;
     for(i = 0; i < MAX_SPI_DEVICES; i++){
@@ -2100,7 +2100,7 @@ int SPIInit()
     TRISGbits.TRISG7 = 1;  // Make sure SDI pin is an input
     TRISGbits.TRISG8 = 0;  // Set SDO pin as an output
     
-    IPC8bits.SPI2IP = 6;
+    IPC8bits.SPI2IP = SPI2_INT_LEVEL;
     IPC8bits.SPI2EIP = 6;
     IFS2bits.SPI2IF = 0;
     IFS2bits.SPI2EIF = 0;
@@ -2112,7 +2112,7 @@ int SPIInit()
     TRISFbits.TRISF7 = 1;  // Make sure SDI pin is an input
     TRISFbits.TRISF8 = 0;  // Set SDO pin as an output
     
-    IPC2bits.SPI1IP = 6;
+    IPC2bits.SPI1IP = SPI1_INT_LEVEL;
     IPC2bits.SPI1EIP = 6;
     IFS0bits.SPI1IF = 0;
     IFS0bits.SPI1EIF = 0;
@@ -2311,7 +2311,7 @@ WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data,
     //DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = DeviceHandle->id;
     SPI_STATUS* Status = DeviceHandle->SPIStatus;
-
+    WORD DataCnt = CmdLen + DataLen;
 
     // проверка размеров
     //if(CmdLen + DataLen > Status->DMASendBufLen){
@@ -2329,17 +2329,17 @@ WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data,
             SPI2CON2 = DeviceHandle->Config.SPICON2;            
             // буфер для отправки
             //DMA2Disable;
-            DMA2SetDataCount(CmdLen + DataLen);
+            DMASetDataCount(SPI2_DMA_SEND_ID,DataCnt);
             // буфер для приёма
             //DMA3Disable;
-            DMA3SetDataCount(CmdLen + DataLen);
+            DMASetDataCount(SPI2_DMA_RECEIVE_ID,DataCnt);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
             SPI2STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA2Enable;
-            DMA3Enable;
-            DMA2ForceTransfer;
+            DMAEnable(SPI2_DMA_SEND_ID);
+            DMAEnable(SPI2_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI2_DMA_SEND_ID);
             break;
         case ID_SPI1:
             SPI1STAT = DeviceHandle->Config.SPISTAT;
@@ -2347,17 +2347,17 @@ WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data,
             SPI1CON2 = DeviceHandle->Config.SPICON2;
             // буфер для отправки
             //DMA4Disable;
-            DMA4SetDataCount(CmdLen + DataLen);
+            DMASetDataCount(SPI1_DMA_SEND_ID,DataCnt);
             // буфер для приёма
             //DMA5Disable;
-            DMA5SetDataCount(CmdLen + DataLen);
+            DMASetDataCount(SPI1_DMA_RECEIVE_ID,DataCnt);
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             memcpy(&(Status->DMASendBuf)[CmdLen], Data, DataLen);
             SPI1STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA4Enable;
-            DMA5Enable;
-            DMA4ForceTransfer;
+            DMAEnable(SPI1_DMA_SEND_ID);
+            DMAEnable(SPI1_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI1_DMA_SEND_ID);
             break;
         default:
             SPIRelease(SPI_id);
@@ -2369,17 +2369,9 @@ WORD SPISendData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data,
 }
 WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Data, WORD DataLen, BYTE WaitData)
 {
-    // TODO: проверка DeviceHandle
-    // 1. Определить порт SPI
-    //DEVICE_REG* Device = &SPIDeviceList[DeviceHandle];
     SPI_ID SPI_id = DeviceHandle->id;
     SPI_STATUS* Status = DeviceHandle->SPIStatus;
-
-    // проверка размеров
-    //if(CmdLen + DataLen > Status->DMASendBufLen){
-    //    return 0;
-        //while(1);
-    //}
+    WORD DataCnt = CmdLen + DataLen;
 
     // Захват шины SPI
     SPILock(SPI_id);
@@ -2392,20 +2384,17 @@ WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Da
             SPI2STAT = DeviceHandle->Config.SPISTAT;
             SPI2CON1 = DeviceHandle->Config.SPICON1;
             SPI2CON2 = DeviceHandle->Config.SPICON2;
-            //DMA2Disable; //send
-            //DMA3Disable; //receive
-            DMA2SetDataCount(CmdLen + DataLen);
-            DMA3SetDataCount(CmdLen + DataLen);
-            //memset(Status->DMASendBuf,0,Status->DMASendBufLen);
+            DMASetDataCount(SPI2_DMA_SEND_ID,DataCnt);// буфер для отправки
+            DMASetDataCount(SPI2_DMA_RECEIVE_ID,DataCnt);// буфер для приёма
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA2Enable;
-            DMA3Enable;
             Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
             Status->DataReceiveLen = DataLen;
             Status->DataReceiveBuf = Data;
-            DMA2ForceTransfer;
+            DMAEnable(SPI2_DMA_SEND_ID);
+            DMAEnable(SPI2_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI2_DMA_SEND_ID);
 
             if(WaitData) {
                 while(Status->TransferComplete == 0){
@@ -2418,20 +2407,17 @@ WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Da
             SPI1STAT = DeviceHandle->Config.SPISTAT;
             SPI1CON1 = DeviceHandle->Config.SPICON1;
             SPI1CON2 = DeviceHandle->Config.SPICON2;
-            //DMA4Disable; //send
-            //DMA5Disable; //receive
-            DMA4SetDataCount(CmdLen + DataLen);
-            DMA5SetDataCount(CmdLen + DataLen);
-            //memset(Status->DMASendBuf,0, Status->DMASendBufLen);
+            DMASetDataCount(SPI1_DMA_SEND_ID,DataCnt);// буфер для отправки
+            DMASetDataCount(SPI1_DMA_RECEIVE_ID,DataCnt);// буфер для приёма
             memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
             SPI1STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA4Enable;
-            DMA5Enable;
             Status->DataReceiveSource = &(Status->DMAReceiveBuf)[CmdLen];
             Status->DataReceiveLen = DataLen;
             Status->DataReceiveBuf = Data;
-            DMA4ForceTransfer;
+            DMAEnable(SPI1_DMA_SEND_ID);
+            DMAEnable(SPI1_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI1_DMA_SEND_ID);
             if(WaitData) {
                 while(Status->TransferComplete == 0){
                     Nop();
@@ -2449,16 +2435,9 @@ WORD SPIReceiveData( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen, BYTE* Da
 }
 WORD SPISendCmd( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen)
 {
-    // TODO: проверка DeviceHandle
-    // 1. Определить порт SPI
     SPI_ID SPI_id = DeviceHandle->id;
     SPI_STATUS* Status = DeviceHandle->SPIStatus;
-
-    // проверка размеров
-    //if(CmdLen > Status->DMASendBufLen){
-    //    return 0;
-        //while(1);
-    //}
+    
     // Захват шины SPI
     SPILock(SPI_id);
     Status->CurrentDevice = DeviceHandle->DeviceId;
@@ -2470,32 +2449,27 @@ WORD SPISendCmd( DEVICE_REG * DeviceHandle, BYTE* Cmd, WORD CmdLen)
             SPI2STAT = DeviceHandle->Config.SPISTAT;
             SPI2CON1 = DeviceHandle->Config.SPICON1;
             SPI2CON2 = DeviceHandle->Config.SPICON2;
-            //DMA2Disable; //send
-            //DMA3Disable; //receive
-            DMA2SetDataCount(CmdLen);
-            DMA3SetDataCount(CmdLen);
+            DMASetDataCount(SPI2_DMA_SEND_ID,CmdLen);// буфер для отправки
+            DMASetDataCount(SPI2_DMA_RECEIVE_ID,CmdLen);// буфер для приёма
             memcpy(Status->DMASendBuf, Cmd, CmdLen);
             SPI2STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA2Enable;
-            DMA3Enable;
-            DMA2ForceTransfer;
+            DMAEnable(SPI2_DMA_SEND_ID);
+            DMAEnable(SPI2_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI2_DMA_SEND_ID);
             break;
         case ID_SPI1:
             SPI1STAT = DeviceHandle->Config.SPISTAT;
             SPI1CON1 = DeviceHandle->Config.SPICON1;
             SPI1CON2 = DeviceHandle->Config.SPICON2;
-
-            //DMA4Disable; //send
-            //DMA5Disable; //receive
-            DMA4SetDataCount(CmdLen);
-            DMA5SetDataCount(CmdLen);
+            DMASetDataCount(SPI1_DMA_SEND_ID,CmdLen);// буфер для отправки
+            DMASetDataCount(SPI1_DMA_RECEIVE_ID,CmdLen);// буфер для приёма
             memcpy(Status->DMAReceiveBuf, Cmd, CmdLen);
             SPI1STATbits.SPIEN = 1;
             DeviceHandle->DeviceSelect();
-            DMA4Enable;
-            DMA5Enable;
-            DMA4ForceTransfer;
+            DMAEnable(SPI1_DMA_SEND_ID);
+            DMAEnable(SPI1_DMA_RECEIVE_ID);
+            DMAForceTransfer(SPI1_DMA_SEND_ID);
             break;
         default:
             SPIRelease(SPI_id);

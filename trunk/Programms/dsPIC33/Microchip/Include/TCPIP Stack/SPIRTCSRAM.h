@@ -130,13 +130,14 @@ typedef struct _RTC_ALARM2
     void SPI_RTCReadRegister(BYTE bAddress, BYTE *vData);
     void SPI_RTCWriteRegister(BYTE bAddress, BYTE vData);
     //SRAM
-    void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, BYTE bLength, BYTE WaitData);
-    void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, BYTE bLength);
+    void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, WORD wLength, BYTE WaitData);
+    void SPI_RTC_SRAMWriteArray(BYTE bAddress, BYTE *vData, WORD wLength);
     //RTC    
     void SPI_RTCReadTime(RTC_TIME * Time);
     void SPI_RTCWriteTime(RTC_TIME Time);
     DWORD SPI_RTCGetUTCSeconds(void);
-    
+    DWORD GetTimeFromRTC();
+    void SetRTCTimeFromUTC(DWORD Seconds);
     void SetTime();
 	//void SPIRTCWriteAlarm(RTC_ALARM *vData);
     //void SPIRTCReadAlarm(RTC_ALARM *vData);

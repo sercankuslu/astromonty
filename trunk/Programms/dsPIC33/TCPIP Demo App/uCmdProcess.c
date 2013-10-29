@@ -4,29 +4,23 @@
 
 #ifdef __C30__
 
-#   include "TCPIP Stack/TCPIP.h"
-#include "Queue.h"
-#include "uCmdProcess.h"
-#include "device_control.h"
+//#   include "TCPIP Stack/TCPIP.h"
+#include "GenericTypeDefs.h"
+
 #else
-#include "device_control.h"
-#include "Queue.h"
-#include "uCmdProcess.h"
-
-//#include "..\..\guidance\stdafx.h"
-//#include "..\..\dsPIC33\TCPIP Demo App\device_control.h"
-//#include "..\..\dsPIC33\TCPIP Demo App\uCmdProcess.h"
-//#include "..\..\dsPIC33\TCPIP Demo App\Queue.h"
-
 void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
 void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
-
 #   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData)  FS_ReadArray(dwAddress, vData, wLen)
 //#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData) FS_ReadArray(dwAddress, vData, wLen)
 
 unsigned char FileSystem[64*1024*256];
 
 #endif
+
+#include "device_control.h"
+#include "Queue.h"
+#include "uCmdProcess.h"
+#include "TCPIP Stack/SPIFlash.h"
 
 
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
@@ -39,7 +33,7 @@ OC_CHANEL_STATE OControll1;
 
 int SetDirection(OC_ID id, BYTE Dir);
 
-int uCmd_Init()
+int uCmd_Init(void)
 {
     // дл€ тестов
     xCMD_QUEUE command;
@@ -156,7 +150,6 @@ int uCmd_OCCallback( void * _This )
                 OCN->CurrentState = Value->State;
             }
             break;
-
         case xCMD_SET_TIMER: // значение Value - значение типа OC_TMR_SELECT - номер таймера
             OCSetTmr(OCN->Config.OCConfig.Index, (OC_TMR_SELECT)Value->Value);
             OCN->CurrentState = Value->State;
@@ -297,6 +290,39 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             }
             break;
         case xCMD_RUN:
+            // получение размеров данных
+            DataSize = (WORD)Value->Value;
+            if (DataSize > BufLen / 4) {
+                DataSize = BufLen / 4;
+            }
+            Buf1 = 0;
+            for (i = 0; i < DataSize; i++) {
+
+                BufPtr->r = OCN->mCMD_Status.RUN_Interval + OCN->T.Val;
+                BufPtr->rs = BufPtr->r + Pulse;
+                BufPtr++;
+                TmpBufPtr++;
+            }
+            if(DataSize > 0){
+                OCN->mCMD_Status.AccX += DataSize;
+                Command.State = xCMD_RUN;
+                Command.Value = (DWORD)DataSize; 
+                Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command);
+                BufLen -= DataSize * 4;
+            } 
+            if(OCN->mCMD_Status.AccX >= Value->Value) {
+                Queue_Delete(&OCN->mCmdQueue);
+            }
+
+            if(BufLen == 0){
+                ProcessCmd = 0; // буфер заполнен ( следующую команду выбирать не нужно)
+            }
+            
+            break;
+        case xCMD_SET_SPEED: //задаЄт значение интервала дл€ xCMD_RUN ( в случае, если не задано, используетс€ последнее значение xCMD_ACCELERATE/xCMD_DECELERATE)
+            // дл€ uCMD не используетс€
+            OCN->mCMD_Status.RUN_Interval = (WORD)Value->Value;
+            Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_DECELERATE:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
@@ -388,3 +414,37 @@ void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
     memcpy(val, &FileSystem[Addr], len);
 #endif
 }
+void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
+{
+    Config->AccBaseAddress = 0x40000;
+    Config->AccRecordCount = 32000; // 10 градусов
+    switch(Number){
+    case 0:
+        Config->DmaId = DMA4;
+        Config->OCConfig.Index = ID_OC1;
+        break;
+    case 1:
+        Config->DmaId = DMA5;
+        Config->OCConfig.Index = ID_OC2;
+        break;
+    case 2:
+        Config->DmaId = DMA6;
+        Config->OCConfig.Index = ID_OC3;
+        break;
+    }
+    Config->DrvConfig.dSTEPPulseWidth = 0.000002; // 2 uS
+    Config->wSTEPPulseWidth = (WORD)(Config->DrvConfig.dSTEPPulseWidth / 0.0000016);
+    Config->DrvConfig.uStepPerStep = 16;
+    Config->MntConfig.Length = 2.0;
+    Config->MntConfig.Mass = 500.0;
+    Config->MntConfig.Radius = 0.3;
+    Config->MntConfig.Reduction = 360.0;
+    Config->OCConfig.WorkMode = TOGGLE;
+    Config->TmrId = TIMER2;
+    Config->MConfig.StepPerTurn = 200;
+    //TODO: ¬ычислить   и B на основании других параметров
+    Config->MConfig.K = -3.384858359;
+    Config->MConfig.B = 40.27981447;
+    Config->dx = 360.0/(Config->MntConfig.Reduction * Config->DrvConfig.uStepPerStep * Config->MConfig.StepPerTurn);
+}
+

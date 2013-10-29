@@ -153,6 +153,6 @@ typedef struct {
 
 #endif //_WINDOWS
 
-
+#include "uCmdProcess.h"
 
 // TODO: reference additional headers your program requires here
