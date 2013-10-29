@@ -57,6 +57,7 @@
 
 #include "TCPIP Stack/tick.h"
 #include "device_control.h"
+#include "TCPIP Stack/SPIRTCSRAM.h"
 //#include "TCPIP Stack/TCPIP.h"
 
 // Internal counter to store Ticks.  This variable is incremented in an ISR and 
@@ -143,8 +144,14 @@ void TickInit(void)
     TimerSetInt(TIMER1, 7, TRUE);
     TimerSetState(TIMER1, TRUE);
 
-
-
+    {
+        DWORD RTCSec = GetTimeFromRTC();
+        dwInternalTicks = RTCSec / 2;
+        if(RTCSec & 1){
+            TimerSetValue(TIMER1, TICKS_PER_SECOND, 0xFFFF);
+        }
+    }
+    
 #endif
 }
 
@@ -418,6 +425,7 @@ int SetTickInSeconds(DWORD Seconds, WORD Milliseconds)
     S = S >> 1;
     TimerSetValue(TIMER1, (WORD)m, 0xFFFF);
     dwInternalTicks = S;
+    SetRTCTimeFromUTC(Seconds);
     return 0;
 }
 /*****************************************************************************

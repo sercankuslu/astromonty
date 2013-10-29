@@ -27,6 +27,7 @@ typedef struct _OC_BUF {
      xCMD_STOP,            //10 остановлен
      xCMD_START,           //10 включение канала
      xCMD_ACCELERATE,      //10 разгоняется
+     xCMD_SET_SPEED,       //10 устанавливает точное значение интервала для xCMD_RUN (double)
      xCMD_RUN,             //10 движется с постоянной скоростью
      xCMD_DECELERATE,      //10 тормозит
      xCMD_SET_TIMER,       //10 установка таймера
@@ -89,7 +90,8 @@ typedef struct OC_CONFIG {
 }OC_CONFIG;
 
 typedef struct CHANEL_CONFIG {
-    MOUNT_CONFIG            MConfig;
+    MOUNT_CONFIG            MntConfig;
+    MOTOR_CONFIG            MConfig;
     MOTOR_DRIVER_CONFIG     DrvConfig;
     OC_CONFIG               OCConfig;
     TIMERS_ID               TmrId;                      // номер таймера от которого работает канал (T2/T3)
@@ -102,13 +104,14 @@ typedef struct CHANEL_CONFIG {
 
 typedef struct mCMD_STATUS {
     WORD                    AccX;                       // координата X в формуле ускорения 
+    WORD                    RUN_Interval;             // текущий интервал
 } mCMD_STATUS;
 
 typedef struct OC_CHANEL_STATE{
         
     PRIORITY_QUEUE          uCmdQueue;                  // очередь микрокоманд
     LONG                    XPosition;                  // текущий номер шага TODO: поддержать переключение скоростей
-    BYTE                    CurrentDirection;           // направление вращения при движении ( зависит значение вывода Dir )
+    BYTE                    CurrentDirection;           // направление вращения при движении ( зависит значение вывода Dir )    
 
     PRIORITY_QUEUE          mCmdQueue;                  // очередь миникоманд
     mCMD_STATUS             mCMD_Status;                // переменные, используемые при обработке миникоманд (предвыборка)
@@ -125,8 +128,9 @@ typedef struct OC_CHANEL_STATE{
 
 
 
-int uCmd_Init();
+int uCmd_Init(void);
 int uCmd_DMACallback(void*, BYTE*, WORD);
 int uCmd_OCCallback(void * _This);
 int uCmd_ICCallback(void * _This);
+void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number);
 #endif //__uCMD_PROCESS_

@@ -108,7 +108,7 @@
 #include "OCTimer.h"
 #include "../protocol.h"
 #include "device_control.h"
-
+#include "uCmdProcess.h"
 
 // Used for Wi-Fi assertions
 #define WF_MODULE_NUMBER   WF_MODULE_MAIN_DEMO
@@ -337,12 +337,21 @@ int main(void)
     static DWORD d = 0;
     static DWORD dwLastIP = 0;
     static int TimeAdjusted = 0;
-    DWORD X = 0;
-    WORD mSec = 0;
-    TMR1 = 3277ul;
-    X = TMR1;
-    mSec = X*1000ul/32768ul;
-    TMR1 = mSec;
+    //volatile double fff = 0;
+    //volatile double ddd = 0;
+    //int i = 0;
+    //ddd = 32565;
+    //fff = TMR1;
+    //for(i = 0; i< 64; i++){
+    //    ddd = fff;
+    //}
+    //DWORD X = 0;
+   // WORD mSec = 0;
+    //TMR1 = 3277ul;
+    //X = TMR1;
+    //mSec = X*1000ul/32768ul;
+    //TMR1 = mSec;
+    //TMR1 = fff + ddd;
     /*
     DWORD StepsPerRound = 3200;
     OC_INTERVAL_CALC Intrerval;
@@ -572,7 +581,7 @@ int main(void)
         // appropriate stack entity to process it.
         StackTask();
         //SPI_RTCReadTime(&Time);
-        SPI_RTCReadRegister(00, &Second);
+        //SPI_RTCReadRegister(00, &Second);
         // This tasks invokes each of the core stack application tasks
         StackApplications();
 
@@ -1293,6 +1302,7 @@ static void InitAppConfig(void)
     //static WORD SizeOfAppCfg;
     //SizeOfAppCfg = sizeof(AppConfig);
     BYTE i;
+    //CHANEL_CONFIG Config;
     while(1)
     {
         // Start out zeroing all AppConfig bytes to ensure all fields are 
@@ -1313,7 +1323,11 @@ static void InitAppConfig(void)
         AppConfig.MyGateway.Val = MY_DEFAULT_GATE_BYTE1 | MY_DEFAULT_GATE_BYTE2<<8ul | MY_DEFAULT_GATE_BYTE3<<16ul | MY_DEFAULT_GATE_BYTE4<<24ul;
         AppConfig.PrimaryDNSServer.Val = MY_DEFAULT_PRIMARY_DNS_BYTE1 | MY_DEFAULT_PRIMARY_DNS_BYTE2<<8ul  | MY_DEFAULT_PRIMARY_DNS_BYTE3<<16ul  | MY_DEFAULT_PRIMARY_DNS_BYTE4<<24ul;
         AppConfig.SecondaryDNSServer.Val = MY_DEFAULT_SECONDARY_DNS_BYTE1 | MY_DEFAULT_SECONDARY_DNS_BYTE2<<8ul  | MY_DEFAULT_SECONDARY_DNS_BYTE3<<16ul  | MY_DEFAULT_SECONDARY_DNS_BYTE4<<24ul;
-    
+
+        uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
+        uCmd_DefaultConfig(&AppConfig.ChanellsConfig[1], 1);
+        uCmd_DefaultConfig(&AppConfig.ChanellsConfig[2], 2);
+
         // SNMP Community String configuration
         #if defined(STACK_USE_SNMP_SERVER)
         {
@@ -1360,6 +1374,8 @@ static void InitAppConfig(void)
         // Load the default NetBIOS Host Name
         memcpypgm2ram(AppConfig.NetBIOSName, (ROM void*)MY_DEFAULT_HOST_NAME, 16);
         FormatNetBIOSName(AppConfig.NetBIOSName);
+        memcpypgm2ram(AppConfig.NTPServer1, (ROM void*)MY_DEFAULT_NTP1_NAME, 32);
+        memcpypgm2ram(AppConfig.NTPServer2, (ROM void*)MY_DEFAULT_NTP2_NAME, 32);        
     
         #if defined(WF_CS_TRIS)
             // Load the default SSID Name

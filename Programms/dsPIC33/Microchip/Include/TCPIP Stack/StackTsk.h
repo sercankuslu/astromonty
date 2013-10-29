@@ -62,6 +62,8 @@
     #include "WF_Config.h" // pull in additional defines from wireless settings
 #endif
 
+#include "uCmdProcess.h"
+
 // Check for potential configuration errors in "TCPIPConfig.h"
 #if (MAX_UDP_SOCKETS <= 0 || MAX_UDP_SOCKETS > 255 )
 #error Invalid MAX_UDP_SOCKETS value specified
@@ -88,7 +90,6 @@ typedef struct __attribute__((__packed__))
     MAC_ADDR    MACAddr;
 } NODE_INFO;
 
-
 // Application-dependent structure used to contain address information
 typedef struct __attribute__((__packed__)) 
 {
@@ -100,6 +101,9 @@ typedef struct __attribute__((__packed__))
 	IP_ADDR		DefaultIPAddr;          // Default IP address
 	IP_ADDR		DefaultMask;            // Default subnet mask
 	BYTE		NetBIOSName[16];        // NetBIOS name
+    BYTE		NTPServer1[32];         // NTPServers name
+    BYTE		NTPServer2[32];         // NTPServers name
+    CHANEL_CONFIG    ChanellsConfig[3];      // Конфигурация каналов
 	struct
 	{
 		unsigned char : 6;
