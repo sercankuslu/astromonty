@@ -62,11 +62,16 @@
 #define SPI_FLASH_PAGE_MASK		0xFF //(SPI_FLASH_PAGE_SIZE - 1)
 #define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 
+typedef enum _WAIT_READY
+{
+    NO_WAIT_READ_COMPLETE = 0,
+    WAIT_READ_COMPLETE = 1,
+} WAIT_READY;
 
 #if defined(SPIFLASH_CS_TRIS)
     void SPIFlashInit(void);		
     //void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen);
-    void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen, BYTE WaitData);
+    void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLen, WAIT_READY WaitData);
     void SPIFlashBeginWrite(DWORD dwAddr);
     void SPIFlashWrite(BYTE vData);
     void SPIFlashWriteArray(BYTE *vData, WORD wLen);

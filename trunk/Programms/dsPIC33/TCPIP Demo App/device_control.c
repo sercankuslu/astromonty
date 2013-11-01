@@ -1954,6 +1954,7 @@ DEVICE_REG SPIDeviceList[MAX_SPI_DEVICES];
 static BYTE DeviceCount = 0;
 
 volatile SPI_STATUS SPIStatus[2];
+/*
 #if defined(__C30__)
 static void WaitForDataReadySPI1( void )
 {
@@ -1974,6 +1975,7 @@ static void WaitForDataReadySPI2( void )
 #define WaitForDataReadySPI1(  )     
 #define WaitForDataReadySPI2(  )     
 #endif
+*/
 int SPIDMACallBack(void* _This, BYTE* DMABuff, WORD BufSize);
 // блокировка SPI
 void SPILock(SPI_ID id)
@@ -2179,6 +2181,7 @@ INTERRUPT _SPI2ErrInterrupt(void)
 {
     IFS2bits.SPI2EIF = 0;
 }
+/*
 //------------------------------------------------------------------------------------------------
 // получение данных через SPI
 // регулярная отправка без блокировок и выбора устройства
@@ -2228,6 +2231,8 @@ WORD SPI1GetArray(BYTE *val, WORD len)
     }
     return len;
 }//end 
+*/
+/*
 //------------------------------------------------------------------------------------------------
 // отправка данных по SPI
 // регулярная отправка без блокировок и выбора устройства
@@ -2274,7 +2279,7 @@ WORD SPI1SendArray(BYTE *val, WORD len)
     }
     return len;
 }
-
+*/
 SPIConfig SPI_CreateParams(SPI_MODE Mode, SPI_CLOCK_POLARITY CKP, SPI_CLOCK_EDGE CKE, SPI_CLOCK_PRIMARY_PRESCALER PPRE, SPI_CLOCK_SECONDARY_PRESCALER SPRE,SYS_IDLE Idle,SPI_DATA_SIZE_BIT DataSize, SPI_INPUT_PHASE InputPhase)
 {
     SPIConfig Config;

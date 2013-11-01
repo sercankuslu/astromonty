@@ -1,27 +1,33 @@
 #include "stdafx.h"
 
-
+#include "device_control.h"
+#include "Queue.h"
+#include "uCmdProcess.h"
+#include <math.h>
 
 #ifdef __C30__
 
 //#   include "TCPIP Stack/TCPIP.h"
+#include "TCPIP Stack/SPIFlash.h"
 #include "GenericTypeDefs.h"
 
 #else
-void FS_WriteArray(DWORD Addr, BYTE* val, WORD len);
-void FS_ReadArray(DWORD Addr, BYTE* val, WORD len);
-#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData)  FS_ReadArray(dwAddress, vData, wLen)
-//#   define SPIFlashReadArray(dwAddress, vData, wLen, WaitData) FS_ReadArray(dwAddress, vData, wLen)
+typedef enum _WAIT_READY
+{
+    NO_WAIT_READ_COMPLETE = 0,
+    WAIT_READ_COMPLETE = 1,
+} WAIT_READY;
 
+void SPIFlashReadArray(DWORD dwAddress, BYTE* vData, WORD wLen, WAIT_READY WaitData);
+void SPIFlashWriteArray(BYTE* vData, WORD wLen);
+void SPIFlashBeginWrite(DWORD Addr);
+
+APP_CONFIG AppConfig;
+
+DWORD dwFlashAddr = 0;
 unsigned char FileSystem[64*1024*256];
 
 #endif
-
-#include "device_control.h"
-#include "Queue.h"
-#include "uCmdProcess.h"
-#include "TCPIP Stack/SPIFlash.h"
-
 
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   uCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
@@ -29,9 +35,23 @@ xCMD_QUEUE      mCmdQueueValues1[mCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   mCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
 OC_CHANEL_STATE OControll1;
 
-
-
 int SetDirection(OC_ID id, BYTE Dir);
+
+#ifndef __C30__
+void SPIFlashReadArray(DWORD dwAddress, BYTE* vData, WORD wLen, WAIT_READY WaitData)
+{
+    memcpy(vData, &FileSystem[dwAddress], wLen);
+}
+void SPIFlashBeginWrite(DWORD Addr)
+{
+    dwFlashAddr = Addr;
+}
+void SPIFlashWriteArray(BYTE* vData, WORD wLen)
+{
+    memcpy(&FileSystem[dwFlashAddr], vData, wLen);
+}
+#endif
+
 
 int uCmd_Init(void)
 {
@@ -43,10 +63,7 @@ int uCmd_Init(void)
     // 0. настроить очередь
     Queue_Init(&OControll1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
     Queue_Init(&OControll1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
-    // 1. считать настройки из flash
-    // 2. настроить OC, DMA
-    // 3. 
-    // 
+    
 
     
     command.State = xCMD_STOP;
@@ -125,15 +142,15 @@ int uCmd_OCCallback( void * _This )
 {
     OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
     xCMD_QUEUE * Value = NULL;
-    BYTE ProcessCmd = 1;
     xCMD_QUEUE StopCommand;
-    StopCommand.State = xCMD_STOP;
-    StopCommand.Value = (DWORD)0x0000;    
+    BYTE ProcessCmd = 1;
 
     while (ProcessCmd){
 
         if(Queue_First( &OCN->uCmdQueue, NULL, (BYTE**)&Value) != 0){
             // если нет команды, то останов
+            StopCommand.State = xCMD_STOP;
+            StopCommand.Value = (DWORD)0x0000;
             Value = &StopCommand;
             ProcessCmd = 0;
         }
@@ -156,9 +173,9 @@ int uCmd_OCCallback( void * _This )
             break;
 
         case xCMD_SET_DIRECTION: // значение Value - направление движения
-            OCN->CurrentDirection = Value->Value;
+            OCN->CurrentDirection = (BYTE)Value->Value;
             OCN->CurrentState = Value->State;
-            SetDirection(OCN->Config.OCConfig.Index, (BYTE)Value->Value);            
+            SetDirection(OCN->Config.OCConfig.Index, (BYTE)Value->Value);
             break;
 
         case xCMD_STOP: // остановка модуля
@@ -174,13 +191,6 @@ int uCmd_OCCallback( void * _This )
             //ProcessCmd = 0;
             break;
 
-        case xCMD_EMERGENCY_STOP:
-            OCN->CurrentState = Value->State;
-            OCSetMode(OCN->Config.OCConfig.Index, OC_DISABLED);
-            DMADisable(OCN->Config.DmaId);
-            ProcessCmd = 0;
-            break;
-
         default:
             OCN->CurrentState = xCMD_ERROR;
             break;
@@ -190,8 +200,6 @@ int uCmd_OCCallback( void * _This )
     }
     return 0;
 }
-#define WAIT_READ_COMPLETE 0
-#define NO_WAIT_READ_COMPLETE 0
 int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 {
 #define TMP_SIZE 8
@@ -212,6 +220,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
     OC_BUF * BufPtr;
     WORD DataSize = 0;
     BYTE Buf1 = 0;
+    BYTE NeedStart = 0;
 
     BufPtr = (OC_BUF*)Buf;
 
@@ -235,7 +244,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 
             // проверка на некорректные данные
             if(OCN->mCMD_Status.AccX > OCN->Config.AccRecordCount){
-                OCN->mCMD_Status.AccX = OCN->Config.AccRecordCount;
+                OCN->mCMD_Status.AccX = (WORD)OCN->Config.AccRecordCount;
             }
             if(Value->Value > OCN->Config.AccRecordCount){
                 Value->Value = OCN->Config.AccRecordCount;
@@ -269,7 +278,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
                         Buf1 = 0;
                     }
                 }
-                BufPtr->r = *TmpBufPtr + OCN->T.Val;
+                BufPtr->r = (WORD)(*TmpBufPtr + OCN->T.Val);
                 BufPtr->rs = BufPtr->r + Pulse;
                 BufPtr++;
                 TmpBufPtr++;
@@ -298,7 +307,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Buf1 = 0;
             for (i = 0; i < DataSize; i++) {
 
-                BufPtr->r = OCN->mCMD_Status.RUN_Interval + OCN->T.Val;
+                BufPtr->r = (WORD)(OCN->mCMD_Status.RUN_Interval + OCN->T.Val);
                 BufPtr->rs = BufPtr->r + Pulse;
                 BufPtr++;
                 TmpBufPtr++;
@@ -321,6 +330,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             break;
         case xCMD_SET_SPEED: //задаёт значение интервала для xCMD_RUN ( в случае, если не задано, используется последнее значение xCMD_ACCELERATE/xCMD_DECELERATE)
             // для uCMD не используется
+            // TODO: надо округлять десятичные
             OCN->mCMD_Status.RUN_Interval = (WORD)Value->Value;
             Queue_Delete(&OCN->mCmdQueue);
             break;
@@ -328,9 +338,9 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
             Queue_Delete(&OCN->mCmdQueue);
             break;
-        case xCMD_SET_TIMER:
-            Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
-            Queue_Delete(&OCN->mCmdQueue);
+//         case xCMD_SET_TIMER: // TODO: Возможно, в mCMD не нужно
+//             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
+//             Queue_Delete(&OCN->mCmdQueue);
             break;
         case xCMD_SET_DIRECTION:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
@@ -344,13 +354,29 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
         case xCMD_START:
             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Value);
             Queue_Delete(&OCN->mCmdQueue);
+            if(OCN->CurrentState == xCMD_STOP){
+                // запуск OC, если все выключено
+                NeedStart = 1;
+            }
             break;
         case xCMD_EMERGENCY_STOP:
             // все вырубить
+            #ifdef __C30__
+                PORT1_ENABLE = 1;
+                PORT2_ENABLE = 1;
+                PORT3_ENABLE = 1;
+            #endif
+            OCN->CurrentState = Value->State;
+            OCSetMode(OCN->Config.OCConfig.Index, OC_DISABLED);
+            DMADisable(OCN->Config.DmaId);
+            ProcessCmd = 0;
             break;
         default:
             break;
         }
+    }
+    if(NeedStart){
+        uCmd_OCCallback( _This );
     }
     return 0;
 }
@@ -390,32 +416,9 @@ int SetDirection(OC_ID id, BYTE Dir)
     return 0;
 }
 
-
-//-------------------------------------------------------------------------
-void FS_WriteArray(DWORD Addr, BYTE* val, WORD len)
-    //------------------------------------------------------------------------------------------------
-{
-#ifdef __C30__
-    SPIFlashBeginWrite(Addr);
-    SPIFlashWriteArray(val, len);
-#else
-    memcpy(&FileSystem[Addr], val, len);
-#endif
-
-}
-
-//------------------------------------------------------------------------------------------------
-void FS_ReadArray(DWORD Addr, BYTE* val, WORD len)
-    //------------------------------------------------------------------------------------------------
-{
-#ifdef __C30__
-    SPIFlashReadArray(Addr, val, len, 1);
-#else
-    memcpy(val, &FileSystem[Addr], len);
-#endif
-}
 void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
 {
+    
     Config->AccBaseAddress = 0x40000;
     Config->AccRecordCount = 32000; // 10 градусов
     switch(Number){
@@ -443,8 +446,56 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
     Config->TmrId = TIMER2;
     Config->MConfig.StepPerTurn = 200;
     //TODO: Вычислить К и B на основании других параметров
-    Config->MConfig.K = -3.384858359;
-    Config->MConfig.B = 40.27981447;
+    
+
+    //TODO: как-то учесть трение
+    {
+        double I;
+        // линия на графике двигателя (F1,P1)(F2,P2)
+        double F1 = 100;
+        double F2 = 1000;
+        double P1 = 0.76;
+        double P2 = 0.46;
+        I = (((Config->MntConfig.Mass*Config->MntConfig.Radius*Config->MntConfig.Radius/4) + (Config->MntConfig.Mass*Config->MntConfig.Length*Config->MntConfig.Length/12))/Config->MntConfig.Reduction)/Rad_to_Grad;
+
+        Config->MConfig.K = (P2 - P1)/(F2-F1);
+        Config->MConfig.B = P1 - F1 * Config->MConfig.K;
+        // предварительные вычисления. здесь характеристики двигателей.
+        Config->K = Config->MConfig.K * Config->MConfig.StepPerTurn / I;  // размерность 1/сек
+        Config->B = Config->MConfig.B / I; // размерность 1/сек^2
+        Config->V = Config->K / Config->B;                                  // V = K/B
+        Config->U = 2.0/(Config->V*Config->V*Config->B);                    // U = 2/(V^2B)
+    }
+    //rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
+    //rr->a = (4.0 * rr->B/(rr->K * rr->K));
+    //rr->OneStepCalcTime = (DWORD)(0.000160 / rr->TimerStep); //160us
     Config->dx = 360.0/(Config->MntConfig.Reduction * Config->DrvConfig.uStepPerStep * Config->MConfig.StepPerTurn);
 }
 
+double GetInterval(double X, double U, double V)
+{
+    //double X = AccX * Config->dx;
+    return V * (-sqrt(X * (X + U)) - X);
+}
+
+void CreateAccTable()
+{
+    
+    {
+        WORD i;
+
+        WORD Buf[128];
+        WORD * Bufptr = Buf;
+        volatile double Value = 0;
+        SPIFlashBeginWrite(262144);   
+        for(i = 0; i < 32000; i++){
+            if(((i & 0x7f) == 0) && (i > 0)){
+                SPIFlashWriteArray((BYTE*)Buf, 256);
+                Bufptr = Buf;
+            }
+            Value = (GetInterval( ((double)i) * AppConfig.ChanellsConfig[0].dx, AppConfig.ChanellsConfig[0].U,AppConfig.ChanellsConfig[0].V)/0.0000002);            
+            *Bufptr = (WORD)Value;
+            Bufptr++;
+        }
+    }
+}

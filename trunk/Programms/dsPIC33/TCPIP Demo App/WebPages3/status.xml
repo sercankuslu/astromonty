@@ -1,9 +1,9 @@
 <response>
-<time0>~time(0)~</time0>
-<ang0>~ang(0)~</ang0>
-<ang1>~ang(1)~</ang1>
-<ang2>~ang(2)~</ang2>
-<angR0>~angR(0)~</angR0>
-<angR1>~angR(1)~</angR1>
-<angR2>~angR(2)~</angR2>
+  <time0>1383228561.40231</time0>
+  <ang0>92.2393116722196</ang0>
+  <ang1>90</ang1>
+  <ang2>~ang(2)~</ang2>
+  <angR0>1</angR0>
+  <angR1>1</angR1>
+  <angR2>~angR(2)~</angR2>
 </response>

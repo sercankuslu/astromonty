@@ -73,10 +73,12 @@ write_comm(2)
 smtps_en
 snmp_en
 ra(0)
-+ang(0)
-+ang(1)
+ang(0)
+ang(1)
 +ang(2)
-+angR(0)
-+angR(1)
+angR(0)
+angR(1)
 +angR(2)
-+time(0)
+time(0)
++config_ntp1
++config_ntp2

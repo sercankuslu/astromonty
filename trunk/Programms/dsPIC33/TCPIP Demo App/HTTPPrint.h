@@ -34,7 +34,8 @@ void HTTPPrint_reboot(void);
 void HTTPPrint_rebootaddr(void);
 void HTTPPrint_ang(WORD);
 void HTTPPrint_angR(WORD);
-void HTTPPrint_time(WORD);
+void HTTPPrint_config_ntp1(void);
+void HTTPPrint_config_ntp2(void);
 
 void HTTPPrint(DWORD callbackID)
 {
@@ -88,26 +89,17 @@ void HTTPPrint(DWORD callbackID)
         case 0x00000033:
 			HTTPIncFile((ROM BYTE*)"header.inc");
 			break;
-        case 0x0000004b:
-			HTTPPrint_ang(0);
-			break;
-        case 0x0000004c:
-			HTTPPrint_ang(1);
-			break;
         case 0x0000004d:
 			HTTPPrint_ang(2);
-			break;
-        case 0x0000004e:
-			HTTPPrint_angR(0);
-			break;
-        case 0x0000004f:
-			HTTPPrint_angR(1);
 			break;
         case 0x00000050:
 			HTTPPrint_angR(2);
 			break;
-        case 0x00000051:
-			HTTPPrint_time(0);
+        case 0x00000052:
+			HTTPPrint_config_ntp1();
+			break;
+        case 0x00000053:
+			HTTPPrint_config_ntp2();
 			break;
 		default:
 			// Output notification for undefined values

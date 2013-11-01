@@ -74,7 +74,7 @@
 static DWORD dwRTCSeconds = 0;
 
 // Tick count of last update
-static DWORD dwRTCLastUpdateTick = 0;
+//static DWORD dwRTCLastUpdateTick = 0;
 // Time Struct
 
 static DWORD EPOCH2000 = (86400ul * (365ul * 30ul + 7ul));
