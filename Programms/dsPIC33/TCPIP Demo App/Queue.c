@@ -135,9 +135,9 @@ int Queue_Selftest ()
     PRIORITY_QUEUE Q;
     BYTE Values[5*6];
     BYTE k1 = 128;
-    BYTE k2 = 64;
+    //BYTE k2 = 64;
     BYTE v1[] = {0,1,2,3,4,5};
-    BYTE v2[] = {2,2,2,2,2,2};
+    //BYTE v2[] = {2,2,2,2,2,2};
     BYTE K = 0;
     BYTE V[] = {0,0,0,0,0,0};
     BYTE* V1 = NULL;

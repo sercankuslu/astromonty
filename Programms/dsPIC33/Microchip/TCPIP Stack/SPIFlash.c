@@ -126,7 +126,6 @@ static union
 } deviceCaps;
 
 
-static void _SendCmd(BYTE cmd);
 static void _WaitWhileBusy(void);
 void SPIFlashPageWrite(BYTE* vData, WORD wLen);
 //static void _GetStatus(void);
@@ -266,7 +265,7 @@ void SPIFlashInit(void)
     SPIReceiveData(FlashDeviceHandle, Cmd, 4, vData, wLength, 1);
 }
 */
-void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength, BYTE WaitData)
+void SPIFlashReadArray(DWORD dwAddress, BYTE *vData, WORD wLength, WAIT_READY WaitData)
 {
     BYTE Cmd[4];
     // Ignore operations when the destination is NULL or nothing to read
@@ -490,34 +489,6 @@ void SPIFlashEraseSector(DWORD dwAddr)
     Cmd[3] = ((BYTE*)&dwAddr)[0];
     SPISendCmd(FlashDeviceHandle, Cmd, 4);
 
-}
-
-
-/*****************************************************************************
-  Function:
-    static void _SendCmd(BYTE cmd)
-
-  Summary:
-    Sends a single-byte command to the SPI Flash part.
-
-  Description:
-    This function sends a single-byte command to the SPI Flash part.  It is
-    used for commands such as WREN, WRDI, and EWSR that must have the chip
-    select activated, then deactivated immediately after the command is
-    transmitted.
-
-  Precondition:
-    SPIFlashInit has been called.
-
-  Parameters:
-    cmd - The single-byte command code to send
-
-  Returns:
-    None
-  ***************************************************************************/
-static void _SendCmd(BYTE cmd)
-{    
-    SPISendCmd( FlashDeviceHandle, &cmd, 1);
 }
 
 

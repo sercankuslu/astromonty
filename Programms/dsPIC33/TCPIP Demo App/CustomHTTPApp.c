@@ -60,10 +60,10 @@
 #include "TCPIP Stack/TCPIP.h"
 #include "MainDemo.h"		// Needed for SaveAppConfig() prototype
 #include "TCPIP Stack/SPIRTCSRAM.h"
-#include "OCTimer.h"
-extern RR rr1;
-extern RR rr2;
-extern RR rr3;
+//#include "OCTimer.h"
+//extern RR rr1;
+//extern RR rr2;
+//extern RR rr3;
 
 /****************************************************************************
   Section:
@@ -465,7 +465,7 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 	APP_CONFIG newAppConfig;
 	BYTE *ptr;
 	BYTE i;
-
+    BYTE NeedReboot = 0;
 	// Check to see if the browser is attempting to submit more data than we 
 	// can parse at once.  This function needs to receive all updated 
 	// parameters and validate them all before committing them to memory so that
@@ -518,16 +518,18 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 			
 		// Parse the value that was read
 		if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ip"))
-		{// Read new static IP Address
+		{// Read new static IP Address            
 			if(!StringToIPAddress(curHTTP.data+6, &newAppConfig.MyIPAddr))
 				goto ConfigFailure;
 				
 			newAppConfig.DefaultIPAddr.Val = newAppConfig.MyIPAddr.Val;
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"gw"))
 		{// Read new gateway address
 			if(!StringToIPAddress(curHTTP.data+6, &newAppConfig.MyGateway))
 				goto ConfigFailure;
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"sub"))
 		{// Read new static subnet
@@ -535,16 +537,19 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 				goto ConfigFailure;
 
 			newAppConfig.DefaultMask.Val = newAppConfig.MyMask.Val;
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"dns1"))
 		{// Read new primary DNS server
 			if(!StringToIPAddress(curHTTP.data+6, &newAppConfig.PrimaryDNSServer))
 				goto ConfigFailure;
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"dns2"))
 		{// Read new secondary DNS server
 			if(!StringToIPAddress(curHTTP.data+6, &newAppConfig.SecondaryDNSServer))
 				goto ConfigFailure;
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"mac"))
 		{
@@ -580,34 +585,55 @@ static HTTP_IO_RESULT HTTPPostConfig(void)
 				((BYTE*)&w)[0] = curHTTP.data[i*2+1];
 				newAppConfig.MyMACAddr.v[i] = hexatob(*((WORD_VAL*)&w));
 			}
+            NeedReboot |= 1;
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"host"))
 		{// Read new hostname
 			FormatNetBIOSName(&curHTTP.data[6]);
 			memcpy((void*)newAppConfig.NetBIOSName, (void*)curHTTP.data+6, 16);
+            NeedReboot |= 1;
+		}
+        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ntp1"))
+		{// Read NTP server hostname
+            if(NeedReboot){
+			    memcpy((void*)newAppConfig.NTPServer1, (void*)curHTTP.data+6,32);
+            } else {
+                memcpy((void*)AppConfig.NTPServer1, (void*)curHTTP.data+6,32);
+            }            
+		}
+        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ntp2"))
+		{// Read NTP server hostname
+            if(NeedReboot){
+			    memcpy((void*)newAppConfig.NTPServer2, (void*)curHTTP.data+6,32);
+            } else {
+                memcpy((void*)AppConfig.NTPServer2, (void*)curHTTP.data+6,32);
+            }            
 		}
 		else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"dhcp"))
 		{// Read new DHCP Enabled flag
 			if(curHTTP.data[6] == '1')
 				newAppConfig.Flags.bIsDHCPEnabled = 1;
+            NeedReboot |= 1;
 		}
 	}
 
-
-	// All parsing complete!  Save new settings and force a reboot
-	SaveAppConfig(&newAppConfig);
+    if(NeedReboot){
+	    // All parsing complete!  Save new settings and force a reboot
+	    SaveAppConfig(&newAppConfig);
 	
-	// Set the board to reboot and display reconnecting information
-	strcpypgm2ram((char*)curHTTP.data, "/protect/reboot.htm?");
-	memcpy((void*)(curHTTP.data+20), (void*)newAppConfig.NetBIOSName, 16);
-	curHTTP.data[20+16] = 0x00;	// Force null termination
-	for(i = 20; i < 20u+16u; i++)
-	{
-		if(curHTTP.data[i] == ' ')
-			curHTTP.data[i] = 0x00;
-	}		
-	curHTTP.httpStatus = HTTP_REDIRECT;	
-	
+	    // Set the board to reboot and display reconnecting information
+	    strcpypgm2ram((char*)curHTTP.data, "/protect/reboot.htm?");
+	    memcpy((void*)(curHTTP.data+20), (void*)newAppConfig.NetBIOSName, 16);
+	    curHTTP.data[20+16] = 0x00;	// Force null termination
+	    for(i = 20; i < 20u+16u; i++)
+	    {
+		    if(curHTTP.data[i] == ' ')
+			    curHTTP.data[i] = 0x00;
+	    }		
+	    curHTTP.httpStatus = HTTP_REDIRECT;	
+	} else {
+        SaveAppConfig(&AppConfig);
+    }   
 	return HTTP_IO_DONE;
 
 
@@ -624,8 +650,7 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
     float A1;
     float A2;
     float A3;
-    int command = 0;
-    int Errors = 0;
+    int command = 0;    
 
     if(curHTTP.byteCount > TCPIsGetReady(sktHTTP) + TCPGetRxFIFOFree(sktHTTP)){
         lastFailure = TRUE;
@@ -1794,6 +1819,18 @@ void HTTPPrint_config_mac(void)
 	
 	// Indicate that we're done
 	curHTTP.callbackPos = 0x00;
+	return;
+}
+
+void HTTPPrint_config_ntp1()
+{
+    TCPPutString(sktHTTP, AppConfig.NTPServer1);
+	return;
+}
+
+void HTTPPrint_config_ntp2()
+{
+    TCPPutString(sktHTTP, AppConfig.NTPServer2);
 	return;
 }
 

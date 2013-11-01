@@ -105,8 +105,8 @@
 // Include functions specific to this stack application
 #include "MainDemo.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
-#include "OCTimer.h"
-#include "../protocol.h"
+//#include "OCTimer.h"
+//#include "../protocol.h"
 #include "device_control.h"
 #include "uCmdProcess.h"
 
@@ -334,9 +334,14 @@ int main(void)
 {  
         
     static DWORD t = 0;
-    static DWORD d = 0;
+    //static DWORD d = 0;
     static DWORD dwLastIP = 0;
-    static int TimeAdjusted = 0;
+    //volatile double X;
+    //static int TimeAdjusted = 0;
+    uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
+    //X = 2456.0 * AppConfig.ChanellsConfig[0].dx;  
+    //TMR1 = GetIntrval(X, &AppConfig.ChanellsConfig[0]);
+
     //volatile double fff = 0;
     //volatile double ddd = 0;
     //int i = 0;
@@ -447,6 +452,25 @@ int main(void)
     // Initialize Stack and application related NV variables into AppConfig.
     InitAppConfig();
 
+    if(0)
+    {
+        WORD i;
+        
+        WORD Buf[128];
+        WORD * Bufptr = Buf;
+        volatile double Value = 0;
+        SPIFlashBeginWrite(262144);   
+        for(i = 0; i < 32000; i++){
+            if(((i & 0x7f) == 0) && (i > 0)){
+                SPIFlashWriteArray((BYTE*)Buf, 256);
+                Bufptr = Buf;
+                Nop();
+            }
+            Value = (GetInterval( ((double)i) * AppConfig.ChanellsConfig[0].dx, AppConfig.ChanellsConfig[0].U,AppConfig.ChanellsConfig[0].V)/0.0000002);            
+            *Bufptr = Value;
+            Bufptr++;
+        }
+    }
     // Initiates board setup process if button is depressed 
     // on startup
     #ifdef bad
@@ -667,39 +691,6 @@ int main(void)
         #endif
     }
     }
-}
-int AdjustLocalRTCTime()
-{
-    DWORD RTCSeconds;
-    DWORD SNTPSeconds;
-#if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
-    //имеет смысл только при работающем модуле SNTP
-    if(SNTPIsTimeValid())
-    {
-        //RTCSeconds = RTCGetUTCSeconds();  
-        //SNTPSeconds = SNTPGetUTCSeconds();
-        //if((RTCSeconds>SNTPSeconds+2)||(RTCSeconds<SNTPSeconds-2)){
-            //SetTimeFromUTC(SNTPSeconds); 
-        //}
-        return 1;
-    }    
-#endif
-    return 0;
-}
-
-DWORD UTCGetTime(void)
-{
-#if defined(STACK_USE_SNTP_CLIENT)&&defined(SPIRTCSRAM_CS_TRIS)
-    //if(RTCIsTimeValid()){
-    //    return RTCGetUTCSeconds();
-    //} else
-    //if(SNTPIsTimeValid()) {
-        //получаем время из SNTP модуля
-    //    return SNTPGetUTCSeconds();
-    //} else {
-    //    return RTCGetUTCSeconds();
-    //}
-#endif
 }
 
 
@@ -1301,7 +1292,7 @@ static void InitAppConfig(void)
 #endif
     //static WORD SizeOfAppCfg;
     //SizeOfAppCfg = sizeof(AppConfig);
-    BYTE i;
+    //BYTE i;
     //CHANEL_CONFIG Config;
     while(1)
     {

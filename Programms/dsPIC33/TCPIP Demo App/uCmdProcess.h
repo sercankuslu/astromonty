@@ -6,11 +6,13 @@
 #include "device_control.h"
 #include "Queue.h"
 #else
-#   include "stdafx.h"
+#include "stdafx.h"
 #include "Queue.h"
 #include "device_control.h"
 #endif
 
+#define Grad_to_Rad 0.017453292519943295
+#define Rad_to_Grad 57.295779513082323
 
 //#include "..\dsPIC33\TCPIP Demo App\OCTimer.h"
 
@@ -51,7 +53,7 @@ typedef struct _xCMD_QUEUE{
 #define mCMD_QUEUE_SIZE 10
 
 typedef struct MOTOR_CONFIG {
-    WORD StepPerTurn;                                   // количество шагов двигателя на оборот (200 - ДШИ-200)
+    WORD                    StepPerTurn;                // количество шагов двигателя на оборот (200 - ДШИ-200)
     double                  K;                          // Kx + B ( K - тангенс угла наклона графика зависимости мощности двигателя от скорости вращения
     double                  B;                          // B - константа, мощность двигателя в Hm скорость в радианах в сек 
 } MOTOR_CONFIG;
@@ -100,6 +102,10 @@ typedef struct CHANEL_CONFIG {
     DMA_ID                  DmaId;
     DWORD                   AccBaseAddress;             // Адрес начала таблицы ускорения на внешней памяти
     DWORD                   AccRecordCount;             // Количество записей в таблице ускорения на внешней памяти
+    double                  K;                          // приведенные параметры двигателя
+    double                  B;
+    double                  U;                          // U = 2/(V^2B)
+    double                  V;                          // V = K/B
 }CHANEL_CONFIG;
 
 typedef struct mCMD_STATUS {
@@ -126,11 +132,26 @@ typedef struct OC_CHANEL_STATE{
 
 }OC_CHANEL_STATE;
 
+#ifdef _WINDOWS_
+#if !defined _APP_CONFIG_TYPE
+#define _APP_CONFIG_TYPE
+typedef struct { 
+    DWORD_VAL MyIPAddr;
+    DWORD_VAL MyMask;
+    DWORD_VAL MyGateway;
+    DWORD_VAL PrimaryDNSServer;
+    DWORD_VAL SecondaryDNSServer;
+    CHANEL_CONFIG    ChanellsConfig[3];      // Конфигурация каналов
+    char NetBIOSName[16];
+    DWORD Time;
+} APP_CONFIG;
+#endif //#if !defined _APP_CONFIG_TYPE
+#endif // _WINDOWS_
 
-
-int uCmd_Init(void);
+int uCmd_Init();
 int uCmd_DMACallback(void*, BYTE*, WORD);
 int uCmd_OCCallback(void * _This);
 int uCmd_ICCallback(void * _This);
 void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number);
+double GetInterval(double X, double U, double V);
 #endif //__uCMD_PROCESS_

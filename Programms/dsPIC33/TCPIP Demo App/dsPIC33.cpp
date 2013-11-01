@@ -1,12 +1,13 @@
 // dsPIC33.cpp : Defines the entry point for the application.
 //
-
 #include "stdafx.h"
 #include "dsPIC33.h"
 #include <wchar.h>
-
+#include "uCmdProcess.h"
 
 #define MAX_LOADSTRING 100
+
+
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -18,21 +19,6 @@ ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
-
-WCHAR S[128];
-
-WCHAR * Calc()
-{
-    float f = 0.0;
-    double d = 32768.12345678901234567890;
-    f = d - 32768.0;
-    f++;
-    d++;
-    
-    _snwprintf(S,128,TEXT("%f  %f %f"), f, d, d+f);
-    
-    return S;
-}
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -59,8 +45,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DSPIC33));
 
+        uCmd_Init();
+        //double R = GetInterval(0.0, 0.0, 0.0);
         
-
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -192,8 +179,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
-                    
-                    MessageBox(hDlg, Calc(), TEXT("message"), 0);
+                    double R = GetInterval(0.0, 0.0, 0.0);
+                    //MessageBox(hDlg, Calc(), TEXT("message"), 0);
 		    EndDialog(hDlg, LOWORD(wParam));
 		    return (INT_PTR)TRUE;
 		}

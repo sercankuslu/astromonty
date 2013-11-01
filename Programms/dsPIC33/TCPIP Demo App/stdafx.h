@@ -16,6 +16,7 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+
 #ifndef _DWORD_VAL_
 #define _DWORD_VAL_
 
@@ -137,22 +138,9 @@ typedef union _WORD_VAL
 #define MY_DEFAULT_RR_PARA_XParkPos		(0ul)
 #define MY_DEFAULT_RR_PARA_VMax			(10.0)
 
-#if !defined _APP_CONFIG_TYPE
-#define _APP_CONFIG_TYPE
-typedef struct { 
-    DWORD_VAL MyIPAddr;
-    DWORD_VAL MyMask;
-    DWORD_VAL MyGateway;
-    DWORD_VAL PrimaryDNSServer;
-    DWORD_VAL SecondaryDNSServer;
-    char NetBIOSName[16];
-    DWORD Time;
-} AppConfigType;
-#endif //#if !defined _APP_CONFIG_TYPE
+
 
 
 #endif //_WINDOWS
-
-#include "uCmdProcess.h"
 
 // TODO: reference additional headers your program requires here
