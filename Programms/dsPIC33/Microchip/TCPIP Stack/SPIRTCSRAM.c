@@ -174,7 +174,7 @@ void SPIRTCSRAMInit(void)
   Returns:
     None
   ***************************************************************************/
-void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, WORD wLength, BYTE WaitData)
+void SPI_RTC_SRAMReadArray(BYTE bAddress, BYTE *vData, WORD wLength, WAIT_READY WaitData)
 {
     BYTE Cmd[2];
     // Ignore operations when the destination is NULL or nothing to read
