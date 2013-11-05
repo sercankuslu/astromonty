@@ -123,7 +123,14 @@ typedef struct _RTC_ALARM2
     DATE    Date;
 } RTC_ALARM2;
 
-
+#ifndef __WAIT_READY
+#define __WAIT_READY
+typedef enum _WAIT_READY
+{
+    NO_WAIT_READ_COMPLETE = 0,
+    WAIT_READ_COMPLETE = 1,
+} WAIT_READY;
+#endif
 
 #if defined(SPIRTCSRAM_CS_TRIS)
     void SPIRTCSRAMInit(void);

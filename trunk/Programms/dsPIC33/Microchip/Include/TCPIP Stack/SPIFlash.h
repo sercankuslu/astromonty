@@ -62,11 +62,14 @@
 #define SPI_FLASH_PAGE_MASK		0xFF //(SPI_FLASH_PAGE_SIZE - 1)
 #define SPI_FLASH_SECTOR_MASK		(SPI_FLASH_SECTOR_SIZE - 1)
 
+#ifndef __WAIT_READY
+#define __WAIT_READY
 typedef enum _WAIT_READY
 {
     NO_WAIT_READ_COMPLETE = 0,
     WAIT_READ_COMPLETE = 1,
 } WAIT_READY;
+#endif
 
 #if defined(SPIFLASH_CS_TRIS)
     void SPIFlashInit(void);		
