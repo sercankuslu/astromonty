@@ -299,19 +299,38 @@ int uCmd_OCCallback( void * _This )
     xCMD_QUEUE StopCommand;
     BYTE ProcessCmd = 1;
 
-    if((OCN->Pulse) && (OCN->CurrentState != xCMD_STOP)){
-        OCN->Pulse = 0;
-        return 0;
+    //if((OCN->Pulse) && (OCN->CurrentState != xCMD_STOP)){
+    //    OCN->Pulse = 0;
+    //    return 0;
+    // }
+    
+    switch(OCN->Config->OCConfig.Index){
+    case ID_OC1: 
+#ifdef __C30__
+        if(PORTDbits.RD0 == 1) return 0; 
+#endif
+        break;
+    case ID_OC2: 
+#ifdef __C30__
+        if(PORTDbits.RD1 == 1) return 0; 
+#endif
+        break;
+    default:
+        break;
     }
 
     while (ProcessCmd){
 
         if(Queue_First( &OCN->uCmdQueue, NULL, (BYTE**)&Value) != 0){
             // если нет команды, то останов
-            StopCommand.State = xCMD_STOP;
-            StopCommand.Value = (DWORD)0x0000;
-            Value = &StopCommand;
-            ProcessCmd = 0;
+            if((OCN->CurrentState != xCMD_STOP) && (OCN->CurrentState != xCMD_EMERGENCY_STOP)){
+                StopCommand.State = xCMD_STOP;
+                StopCommand.Value = (DWORD)0x0000;
+                Value = &StopCommand;
+                ProcessCmd = 0;
+            } else {
+                return -1;
+            }
         }
 
         switch (Value->State) {
@@ -427,13 +446,13 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             if(Value->Value < OCN->mCMD_Status.AccX){
                 Value->State = xCMD_DECELERATE;
                 break;
-            }
+             }
 
             // получение количества данных
             DataSize = Value->Value - OCN->mCMD_Status.AccX;
             if (DataSize > BufCount) {
                 DataSize = BufCount;
-            }
+            } 
             // получение адреса
             Addr = OCN->Config->AccBaseAddress + (OCN->mCMD_Status.AccX) * sizeof(WORD);
 
@@ -445,6 +464,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Buf1Wait = NO_WAIT_READ_COMPLETE;
             FirstPass = 1;
             // вычисляем количество полных буферов
+            if (DataSize > 0)
             {   
                 TmpSize2 = DataSize;
 
@@ -527,12 +547,14 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             if (DataSize > BufCount) {
                 DataSize = BufCount;
             }
-            BufLoad = 0;
-            for (i = 0; i < DataSize; i++) {
+            if (DataSize > 0){
+                BufLoad = 0;
+                for (i = 0; i < DataSize; i++) {
 
-                OCN->T.Val += (WORD)(OCN->mCMD_Status.RUN_Interval);
-                *(BufPtr++) = OCN->T.word.LW;
-                *(BufPtr++) = OCN->T.word.LW + Pulse;
+                    OCN->T.Val += (WORD)(OCN->mCMD_Status.RUN_Interval);
+                    *(BufPtr++) = OCN->T.word.LW;
+                    *(BufPtr++) = OCN->T.word.LW + Pulse;
+                }
             }
             if(DataSize > 0){
                 Command.State = xCMD_RUN;
@@ -566,18 +588,18 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
                 Value->Value = OCN->Config->AccRecordCount;
             }
 
-            if(Value->Value > OCN->mCMD_Status.AccX){
-                Value->State = xCMD_ACCELERATE;
-                break;
-            }
+//             if(Value->Value > OCN->mCMD_Status.AccX){
+//                 Value->State = xCMD_ACCELERATE;
+//                 break;
+//             }
 
             // получение количества данных
-            DataSize = OCN->mCMD_Status.AccX - (WORD)Value->Value;
+            DataSize = (DWORD)OCN->mCMD_Status.AccX - Value->Value;
             if (DataSize > BufCount) {
                 DataSize = BufCount;
             }
             // получение адреса
-            Addr = OCN->Config->AccBaseAddress + (OCN->mCMD_Status.AccX) * sizeof(WORD);
+            Addr = OCN->Config->AccBaseAddress + ((DWORD)OCN->mCMD_Status.AccX) * sizeof(WORD);
 
             BufLoad = 0;
             BufProcess = 0;
@@ -588,6 +610,7 @@ int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Buf1Wait = NO_WAIT_READ_COMPLETE;
 
             // вычисляем количество полных буферов
+            if (DataSize > 0)
             {
                 TmpSize2 = DataSize;
 
@@ -1003,6 +1026,13 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         mCmd.Value = 0;
         Queue_Insert(&OCN->mCmdQueue, Priority - 1, (BYTE*)&mCmd);
     }
+    mCmd.State = xCMD_SET_SPEED;
+    mCmd.Value = 156;
+    Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+    mCmd.State = xCMD_RUN;
+    mCmd.Value = diff;
+    Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+    /*
     diff_2 = diff / 2;
     if(diff_2 < OCN->Config->AccRecordCount){
         mCmd.State = xCMD_ACCELERATE;
@@ -1025,7 +1055,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
         mCmd.State = xCMD_STOP;
         Queue_Insert(&OCN->mCmdQueue, Priority + 1, (BYTE*)&mCmd);
-    }
+    }*/
     return 0;
 }
 

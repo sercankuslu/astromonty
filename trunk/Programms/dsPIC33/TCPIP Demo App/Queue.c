@@ -4,28 +4,27 @@
 #   include "TCPIP Stack/TCPIP.h"
 #endif
 
+//****************
+
 int Queue_Insert( PRIORITY_QUEUE * Queue, BYTE Key, BYTE * Value )
 {
-    if(Queue->Count < Queue->Size){
+    //if(Queue->End != Queue->Start){
         Queue->End->Key = Key; 
         memcpy(Queue->End->Value, Value, Queue->ValueSize);
-        Queue->Count++;
         Queue->End++;
-        if(Queue->End >= (Queue->Queue + Queue->Size) )
-            Queue->End = Queue->Queue;        
-    } else 
-        return -1;
+        if(Queue->End >= (Queue->Queue + Queue->Size))
+            Queue->End = Queue->Queue;
+    //} else 
+    //    return -1;
     return 0;
 }
 
 int Queue_First( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
 {
-    if(Queue->Count == 0 )
-        return -1;
-    if((Key == NULL)&&(Value == NULL)) 
+    if(Queue->End == Queue->Start)      // Очередь пуста
         return -1;
     if(Key != NULL)
-        *Key = Queue->Start->Key;    
+        *Key = Queue->Start->Key;
     if(Value != NULL)
         *Value = Queue->Start->Value;
     return 0;
@@ -36,16 +35,14 @@ int Queue_Min( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
     QUEUE_ELEMENT * j = NULL;
     BYTE MinKey = 255;
     QUEUE_ELEMENT * MinIndex = NULL;
-    BYTE i;
 
-    if(Queue->Count == 0)
+    if(Queue->End == Queue->Start)
         return -1;
     if((Key == NULL)&&(Value == NULL)) 
         return -1;
 
     j = Queue->Start;
-
-    for(i = 0; i < Queue->Count; i++) {
+    while(j != Queue->End) {
         if (MinKey > j->Key) {
             MinKey = j->Key;
             MinIndex = j;
@@ -53,10 +50,9 @@ int Queue_Min( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
         j++;
         if(j >= (Queue->Queue + Queue->Size) )
             j = Queue->Queue;
-                    
     }
     if(Key != NULL)
-        *Key = MinIndex->Key;        
+        *Key = MinIndex->Key;
     if(Value != NULL)
         *Value = MinIndex->Value;
     return 0;
@@ -64,7 +60,7 @@ int Queue_Min( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
 
 int Queue_Extract( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE * Value )
 {
-    if(Queue->Count == 0)
+    if(Queue->End == Queue->Start)
         return -1;
     if((Key == NULL)&&(Value == NULL)) 
         return -1;
@@ -77,8 +73,6 @@ int Queue_Extract( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE * Value )
     Queue->Start++;
     if(Queue->Start >= (Queue->Queue + Queue->Size) )
         Queue->Start = Queue->Queue;
-    Queue->Count--;    
-
     return 0;
 }
 
@@ -88,7 +82,7 @@ int Queue_Init(PRIORITY_QUEUE * Queue, QUEUE_ELEMENT * KeyBuf, BYTE KeyBufSize, 
     BYTE * TmpVal = NULL;
 
     Queue->Queue = KeyBuf;          // буфер ключей очереди
-    Queue->Count = 0;               // количество занятых элементов
+    //Queue->Count = 0;               // количество занятых элементов
     Queue->Start = Queue->Queue;               // указатель на точку очереди из которой забираются элементы
     Queue->End = Queue->Queue;                 // указатель на точку очереди в которую записываются элементы
     Queue->Size = KeyBufSize;       // размер буфера очереди
@@ -118,13 +112,12 @@ int Queue_ExtractAllToMin( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
 
 int Queue_Delete( PRIORITY_QUEUE * Queue )
 {
-    if(Queue->Count == 0)
+    if(Queue->End == Queue->Start)
         return -1;
 
     Queue->Start++;
     if(Queue->Start >= (Queue->Queue + Queue->Size) )
         Queue->Start = Queue->Queue;
-    Queue->Count--;    
     return 0;
 }
 

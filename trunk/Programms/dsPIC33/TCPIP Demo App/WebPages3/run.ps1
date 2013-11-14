@@ -115,9 +115,14 @@ while(1){
         if($angle1 -ge 360.0){
             $angle1 = 0.0
         }
-        $status.response.ang0 = "$angle0"
-        $status.response.ang1 = "$angle1"
+        
+        $status.response.ang0 = ([Math]::floor($angle0*3200)).ToString()
+        $status.response.ang1 = ([Math]::floor($angle1*3200)).ToString()
+        $status.response.ang2 = "0"
         $status.response.time0 = "$unixDate" -replace ",","."
+        $status.response.step0 = "3200"
+        $status.response.step1 = "3200"
+        $status.response.step2 = "3200"
         $status.Save($filename)
         "a: " + $status.response.ang0 + " d: " +  $status.response.ang1 + " speed: " + $da0 | write-host
         start-sleep -Milliseconds 100

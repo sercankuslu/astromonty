@@ -694,7 +694,7 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
                 lastFailure = TRUE;	
                 break;
             }
-            Command.a = tmp;
+            Command.a = tmpl;
             //Command.a = 60.0;
         } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
         {// 
@@ -702,7 +702,7 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
                 lastFailure = TRUE;	
                 break;
             }
-            Command.d = tmp;
+            Command.d = tmpl;
         } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
         {// 
             if(sscanf((char*)(curHTTP.data+6),"%lf", &tmp) <= 0 ){

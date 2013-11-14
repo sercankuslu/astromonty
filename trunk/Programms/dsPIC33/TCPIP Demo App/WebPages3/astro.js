@@ -931,7 +931,10 @@ function GoTo(){
     if(AbsolutePosition.visible && !Loading){
         document.getElementById('gotobutton').disabled = true;
         // CMD_GO_TO_POSITION = 1
-        newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"cmd=1&prty=50&ang0="+AbsolutePosition.a + "&ang1="+AbsolutePosition.d);
+        newAJAXCommand('index.htm',
+            function(){document.getElementById('gotobutton').disabled = false;}, false,
+            "cmd=1&prty=50&ang0=" + Math.floor(AbsolutePosition.a * StepValue.X) + "&ang1=" + Math.floor(AbsolutePosition.d * StepValue.Y)
+        );
     }
 }
 
