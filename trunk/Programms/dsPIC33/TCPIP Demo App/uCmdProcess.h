@@ -23,11 +23,29 @@ typedef struct _OC_BUF {
     WORD rs;
 } OC_BUF;
 
+typedef enum _COMMAND { 
+    CMD_STOP = 0x00,                        // остановка
+    CMD_GO_TO_POSITION,                     // перейти на позицию; параметры: a, d
+    CMD_GO_TO_POSITION_AND_GUIDE_STAR,      // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d
+    CMD_GO_TO_POSITION_AND_GUIDE_SAT,       // перейти на позицию и сопровождать спутник ( нужны параметры движения спутника) a, d, a1, d1
+    CMD_SET_GUIDE_TIME,                     // установить время сопровождения объекта
+    CMD_GO_HOME,                            // перевести телескоп в положение парковки  
+    CMD_OPEN_ROOF,                          // открыть купол ( посылает пакет на заданный URL) 
+    CMD_CLOSE_ROOF,                         // закрыть купол
+    CMD_CREATE_SNAPSHOT,                    // подает команду на камеру
+    CMD_GET_SNAPSHOT,                       // запрашивает фотографию у камеры 
+    CMD_SLOW_GO_HOME,                       // медленное возвращение на парковочную позицию после возобновления электропитания
+    CMD_SET_AXIS,                           // калибровка ( устанавливает параметры, как текущее положение телескопа) a, d
+    CMD_SET_GUIDE_SPEED,                    // калибровка ( устанавливает скорость сопровождения звезды) guidespeed
+    CMD_SET_AIM_SPEED,                      // калибровка ( устанавливает скорость наведения) runspeed
+    CMD_EMG_STOP = 0xFF,                    // аварийная остановка
+
+} COMMAND;
 
  typedef enum _xCMD_STATE { // состояния
                            // приоритет|описание
      xCMD_STOP,            //10 остановлен
-     xCMD_START,           //10 включение канала
+     //xCMD_START,           //10 включение канала
      xCMD_ACCELERATE,      //10 разгоняется
      xCMD_SET_SPEED,       //10 устанавливает точное значение интервала для xCMD_RUN (double)
      xCMD_RUN,             //10 движется с постоянной скоростью
@@ -37,7 +55,7 @@ typedef struct _OC_BUF {
      xCMD_SET_DIRECTION,   //10 установка направления вращения
      //xCMD_SET_STEP,        //10 установка количества микрошагов
      xCMD_EMERGENCY_STOP,  //0 аварийная остановка
-     xCMD_BREAK,           //5 отменить все команды до этой и выбрать следующую ( только mCMD )
+     //xCMD_BREAK,           //5 отменить все команды до этой и выбрать следующую ( только mCMD )
      xCMD_ERROR            // ошибочное состояние
  }xCMD_STATE;
 
@@ -49,6 +67,17 @@ typedef struct _xCMD_QUEUE{
     DWORD       Value;                                  // параметры команды (количество шагов на выполнение команды)
 } xCMD_QUEUE;
 
+typedef struct _CMD_QUEUE{
+    COMMAND     Command;                                // команда
+    LONG       a;                                      // углы в шагах
+    LONG       d;
+    double       a1;                                     // скорость наведения
+    double       d1;                                     // скорость сопровождения
+
+} CMD_QUEUE;
+
+
+#define CMD_QUEUE_SIZE 10
 #define uCMD_QUEUE_SIZE 10
 #define mCMD_QUEUE_SIZE 10
 
@@ -106,6 +135,7 @@ typedef struct CHANEL_CONFIG {
     double                  B;
     double                  U;                          // U = 2/(V^2B)
     double                  V;                          // V = K/B
+    double                  GuideSpeed;                 // Скорость сопровождения звезды
 }CHANEL_CONFIG;
 
 typedef struct mCMD_STATUS {
@@ -126,8 +156,9 @@ typedef struct OC_CHANEL_STATE{
     
     DWORD_VAL               T;
     BYTE                    Enable;                     // признак включенности
+    BYTE                    Pulse;                      // флаг для Togle режима в OC (микрокоманды)
     
-    CHANEL_CONFIG           Config;
+    CHANEL_CONFIG *         Config;
     
 
 }OC_CHANEL_STATE;
@@ -148,10 +179,11 @@ typedef struct {
 #endif //#if !defined _APP_CONFIG_TYPE
 #endif // _WINDOWS_
 
-int uCmd_Init();
-int uCmd_DMACallback(void*, BYTE*, WORD);
-int uCmd_OCCallback(void * _This);
-int uCmd_ICCallback(void * _This);
+int Cmd_Init(void);
+int Cmd_Process(void);
 void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number);
-double GetInterval(double X, double U, double V);
+void CreateAccTable();
+LONG GetAngle(BYTE ch);
+DWORD GetStepsPerGrad(BYTE ch);
+BYTE GetStatus(BYTE ch);
 #endif //__uCMD_PROCESS_

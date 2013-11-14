@@ -123,14 +123,14 @@ typedef enum GD_STATE { // состояния
 }GD_STATE;
 
 // очередь команд. если значение равно 0, то оно либо не используется, либо заполняется автоматически
-typedef struct CMD_QUEUE{
-    GD_STATE    State;      // команда
-    STATE_VALUE Value;      // значение параметра
+//typedef struct CMD_QUEUE{
+//    GD_STATE    State;      // команда
+//    STATE_VALUE Value;      // значение параметра
     //BYTE        Direction;  // направление движения в команде
     //double      Vend;       // скорость, которая будет достигнута
     //double      deltaX;     // расстояние, которое будет пройдено после выполнения команды
     //DWORD       RunStep;    // количество шагов на выполнение команды
-}Cmd_Queue;
+//}Cmd_Queue;
 
 // очередь команд исполнения
 typedef struct RUNCMD_QUEUE{

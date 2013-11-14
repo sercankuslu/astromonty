@@ -64,7 +64,7 @@
 //extern RR rr1;
 //extern RR rr2;
 //extern RR rr3;
-
+extern PRIORITY_QUEUE  CmdQueue;                  // очередь команд
 /****************************************************************************
   Section:
 	Function Prototypes and Memory Globalizers
@@ -647,10 +647,10 @@ ConfigFailure:
 
 static HTTP_IO_RESULT HTTPPostAngle(void)
 {	
-    float A1;
-    float A2;
-    float A3;
-    int command = 0;    
+    CMD_QUEUE Command;
+    int Priority = 10;
+    double tmp = 0.0;
+    LONG tmpl = 0;
 
     if(curHTTP.byteCount > TCPIsGetReady(sktHTTP) + TCPGetRxFIFOFree(sktHTTP)){
         lastFailure = TRUE;
@@ -676,44 +676,55 @@ static HTTP_IO_RESULT HTTPPostAngle(void)
         }
 
         // Parse the value that was read
-        if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
-        {// 0.004166667 1.0027389629079429924330346780558
-            if(sscanf((char*)(curHTTP.data+6),"%f", &A1)){
-                //GoToCmd(&rr1, -0.00417807934636275010445197530291 * Grad_to_Rad, A1 * Grad_to_Rad, TickGet());
-            }else {
+        if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"cmd"))
+        {
+            if(sscanf((char*)(curHTTP.data+6),"%d", ((int*)&Command.Command)) <= 0 ) {
                 lastFailure = TRUE;	
                 break;
             }
-        }
-        else  if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
+        } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"prty"))
         {// 
-            if(sscanf((char*)(curHTTP.data+6),"%f", &A2)){
-                //GoToCmd(&rr2, 0.0, A2 * Grad_to_Rad, TickGet());
-            }else {
+            if(sscanf((char*)(curHTTP.data+6),"%d", &Priority) <= 0 ){
                 lastFailure = TRUE;	
                 break;
             }
-        }
-        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
-        {
-            if(!sscanf((char*)(curHTTP.data+6),"%f", &A3)) {
+        } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang0"))
+        {// 0.004166667 1.0027389629079429924330346780558
+            if(sscanf((char*)(curHTTP.data+6),"%ld", &tmpl) <= 0 ){
                 lastFailure = TRUE;	
                 break;
             }
-        }
-        else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"stop"))
-        {
-            if(sscanf((char*)(curHTTP.data+6),"%d", &command)) {
+            Command.a = tmp;
+            //Command.a = 60.0;
+        } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang1"))
+        {// 
+            if(sscanf((char*)(curHTTP.data+6),"%ld", &tmpl) <= 0 ){
                 lastFailure = TRUE;	
                 break;
             }
-            if(command == 1){
-                //BreakCurrentCmd(&rr1);
-                //BreakCurrentCmd(&rr2);	
-                //BreakCurrentCmd(&rr3);
+            Command.d = tmp;
+        } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang2"))
+        {// 
+            if(sscanf((char*)(curHTTP.data+6),"%lf", &tmp) <= 0 ){
+                lastFailure = TRUE;	
+                break;
             }
-        }
+            Command.a1 = tmp;
+        } else if(!strcmppgm2ram((char*)curHTTP.data, (ROM char*)"ang3"))
+        {// 
+            if(sscanf((char*)(curHTTP.data+6),"%lf", &tmp) <= 0 ){
+                lastFailure = TRUE;	
+                break;
+            }
+            Command.d1 = tmp;
+        } 
+        
     } 
+
+    if(Queue_Insert(&CmdQueue, Priority, (BYTE*)&Command) != 0){
+        lastFailure = TRUE;
+    }
+
     curHTTP.httpStatus = HTTP_REDIRECT;	
 
     return HTTP_IO_DONE;
@@ -2018,16 +2029,24 @@ void HTTPPrint_status_fail(void)
 		TCPPutROMString(sktHTTP, (ROM BYTE*)"none");
 	lastFailure = FALSE;
 }
+
 void HTTPPrint_ang(WORD i)
 {
 	char buf[16];
-	sprintf(buf,"%f", 0.00000/*GetAngle(i)*/);
+	sprintf(buf,"%ld", GetAngle(i));
 	TCPPutString(sktHTTP,(BYTE*)buf);
+}
+
+void HTTPPrint_step(WORD i)
+{
+    char buf[16];
+    sprintf(buf,"%ld", GetStepsPerGrad(i));
+    TCPPutString(sktHTTP,(BYTE*)buf);
 }
 void HTTPPrint_angR(WORD i)
 {
     char buf[4];
-	sprintf(buf,"%d", 0/*GetStatus(i)*/);
+	sprintf(buf,"%d", GetStatus(i));
 	TCPPutString(sktHTTP,(BYTE*)buf);
 }
 void HTTPPrint_time(WORD i)

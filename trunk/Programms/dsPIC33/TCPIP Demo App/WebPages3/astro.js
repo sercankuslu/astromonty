@@ -18,11 +18,16 @@ var DrawingStar = 0;
 var Follow = true;
 var Loading = false;
 var ServerDate = 0;
+var StepValue = {
+    X: 3200,
+    Y: 3200,
+    Z: 3200
+};
 var GeoPosition = {
     Lon : 37.6028,
     //Lon : 217.6028,
     Lat : 55.791437,
-}
+};
 // текущие координаты телескопа(зелёный крестик)
 var CurrentPosition = {
     X : 101.287155,
@@ -925,7 +930,8 @@ function updateTargetForm(){
 function GoTo(){
     if(AbsolutePosition.visible && !Loading){
         document.getElementById('gotobutton').disabled = true;
-        newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"ang0="+AbsolutePosition.a + "&ang1="+AbsolutePosition.d);
+        // CMD_GO_TO_POSITION = 1
+        newAJAXCommand('index.htm',function(){document.getElementById('gotobutton').disabled = false;}, false,"cmd=1&prty=50&ang0="+AbsolutePosition.a + "&ang1="+AbsolutePosition.d);
     }
 }
 
