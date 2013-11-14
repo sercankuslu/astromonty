@@ -37,6 +37,7 @@ void HTTPPrint_angR(WORD);
 void HTTPPrint_time(WORD);
 void HTTPPrint_config_ntp1(void);
 void HTTPPrint_config_ntp2(void);
+void HTTPPrint_step(WORD);
 
 void HTTPPrint(DWORD callbackID)
 {
@@ -116,6 +117,15 @@ void HTTPPrint(DWORD callbackID)
 			break;
         case 0x00000053:
 			HTTPPrint_config_ntp2();
+			break;
+        case 0x00000054:
+			HTTPPrint_step(0);
+			break;
+        case 0x00000055:
+			HTTPPrint_step(1);
+			break;
+        case 0x00000056:
+			HTTPPrint_step(2);
 			break;
 		default:
 			// Output notification for undefined values

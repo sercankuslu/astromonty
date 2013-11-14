@@ -45,7 +45,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DSPIC33));
 
-        uCmd_Init();
+        Cmd_Init();
         //double R = GetInterval(0.0, 0.0, 0.0);
         
 	// Main message loop:
@@ -179,7 +179,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
-                    double R = GetInterval(0.0, 0.0, 0.0);
+                    
                     //MessageBox(hDlg, Calc(), TEXT("message"), 0);
 		    EndDialog(hDlg, LOWORD(wParam));
 		    return (INT_PTR)TRUE;

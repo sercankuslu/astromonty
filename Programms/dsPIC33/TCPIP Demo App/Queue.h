@@ -23,7 +23,7 @@ typedef struct PRIORITY_QUEUE {
     BYTE * Values;
     QUEUE_ELEMENT * Start;
     QUEUE_ELEMENT * End;
-    BYTE Count;
+    //BYTE Count;
     BYTE Size;
     BYTE ValueSize;
 } PRIORITY_QUEUE;
