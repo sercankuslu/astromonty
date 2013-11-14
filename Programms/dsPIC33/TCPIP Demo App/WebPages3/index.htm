@@ -155,26 +155,37 @@ function updateStatus(xmlData) {
     // 55.791437,37.6028
     for(i = 0; i < 1; i++){
         var time = +getXMLValue(xmlData, 'time' + i);//*180/Math.PI;
-        if(i==0) {
-            ServerDate = time * 1000;
-            UpdateTime()
+        if(!isNaN(time)){
+            if(i==0) {
+                ServerDate = time * 1000;
+                UpdateTime()
+            }
+        }
+    }
+    for(i = 0; i < 2; i++){
+        var step = +getXMLValue(xmlData, 'step' + i);//*180/Math.PI;
+        if(!isNaN(step)){
+            if(i==0){
+                StepValue.X = step;
+            } else if(i==1){
+                StepValue.Y = step;
+            } else if(i==2){
+                StepValue.Z = step;
+            }
         }
     }
     for(i = 0; i < 2; i++){
         var angle = +getXMLValue(xmlData, 'ang' + i);//*180/Math.PI;
-        if(i==0) {
-            if(angle){
-
-                correctAngle = angle - 90 + LocalStarTime * 15;
+        if(!isNaN(angle)){
+            if(i==0) {
+                correctAngle = ( angle / StepValue.X ) - 90 + LocalStarTime * 15;
                 if(correctAngle>=360) correctAngle-=360;
                 if(correctAngle<0) correctAngle+=360;
                 document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,true);
                 CurrentPosition.X = correctAngle;
                 needUpdateStar = true;
-            }
-        } else if(i==1){
-            if(angle){
-                correctAngle = angle - 90 + GeoPosition.Lat;
+            } else if(i==1){
+                correctAngle =( angle / StepValue.Y ) - 90 + GeoPosition.Lat;
                 document.getElementById('ang' + i).innerHTML = AngleToString(correctAngle,false);
                 CurrentPosition.Y = correctAngle
                 needUpdateStar = true;

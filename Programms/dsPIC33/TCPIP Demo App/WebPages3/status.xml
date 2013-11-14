@@ -1,9 +1,12 @@
 <response>
-<time0>~time(0)~</time0>
-<ang0>~ang(0)~</ang0>
-<ang1>~ang(1)~</ang1>
-<ang2>~ang(2)~</ang2>
-<angR0>~angR(0)~</angR0>
-<angR1>~angR(1)~</angR1>
-<angR2>~angR(2)~</angR2>
+  <time0>~time(0)~</time0>
+  <step0>~step(0)~</step0>
+  <step1>~step(1)~</step1>
+  <step2>~step(2)~</step2>
+  <ang0>~ang(0)~</ang0>
+  <ang1>~ang(1)~</ang1>
+  <ang2>~ang(2)~</ang2>
+  <angR0>~angR(0)</angR0>
+  <angR1>~angR(1)~</angR1>
+  <angR2>~angR(2)~</angR2>
 </response>

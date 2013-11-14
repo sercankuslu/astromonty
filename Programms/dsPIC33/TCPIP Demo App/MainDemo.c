@@ -105,8 +105,6 @@
 // Include functions specific to this stack application
 #include "MainDemo.h"
 #include "TCPIP Stack/SPIRTCSRAM.h"
-//#include "OCTimer.h"
-//#include "../protocol.h"
 #include "device_control.h"
 #include "uCmdProcess.h"
 
@@ -123,10 +121,6 @@ RTC_TIME Time;
 volatile BYTE Second;
 
 
-//extern RR rr1;
-//extern RR rr2;
-//extern RR rr3;
-//extern RAMSaveConfig RRConfigRAM;
 // Use UART2 instead of UART1 for stdout (printf functions).  Explorer 16 
 // serial port hardware is on PIC UART2 module.
 #if defined(EXPLORER_16) || defined(PIC24FJ256DA210_DEV_BOARD)
@@ -144,64 +138,11 @@ void FanControl();
 #if defined(WF_CS_TRIS)
     static void WF_Connect(void);
 #endif
-/*
-void __attribute__((__interrupt__,__no_auto_psv__)) _T7Interrupt( void )
-{
-    static BYTE Up = 0;    
-    //T7CONbits.TON = 0;
-    if(Up == 1){
-        LATBbits.LATB4 = 1;
-        Up = 0;
-        PR7 = 2000;
-    } else {
-        LATBbits.LATB4 = 0;
-        Up = 1;
-        PR7 = 1000;
-    }
-    //T7CONbits.TON = 1;
-    //LATBbits.LATB4 ^= 1;
-    IFS3bits.T7IF = 0;
-}
-*/
-//
-// PIC18 Interrupt Service Routines
-// 
-// NOTE: Several PICs, including the PIC18F4620 revision A3 have a RETFIE FAST/MOVFF bug
-// The interruptlow keyword is used to work around the bug when using C18
-#if defined(__18CXX)
-#if defined(HI_TECH_C)
-void interrupt low_priority LowISR(void)
-#else
-#pragma interruptlow LowISR
-void LowISR(void)
-#endif
-{
-    TickUpdate();
-}
-    
-#if defined(HI_TECH_C)
-void interrupt HighISR(void)
-#else
-#pragma interruptlow HighISR
-void HighISR(void)
-#endif
-{
-    Nop();    
-}
-
-#if !defined(HI_TECH_C)
-#pragma code lowVector=0x18
-void LowVector(void){_asm goto LowISR _endasm}
-#pragma code highVector=0x8
-void HighVector(void){_asm goto HighISR _endasm}
-#pragma code // Return to default code section
-#endif
 
 // C30 and C32 Exception Handlers
 // If your code gets here, you either tried to read or write
 // a NULL pointer, or your application overflowed the stack
 // by having too many local variables or parameters declared.
-#elif defined(__C30__)
 void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
 {
     //while(1){
@@ -236,23 +177,8 @@ void _ISR __attribute__((__no_auto_psv__)) _DMACError(void)
         Nop();
         Nop();
     }
-} /*
-void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
-{    
-    //static WORD T;
-    //static WORD T1;
-    //T  = TMR8;
-    //T1 = TMR9HLD;
-    //TMR9HLD = 0x0000;
-    //TMR8 = 0x0000;
-    //TMR6 = 0x7FFF;
-    //CPUSPEED.word.LW = T;
-    //CPUSPEED.word.HW = T1;
-    IFS2bits.T6IF = 0; // Clear T6 interrupt flag
-    TimerMonitor();
-}   
-*/ 
-#elif defined(__C32__)
+}  
+#if defined(__C32__)
     void _general_exception_handler(unsigned cause, unsigned status)
     {
         Nop();
@@ -260,68 +186,15 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _T6Interrupt( void )
     }
 #endif
 
-/*
-unsigned int BufferA[128] __attribute__((space(dma)));
-unsigned int BufferAS[128] __attribute__((space(dma)));
-unsigned int BufferB[128] __attribute__((space(dma)));
-unsigned int BufferBS[128] __attribute__((space(dma)));
-*/
-// DMA Interrupt Handler
-void fillingBufferR(void* _This, WORD * Buf, WORD Count)
+int Tmr7CallBack(void)
 {
-    static int T = 0;
-    int i = 0; 
-    WORD Interval;
-    for(i = 0; i < Count; i++){
-        Interval = (T++ + 1)*256;
-        Buf[i] = (int)Interval;
-        i++;
-        Buf[i] = (int)Interval+128;
-    }
-}
-void fillingBufferRS(void* _This, WORD * Buf, WORD Count)
-{
-    static int T = 0;
-    int i = 0;    
-    for(i = 0; i < Count; i++){
-        Buf[i] = (int)(T+1)*200+25;
-        T++;
-    }
-}
-void fillingBufferR1(void* _This, WORD * Buf, WORD Count)
-{
-    static int T = 0;
-    int i = 0; 
-    WORD Interval;
-    for(i = 0; i < Count; i++){
-        Interval = (T++ + 1)*256;
-        Buf[i] = (int)Interval;
-        i++;
-        Buf[i] = (int)Interval+128;
-    }
-}
-void fillingBufferRS1(void* _This, WORD * Buf, WORD Count)
-{
-    static int T = 0;
-    int i = 0;    
-    for(i = 0; i < Count; i++){
-        Buf[i] = (int)(T+1)*200+25;
-        T++;
-    }
-}
-
-void FillBufSPI(void* _This, WORD * Buf, WORD Count)
-{
-    static int T = 322;
-    int i = 0;   
-    int t = 0;
-    if(t < Count){
-	    
-    } 
-    for(i = 0; i < Count; i++){
-        Buf[i] = (int)(T+1)*200+25;
-        T++;
-    }
+    DWORD_VAL C;
+    T8CONbits.TON = 0;
+    T7CONbits.TON = 0;
+    C.word.LW = TMR8;
+    C.word.HW = TMR9;
+    CPUSPEED.Val = C.Val / 2;
+    return 0;
 }
 //
 // Main application entry point.
@@ -334,72 +207,7 @@ int main(void)
 {  
         
     static DWORD t = 0;
-    //static DWORD d = 0;
     static DWORD dwLastIP = 0;
-    //volatile double X;
-    //static int TimeAdjusted = 0;
-    uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
-    //X = 2456.0 * AppConfig.ChanellsConfig[0].dx;  
-    //TMR1 = GetIntrval(X, &AppConfig.ChanellsConfig[0]);
-
-    //volatile double fff = 0;
-    //volatile double ddd = 0;
-    //int i = 0;
-    //ddd = 32565;
-    //fff = TMR1;
-    //for(i = 0; i< 64; i++){
-    //    ddd = fff;
-    //}
-    //DWORD X = 0;
-   // WORD mSec = 0;
-    //TMR1 = 3277ul;
-    //X = TMR1;
-    //mSec = X*1000ul/32768ul;
-    //TMR1 = mSec;
-    //TMR1 = fff + ddd;
-    /*
-    DWORD StepsPerRound = 3200;
-    OC_INTERVAL_CALC Intrerval;
-    DWORD T3 = 0;
-    Intrerval.A = 0.0;
-    Intrerval.V = 10.0;
-    Intrerval.K = -3.384858359;
-    Intrerval.B = 40.27981447;
-    Intrerval.AccSign = 1.0;
-    Intrerval.Rev = 1.0;
-    Intrerval.Dx = 1.0/(double)StepsPerRound;
-    Intrerval.Tstep = 0.0000002;
-    Intrerval.MaxSpeed = 5.0;
-    T3 = GetMinInterval( &Intrerval);
-    */
-    //void (*mas[8])(WORD) = {f0,f1,f2,f3,f4,f5,f6,f7};    
-    //WORD Count = 10;
-    //DMA_ID id = 6;
-    //(mas[id])(Count);
-    //BYTE Cmd[] = {0x03,0x04,0x00,0x00};
-    //BYTE Cmd[] = {0x9F};
-    //SPIFLASH_CS_TRIS = 0;
-    //SPIFLASH_CS_IO = 1;
-    //SPIRTCSRAM_CS_TRIS = 0;
-    //SPIRTCSRAM_CS_IO = 1;
-    //ENC_CS_TRIS = 0;
-    //ENC_CS_IO = 1;
-    
-    //BYTE Data[512]; //= { 0x10,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                  //  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
-    //SPIConfig Config;
-    //BYTE EncHandle = 0;
-    //uCmd_Init();    
-    
- 
-    // указатель на функцию
-    //int (*p)(void); // объ€вление
-    //p = OCSetup;    // присвоение
-    //p();			  // вызов
-
-    //volatile DWORD UTCT;
-    //LATFbits.LATF4 = 0;
-    //TRISFbits.TRISF4 = 0;  
 
     // Initialize application specific hardware
     // ƒл€ работы A13  его нужно отключить от ADC
@@ -414,24 +222,20 @@ int main(void)
 
   
     InitializeBoard();
+    CPUSPEED.Val = 0;
     // calculate CPU speed  
-    if(0){
-        T6CON = 0x0002;
-        T8CON = 0x0008;
-        T9CON = 0x0000;
-        PR8=0xFFFF;
-        PR9=0xFFFF;
-        TMR6 = 0x7FFF;
-        TMR8 = 0x0000;
-        TMR9 = 0x0000;    
-        CPUSPEED.Val = 0;
-        IFS2bits.T6IF = 0;
-        IEC2bits.T6IE = 1;
-        IPC11bits.T6IP = 7;
-        T6CONbits.TON = 1;
-        T8CONbits.TON = 1;    
-    }
-    
+    T7CONbits.TON = 0;
+    T8CONbits.TON = 0;
+    T9CONbits.TON = 0;
+    TimerInit(TIMER8, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_32, SYNC_DISABLE);
+    TimerInit(TIMER7, CLOCK_SOURCE_EXTERNAL, GATED_DISABLE, PRE_1_1, IDLE_DISABLE, BIT_16, SYNC_DISABLE);
+    TimerSetValue(TIMER7, 0x0000, 0xFFFF); 
+    TimerSetValue(TIMER8, 0x0000, 0xFFFF);
+    TimerSetValue(TIMER9, 0x0000, 0xFFFF);
+    TimerSetCallback(TIMER7, Tmr7CallBack);
+    TimerSetInt(TIMER7, 7, TRUE);
+    T7CONbits.TON = 1;
+    T8CONbits.TON = 1;
     
 #if defined(USE_LCD)
     // Initialize and display the stack version on the LCD
@@ -451,26 +255,8 @@ int main(void)
 
     // Initialize Stack and application related NV variables into AppConfig.
     InitAppConfig();
+    Cmd_Init();
 
-    if(0)
-    {
-        WORD i;
-        
-        WORD Buf[128];
-        WORD * Bufptr = Buf;
-        volatile double Value = 0;
-        SPIFlashBeginWrite(262144);   
-        for(i = 0; i < 32000; i++){
-            if(((i & 0x7f) == 0) && (i > 0)){
-                SPIFlashWriteArray((BYTE*)Buf, 256);
-                Bufptr = Buf;
-                Nop();
-            }
-            Value = (GetInterval( ((double)i) * AppConfig.ChanellsConfig[0].dx, AppConfig.ChanellsConfig[0].U,AppConfig.ChanellsConfig[0].V)/0.0000002);            
-            *Bufptr = Value;
-            Bufptr++;
-        }
-    }
     // Initiates board setup process if button is depressed 
     // on startup
     #ifdef bad
@@ -608,6 +394,7 @@ int main(void)
         //SPI_RTCReadRegister(00, &Second);
         // This tasks invokes each of the core stack application tasks
         StackApplications();
+        Cmd_Process();
 
         #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
         ZeroconfLLProcess();
@@ -1506,7 +1293,7 @@ void SaveAppConfig(const APP_CONFIG *ptrAppConfig)
         //SPIFlashEraseSector(0x0000);
         SPIFlashWriteArray((BYTE*)&NVMValidationStruct, sizeof(NVMValidationStruct));
         SPIFlashWriteArray((BYTE*)ptrAppConfig, sizeof(APP_CONFIG));
-        
+        CreateAccTable();
     #endif
 }
 #endif

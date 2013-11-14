@@ -22,7 +22,15 @@
 #define SPI2_DMA_BUF_LEN        512
 #define SPI2_INT_LEVEL          6
 
+#define OC1_DMA_ID              DMA4
+#define OC1_DMA_INT_LEVEL       4
+#define OC1_INT_LEVEL           6
+#define OC1_DMA_BUF_LEN         256     //x2
 
+#define OC2_DMA_ID              DMA5
+#define OC2_DMA_INT_LEVEL       4
+#define OC2_INT_LEVEL           6
+#define OC2_DMA_BUF_LEN         256     //x2
 
 // Таймеры
 typedef enum _TIMERS_ID{

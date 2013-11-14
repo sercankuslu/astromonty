@@ -1249,21 +1249,61 @@ int DMASetDataCount(DMA_ID id, WORD Count)
 {
     DMAConfig[id].Count = Count;
     switch(id){
-        case DMA0: DMA0CNT = Count-1;
+        case DMA0: 
+            if(DMA0CONbits.SIZE == SIZE_WORD){
+                DMA0CNT = (Count / 2)-1;
+            } else {
+                DMA0CNT = Count-1;
+            }
             break;
-        case DMA1: DMA1CNT = Count-1;
+        case DMA1: 
+            if(DMA1CONbits.SIZE == SIZE_WORD){
+                DMA1CNT = (Count / 2)-1;
+            } else {
+                DMA1CNT = Count-1;
+            }
             break;
-        case DMA2: DMA2CNT = Count-1;
+        case DMA2: 
+            if(DMA2CONbits.SIZE == SIZE_WORD){
+                DMA2CNT = (Count / 2)-1;
+            } else {
+                DMA2CNT = Count-1;
+            }    
             break;
-        case DMA3: DMA3CNT = Count-1;
+        case DMA3:
+            if(DMA3CONbits.SIZE == SIZE_WORD){
+                DMA3CNT = (Count / 2)-1;
+            } else {
+                DMA3CNT = Count-1;
+            }
             break;
-        case DMA4: DMA4CNT = Count-1;
+        case DMA4: 
+            if(DMA4CONbits.SIZE == SIZE_WORD){
+                DMA4CNT = (Count / 2)-1;
+            } else {
+                DMA4CNT = Count-1;
+            }
             break;
-        case DMA5: DMA5CNT = Count-1;
+        case DMA5:
+            if(DMA5CONbits.SIZE == SIZE_WORD){
+                DMA5CNT = (Count / 2)-1;
+            } else {
+                DMA5CNT = Count-1;
+            }
             break;
-        case DMA6: DMA6CNT = Count-1;
+        case DMA6: 
+            if(DMA6CONbits.SIZE == SIZE_WORD){
+                DMA6CNT = (Count / 2)-1;
+            } else {
+                DMA6CNT = Count-1;
+            }
             break;
-        case DMA7: DMA7CNT = Count-1;
+        case DMA7:
+            if(DMA7CONbits.SIZE == SIZE_WORD){
+                DMA7CNT = (Count / 2)-1;
+            } else {
+                DMA7CNT = Count-1;
+            }
             break;
         default:
         return -1;
@@ -2107,7 +2147,7 @@ int SPIInit()
     IFS2bits.SPI2IF = 0;
     IFS2bits.SPI2EIF = 0;
     IEC2bits.SPI2IE = 1;
-    IEC2bits.SPI2EIE = 1;
+    IEC2bits.SPI2EIE = 0;
     // SPI1
 
     TRISFbits.TRISF6 = 0;  // Set SCK pin as an output
@@ -2119,7 +2159,7 @@ int SPIInit()
     IFS0bits.SPI1IF = 0;
     IFS0bits.SPI1EIF = 0;
     IEC0bits.SPI1IE = 1;
-    IEC0bits.SPI1EIE = 1;
+    IEC0bits.SPI1EIE = 0;
 
     SPIInitialized = 1;
     return 0;
