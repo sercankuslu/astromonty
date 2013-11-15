@@ -46,7 +46,7 @@ OC_CHANEL_STATE OControll2;
 int uCmd_Init(void);
 int xCmdStart(BYTE Id);
 int SetDirection(OC_ID id, BYTE Dir);
-int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen);
+int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen);
 int uCmd_OCCallback(void * _This);
 int uCmd_ICCallback(void * _This);
 double GetInterval(double X, double U, double V);
@@ -176,11 +176,11 @@ int uCmd_Init(void)
 
         if(nOC->Config->OCConfig.Index == ID_OC1){
             OCSetCallback(ID_OC1, (void*)&OControll1,  uCmd_OCCallback);
-            DMASetCallback(OC1_DMA_ID, (void*)&OControll1, uCmd_DMACallback, uCmd_DMACallback);
+            DMASetCallback(OC1_DMA_ID, (void*)&OControll1, mCmd_DMACallback, mCmd_DMACallback);
         } else 
         if(nOC->Config->OCConfig.Index == ID_OC2){
             OCSetCallback(ID_OC2, (void*)&OControll2,  uCmd_OCCallback);
-            DMASetCallback(OC2_DMA_ID, (void*)&OControll2, uCmd_DMACallback, uCmd_DMACallback);
+            DMASetCallback(OC2_DMA_ID, (void*)&OControll2, mCmd_DMACallback, mCmd_DMACallback);
         }
     }
 
@@ -338,8 +338,8 @@ int uCmd_OCCallback( void * _This )
         case xCMD_ACCELERATE:
         case xCMD_RUN:
         case xCMD_DECELERATE: // значение Value - количество шагов, которое загружено в буфер
-            (OCN->CurrentDirection == 0) ? OCN->XPosition++ : OCN->XPosition--;
             if(Value->Value > 0){
+                (OCN->CurrentDirection == 0) ? OCN->XPosition++ : OCN->XPosition--;
                 Value->Value--;
                 ProcessCmd = 0;
                 OCN->CurrentState = Value->State;
@@ -384,11 +384,11 @@ int uCmd_OCCallback( void * _This )
     }
     return 0;
 }
-int uCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
+int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 {
-#define TMP_SIZE 8
-#define TMP_SIZE_MASK 7
-#define bTMP_SIZE 16
+#define TMP_SIZE 32
+#define TMP_SIZE_MASK TMP_SIZE-1
+#define bTMP_SIZE TMP_SIZE*2
 
     OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
     xCMD_QUEUE * Value = NULL;
@@ -772,7 +772,7 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
 {
     
     Config->AccBaseAddress = 0x40000;
-    Config->AccRecordCount = 64000; // 10 градусов
+    Config->AccRecordCount = 32000; // 10 градусов
     switch(Number){
     case 0:
         Config->DmaId = OC1_DMA_ID;
@@ -891,11 +891,11 @@ BYTE GetStatus(BYTE ch){
     volatile BYTE value = 0;
     switch (ch)
     {
-    case 0: value = (OControll1.CurrentState == xCMD_STOP)? 0 : 1;
+    case 0: value = (OControll1.CurrentState);
         break;
-    case 1: value = (OControll2.CurrentState == xCMD_STOP)? 0 : 1;
+    case 1: value = (OControll2.CurrentState);
         break;
-    case 3: value = 0;
+    case 3: value = 0;//(OControll3.CurrentState);
         break;
     default:
         value = 0;
@@ -1002,6 +1002,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
     LONG diff;
     LONG diff_2;
     xCMD_QUEUE mCmd;
+    /*
     if(destang < 0) {
         destang += 1152000;
     } else if(destang > 1152000){
@@ -1011,7 +1012,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         OCN->XPosition += 1152000;
     }else if(OCN->XPosition > 1152000){
         OCN->XPosition -= 1152000;
-    }
+    }*/
     
     diff = destang - OCN->XPosition;
 
@@ -1026,13 +1027,15 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         mCmd.Value = 0;
         Queue_Insert(&OCN->mCmdQueue, Priority - 1, (BYTE*)&mCmd);
     }
+    /*
     mCmd.State = xCMD_SET_SPEED;
     mCmd.Value = 156;
     Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
     mCmd.State = xCMD_RUN;
     mCmd.Value = diff;
     Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
-    /*
+    */
+    
     diff_2 = diff / 2;
     if(diff_2 < OCN->Config->AccRecordCount){
         mCmd.State = xCMD_ACCELERATE;
@@ -1055,7 +1058,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
         mCmd.State = xCMD_STOP;
         Queue_Insert(&OCN->mCmdQueue, Priority + 1, (BYTE*)&mCmd);
-    }*/
+    }
     return 0;
 }
 
