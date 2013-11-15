@@ -1614,7 +1614,11 @@ INTERRUPT _DMA4Interrupt(void)
         } else {
             DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
-    }     
+    } 
+    if(IFS2bits.DMA4IF){
+        Nop();
+        Nop();
+    }    
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
@@ -1629,6 +1633,10 @@ INTERRUPT _Interrupt61(void)//_DMA5Interrupt(void) // ошибка в конфигурации?
             DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
         }
     }     
+    if(IFS3bits.DMA5IF){
+        Nop();
+        Nop();
+    }    
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _DMA6Interrupt(void)
@@ -1851,20 +1859,20 @@ INTERRUPT _OC1Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {    
     OCConfigType *OCCfg = &OCConfig[ID_OC1];
+    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
     if(OCCfg->CallbackFunc){
             OCCfg->CallbackFunc(OCCfg->_This);
     }   
-    IFS0bits.OC1IF = 0; // Clear OC1 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC2Interrupt( void )
 //------------------------------------------------------------------------------------------------
 {
     OCConfigType *OCCfg = &OCConfig[ID_OC2];
+    IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
     if(OCCfg->CallbackFunc){
         OCCfg->CallbackFunc(OCCfg->_This);
     }   
-    IFS0bits.OC2IF = 0; // Clear OC2 interrupt flag
 }
 //------------------------------------------------------------------------------------------------
 INTERRUPT _OC3Interrupt( void )

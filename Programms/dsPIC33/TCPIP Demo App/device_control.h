@@ -10,27 +10,27 @@
 #define SAVE_INT_LOCK SRbits.IPL
 #define RESTORE_INT_LOCK(x) SRbits.IPL = x
 
-#define SPI1_DMA_SEND_ID        DMA0
-#define SPI1_DMA_RECEIVE_ID     DMA1
+#define SPI1_DMA_SEND_ID        DMA2
+#define SPI1_DMA_RECEIVE_ID     DMA3
 #define SPI1_DMA_INT_LEVEL      5
-#define SPI1_DMA_BUF_LEN        512
+#define SPI1_DMA_BUF_LEN        256
 #define SPI1_INT_LEVEL          6
 
-#define SPI2_DMA_SEND_ID        DMA2
-#define SPI2_DMA_RECEIVE_ID     DMA3
+#define SPI2_DMA_SEND_ID        DMA4
+#define SPI2_DMA_RECEIVE_ID     DMA5
 #define SPI2_DMA_INT_LEVEL      5
-#define SPI2_DMA_BUF_LEN        512
+#define SPI2_DMA_BUF_LEN        256
 #define SPI2_INT_LEVEL          6
 
-#define OC1_DMA_ID              DMA4
+#define OC1_DMA_ID              DMA0
 #define OC1_DMA_INT_LEVEL       4
 #define OC1_INT_LEVEL           6
-#define OC1_DMA_BUF_LEN         256     //x2
+#define OC1_DMA_BUF_LEN         384     //x2
 
-#define OC2_DMA_ID              DMA5
+#define OC2_DMA_ID              DMA1
 #define OC2_DMA_INT_LEVEL       4
 #define OC2_INT_LEVEL           6
-#define OC2_DMA_BUF_LEN         256     //x2
+#define OC2_DMA_BUF_LEN         384     //x2
 
 // Таймеры
 typedef enum _TIMERS_ID{

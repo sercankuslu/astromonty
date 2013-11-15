@@ -195,8 +195,10 @@ function updateStatus(xmlData) {
     for(i = 0; i < 2; i++ ){
         var angleRun = +getXMLValue(xmlData, 'angR' + i);
         switch (angleRun) {
-            case 0: color = "#FF0000"; break;
-            case 1: color = "#00FF00"; break;
+            case 0: color = "#FF0000"; break; //STOP   red
+            case 1: color = "#FFFF00"; break; // ACC   yellow
+            case 3: color = "#00FF00"; break; // RUN   green
+            case 4: color = "#FF7F00"; break; // DECC  orange
             default: color = "#777777"; break;
         }
         document.getElementById('angR' + i).style.color = color;
