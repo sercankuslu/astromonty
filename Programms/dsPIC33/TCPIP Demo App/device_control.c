@@ -360,25 +360,26 @@ struct
     __EXTENSION BYTE b12:4;
 } DMACS1bits;
 
-struct 
-{
-    __EXTENSION BYTE INT0IF:1;
-    __EXTENSION BYTE IC1IF:1;
-    __EXTENSION BYTE OC1IF:1;
-    __EXTENSION BYTE T1IF:1;
-    __EXTENSION BYTE DMA0IF:1;
-    __EXTENSION BYTE IC2IF:1;
-    __EXTENSION BYTE OC2IF:1;
-    __EXTENSION BYTE T2IF:1;
-    __EXTENSION BYTE T3IF:1;
-    __EXTENSION BYTE SPI1EIF:1;
-    __EXTENSION BYTE SPI1IF:1;
-    __EXTENSION BYTE U1RXIF:1;
-    __EXTENSION BYTE U1TXIF:1;
-    __EXTENSION BYTE AD1IF:1;
-    __EXTENSION BYTE DMA1IF:1;
-    __EXTENSION BYTE b16:1;
-} IFS0bits;
+// struct 
+// {
+//     __EXTENSION BYTE INT0IF:1;
+//     __EXTENSION BYTE IC1IF:1;
+//     __EXTENSION BYTE OC1IF:1;
+//     __EXTENSION BYTE T1IF:1;
+//     __EXTENSION BYTE DMA0IF:1;
+//     __EXTENSION BYTE IC2IF:1;
+//     __EXTENSION BYTE OC2IF:1;
+//     __EXTENSION BYTE T2IF:1;
+//     __EXTENSION BYTE T3IF:1;
+//     __EXTENSION BYTE SPI1EIF:1;
+//     __EXTENSION BYTE SPI1IF:1;
+//     __EXTENSION BYTE U1RXIF:1;
+//     __EXTENSION BYTE U1TXIF:1;
+//     __EXTENSION BYTE AD1IF:1;
+//     __EXTENSION BYTE DMA1IF:1;
+//     __EXTENSION BYTE b16:1;
+// } IFS0bits;
+_IFS0bits IFS0bits;
 struct 
 {
     __EXTENSION BYTE SI2C1IF:1;
@@ -1146,6 +1147,7 @@ int DMAInit()
         DMAConfig[i].Count = 0;
         DMAConfig[i].fillingBufferAFunc = NULL;
         DMAConfig[i].fillingBufferBFunc = NULL;
+        DMAConfig[i].SelectBuffer = 0;
     }
     DMAInitialized = 1;
     return 0;
@@ -1372,6 +1374,7 @@ int DMAPrepBuffer(DMA_ID id)
 int DMAEnable(DMA_ID id)
 //------------------------------------------------------------------------------------------------
 {
+    DMAConfig[id].SelectBuffer = 0;
     switch(id){
         case DMA0:
             DMA0CONbits.CHEN = 1;
@@ -1436,7 +1439,32 @@ int DMADisable(DMA_ID id)
     }
     return 0;
 }
-
+//------------------------------------------------------------------------------------------------
+BYTE DMACheck(DMA_ID id)
+    //------------------------------------------------------------------------------------------------
+{
+    switch(id){
+    case DMA0:
+        return DMA0CONbits.CHEN;
+    case DMA1:
+        return DMA1CONbits.CHEN;
+    case DMA2:
+        return DMA2CONbits.CHEN;
+    case DMA3:
+        return DMA3CONbits.CHEN;
+    case DMA4:
+        return DMA4CONbits.CHEN;
+    case DMA5:
+        return DMA5CONbits.CHEN;
+    case DMA6:
+        return DMA6CONbits.CHEN;
+    case DMA7:
+        return DMA7CONbits.CHEN;
+    default:
+        return 0;
+    }
+    return 0;
+}
 //------------------------------------------------------------------------------------------------
 int DMAGetPPState(DMA_ID id)
 //------------------------------------------------------------------------------------------------
@@ -1551,12 +1579,14 @@ INTERRUPT _DMA0Interrupt(void)
 //------------------------------------------------------------------------------------------------
 {
     DMAConfigType *DMACfg = &DMAConfig[DMA0];
-    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag    
+    IFS0bits.DMA0IF = 0; // Clear the DMA0 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
-        if(DMACS1bits.PPST0){
+        if(DMACfg->SelectBuffer == 0){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
+            DMACfg->SelectBuffer = 1;
         } else {
             DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
+            DMACfg->SelectBuffer = 0;
         }
     }     
 }
@@ -1567,10 +1597,12 @@ INTERRUPT _DMA1Interrupt(void)
     DMAConfigType *DMACfg = &DMAConfig[DMA1];
     IFS0bits.DMA1IF = 0; // Clear the DMA1 Interrupt Flag
     if(DMACfg->fillingBufferAFunc){
-        if(DMACS1bits.PPST1){
+        if(DMACfg->SelectBuffer == 0){
             DMACfg->fillingBufferAFunc(DMACfg->_This, (BYTE*)DMACfg->BufA, DMACfg->Count);
+            DMACfg->SelectBuffer = 1;
         } else {
             DMACfg->fillingBufferBFunc(DMACfg->_This, (BYTE*)DMACfg->BufB, DMACfg->Count);
+            DMACfg->SelectBuffer = 0;
         }
     }     
 }
@@ -1672,14 +1704,19 @@ INTERRUPT _DMA7Interrupt(void)
 //
 //************************************************************************************************
 OCConfigType OCConfig[8];
-//------------------------------------------------------------------------------------------------
-int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
-//------------------------------------------------------------------------------------------------
+
+WORD OCCreateConfig(SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm)
 {
     WORD Config = 0;
     Config |= ((WORD)idle)  << 13;
     Config |= ((WORD)tmr)   << 3;
     Config |= ((WORD)ocm)   << 0;
+    return Config;
+}
+//------------------------------------------------------------------------------------------------
+int OCInit(OC_ID id, WORD Config)
+//------------------------------------------------------------------------------------------------
+{
     switch(id){
         case ID_OC1: OC1CON = Config;
             break;
@@ -2034,6 +2071,17 @@ void SPILock(SPI_ID id)
         // вход в критическую секцию
         SRbits.IPL = 4;
         if(Status->Busy){
+            if(id == ID_SPI1){
+                // если отключены каналы DMA
+                if((DMACheck(SPI1_DMA_RECEIVE_ID) == 0) && DMACheck(SPI1_DMA_SEND_ID) == 0){
+                    Status->Busy = 0;
+                }
+            } else if (id == ID_SPI2) {
+                // если отключены каналы DMA
+                if((DMACheck(SPI2_DMA_RECEIVE_ID) == 0) && DMACheck(SPI2_DMA_SEND_ID) == 0){
+                    Status->Busy = 0;
+                }
+            }
             // выход из критической секции
             SRbits.IPL = Tmp;
         } else {
@@ -2150,8 +2198,8 @@ int SPIInit()
     TRISGbits.TRISG7 = 1;  // Make sure SDI pin is an input
     TRISGbits.TRISG8 = 0;  // Set SDO pin as an output
     
-    IPC8bits.SPI2IP = SPI2_INT_LEVEL;
-    IPC8bits.SPI2EIP = 6;
+    IPC8bits.SPI2IP = 1;
+    IPC8bits.SPI2EIP = 1;
     IFS2bits.SPI2IF = 0;
     IFS2bits.SPI2EIF = 0;
     IEC2bits.SPI2IE = 1;
@@ -2162,8 +2210,8 @@ int SPIInit()
     TRISFbits.TRISF7 = 1;  // Make sure SDI pin is an input
     TRISFbits.TRISF8 = 0;  // Set SDO pin as an output
     
-    IPC2bits.SPI1IP = SPI1_INT_LEVEL;
-    IPC2bits.SPI1EIP = 6;
+    IPC2bits.SPI1IP = 1;
+    IPC2bits.SPI1EIP = 1;
     IFS0bits.SPI1IF = 0;
     IFS0bits.SPI1EIF = 0;
     IEC0bits.SPI1IE = 1;

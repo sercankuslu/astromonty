@@ -23,16 +23,20 @@ typedef struct PRIORITY_QUEUE {
     BYTE * Values;
     QUEUE_ELEMENT * Start;
     QUEUE_ELEMENT * End;
-    //BYTE Count;
+    //BYTE QueueFull;
+    BYTE Count;
     BYTE Size;
-    BYTE ValueSize;
+    WORD ValueSize;
 } PRIORITY_QUEUE;
 
 int Queue_Insert(PRIORITY_QUEUE * Queue, BYTE Key, BYTE * Value);               // добавляет пару (k,v) в хранилище; Значение из массива Value копируется во внутреннее хранилище
+int Queue_GetEndBuffer( PRIORITY_QUEUE * Queue, BYTE Key, BYTE ** Value );      // добавляет пару (k,v) в хранилище и возвращает указатель на буфер ( позволит уменьшит количество копирований, но есть риск считать неготовый буфер)
 int Queue_Min(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);               // возвращает пару (k,v) с минимальным значением ключа k. в Value передаётся указатель на запись во внутреннем хранилище
 int Queue_Extract(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE * Value);            // возвращает пару (k,v) удаляя её из хранилища. Значение из внутреннего хранилища копируется в массив Value
+int Queue_ExtractMin( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE * Value );       // возвращает пару (k,v) с минимальным значением ключа k. удаляя из хранилища все пары, находящиеся раньше пары с минимальным значением k,
+                                                                                // Значение из внутреннего хранилища копируется в массив Value  
 int Queue_ExtractAllToMin(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);    // возвращает пару (k,v) с минимальным значением ключа k. удаляя из хранилища все пары, находящиеся раньше пары с минимальным значением k
-int Queue_Init(PRIORITY_QUEUE * Queue, QUEUE_ELEMENT * KeyBuf, BYTE KeyBufSize, BYTE * ValueBuf, BYTE ValueSize );         // инициирует очередь
+int Queue_Init(PRIORITY_QUEUE * Queue, QUEUE_ELEMENT * KeyBuf, BYTE KeyBufSize, BYTE * ValueBuf, WORD ValueSize );         // инициирует очередь
 int Queue_Delete(PRIORITY_QUEUE * Queue);                                       // удаляет пару из начала очереди
 int Queue_Selftest ();
 int Queue_First(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);
