@@ -46,11 +46,13 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DSPIC33));
 
         Cmd_Init();
+        
         //double R = GetInterval(0.0, 0.0, 0.0);
         
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
+            Cmd_Process();
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);

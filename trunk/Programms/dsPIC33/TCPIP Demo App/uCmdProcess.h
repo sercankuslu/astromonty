@@ -76,9 +76,9 @@ typedef struct _CMD_QUEUE{
 
 } CMD_QUEUE;
 
-
+#define BUFFER_QUEUE_SIZE 16
 #define CMD_QUEUE_SIZE 10
-#define uCMD_QUEUE_SIZE 10
+#define uCMD_QUEUE_SIZE 24
 #define mCMD_QUEUE_SIZE 10
 
 typedef struct MOTOR_CONFIG {
@@ -102,7 +102,7 @@ typedef struct MOUNT_CONFIG {
 typedef struct OC_CONFIG {
     OC_ID                   Index;                      // номер канала (номер OC)
     OC_WORK_MODE            WorkMode;                   // режим работы канала OC 
-
+    WORD                    OCxCon;                     //  онфигураци€ канала
     // TODO: этим двум параметрам тут не место
     // TMR_PRESCALER Tmr2divide;                                    // делитель таймера 2(0 => 1, 3 => 8, 6 => 64, 8 => 256)
     // TMR_PRESCALER Tmr3divide;                                    // делитель таймера 3(0 => 1, 3 => 8, 6 => 64, 8 => 256)
@@ -120,15 +120,21 @@ typedef struct OC_CONFIG {
     double                  MinAngle;*/
 }OC_CONFIG;
 
+typedef struct DMA_CONFIG {
+    DMA_ID                  DmaId;
+    WORD                    DmaCfg;
+    WORD                    DMABufSize;
+} DMA_CONFIG;
+
 typedef struct CHANEL_CONFIG {
     MOUNT_CONFIG            MntConfig;
     MOTOR_CONFIG            MConfig;
     MOTOR_DRIVER_CONFIG     DrvConfig;
     OC_CONFIG               OCConfig;
+    DMA_CONFIG              DMAConfig;
     TIMERS_ID               TmrId;                      // номер таймера от которого работает канал (T2/T3)
     double                  dx;                         // шаг угла в градусах
     WORD                    wSTEPPulseWidth;            // ƒлительность ипульса Ўј√ в интервалах таймера
-    DMA_ID                  DmaId;
     DWORD                   AccBaseAddress;             // јдрес начала таблицы ускорени€ на внешней пам€ти
     DWORD                   AccRecordCount;             //  оличество записей в таблице ускорени€ на внешней пам€ти
     double                  K;                          // приведенные параметры двигател€
@@ -141,11 +147,13 @@ typedef struct CHANEL_CONFIG {
 typedef struct mCMD_STATUS {
     WORD                    AccX;                       // координата X в формуле ускорени€ 
     WORD                    RUN_Interval;             // текущий интервал
+    xCMD_STATE              State;
 } mCMD_STATUS;
 
 typedef struct OC_CHANEL_STATE{
         
     PRIORITY_QUEUE          uCmdQueue;                  // очередь микрокоманд
+    PRIORITY_QUEUE          BufferQueue;                  // очередь микрокоманд
     LONG                    XPosition;                  // текущий номер шага TODO: поддержать переключение скоростей
     BYTE                    CurrentDirection;           // направление вращени€ при движении ( зависит значение вывода Dir )    
 
@@ -154,7 +162,7 @@ typedef struct OC_CHANEL_STATE{
 
     xCMD_STATE              CurrentState;
     
-    DWORD_VAL               T;
+    WORD                    T;
     BYTE                    Enable;                     // признак включенности
     BYTE                    Pulse;                      // флаг дл€ Togle режима в OC (микрокоманды)
     

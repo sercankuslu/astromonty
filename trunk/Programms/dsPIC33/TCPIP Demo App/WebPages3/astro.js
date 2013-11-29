@@ -939,7 +939,7 @@ function GoTo(){
 }
 
 function Stop(){    
-    newAJAXCommand('index.htm',function(){}, false,"stop=1");
+    newAJAXCommand('index.htm',function(){}, false,"cmd=0&prty=0");
 }
 function GoToView(){
     ViewPosition.SetPosition(CurrentPosition.X,CurrentPosition.Y);

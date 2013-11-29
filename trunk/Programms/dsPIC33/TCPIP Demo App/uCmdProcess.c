@@ -6,12 +6,15 @@
 #include <math.h>
 
 #ifdef __C30__
-
+#   define INTERRUPT void __attribute__((__interrupt__,__no_auto_psv__))
 #include "TCPIP Stack/TCPIP.h"
 #include "TCPIP Stack/SPIFlash.h"
 #include "GenericTypeDefs.h"
 extern APP_CONFIG AppConfig;
 #else
+#   define INTERRUPT void
+#define Nop()
+extern _IFS0bits IFS0bits;
 typedef enum _WAIT_READY
 {
     NO_WAIT_READ_COMPLETE = 0,
@@ -26,8 +29,14 @@ APP_CONFIG AppConfig;
 
 DWORD dwFlashAddr = 0;
 unsigned char FileSystem[64*1024*256];
-
+#define __attribute__(far) 
 #endif
+
+QUEUE_ELEMENT   BufferQueueKeys1[BUFFER_QUEUE_SIZE];
+BYTE            BufferValues1[BUFFER_QUEUE_SIZE][OC1_DMA_BUF_LEN] __attribute__ ((far));
+QUEUE_ELEMENT   BufferQueueKeys2[BUFFER_QUEUE_SIZE];
+BYTE            BufferValues2[BUFFER_QUEUE_SIZE][OC2_DMA_BUF_LEN] __attribute__ ((far));
+
 QUEUE_ELEMENT   CMDQueueKeys[CMD_QUEUE_SIZE];
 CMD_QUEUE       CMDQueueValues[CMD_QUEUE_SIZE];
 PRIORITY_QUEUE  CmdQueue;                  // очередь команд
@@ -51,6 +60,7 @@ int uCmd_OCCallback(void * _This);
 int uCmd_ICCallback(void * _This);
 double GetInterval(double X, double U, double V);
 int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE priority);
+int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen);
 
 #ifndef __C30__
 void SPIFlashReadArray(DWORD dwAddress, BYTE* vData, WORD wLen, WAIT_READY WaitData)
@@ -82,10 +92,23 @@ int xCmdStart(BYTE Id)
     } else return 0;
 
     if((OCN->CurrentState == xCMD_STOP) || (OCN->CurrentState == xCMD_EMERGENCY_STOP)){
-        DMAPrepBuffer(OCN->Config->DmaId);
-        OCSetMode(OCN->Config->OCConfig.Index, OCN->Config->OCConfig.WorkMode);
-        DMAEnable(OCN->Config->DmaId);
-        DMAForceTransfer(OCN->Config->DmaId);
+        OCN->T = 0;
+        OCN->Pulse = 0;
+        OCN->mCMD_Status.AccX = 0;
+        OCN->mCMD_Status.RUN_Interval = 0;
+        OCN->mCMD_Status.State = xCMD_STOP;
+        DMADisable(OCN->Config->DMAConfig.DmaId);
+        OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
+        IFS0bits.U1TXIF = 1;
+        while(IFS0bits.U1TXIF){
+            Nop();
+            Nop();
+        }
+        DMAPrepBuffer(OCN->Config->DMAConfig.DmaId);
+        DMASetDataCount(OCN->Config->DMAConfig.DmaId, OCN->Config->DMAConfig.DMABufSize);
+        DMAEnable(OCN->Config->DMAConfig.DmaId);
+        DMAForceTransfer(OCN->Config->DMAConfig.DmaId);        
+        OCInit(OCN->Config->OCConfig.Index,OCN->Config->OCConfig.OCxCon);
         return 0;
     } else return -1;
 }
@@ -95,6 +118,7 @@ int uCmd_Init(void)
     // для тестов
     //xCMD_QUEUE command;
     WORD DMAcfg;
+    WORD OCConfig;
     BYTE * Buf1;
     BYTE * Buf2;
     BYTE i = 0;
@@ -103,10 +127,13 @@ int uCmd_Init(void)
     //                              
     // команда -> очередь команд -> мини команда -> очередь выборки -> микрокоманда -> очередь микрокоманд -> исполнение
     // 0. настроить очередь
-    Queue_Init(&OControll1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, sizeof(xCMD_QUEUE));
-    Queue_Init(&OControll1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, sizeof(xCMD_QUEUE));
-    Queue_Init(&OControll2.uCmdQueue, uCMDQueueKeys2, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues2, sizeof(xCMD_QUEUE));
-    Queue_Init(&OControll2.mCmdQueue, mCMDQueueKeys2, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues2, sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, (BYTE)sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, (BYTE)sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll1.BufferQueue, BufferQueueKeys1, BUFFER_QUEUE_SIZE, (BYTE*)BufferValues1, OC1_DMA_BUF_LEN);
+
+    Queue_Init(&OControll2.uCmdQueue, uCMDQueueKeys2, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues2, (BYTE)sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll2.mCmdQueue, mCMDQueueKeys2, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues2, (BYTE)sizeof(xCMD_QUEUE));
+    Queue_Init(&OControll2.BufferQueue, BufferQueueKeys2, BUFFER_QUEUE_SIZE, (BYTE*)BufferValues2, OC2_DMA_BUF_LEN);
 
     OControll1.Config = &AppConfig.ChanellsConfig[0];
     OControll1.CurrentDirection = 0;
@@ -114,16 +141,21 @@ int uCmd_Init(void)
     OControll2.CurrentDirection = 0;
     OControll1.Pulse = 0;
     OControll2.Pulse = 0;
+    // TODO: временно
+    OControll1.XPosition = 288000;
+    OControll2.XPosition = 288000;
+
     //uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
 #ifdef __C30__
     T2CONbits.TON = 0;
     T3CONbits.TON = 0;
 #else
+    uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
     CreateAccTable();
 #endif 
 
 
-    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_ENABLE, BIT_16, SYNC_DISABLE);
+    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_256, IDLE_ENABLE, BIT_16, SYNC_DISABLE);
     TimerSetValue(TIMER2, 0x0000, 0xFFFF);
     TimerSetCallback(TIMER2, NULL);
     TimerSetInt(TIMER2, 0, FALSE);
@@ -143,25 +175,26 @@ int uCmd_Init(void)
     DMAInit();
     DMAcfg = DMACreateConfig(SIZE_WORD, RAM_TO_DEVICE, FULL_BLOCK, NORMAL_OPS, REG_INDIRECT_W_POST_INC, CONTINUE_PP);
 
-    OCInit(ID_OC1, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
-    OCSetInt(ID_OC1, OC1_INT_LEVEL, TRUE);
+    OCConfig = OCCreateConfig(IDLE_DISABLE, OC_TMR2, TOGGLE);
+    //OCInit(ID_OC1, OCConfig);
+    OCSetInt(ID_OC1, OC_INT_LEVEL, TRUE);
 
     DMASetConfig(OC1_DMA_ID, DMAcfg);
     Buf1 = DMAGetBuffer(OC1_DMA_BUF_LEN);
     Buf2 = DMAGetBuffer(OC1_DMA_BUF_LEN);
     DMASelectDevice(OC1_DMA_ID, IRQ_OC1, (int)&OC1R);
-    DMASetInt(OC1_DMA_ID, OC1_DMA_INT_LEVEL, TRUE);
+    DMASetInt(OC1_DMA_ID, OC_DMA_INT_LEVEL, TRUE);
     DMASetBuffers(OC1_DMA_ID, Buf1, Buf2);
     DMASetDataCount(OC1_DMA_ID, OC1_DMA_BUF_LEN);
 
-    OCInit(ID_OC2, IDLE_DISABLE, OC_TMR2, OC_DISABLED);
-    OCSetInt(ID_OC2, OC2_INT_LEVEL, TRUE);
+    //OCInit(ID_OC2, OCConfig);
+    OCSetInt(ID_OC2, OC_INT_LEVEL, TRUE);
 
     DMASetConfig(OC2_DMA_ID, DMAcfg);
     Buf1 = DMAGetBuffer(OC2_DMA_BUF_LEN);
     Buf2 = DMAGetBuffer(OC2_DMA_BUF_LEN);
     DMASelectDevice(OC2_DMA_ID, IRQ_OC2, (int)&OC2R);
-    DMASetInt(OC2_DMA_ID, OC2_DMA_INT_LEVEL, TRUE);
+    DMASetInt(OC2_DMA_ID, OC_DMA_INT_LEVEL, TRUE);
     DMASetBuffers(OC2_DMA_ID, Buf1, Buf2);
     DMASetDataCount(OC2_DMA_ID, OC2_DMA_BUF_LEN);
 
@@ -173,120 +206,66 @@ int uCmd_Init(void)
         } else {
             nOC = &OControll2;
         }
-
+        nOC->Config->DMAConfig.DmaCfg = DMAcfg;
+        nOC->Config->OCConfig.OCxCon = OCConfig;
         if(nOC->Config->OCConfig.Index == ID_OC1){
             OCSetCallback(ID_OC1, (void*)&OControll1,  uCmd_OCCallback);
             DMASetCallback(OC1_DMA_ID, (void*)&OControll1, mCmd_DMACallback, mCmd_DMACallback);
+            nOC->Config->DMAConfig.DMABufSize = OC1_DMA_BUF_LEN;
         } else 
         if(nOC->Config->OCConfig.Index == ID_OC2){
             OCSetCallback(ID_OC2, (void*)&OControll2,  uCmd_OCCallback);
             DMASetCallback(OC2_DMA_ID, (void*)&OControll2, mCmd_DMACallback, mCmd_DMACallback);
+            nOC->Config->DMAConfig.DMABufSize = OC2_DMA_BUF_LEN;
         }
     }
+#ifdef __C30__
+    MS1         = 1;    // выход MS1
+    MS2         = 1;     // выход MS2
+    SLEEP       = 1;     // выход SLEEP
+    RESET       = 1;     // выход RESET
 
-    /*
-    command.State = xCMD_STOP;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_SET_TIMER;
-    command.Value = (DWORD)OC_TMR3;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_START;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_ACCELERATE;
-    command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_RUN;
-    command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_DECELERATE;
-    command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_STOP;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
+    MS1_Tris    = 0;     // выход MS1
+    MS2_Tris    = 0;     // выход MS2
+    SLEEP_Tris  = 0;    // выход SLEEP
+    RESET_Tris  = 0;    // выход RESET
 
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
-    command.State = xCMD_START;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_ACCELERATE;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_DECELERATE;
-    command.Value = (DWORD)0x0001;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    command.State = xCMD_STOP;
-    command.Value = (DWORD)0x0000;    
-    Queue_Insert(&OControll1.uCmdQueue, 10, (BYTE*)&command);
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
-    uCmd_OCCallback((void*)&OControll1);
+    //Инициализация порта1
+    {
+        PORT1_NULL_Tris   = 1; // вход NULL
+        PORT1_POS_Tris    = 1; // вход POS
+        PORT1_POS2_Tris   = 1; // вход POS2
 
-    */
+        PORT1_ENABLE      = 0;// выход ENABLE
+        PORT1_DIR         = 0;// выход DIR
+        PORT1_STEP        = 0;// выход STEP
 
-    /*
-    // миникоманды ( заполнение буфера DMA )
-    BYTE Buf[256];
-    WORD * k = (WORD*)FileSystem;
-    for (int i = 256; i > 0 ; i--) {
-        *(k++) = i * 100;
+        PORT1_ENABLE_Tris = 0;// выход ENABLE
+        PORT1_DIR_Tris    = 0;// выход DIR
+        PORT1_STEP_Tris   = 0;// выход STEP
     }
-    OControll1.Config.wSTEPPulseWidth = 10;
-    OControll1.Config.AccRecordCount = 256;
-    */
-//     command.State = xCMD_START;
-//     command.Value = (DWORD)0x0000;
-//     Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-    //command.State = xCMD_ACCELERATE;
-    //command.Value = (DWORD)8;          // дойти до 8 шага в разгоне
-    //Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-//     command.State = xCMD_ACCELERATE;
-//     command.Value = (DWORD)60000;          // разгон до максимальной скорости
-//     Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-//     command.State = xCMD_RUN;
-//     command.Value = (DWORD)1152000;          // пройти 360 градусов на скорости
-//     Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-//     command.State = xCMD_DECELERATE;
-//     command.Value = (DWORD)0;           // дойти до 0 шага в торможении
-//     Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-//     //DMAPrepBuffer(OControll1.Config->DmaId);
-//     command.State = xCMD_STOP;
-//     command.Value = (DWORD)0x0000;
-//     Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-    //uCmd_DMACallback( (void*)&OControll1, Buf, 256);
-    /*
-    command.State = xCMD_SET_DIRECTION;
-    command.Value = (DWORD)1;
-    Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
 
-    command.State = xCMD_SET_TIMER;
-    command.Value = (DWORD)OC_TMR3;
-    Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
+    //Инициализация порта2
+    {
+        PORT2_NULL_Tris   = 1; // вход NULL
+        PORT2_POS_Tris    = 1; // вход POS
+        PORT2_POS2_Tris   = 1; // вход POS2
 
-    command.State = xCMD_SET_SPEED;//
-    command.Value = (DWORD)46746;       // задать интервал (часовое ведение)
-    Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
+        PORT2_ENABLE      = 0;// выход ENABLE
+        PORT2_DIR         = 0;// выход DIR
+        PORT2_STEP        = 0;// выход STEP
 
-    command.State = xCMD_RUN;
-    command.Value = (DWORD)1152000;         // пройти 100 шагов на скорости
-    Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
+        PORT2_ENABLE_Tris = 0;// выход ENABLE
+        PORT2_DIR_Tris    = 0;// выход DIR
+        PORT2_STEP_Tris   = 0;// выход STEP
+    }
+    // U1TX
+    IFS0bits.U1TXIF = 0;
+    IEC0bits.U1TXIE = 1;
+    IPC3bits.U1TXIP = 1;
 
-    command.State = xCMD_STOP;
-    Queue_Insert(&OControll1.mCmdQueue, 10, (BYTE*)&command);
-    */
-    /*
-    for (int j = 0; j < (32 + 10 + 32 + 100); j++) {
-        uCmd_DMACallback( (void*)&OControll1, Buf, 256);
-        for (int i = 0; i < 64; i++) {
-            uCmd_OCCallback((void*)&OControll1);
-        }
-    }*/
+#endif
+    
     return 0;
 }
 
@@ -298,12 +277,17 @@ int uCmd_OCCallback( void * _This )
     xCMD_QUEUE * Value = NULL;
     xCMD_QUEUE StopCommand;
     BYTE ProcessCmd = 1;
-
-    //if((OCN->Pulse) && (OCN->CurrentState != xCMD_STOP)){
-    //    OCN->Pulse = 0;
-    //    return 0;
-    // }
     
+    
+    if(OCN->Pulse){
+        OCN->Pulse = 0;
+        if(OCN->CurrentState != xCMD_STOP){
+            return 0;
+        }
+    }
+    
+
+    /*
     switch(OCN->Config->OCConfig.Index){
     case ID_OC1: 
 #ifdef __C30__
@@ -318,7 +302,7 @@ int uCmd_OCCallback( void * _This )
     default:
         break;
     }
-
+    */
     while (ProcessCmd){
 
         if(Queue_First( &OCN->uCmdQueue, NULL, (BYTE**)&Value) != 0){
@@ -349,7 +333,9 @@ int uCmd_OCCallback( void * _This )
             }
             break;
         case xCMD_SET_TIMER: // значение Value - значение типа OC_TMR_SELECT - номер таймера
+            OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
             OCSetTmr(OCN->Config->OCConfig.Index, (OC_TMR_SELECT)Value->Value);
+            OCSetMode(OCN->Config->OCConfig.Index, OCN->Config->OCConfig.WorkMode);
             OCN->CurrentState = Value->State;
             Queue_Delete(&OCN->uCmdQueue);
             break;
@@ -364,17 +350,10 @@ int uCmd_OCCallback( void * _This )
         case xCMD_STOP: // остановка модуля
             OCN->CurrentState = Value->State;
             OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
-            DMADisable(OCN->Config->DmaId);
+            DMADisable(OCN->Config->DMAConfig.DmaId);
             Queue_Delete(&OCN->uCmdQueue);
+            ProcessCmd = 0;
             break;
-
-//         case xCMD_START: // запуск модуля
-//             OCSetMode(OCN->Config->OCConfig.Index, OCN->Config->OCConfig.WorkMode);
-//             DMAEnable(OCN->Config->DmaId);
-//             DMAForceTransfer(OCN->Config->DmaId);
-//             Queue_Delete(&OCN->uCmdQueue);
-//             ProcessCmd = 0;
-//             break;
 
         default:
             OCN->CurrentState = xCMD_ERROR;
@@ -384,54 +363,76 @@ int uCmd_OCCallback( void * _This )
     }
     return 0;
 }
+
 int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 {
-#define TMP_SIZE 32
+    OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
+    BYTE Priority = 0;
+
+    if(Queue_Extract( &OCN->BufferQueue, &Priority, Buf )!=0){
+        Nop();
+        Nop();
+    }
+
+    // вызываем прерывание
+    IFS0bits.U1TXIF = 1;
+    
+    return 0;
+}
+
+int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
+{
+#define TMP_SIZE 64
 #define TMP_SIZE_MASK TMP_SIZE-1
 #define bTMP_SIZE TMP_SIZE*2
 
-    OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
     xCMD_QUEUE * Value = NULL;
     BYTE ProcessCmd = 1;
     BYTE Priority = 0;
     xCMD_QUEUE Command;
     WORD TmpBuf1[TMP_SIZE];
-    WORD TmpBuf2[TMP_SIZE];
+    //WORD TmpBuf2[TMP_SIZE];
     WORD * TmpBufPtr = NULL;
     DWORD Addr = 0;
     WORD i = 0;
     //WORD j = 0;
     WORD Pulse = OCN->Config->wSTEPPulseWidth;
-    WORD * BufPtr;
     //OC_BUF * BufPtr;
     DWORD DataSize = 0;
-    BYTE BufLoad = 0;
-    BYTE BufProcess = 0;
+    //BYTE BufLoad = 0;
+    //BYTE BufProcess = 0;
     //BYTE NeedStart = 0;
-    WORD BufCount = BufLen / sizeof(OC_BUF); // свободное мето в буфере в элементах ( (WORD)r + (WORD)rs )
-    WORD Buf1Cnt = 0;           // количество данных в буфере 1
-    WORD Buf2Cnt = 0;           // количество данных в буфере 2
-    WORD TmpSize2 = 0;
+    WORD BufCount = TMP_SIZE; // свободное мето в буфере в элементах ( (WORD)r + (WORD)rs )
+    //WORD Buf1Cnt = 0;           // количество данных в буфере 1
+    //WORD Buf2Cnt = 0;           // количество данных в буфере 2
+   // WORD TmpSize2 = 0;
     WORD TmpSize = 0;              
-    BYTE FirstPass = 1;         // первый проход
-    BYTE Buf1Ready = 0;         // признак готовности буфера
-    BYTE Buf2Ready = 0;
-    WAIT_READY Buf1Wait = NO_WAIT_READ_COMPLETE;
-    WAIT_READY Buf2Wait = NO_WAIT_READ_COMPLETE;
+    //BYTE FirstPass = 1;         // первый проход
+    //BYTE Buf1Ready = 0;         // признак готовности буфера
+    //BYTE Buf2Ready = 0;
+    //WAIT_READY Buf1Wait = NO_WAIT_READ_COMPLETE;
+    //WAIT_READY Buf2Wait = NO_WAIT_READ_COMPLETE;
+    WORD Interval = 0;
+    OC_BUF Buf[TMP_SIZE];
+    OC_BUF * BufPtr = Buf;
+    //BYTE CurrInt = 0;
+    WORD TmpT = 0;
 
-
-    BufPtr = (WORD*)Buf;
-
-    while (ProcessCmd){
+    while (BufCount){
 
         if(Queue_ExtractAllToMin( &OCN->mCmdQueue, &Priority, (BYTE**)&Value ) != 0){
             // если нет команды, то останов
-            Command.State = xCMD_STOP;
-            Command.Value = (DWORD)0x0000; 
-            Value = &Command;
-            ProcessCmd = 0;
+            //Command.State = xCMD_STOP;
+            //Command.Value = (DWORD)0x0000; 
+            //Value = &Command;
+            //ProcessCmd = 0;
+            return -1;
         }
-
+        if((OCN->BufferQueue.Count >= OCN->BufferQueue.Size)||(OCN->uCmdQueue.Count >= OCN->uCmdQueue.Size))
+            return -1;
+        
+        OCN->mCMD_Status.State = Value->State;
+        TmpT = OCN->T;
         switch (Value->State) {
 
         case xCMD_ACCELERATE:
@@ -446,7 +447,7 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             if(Value->Value < OCN->mCMD_Status.AccX){
                 Value->State = xCMD_DECELERATE;
                 break;
-             }
+            }
 
             // получение количества данных
             DataSize = Value->Value - OCN->mCMD_Status.AccX;
@@ -456,6 +457,7 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             // получение адреса
             Addr = OCN->Config->AccBaseAddress + (OCN->mCMD_Status.AccX) * sizeof(WORD);
 
+            /*
             BufLoad = 0;
             BufProcess = 0;
             Buf1Ready = 0;
@@ -463,11 +465,13 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Buf2Wait = NO_WAIT_READ_COMPLETE;
             Buf1Wait = NO_WAIT_READ_COMPLETE;
             FirstPass = 1;
+            */
+
             // вычисляем количество полных буферов
             if (DataSize > 0)
-            {   
-                TmpSize2 = DataSize;
-
+            {
+                //TmpSize2 = (WORD)DataSize;
+                /*
                 while(TmpSize2 > 0){
                     if((BufLoad == 0)  && (Buf1Ready == 0) && (TmpSize2 > 0)){
                         if(TmpSize2 > TMP_SIZE){
@@ -516,70 +520,104 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
                             BufProcess = 0;
                         }
                         while(TmpSize > 0){
-                            OCN->T.Val += (WORD)(*(TmpBufPtr++));       // на flash хранятся интервалы ( в TmpBufPtr)
-                            *(BufPtr++) = OCN->T.word.LW;
-                            *(BufPtr++) = OCN->T.word.LW + Pulse;
+                            Interval = *TmpBufPtr;
+                            TmpBufPtr++;
+                            OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                            BufPtr->r = OCN->T;
+                            BufPtr->rs = OCN->T + Pulse;
+                            if(BufPtr->r == 0) BufPtr->r++; 
+                            BufPtr++;
                             TmpSize--;
                         }
                     }
-                }
-            }
+                }*/
+                
+                SPIFlashReadArray(Addr, (BYTE*)TmpBuf1, DataSize * sizeof(WORD), WAIT_READ_COMPLETE);
+                Addr += DataSize * sizeof(WORD);
+                TmpBufPtr = TmpBuf1;
+                TmpSize = DataSize;
 
-            if(DataSize > 0){
-                OCN->mCMD_Status.AccX += DataSize;
-                Command.State = xCMD_ACCELERATE;
-                Command.Value = (DWORD)DataSize; 
-                Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command);
-                BufCount -= DataSize;
-                OCN->mCMD_Status.RUN_Interval = (WORD)(*(TmpBufPtr - 1));   // эта переменная указывает на значение последнего интервала
-            } 
+                while(TmpSize > 0){
+
+                    Interval = *TmpBufPtr;
+                    TmpBufPtr++;
+                    OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                    BufPtr->r = OCN->T;
+                    BufPtr->rs = OCN->T + Pulse;
+                    if(BufPtr->r == 0) BufPtr->r++; 
+                    if(OCN->T <= TmpT){
+                        Nop();
+                        Nop();
+                    }
+                    if(Interval > 1000){
+                        Nop();
+                        Nop();
+                    }
+                    TmpT = OCN->T;
+                    BufPtr++;
+                    TmpSize--;
+                }
+            
+                OCN->mCMD_Status.AccX += (WORD)DataSize;
+                BufCount -= (WORD)DataSize;
+                OCN->mCMD_Status.RUN_Interval = Interval;   // эта переменная указывает на значение последнего интервала
+                // Добавляем команду в очередь
+                Command.State = Value->State;
+                Command.Value = DataSize; 
+                //LOCK(OC_DMA_INT_LEVEL, Queue_Insert(&OCN->BufferQueue, Priority, (BYTE*)Buf));
+                LOCK(OC_INT_LEVEL, Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command));
+
+            }
             if(OCN->mCMD_Status.AccX >= Value->Value) {
                 Queue_Delete(&OCN->mCmdQueue);
             }
-
-            if(BufCount == 0){
-                ProcessCmd = 0; // буфер заполнен ( следующую команду выбирать не нужно)
-            }
             break;
         case xCMD_RUN:
+
             // получение размеров данных
             DataSize = (DWORD)Value->Value;
+
             if (DataSize > BufCount) {
                 DataSize = BufCount;
             }
+            if(DataSize < BufCount){
+                Nop();
+                Nop();
+            }
             if (DataSize > 0){
-                BufLoad = 0;
                 for (i = 0; i < DataSize; i++) {
 
-                    OCN->T.Val += (WORD)(OCN->mCMD_Status.RUN_Interval);
-                    *(BufPtr++) = OCN->T.word.LW;
-                    *(BufPtr++) = OCN->T.word.LW + Pulse;
+                    OCN->T += (WORD)(OCN->mCMD_Status.RUN_Interval);
+                    BufPtr->r = OCN->T;
+                    BufPtr->rs = OCN->T + Pulse;
+                    if(BufPtr->r == 0) BufPtr->r++; 
+                    if(OCN->T <= TmpT){
+                        Nop();
+                        Nop();
+                    }
+                    TmpT = OCN->T;
+                    if(Interval > 1000){
+                        Nop();
+                        Nop();
+                    }
+                    BufPtr++;
                 }
-            }
-            if(DataSize > 0){
-                Command.State = xCMD_RUN;
-                Command.Value = (DWORD)DataSize; 
-                Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command);
-                BufCount -= DataSize;
+
+                BufCount -= (WORD)DataSize;
                 Value->Value -= DataSize;
+                // Добавляем команду в очередь
+                Command.State = Value->State;
+                Command.Value = DataSize; 
+                LOCK(OC_INT_LEVEL, Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command));
+
             } 
             if(Value->Value == 0) {
                 Queue_Delete(&OCN->mCmdQueue);
             }
-
-            if(BufCount == 0){
-                ProcessCmd = 0; // буфер заполнен ( следующую команду выбирать не нужно)
-            }
             
             break;
-        case xCMD_SET_SPEED: //задаёт значение интервала для xCMD_RUN ( в случае, если не задано, используется последнее значение xCMD_ACCELERATE/xCMD_DECELERATE)
-            // для uCMD не используется
-            // TODO: надо округлять десятичные
-            OCN->mCMD_Status.RUN_Interval = (WORD)Value->Value;
-            Queue_Delete(&OCN->mCmdQueue);
-            break;
         case xCMD_DECELERATE:
-            // TODO::
+            
             // проверка на некорректные данные 
             if(OCN->mCMD_Status.AccX > OCN->Config->AccRecordCount){
                 OCN->mCMD_Status.AccX = (WORD)OCN->Config->AccRecordCount;
@@ -588,10 +626,10 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
                 Value->Value = OCN->Config->AccRecordCount;
             }
 
-//             if(Value->Value > OCN->mCMD_Status.AccX){
-//                 Value->State = xCMD_ACCELERATE;
-//                 break;
-//             }
+            if(Value->Value > OCN->mCMD_Status.AccX){
+                Value->State = xCMD_ACCELERATE;
+                break;
+            }
 
             // получение количества данных
             DataSize = (DWORD)OCN->mCMD_Status.AccX - Value->Value;
@@ -601,6 +639,7 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             // получение адреса
             Addr = OCN->Config->AccBaseAddress + ((DWORD)OCN->mCMD_Status.AccX) * sizeof(WORD);
 
+            /*
             BufLoad = 0;
             BufProcess = 0;
             FirstPass = 1;
@@ -608,13 +647,13 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             Buf2Ready = 0;
             Buf2Wait = NO_WAIT_READ_COMPLETE;
             Buf1Wait = NO_WAIT_READ_COMPLETE;
-
+            */
             // вычисляем количество полных буферов
             if (DataSize > 0)
             {
-                TmpSize2 = DataSize;
 
-                while(TmpSize2 > 0){
+                //TmpSize2 = (WORD)DataSize;
+                /* while(TmpSize2 > 0){
                     if((BufLoad == 0)  && (Buf1Ready == 0) && (TmpSize2 > 0)){
                         if(TmpSize2 > TMP_SIZE){
                             Buf1Cnt = TMP_SIZE;
@@ -662,55 +701,73 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
                             BufProcess = 0;
                         }
                         while(TmpSize > 0){
-                            OCN->T.Val += (WORD)(*(--TmpBufPtr));       // на flash хранятся интервалы ( в TmpBufPtr)
-                            *(BufPtr++) = OCN->T.word.LW;
-                            *(BufPtr++) = OCN->T.word.LW + Pulse;
+                            TmpBufPtr--;
+                            Interval = *TmpBufPtr;
+                            OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                            BufPtr->r = OCN->T;
+                            BufPtr->rs = OCN->T + Pulse;
+                            if(BufPtr->r == 0) BufPtr->r++; 
+                            BufPtr++;
                             TmpSize--;
                         }
                     }
+                } */
+                
+                Addr -= DataSize * sizeof(WORD);
+                SPIFlashReadArray(Addr, (BYTE*)TmpBuf1, DataSize * sizeof(WORD), WAIT_READ_COMPLETE);
+                TmpBufPtr = TmpBuf1 + DataSize;
+                TmpSize = DataSize;
+                while(TmpSize > 0){
+                    TmpBufPtr--;
+                    Interval = *TmpBufPtr;
+                    OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                    BufPtr->r = OCN->T;
+                    BufPtr->rs = OCN->T + Pulse;
+                    if(BufPtr->r == 0) BufPtr->r++; 
+                    if(OCN->T <= TmpT){
+                        Nop();
+                        Nop();
+                    }
+                    TmpT = OCN->T;
+                    if(Interval > 1000){
+                        Nop();
+                        Nop();
+                    }
+                    BufPtr++;
+                    TmpSize--;
                 }
-            }
-
-            if(DataSize > 0){
-                OCN->mCMD_Status.AccX -= DataSize;
-                Command.State = xCMD_DECELERATE;
-                Command.Value = (DWORD)DataSize; 
-                Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command);
-                BufCount -= DataSize;
-                OCN->mCMD_Status.RUN_Interval = (WORD)(*(TmpBufPtr));   // эта переменная указывает на значение последнего интервала
+                
+                OCN->mCMD_Status.RUN_Interval = Interval;   // эта переменная указывает на значение последнего интервала
+                OCN->mCMD_Status.AccX -= (WORD)DataSize;
+                BufCount -= (WORD)DataSize;
+                // Добавляем команду в очередь
+                Command.State = Value->State;
+                Command.Value = DataSize; 
+                //LOCK(OC_DMA_INT_LEVEL, Queue_Insert(&OCN->BufferQueue, Priority, (BYTE*)Buf));
+                LOCK(OC_INT_LEVEL, Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command));
             } 
             if(OCN->mCMD_Status.AccX <= Value->Value) {
                 Queue_Delete(&OCN->mCmdQueue);
             }
 
-            if(BufCount == 0){
-                ProcessCmd = 0; // буфер заполнен ( следующую команду выбирать не нужно)
-            }
             break;
-         case xCMD_SET_TIMER: // TODO: Возможно, в mCMD не нужно
-             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)Value);
-             Queue_Delete(&OCN->mCmdQueue);
+        case xCMD_SET_SPEED: //задаёт значение интервала для xCMD_RUN ( в случае, если не задано, используется последнее значение xCMD_ACCELERATE/xCMD_DECELERATE)
+            // для uCMD не используется
+            // TODO: надо округлять десятичные
+            OCN->mCMD_Status.RUN_Interval = (WORD)Value->Value;
+            OCN->mCMD_Status.State = Value->State;
+            Queue_Delete(&OCN->mCmdQueue);
             break;
+        case xCMD_SET_TIMER: // TODO: Возможно, в mCMD не нужно
         case xCMD_SET_DIRECTION:
-            Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)Value);
-            Queue_Delete(&OCN->mCmdQueue);
-            break;
-        //case xCMD_BREAK:
-        //    Queue_Delete(&OCN->mCmdQueue);
-        //    break;
         case xCMD_STOP:
-            Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)Value);
+            Command.State = Value->State;
+            Command.Value = Value->Value; 
+            LOCK(OC_INT_LEVEL, Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command));
             Queue_Delete(&OCN->mCmdQueue);
-            ProcessCmd = 0;
+            OCN->mCMD_Status.State = Value->State;
+            //ProcessCmd = 0;
             break;
-//         case xCMD_START:
-//             Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)Value);
-//             Queue_Delete(&OCN->mCmdQueue);
-//             if(OCN->CurrentState == xCMD_STOP){
-//                 // запуск OC, если все выключено
-//                 NeedStart = 1;
-//             }
-//             break;
         case xCMD_EMERGENCY_STOP:
             // все вырубить
             #ifdef __C30__
@@ -720,16 +777,18 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
             #endif
             OCN->CurrentState = Value->State;
             OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
-            DMADisable(OCN->Config->DmaId);
+            DMADisable(OCN->Config->DMAConfig.DmaId);
             ProcessCmd = 0;
+            OCN->mCMD_Status.State = Value->State;
             break;
         default:
             break;
         }
     }
-//     if(NeedStart){
-//         uCmd_OCCallback( _This );
-//     }
+    if(BufCount == 0){
+        LOCK(OC_DMA_INT_LEVEL, Queue_Insert(&OCN->BufferQueue, Priority, (BYTE*)Buf));
+    }
+
     return 0;
 }
 
@@ -775,22 +834,24 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
     Config->AccRecordCount = 32000; // 10 градусов
     switch(Number){
     case 0:
-        Config->DmaId = OC1_DMA_ID;
+        Config->DMAConfig.DmaId = OC1_DMA_ID;
         Config->OCConfig.Index = ID_OC1;
+        Config->DMAConfig.DMABufSize = OC1_DMA_BUF_LEN;
         break;
     case 1:
-        Config->DmaId = OC2_DMA_ID;
+        Config->DMAConfig.DmaId = OC2_DMA_ID;
         Config->OCConfig.Index = ID_OC2;
+        Config->DMAConfig.DMABufSize = OC2_DMA_BUF_LEN;
         break;
     case 2:
-        Config->DmaId = OC1_DMA_ID;  // без разницы DMA у OC3 нет
+        Config->DMAConfig.DmaId = OC1_DMA_ID;  // без разницы DMA у OC3 нет
         Config->OCConfig.Index = ID_OC3;
         break;
     }
     Config->DrvConfig.dSTEPPulseWidth = 0.000002; // 2 uS
-    Config->wSTEPPulseWidth = 20;//(WORD)(Config->DrvConfig.dSTEPPulseWidth / 0.0000016);
+    Config->wSTEPPulseWidth = 70;//(WORD)(Config->DrvConfig.dSTEPPulseWidth / 0.0000016);
     Config->DrvConfig.uStepPerStep = 16;
-    Config->MntConfig.Length = 2.0;
+    Config->MntConfig.Length = 3.0;
     Config->MntConfig.Mass = 500.0;
     Config->MntConfig.Radius = 0.3;
     Config->MntConfig.Reduction = 360.0;
@@ -838,17 +899,32 @@ void CreateAccTable()
         
         WORD Buf[128];
         WORD * Bufptr = Buf;
+        double K = AppConfig.ChanellsConfig[0].K;
+        double B = AppConfig.ChanellsConfig[0].B;
+        double dx = AppConfig.ChanellsConfig[0].dx;
+        double dT = 0.0000002;
+        double KX;
+        double X;
         volatile DWORD Value = 0;
         volatile DWORD Value1 = 0;
+        volatile DWORD Res;
         SPIFlashBeginWrite(262144);
-        for(i = 0; i < 64000; i++){
+        for(i = 0; i < 32768; i++){
             if(((i & 0x7f) == 0) && (i > 0)){
                 SPIFlashWriteArray((BYTE*)Buf, 256);
                 Bufptr = Buf;
                 //Nop();
             }
-            Value = (DWORD)(GetInterval( ((double)i) * AppConfig.ChanellsConfig[0].dx + AppConfig.ChanellsConfig[0].dx, AppConfig.ChanellsConfig[0].U,AppConfig.ChanellsConfig[0].V)/0.0000002);
-            *Bufptr = (WORD)(Value - Value1);
+            X = (double)i*dx;
+            KX = X*K;
+            Value = (DWORD)((-KX + sqrt(KX*KX+4*B*X))/(2*B * dT));
+            //Value = (DWORD)(GetInterval( ((double)i) * AppConfig.ChanellsConfig[0].dx + AppConfig.ChanellsConfig[0].dx, AppConfig.ChanellsConfig[0].U,AppConfig.ChanellsConfig[0].V)/0.0000002);
+            if(Value < Value1){
+                Nop();
+                Nop();
+            }
+            Res = Value - Value1;
+            *Bufptr = (WORD)Res;
             Value1 = Value;
             Bufptr++;
         }
@@ -876,9 +952,9 @@ DWORD GetStepsPerGrad(BYTE ch)
     volatile DWORD value = 0;
     switch (ch)
     {
-    case 0: value = (OControll1.Config->MntConfig.Reduction * OControll1.Config->DrvConfig.uStepPerStep * OControll1.Config->MConfig.StepPerTurn)/360;
+    case 0: value = (DWORD)((OControll1.Config->MntConfig.Reduction * OControll1.Config->DrvConfig.uStepPerStep * OControll1.Config->MConfig.StepPerTurn)/360);
         break;
-    case 1: value = (OControll2.Config->MntConfig.Reduction * OControll2.Config->DrvConfig.uStepPerStep * OControll2.Config->MConfig.StepPerTurn)/360;
+    case 1: value = (DWORD)((OControll2.Config->MntConfig.Reduction * OControll2.Config->DrvConfig.uStepPerStep * OControll2.Config->MConfig.StepPerTurn)/360);
         break;
     case 3: value = 0;
         break;
@@ -906,6 +982,13 @@ BYTE GetStatus(BYTE ch){
 int Cmd_Init(void)
 {
     Queue_Init(&CmdQueue, CMDQueueKeys, CMD_QUEUE_SIZE, (BYTE*)CMDQueueValues, sizeof(CMD_QUEUE));
+    if(0){
+        CMD_QUEUE Cmd;
+        Cmd.a  = 300000;
+        Cmd.a1 = 288000;
+        Cmd.Command = CMD_GO_TO_POSITION;
+        Queue_Insert(&CmdQueue, 50, (BYTE*)&Cmd);
+    }
     return uCmd_Init();
 }
 
@@ -917,82 +1000,96 @@ int Cmd_Process()
     //BYTE ProcessCmd = 1;
     BYTE Priority = 50;
     static double GuideTime = 100.0; // 100 секунд
+    
+    if(Queue_ExtractAllToMin( &CmdQueue, &Priority, (BYTE**)&Value ) == 0){
 
-    if(Queue_ExtractAllToMin( &CmdQueue, &Priority, (BYTE**)&Value ) != 0){
-        // если нет команды, выход
-        return -1;
-    }
+        switch (Value->Command) {
 
-    switch (Value->Command) {
+        case CMD_STOP:                                  // остановка
+            mCmd.State = xCMD_STOP;
+            Queue_Insert(&OControll1.mCmdQueue, 0, (BYTE*)&mCmd);
+            Queue_Insert(&OControll2.mCmdQueue, 0, (BYTE*)&mCmd);
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_GO_TO_POSITION:                        // перейти на позицию; параметры: a, d,
+            // останавливаем
+            if((OControll1.CurrentState != xCMD_STOP) || (OControll2.CurrentState != xCMD_STOP)) {
 
-    case CMD_STOP:                                  // остановка
-        mCmd.State = xCMD_STOP;
-        Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd);
-        Queue_Insert(&OControll2.mCmdQueue, Priority, (BYTE*)&mCmd);
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_GO_TO_POSITION:                        // перейти на позицию; параметры: a, d,
-        // останавливаем
-        if((OControll1.CurrentState != xCMD_STOP) || (OControll2.CurrentState != xCMD_STOP)) {
-
-            if(OControll1.CurrentState != xCMD_STOP){
-                mCmd.State = xCMD_DECELERATE;
-                mCmd.Value = 0;
-                Queue_Insert(&OControll1.mCmdQueue, Priority - 1, (BYTE*)&mCmd);
+                if(OControll1.CurrentState != xCMD_STOP){
+                    mCmd.State = xCMD_DECELERATE;
+                    mCmd.Value = 0;
+                    Queue_Insert(&OControll1.mCmdQueue, Priority - 1, (BYTE*)&mCmd);
+                }
+                if(OControll2.CurrentState != xCMD_STOP){
+                    mCmd.State = xCMD_DECELERATE;
+                    mCmd.Value = 0;
+                    Queue_Insert(&OControll2.mCmdQueue, Priority - 1, (BYTE*)&mCmd);
+                }
+                break;
             }
-            if(OControll2.CurrentState != xCMD_STOP){
-                mCmd.State = xCMD_DECELERATE;
-                mCmd.Value = 0;
-                Queue_Insert(&OControll2.mCmdQueue, Priority - 1, (BYTE*)&mCmd);
+            // вычисляем и запускаем
+            if(Aim(&OControll1, (LONG)(Value->a), Priority) == 0){
+                xCmdStart(0);
+                if(0){
+                    mCmd.State = xCMD_SET_DIRECTION;
+                    mCmd.Value = 1;
+                    Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd);
+                    mCmd.State = xCMD_SET_TIMER;
+                    mCmd.Value = (DWORD)OC_TMR3;
+                    Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd);
+                    mCmd.State = xCMD_SET_SPEED;
+                    mCmd.Value = 46500;
+                    Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd);
+                    mCmd.State = xCMD_RUN;
+                    mCmd.Value = 288000;
+                    Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd);
+                }
+
             }
+            if(Aim(&OControll2, (LONG)(Value->d), Priority) == 0){
+                xCmdStart(1);
+            }
+
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_GO_TO_POSITION_AND_GUIDE_STAR:         // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d,
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_SET_GUIDE_TIME:                        // установить время сопровождения объекта a ( в сек )
+            GuideTime = (double)Value->a;
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_GO_HOME:                               // перевести телескоп в положение парковки  
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_SLOW_GO_HOME:                          // медленное возвращение на парковочную позицию после возобновления электропитания
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_SET_AXIS:                              // калибровка ( устанавливает текущее положение телескопа) a, d
+            OControll1.XPosition = Value->a;
+            OControll2.XPosition = Value->d;
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_SET_GUIDE_SPEED:                       // калибровка ( устанавливает скорость сопровождения звезды) guidespeed
+            OControll1.Config->GuideSpeed = Value->a1;
+            OControll2.Config->GuideSpeed = Value->d1;
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_SET_AIM_SPEED:                         // калибровка ( устанавливает скорость наведения) runspeed
+            Queue_Delete(&CmdQueue);
+            break;
+        case CMD_EMG_STOP:                              // аварийная остановка
+            mCmd.State = xCMD_EMERGENCY_STOP;
+            Queue_Insert(&OControll1.mCmdQueue, 0, (BYTE*)&mCmd);
+            Queue_Insert(&OControll2.mCmdQueue, 0, (BYTE*)&mCmd);
+            Queue_Delete(&CmdQueue);
+            break;
+        default:
+            Queue_Delete(&CmdQueue);
             break;
         }
-        // вычисляем и запускаем
-        if(Aim(&OControll1, (LONG)(Value->a), Priority) == 0){
-            xCmdStart(0);
-        }
-        if(Aim(&OControll2, (LONG)(Value->d), Priority) == 0){
-            xCmdStart(1);
-        }
-
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_GO_TO_POSITION_AND_GUIDE_STAR:         // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d,
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_SET_GUIDE_TIME:                        // установить время сопровождения объекта a ( в сек )
-        GuideTime = (double)Value->a;
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_GO_HOME:                               // перевести телескоп в положение парковки  
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_SLOW_GO_HOME:                          // медленное возвращение на парковочную позицию после возобновления электропитания
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_SET_AXIS:                              // калибровка ( устанавливает текущее положение телескопа) a, d
-        OControll1.XPosition = Value->a;
-        OControll2.XPosition = Value->d;
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_SET_GUIDE_SPEED:                       // калибровка ( устанавливает скорость сопровождения звезды) guidespeed
-        OControll1.Config->GuideSpeed = Value->a1;
-        OControll2.Config->GuideSpeed = Value->d1;
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_SET_AIM_SPEED:                         // калибровка ( устанавливает скорость наведения) runspeed
-        Queue_Delete(&CmdQueue);
-        break;
-    case CMD_EMG_STOP:                              // аварийная остановка
-        mCmd.State = xCMD_EMERGENCY_STOP;
-        Queue_Insert(&OControll1.mCmdQueue, 0, (BYTE*)&mCmd);
-        Queue_Insert(&OControll2.mCmdQueue, 0, (BYTE*)&mCmd);
-        Queue_Delete(&CmdQueue);
-        break;
-    default:
-        Queue_Delete(&CmdQueue);
-        break;
     }
+    //IFS0bits.U1TXIF = 1;
     return 0;
 }
 
@@ -1015,7 +1112,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
     }*/
     
     diff = destang - OCN->XPosition;
-
+    if(diff == 0) return -1;
     // определяем направление движения
     if(diff < 0){
         diff = -diff;
@@ -1027,38 +1124,48 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         mCmd.Value = 0;
         Queue_Insert(&OCN->mCmdQueue, Priority - 1, (BYTE*)&mCmd);
     }
-    /*
-    mCmd.State = xCMD_SET_SPEED;
-    mCmd.Value = 156;
+    mCmd.State = xCMD_SET_TIMER;
+    mCmd.Value = (DWORD)OC_TMR2;
     Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
-    mCmd.State = xCMD_RUN;
-    mCmd.Value = diff;
-    Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
-    */
-    
-    diff_2 = diff / 2;
-    if(diff_2 < OCN->Config->AccRecordCount){
-        mCmd.State = xCMD_ACCELERATE;
-        mCmd.Value = diff_2;
-        Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
-        mCmd.State = xCMD_DECELERATE;
-        mCmd.Value = 0;
-        Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
-        mCmd.State = xCMD_STOP;
-        Queue_Insert(&OCN->mCmdQueue, Priority + 1, (BYTE*)&mCmd);
-    } else {
-        mCmd.State = xCMD_ACCELERATE;
-        mCmd.Value = OCN->Config->AccRecordCount;
+
+    if(0){
+        mCmd.State = xCMD_SET_SPEED;
+        mCmd.Value = 1562;
         Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
         mCmd.State = xCMD_RUN;
-        mCmd.Value = diff - OCN->Config->AccRecordCount * 2;
+        mCmd.Value = diff;
         Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+    } else {
+    
+        diff_2 = diff / 2;
+        if(diff_2 < (LONG)OCN->Config->AccRecordCount){
+            mCmd.State = xCMD_ACCELERATE;
+            mCmd.Value = diff_2;
+            Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+        } else {
+            mCmd.State = xCMD_ACCELERATE;
+            mCmd.Value = OCN->Config->AccRecordCount;
+            Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+            mCmd.State = xCMD_RUN;
+            mCmd.Value = diff - OCN->Config->AccRecordCount * 2;
+            Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
+        }
         mCmd.State = xCMD_DECELERATE;
         mCmd.Value = 0;
         Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd);
         mCmd.State = xCMD_STOP;
-        Queue_Insert(&OCN->mCmdQueue, Priority + 1, (BYTE*)&mCmd);
+        Queue_Insert(&OCN->mCmdQueue, 250, (BYTE*)&mCmd);
     }
     return 0;
 }
 
+INTERRUPT _U1TXInterrupt(void)
+{
+    int res = 0;
+    IFS0bits.U1TXIF = 0;
+    while(res > -2) {
+        res = 0;
+        res += mCmd_Process(&OControll1, OC1_DMA_BUF_LEN);
+        res += mCmd_Process(&OControll2, OC2_DMA_BUF_LEN);
+    }
+}

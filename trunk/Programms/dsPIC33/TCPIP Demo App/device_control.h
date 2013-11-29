@@ -2,13 +2,52 @@
 #define __DEVICE_CONTROL_H_
 #ifdef __C30__
 #   include "GenericTypeDefs.h"
-#else
-#   include "stdafx.h"
-#endif 
 // блокировки
 #define SET_INT_LOCK(x) SRbits.IPL = x
 #define SAVE_INT_LOCK SRbits.IPL
 #define RESTORE_INT_LOCK(x) SRbits.IPL = x
+#else
+#   include "stdafx.h"
+// блокировки
+#define SET_INT_LOCK(x)
+#define SAVE_INT_LOCK 4
+#define RESTORE_INT_LOCK(x)
+typedef struct 
+{
+    __EXTENSION BYTE INT0IF:1;
+    __EXTENSION BYTE IC1IF:1;
+    __EXTENSION BYTE OC1IF:1;
+    __EXTENSION BYTE T1IF:1;
+    __EXTENSION BYTE DMA0IF:1;
+    __EXTENSION BYTE IC2IF:1;
+    __EXTENSION BYTE OC2IF:1;
+    __EXTENSION BYTE T2IF:1;
+    __EXTENSION BYTE T3IF:1;
+    __EXTENSION BYTE SPI1EIF:1;
+    __EXTENSION BYTE SPI1IF:1;
+    __EXTENSION BYTE U1RXIF:1;
+    __EXTENSION BYTE U1TXIF:1;
+    __EXTENSION BYTE AD1IF:1;
+    __EXTENSION BYTE DMA1IF:1;
+    __EXTENSION BYTE b16:1;
+} _IFS0bits;
+#endif 
+
+#define LOCK(x,y) {\
+    BYTE K = SAVE_INT_LOCK; \
+    SET_INT_LOCK(x);\
+    y;\
+    RESTORE_INT_LOCK(K);\
+}
+
+#define OC_DMA_INT_LEVEL        6
+#define OC_INT_LEVEL            7
+
+#define OC1_DMA_ID              DMA0
+#define OC2_DMA_ID              DMA1
+
+#define OC1_DMA_BUF_LEN         256     //x2
+#define OC2_DMA_BUF_LEN         256     //x2
 
 #define SPI1_DMA_SEND_ID        DMA2
 #define SPI1_DMA_RECEIVE_ID     DMA3
@@ -22,15 +61,8 @@
 #define SPI2_DMA_BUF_LEN        256
 #define SPI2_INT_LEVEL          6
 
-#define OC1_DMA_ID              DMA0
-#define OC1_DMA_INT_LEVEL       4
-#define OC1_INT_LEVEL           6
-#define OC1_DMA_BUF_LEN         384     //x2
-
-#define OC2_DMA_ID              DMA1
-#define OC2_DMA_INT_LEVEL       4
-#define OC2_INT_LEVEL           6
-#define OC2_DMA_BUF_LEN         384     //x2
+#define OC_INT_LOCK         SAVE_INT_LOCK; SET_INT_LOCK(OC_INT_LEVEL)
+#define OC_DMA_INT_LOCK     SAVE_INT_LOCK; SET_INT_LOCK(OC_DMA_INT_LEVEL)
 
 // Таймеры
 typedef enum _TIMERS_ID{
@@ -109,6 +141,7 @@ typedef struct _DMAConfigType {
     BYTE* BufB;
     WORD Count;
     void* _This;
+    BYTE SelectBuffer;      // номер буфера
 } DMAConfigType;
 
 WORD DMACreateConfig(DMA_DATA_SIZE_BIT size, DMA_TRANSFER_DIRECTION dir, DMA_COMPLETE_BLOCK_INT half, DMA_NULL_DATA_MODE nullw, DMA_ADRESING_MODE addr, DMA_OPERATION_MODE mode);
@@ -123,6 +156,7 @@ int DMASetCallback(DMA_ID id, void* _This, int (*fillingBufAFunc)(void*, BYTE*, 
 int DMAPrepBuffer(DMA_ID id);
 int DMAEnable(DMA_ID id);
 int DMADisable(DMA_ID id);
+BYTE DMACheck(DMA_ID id);
 int DMAGetPPState(DMA_ID id);
 int DMAForceTransfer(DMA_ID id);
 int DMASetInt(DMA_ID id, BYTE Level, BOOL enabled);
@@ -144,7 +178,8 @@ typedef struct _OCConfigType{
     void* _This;
 } OCConfigType;
 
-int OCInit(OC_ID id, SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm);
+WORD OCCreateConfig(SYS_IDLE idle, OC_TMR_SELECT tmr, OC_WORK_MODE ocm);
+int OCInit(OC_ID id, WORD Config);
 int OCSetInt(OC_ID id, BYTE Level, BOOL enabled);
 int OCSetMode(OC_ID id,OC_WORK_MODE ocm);
 int OCSetCallback(OC_ID id, void* _This,  int (*CallbackFunc)(void*));

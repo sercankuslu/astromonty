@@ -132,12 +132,7 @@ volatile BYTE Second;
 // These may or may not be present in all applications.
 static void InitAppConfig(void);
 static void InitializeBoard(void);
-static void ProcessIO(void);
 void FanControl();
-
-#if defined(WF_CS_TRIS)
-    static void WF_Connect(void);
-#endif
 
 // C30 and C32 Exception Handlers
 // If your code gets here, you either tried to read or write
@@ -145,10 +140,10 @@ void FanControl();
 // by having too many local variables or parameters declared.
 void _ISR __attribute__((__no_auto_psv__)) _AddressError(void)
 {
-    //while(1){
+    while(1){
         Nop();
         Nop();
-    //}
+    }
 }
 void _ISR __attribute__((__no_auto_psv__)) _StackError(void)
 {
@@ -237,14 +232,6 @@ int main(void)
     T7CONbits.TON = 1;
     T8CONbits.TON = 1;
     
-#if defined(USE_LCD)
-    // Initialize and display the stack version on the LCD
-    LCDInit();
-    DelayMs(100);
-    strcpypgm2ram((char*)LCDText, "TCPStack " TCPIP_STACK_VERSION "  "
-        "                ");
-    LCDUpdate();
-#endif
 
     // Initialize stack-related hardware components that may be 
     // required by the UART configuration routines
@@ -256,84 +243,10 @@ int main(void)
     // Initialize Stack and application related NV variables into AppConfig.
     InitAppConfig();
     Cmd_Init();
-
-    // Initiates board setup process if button is depressed 
-    // on startup
-    #ifdef bad
-    if(BUTTON0_IO == 0u)
-    {
-    #if defined(EEPROM_CS_TRIS) || defined(SPIFLASH_CS_TRIS)
-    // Invalidate the EEPROM contents if BUTTON0 is held down for more than 4 seconds
-    DWORD StartTime = TickGet();
-    LED_PUT(0x00);
-            
-    while(BUTTON0_IO == 0u)
-    {
-        if(TickGet() - StartTime > 4*TICK_SECOND)
-        {
-            #if defined(EEPROM_CS_TRIS)
-            XEEBeginWrite(0x0000);
-            XEEWrite(0xFF);
-            XEEWrite(0xFF);
-            XEEEndWrite();
-            #elif defined(SPIFLASH_CS_TRIS)
-            SPIFlashBeginWrite(0x0000);
-            SPIFlashWrite(0xFF);
-            SPIFlashWrite(0xFF);
-            #endif
-            
-            #if defined(STACK_USE_UART)
-            putrsUART("\r\n\r\nBUTTON0 held for more than 4 seconds.  Default settings restored.\r\n\r\n");
-            #endif
-
-            LED_PUT(0x0F);
-            while((LONG)(TickGet() - StartTime) <= (LONG)(9*TICK_SECOND/2));
-            LED_PUT(0x00);
-            while(BUTTON0_IO == 0u);
-            Reset();
-            break;
-        }
-    }
-    #endif
-
-    #if defined(STACK_USE_UART)
-        DoUARTConfig();
-    #endif
-    }
-    #endif //bad
+    
     // Initialize core stack layers (MAC, ARP, TCP, UDP) and
     // application modules (HTTP, SNMP, etc.)
     StackInit();
-
-    #if defined(WF_CS_TRIS)
-    WF_Connect();
-    #endif
-
-    // Initialize any application-specific modules or functions/
-    // For this demo application, this only includes the
-    // UART 2 TCP Bridge
-    #if defined(STACK_USE_UART2TCP_BRIDGE)
-    UART2TCPBridgeInit();
-    #endif
-
-    #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
-    ZeroconfLLInitialize();
-    #endif
-
-    #if defined(STACK_USE_ZEROCONF_MDNS_SD)
-    mDNSInitialize(MY_DEFAULT_HOST_NAME);
-    mDNSServiceRegister(
-        (const char *) "DemoWebServer",    // base name of the service
-        "_http._tcp.local",                // type of the service
-        80,                                // TCP or UDP port, at which this service is available
-        ((const BYTE *)"path=/index.htm"),    // TXT info
-        1,                                    // auto rename the service when if needed
-        NULL,                                // no callback function
-        NULL                                // no application context
-        );
-
-    mDNSMulticastFilterRegister();            
-    #endif
 
      //Вентиляторы        
     /*{
@@ -346,7 +259,6 @@ int main(void)
         IPC12bits.T7IP = 4;    
         T7CONbits.TON = 1;
     } */
-    // OCSetup();
     // Now that all items are initialized, begin the co-operative
     // multitasking loop.  This infinite loop will continuously 
     // execute all stack-related tasks, as well as your own
@@ -360,12 +272,6 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        
-        //Control(&rr1);
-        //Control(&rr2);
-        //Control(&rr3);
-        // Blink LED0 (right most one) every second.
-        
         //if(TickGet() - d >= TICK_SECOND/16000ul)
         //{
         //    d = TickGet();
@@ -396,293 +302,51 @@ int main(void)
         StackApplications();
         Cmd_Process();
 
-        #if defined(STACK_USE_ZEROCONF_LINK_LOCAL)
-        ZeroconfLLProcess();
+   
+        // Process application specific tasks here.
+        // For this demo app, this will include the Generic TCP 
+        // client and servers, and the SNMP, Ping, and SNMP Trap
+        // demos.  Following that, we will process any IO from
+        // the inputs on the board itself.
+        // Any custom modules or processing you need to do should
+        // go here.
+        #if defined(STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE)
+       // GenericTCPClient();
         #endif
-
-        #if defined(STACK_USE_ZEROCONF_MDNS_SD)
-        mDNSProcess();
-    // Use this function to exercise service update function
-    // HTTPUpdateRecord();
+        
+        #if defined(STACK_USE_GENERIC_TCP_SERVER_EXAMPLE)
+        //GenericTCPServer();
         #endif
-
-    // Process application specific tasks here.
-    // For this demo app, this will include the Generic TCP 
-    // client and servers, and the SNMP, Ping, and SNMP Trap
-    // demos.  Following that, we will process any IO from
-    // the inputs on the board itself.
-    // Any custom modules or processing you need to do should
-    // go here.
-    #if defined(STACK_USE_GENERIC_TCP_CLIENT_EXAMPLE)
-    GenericTCPClient();
-    #endif
+        
+        #if defined(STACK_USE_SMTP_CLIENT)
+        //SMTPDemo();
+        #endif
+        
+        #if defined(STACK_USE_ICMP_CLIENT)
+        PingDemo();
+        #endif
+        
+        #if defined(STACK_USE_BERKELEY_API)
+        //BerkeleyTCPClientDemo();
+        //BerkeleyTCPServerDemo();
+        //BerkeleyUDPClientDemo();
+        #endif
     
-    #if defined(STACK_USE_GENERIC_TCP_SERVER_EXAMPLE)
-    GenericTCPServer();
-    #endif
+        //ProcessIO();
     
-    #if defined(STACK_USE_SMTP_CLIENT)
-    SMTPDemo();
-    #endif
-    
-    #if defined(STACK_USE_ICMP_CLIENT)
-    PingDemo();
-    #endif
-    
-    #if defined(STACK_USE_SNMP_SERVER) && !defined(SNMP_TRAP_DISABLED)
-    //User should use one of the following SNMP demo
-    // This routine demonstrates V1 or V2 trap formats with one variable binding.
-    SNMPTrapDemo();
-    
-    #if defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
-    //This routine provides V2 format notifications with multiple (3) variable bindings
-    //User should modify this routine to send v2 trap format notifications with the required varbinds.
-    //SNMPV2TrapDemo();
-    #endif 
-    if(gSendTrapFlag)
-        SNMPSendTrap();
-    #endif
-    
-    #if defined(STACK_USE_BERKELEY_API)
-    //BerkeleyTCPClientDemo();
-        BerkeleyTCPServerDemo();
-    //BerkeleyUDPClientDemo();
-    #endif
-
-    ProcessIO();
-
         // If the local IP address has changed (ex: due to DHCP lease change)
         // write the new IP address to the LCD display, UART, and Announce 
         // service
-    if(dwLastIP != AppConfig.MyIPAddr.Val)
-    {
-        dwLastIP = AppConfig.MyIPAddr.Val;
-            
-        #if defined(STACK_USE_UART)
-            putrsUART((ROM char*)"\r\nNew IP Address: ");
-        #endif
-
-        DisplayIPValue(AppConfig.MyIPAddr);
-
-        #if defined(STACK_USE_UART)
-            putrsUART((ROM char*)"\r\n");
-        #endif
-
-
-        #if defined(STACK_USE_ANNOUNCE)
-            AnnounceIP();
-        #endif
-
-            #if defined(STACK_USE_ZEROCONF_MDNS_SD)
-            mDNSFillHostRecord();
-        #endif
+        
+        if(dwLastIP != AppConfig.MyIPAddr.Val)
+        {
+            dwLastIP = AppConfig.MyIPAddr.Val;
+            #if defined(STACK_USE_ANNOUNCE)
+                AnnounceIP();
+            #endif
+    
+        }
     }
-    }
-}
-
-
-#if defined(WF_CS_TRIS)
-/*****************************************************************************
- * FUNCTION: WF_Connect
- *
- * RETURNS:  None
- *
- * PARAMS:   None
- *
- *  NOTES:   Connects to an 802.11 network.  Customize this function as needed 
- *           for your application.
- *****************************************************************************/
-static void WF_Connect(void)
-{
-    UINT8 ConnectionProfileID;
-    UINT8 channelList[] = MY_DEFAULT_CHANNEL_LIST;
-    #if defined(WF_USE_POWER_SAVE_FUNCTIONS)
-    BOOL  PsPollEnabled;
-    #endif
-    
-    /* create a Connection Profile */
-    WF_CPCreate(&ConnectionProfileID);
-
-    #if defined(STACK_USE_UART)
-    putrsUART("Set SSID (");
-    putsUART(AppConfig.MySSID);
-    putrsUART(")\r\n");
-    #endif
-    WF_CPSetSsid(ConnectionProfileID, 
-                 AppConfig.MySSID, 
-                 AppConfig.SsidLength);
-
-    #if defined(STACK_USE_UART)
-    putrsUART("Set Network Type\r\n");
-    #endif
-    WF_CPSetNetworkType(ConnectionProfileID, MY_DEFAULT_NETWORK_TYPE);
-    
-    #if defined(STACK_USE_UART)
-    putrsUART("Set Scan Type\r\n");
-    #endif
-    WF_CASetScanType(MY_DEFAULT_SCAN_TYPE);
-    
-    #if defined(STACK_USE_UART)
-    putrsUART("Set Channel List\r\n");
-    #endif    
-    WF_CASetChannelList(channelList, sizeof(channelList));
-    
-    #if defined(STACK_USE_UART)
-    putrsUART("Set list retry count\r\n");
-    #endif
-    WF_CASetListRetryCount(MY_DEFAULT_LIST_RETRY_COUNT);
-
-    #if defined(STACK_USE_UART)        
-    putrsUART("Set Event Notify\r\n");    
-    #endif
-    WF_CASetEventNotificationAction(MY_DEFAULT_EVENT_NOTIFICATION_LIST);
-    
-#if defined(WF_USE_POWER_SAVE_FUNCTIONS)
-    PsPollEnabled = (MY_DEFAULT_PS_POLL == WF_ENABLED);
-    if (!PsPollEnabled)
-    {    
-        /* disable low power (PS-Poll) mode */
-        #if defined(STACK_USE_UART)
-        putrsUART("Disable PS-Poll\r\n");        
-        #endif
-        WF_PsPollDisable();
-    }    
-    else
-    {
-        /* Enable low power (PS-Poll) mode */
-        #if defined(STACK_USE_UART)
-        putrsUART("Enable PS-Poll\r\n");        
-        #endif
-        WF_PsPollEnable(TRUE);
-    }    
-#endif
-
-    #if defined(STACK_USE_UART)
-    putrsUART("Set Beacon Timeout\r\n");
-    #endif
-    WF_CASetBeaconTimeout(40);
-    
-    /* Set Security */
-    #if (MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_OPEN)
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (Open)\r\n");
-        #endif
-    #elif (MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WEP_40)
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WEP40)\r\n");
-        #endif
-    #elif (MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WEP_104)
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WEP104)\r\n");
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA_WITH_KEY 
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA with key)\r\n");
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA2_WITH_KEY 
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA2 with key)\r\n");
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA_WITH_PASS_PHRASE
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA with pass phrase)\r\n");
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA2_WITH_PASS_PHRASE
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA2 with pass phrase)\r\n");    
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA_AUTO_WITH_KEY
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA with key, auto-select)\r\n");
-        #endif
-    #elif MY_DEFAULT_WIFI_SECURITY_MODE == WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE
-        #if defined(STACK_USE_UART)
-        putrsUART("Set Security (WPA with pass phrase, auto-select)\r\n");
-        #endif
-    #endif /* MY_DEFAULT_WIFI_SECURITY_MODE */
-
-    WF_CPSetSecurity(ConnectionProfileID,
-                     AppConfig.SecurityMode,
-                     AppConfig.WepKeyIndex,   /* only used if WEP enabled */
-                     AppConfig.SecurityKey,
-                     AppConfig.SecurityKeyLength);
-    #if defined(STACK_USE_UART)                     
-    putrsUART("Start WiFi Connect\r\n");        
-    #endif
-    WF_CMConnect(ConnectionProfileID);
-}   
-#endif /* WF_CS_TRIS */
-
-// Writes an IP address to the LCD display and the UART as available
-void DisplayIPValue(IP_ADDR IPVal)
-{
-//    printf("%u.%u.%u.%u", IPVal.v[0], IPVal.v[1], IPVal.v[2], IPVal.v[3]);
-    BYTE IPDigit[4];
-    BYTE i;
-#ifdef USE_LCD
-    BYTE j;
-    BYTE LCDPos=16;
-#endif
-
-    for(i = 0; i < sizeof(IP_ADDR); i++)
-    {
-        uitoa((WORD)IPVal.v[i], IPDigit);
-
-        #if defined(STACK_USE_UART)
-            putsUART((char *) IPDigit);
-        #endif
-
-        #ifdef USE_LCD
-            for(j = 0; j < strlen((char*)IPDigit); j++)
-            {
-                LCDText[LCDPos++] = IPDigit[j];
-            }
-            if(i == sizeof(IP_ADDR)-1)
-                break;
-            LCDText[LCDPos++] = '.';
-        #else
-            if(i == sizeof(IP_ADDR)-1)
-                break;
-        #endif
-
-        #if defined(STACK_USE_UART)
-            while(BusyUART());
-            WriteUART('.');
-        #endif
-    }
-
-    #ifdef USE_LCD
-        if(LCDPos < 32u)
-            LCDText[LCDPos] = 0;
-        LCDUpdate();
-    #endif
-}
-
-// Processes A/D data from the potentiometer
-static void ProcessIO(void)
-{
-#if defined(__C30__) || defined(__C32__)
-    // Convert potentiometer result into ASCII string
-    uitoa((WORD)ADC1BUF0, AN0String);
-#else
-    // AN0 should already be set up as an analog input
-    ADCON0bits.GO = 1;
-
-    // Wait until A/D conversion is done
-    while(ADCON0bits.GO);
-
-    // AD converter errata work around (ex: PIC18F87J10 A2)
-    #if !defined(__18F87J50) && !defined(_18F87J50) && !defined(__18F87J11) && !defined(_18F87J11) 
-    {
-        BYTE temp = ADCON2;
-        ADCON2 |= 0x7;    // Select Frc mode by setting ADCS0/ADCS1/ADCS2
-        ADCON2 = temp;
-    }
-    #endif
-
-    // Convert 10-bit value into ASCII string
-    uitoa(*((WORD*)(&ADRESL)), AN0String);
-#endif
 }
 
 
@@ -719,6 +383,15 @@ static void InitializeBoard(void)
     LED6_TRIS = 0;
     LED7_TRIS = 0;
     LED_PUT(0x00);
+#if defined(ENC_RST_IO)
+    ENC_RST_TRIS    = 0;
+    ENC_RST_IO      = 0;
+    Nop();
+    Nop();
+    Nop();
+    Nop();
+    ENC_RST_IO      = 1;
+#endif
 
 #if defined(__18CXX)
     // Enable 4x/5x/96MHz PLL on PIC18F87J10, PIC18F97J60, PIC18F87J50, etc.
