@@ -386,11 +386,6 @@ static void InitializeBoard(void)
 #if defined(ENC_RST_IO)
     ENC_RST_TRIS    = 0;
     ENC_RST_IO      = 0;
-    Nop();
-    Nop();
-    Nop();
-    Nop();
-    ENC_RST_IO      = 1;
 #endif
 
 #if defined(__18CXX)
