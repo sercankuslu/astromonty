@@ -209,13 +209,15 @@ int ENCRelease1()
  *
  * Note:            None
  *****************************************************************************/
-//BYTE TestBuf1[1000];
-//BYTE TestBuf2[1000];
+static BYTE MACAlredyInited = 0;
 void MACInit(void)
 {
     volatile BYTE i;
     //volatile PHYREG w;
-    SPIConfig Config;    
+    SPIConfig Config;
+    if(MACAlredyInited)
+        return;
+    MACAlredyInited = 1;
     //WORD j = 0;
     // Set up the SPI module on the PIC for communications with the ENC28J60
     ENC_CS_IO = 1;
@@ -245,7 +247,9 @@ void MACInit(void)
     // means the part is in RESET or there is something wrong with the SPI
     // connection.  This loop makes sure that we can communicate with the
     // ENC28J60 before proceeding.
+    #if !defined(ENC_RST_IO)
     SendSystemReset();
+    #endif
     do {        
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
