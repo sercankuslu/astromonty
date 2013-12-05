@@ -56,6 +56,7 @@ typedef enum _COMMAND {
      //xCMD_SET_STEP,        //10 установка количества микрошагов
      xCMD_EMERGENCY_STOP,  //0 аварийная остановка
      //xCMD_BREAK,           //5 отменить все команды до этой и выбрать следующую ( только mCMD )
+    xCMD_SLOW_RUN,        //режим ведения ( скорость такова, что буфер (64 шага) занимают много времени (при часовом ведении это 9,6 сек))
      xCMD_ERROR            // ошибочное состояние
  }xCMD_STATE;
 
@@ -148,6 +149,7 @@ typedef struct mCMD_STATUS {
     WORD                    AccX;                       // координата X в формуле ускорения 
     WORD                    RUN_Interval;             // текущий интервал
     xCMD_STATE              State;
+    BYTE                    Priority;
 } mCMD_STATUS;
 
 typedef struct OC_CHANEL_STATE{
