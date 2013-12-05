@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 
 #include "device_control.h"
 #include "Queue.h"
@@ -39,7 +39,7 @@ BYTE            BufferValues2[BUFFER_QUEUE_SIZE][OC2_DMA_BUF_LEN] __attribute__ 
 
 QUEUE_ELEMENT   CMDQueueKeys[CMD_QUEUE_SIZE];
 CMD_QUEUE       CMDQueueValues[CMD_QUEUE_SIZE];
-PRIORITY_QUEUE  CmdQueue;                  // очередь команд
+PRIORITY_QUEUE  CmdQueue;                  // РѕС‡РµСЂРµРґСЊ РєРѕРјР°РЅРґ
 xCMD_QUEUE      uCmdQueueValues1[uCMD_QUEUE_SIZE];     // values
 QUEUE_ELEMENT   uCMDQueueKeys1[uCMD_QUEUE_SIZE];    // keys
 xCMD_QUEUE      mCmdQueueValues1[mCMD_QUEUE_SIZE];     // values
@@ -110,7 +110,7 @@ int xCmdStart(BYTE Id)
 
 int uCmd_Init(void)
 {
-    // для тестов
+    // РґР»СЏ С‚РµСЃС‚РѕРІ
     //xCMD_QUEUE command;
     WORD DMAcfg;
     WORD OCConfig;
@@ -120,8 +120,8 @@ int uCmd_Init(void)
     OC_CHANEL_STATE * nOC;
 
     //                              
-    // команда -> очередь команд -> мини команда -> очередь выборки -> микрокоманда -> очередь микрокоманд -> исполнение
-    // 0. настроить очередь
+    // РєРѕРјР°РЅРґР° -> РѕС‡РµСЂРµРґСЊ РєРѕРјР°РЅРґ -> РјРёРЅРё РєРѕРјР°РЅРґР° -> РѕС‡РµСЂРµРґСЊ РІС‹Р±РѕСЂРєРё -> РјРёРєСЂРѕРєРѕРјР°РЅРґР° -> РѕС‡РµСЂРµРґСЊ РјРёРєСЂРѕРєРѕРјР°РЅРґ -> РёСЃРїРѕР»РЅРµРЅРёРµ
+    // 0. РЅР°СЃС‚СЂРѕРёС‚СЊ РѕС‡РµСЂРµРґСЊ
     Queue_Init(&OControll1.uCmdQueue, uCMDQueueKeys1, uCMD_QUEUE_SIZE, (BYTE*)uCmdQueueValues1, (BYTE)sizeof(xCMD_QUEUE));
     Queue_Init(&OControll1.mCmdQueue, mCMDQueueKeys1, mCMD_QUEUE_SIZE, (BYTE*)mCmdQueueValues1, (BYTE)sizeof(xCMD_QUEUE));
     Queue_Init(&OControll1.BufferQueue, BufferQueueKeys1, BUFFER_QUEUE_SIZE, (BYTE*)BufferValues1, OC1_DMA_BUF_LEN);
@@ -136,7 +136,7 @@ int uCmd_Init(void)
     OControll2.CurrentDirection = 0;
     OControll1.Pulse = 0;
     OControll2.Pulse = 0;
-    // TODO: временно
+    // TODO: РІСЂРµРјРµРЅРЅРѕ
     OControll1.XPosition = 288000;
     OControll2.XPosition = 288000;
 
@@ -160,7 +160,7 @@ int uCmd_Init(void)
     TimerSetCallback(TIMER3, NULL);
     TimerSetInt(TIMER3, 0, FALSE);
 
-    //TimerSetState(TIMER3, TRUE); // сначала медленный потом быстрый
+    //TimerSetState(TIMER3, TRUE); // СЃРЅР°С‡Р°Р»Р° РјРµРґР»РµРЅРЅС‹Р№ РїРѕС‚РѕРј Р±С‹СЃС‚СЂС‹Р№
     //TimerSetState(TIMER2, TRUE);
 #ifdef __C30__
     T2CONbits.TON = 1;
@@ -222,44 +222,44 @@ int uCmd_Init(void)
         }
     }
 #ifdef __C30__
-    MS1         = 1;    // выход MS1
-    MS2         = 1;     // выход MS2
-    SLEEP       = 1;     // выход SLEEP
-    RESET       = 1;     // выход RESET
+    MS1         = 1;    // РІС‹С…РѕРґ MS1
+    MS2         = 1;     // РІС‹С…РѕРґ MS2
+    SLEEP       = 1;     // РІС‹С…РѕРґ SLEEP
+    RESET       = 1;     // РІС‹С…РѕРґ RESET
 
-    MS1_Tris    = 0;     // выход MS1
-    MS2_Tris    = 0;     // выход MS2
-    SLEEP_Tris  = 0;    // выход SLEEP
-    RESET_Tris  = 0;    // выход RESET
+    MS1_Tris    = 0;     // РІС‹С…РѕРґ MS1
+    MS2_Tris    = 0;     // РІС‹С…РѕРґ MS2
+    SLEEP_Tris  = 0;    // РІС‹С…РѕРґ SLEEP
+    RESET_Tris  = 0;    // РІС‹С…РѕРґ RESET
 
-    //Инициализация порта1
+    //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРѕСЂС‚Р°1
     {
-        PORT1_NULL_Tris   = 1; // вход NULL
-        PORT1_POS_Tris    = 1; // вход POS
-        PORT1_POS2_Tris   = 1; // вход POS2
+        PORT1_NULL_Tris   = 1; // РІС…РѕРґ NULL
+        PORT1_POS_Tris    = 1; // РІС…РѕРґ POS
+        PORT1_POS2_Tris   = 1; // РІС…РѕРґ POS2
 
-        PORT1_ENABLE      = 0;// выход ENABLE
-        PORT1_DIR         = 0;// выход DIR
-        PORT1_STEP        = 0;// выход STEP
+        PORT1_ENABLE      = 0;// РІС‹С…РѕРґ ENABLE
+        PORT1_DIR         = 0;// РІС‹С…РѕРґ DIR
+        PORT1_STEP        = 0;// РІС‹С…РѕРґ STEP
 
-        PORT1_ENABLE_Tris = 0;// выход ENABLE
-        PORT1_DIR_Tris    = 0;// выход DIR
-        PORT1_STEP_Tris   = 0;// выход STEP
+        PORT1_ENABLE_Tris = 0;// РІС‹С…РѕРґ ENABLE
+        PORT1_DIR_Tris    = 0;// РІС‹С…РѕРґ DIR
+        PORT1_STEP_Tris   = 0;// РІС‹С…РѕРґ STEP
     }
 
-    //Инициализация порта2
+    //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРѕСЂС‚Р°2
     {
-        PORT2_NULL_Tris   = 1; // вход NULL
-        PORT2_POS_Tris    = 1; // вход POS
-        PORT2_POS2_Tris   = 1; // вход POS2
+        PORT2_NULL_Tris   = 1; // РІС…РѕРґ NULL
+        PORT2_POS_Tris    = 1; // РІС…РѕРґ POS
+        PORT2_POS2_Tris   = 1; // РІС…РѕРґ POS2
 
-        PORT2_ENABLE      = 0;// выход ENABLE
-        PORT2_DIR         = 0;// выход DIR
-        PORT2_STEP        = 0;// выход STEP
+        PORT2_ENABLE      = 0;// РІС‹С…РѕРґ ENABLE
+        PORT2_DIR         = 0;// РІС‹С…РѕРґ DIR
+        PORT2_STEP        = 0;// РІС‹С…РѕРґ STEP
 
-        PORT2_ENABLE_Tris = 0;// выход ENABLE
-        PORT2_DIR_Tris    = 0;// выход DIR
-        PORT2_STEP_Tris   = 0;// выход STEP
+        PORT2_ENABLE_Tris = 0;// РІС‹С…РѕРґ ENABLE
+        PORT2_DIR_Tris    = 0;// РІС‹С…РѕРґ DIR
+        PORT2_STEP_Tris   = 0;// РІС‹С…РѕРґ STEP
     }
     // U1TX
     IFS0bits.U1TXIF = 0;
@@ -271,8 +271,8 @@ int uCmd_Init(void)
     return 0;
 }
 
-// для команд, находящихся в буфере,
-// приоритетная выборка не производится
+// РґР»СЏ РєРѕРјР°РЅРґ, РЅР°С…РѕРґСЏС‰РёС…СЃСЏ РІ Р±СѓС„РµСЂРµ,
+// РїСЂРёРѕСЂРёС‚РµС‚РЅР°СЏ РІС‹Р±РѕСЂРєР° РЅРµ РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ
 int uCmd_OCCallback( void * _This )
 {
     OC_CHANEL_STATE * OCN = (OC_CHANEL_STATE*)_This;
@@ -306,10 +306,10 @@ int uCmd_OCCallback( void * _This )
     }
     */
     while (ProcessCmd){
-        // приоритетная выборка только, если OCN->CurrentState == xCMD_SLOW_RUN
+        // РїСЂРёРѕСЂРёС‚РµС‚РЅР°СЏ РІС‹Р±РѕСЂРєР° С‚РѕР»СЊРєРѕ, РµСЃР»Рё OCN->CurrentState == xCMD_SLOW_RUN
 
         if(Queue_First( &OCN->uCmdQueue, NULL, (BYTE**)&Value) != 0){
-            // если нет команды, то останов
+            // РµСЃР»Рё РЅРµС‚ РєРѕРјР°РЅРґС‹, С‚Рѕ РѕСЃС‚Р°РЅРѕРІ
             if((OCN->CurrentState != xCMD_STOP) && (OCN->CurrentState != xCMD_EMERGENCY_STOP)){
                 StopCommand.State = xCMD_STOP;
                 StopCommand.Value = (DWORD)0x0000;
@@ -325,7 +325,7 @@ int uCmd_OCCallback( void * _This )
         case xCMD_ACCELERATE:
         case xCMD_RUN:
         case xCMD_SLOW_RUN:
-        case xCMD_DECELERATE: // значение Value - количество шагов, которое загружено в буфер
+        case xCMD_DECELERATE: // Р·РЅР°С‡РµРЅРёРµ Value - РєРѕР»РёС‡РµСЃС‚РІРѕ С€Р°РіРѕРІ, РєРѕС‚РѕСЂРѕРµ Р·Р°РіСЂСѓР¶РµРЅРѕ РІ Р±СѓС„РµСЂ
             if(Value->Value > 0){
                 (OCN->CurrentDirection == 0) ? OCN->XPosition++ : OCN->XPosition--;
                 Value->Value--;
@@ -336,7 +336,7 @@ int uCmd_OCCallback( void * _This )
                 Queue_Delete(&OCN->uCmdQueue);
             }
             break;
-        case xCMD_SET_TIMER: // значение Value - значение типа OC_TMR_SELECT - номер таймера
+        case xCMD_SET_TIMER: // Р·РЅР°С‡РµРЅРёРµ Value - Р·РЅР°С‡РµРЅРёРµ С‚РёРїР° OC_TMR_SELECT - РЅРѕРјРµСЂ С‚Р°Р№РјРµСЂР°
             OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
             OCSetTmr(OCN->Config->OCConfig.Index, (OC_TMR_SELECT)Value->Value);
             OCSetMode(OCN->Config->OCConfig.Index, OCN->Config->OCConfig.WorkMode);
@@ -344,14 +344,14 @@ int uCmd_OCCallback( void * _This )
             Queue_Delete(&OCN->uCmdQueue);
             break;
 
-        case xCMD_SET_DIRECTION: // значение Value - направление движения
+        case xCMD_SET_DIRECTION: // Р·РЅР°С‡РµРЅРёРµ Value - РЅР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
             OCN->CurrentDirection = (BYTE)Value->Value;
             OCN->CurrentState = Value->State;
             SetDirection(OCN->Config->OCConfig.Index, (BYTE)Value->Value);
             Queue_Delete(&OCN->uCmdQueue);
             break;
 
-        case xCMD_STOP: // остановка модуля
+        case xCMD_STOP: // РѕСЃС‚Р°РЅРѕРІРєР° РјРѕРґСѓР»СЏ
             if(OCN->CurrentState != xCMD_STOP){
                 OCN->CurrentState = Value->State;
                 OCSetMode(OCN->Config->OCConfig.Index, OC_DISABLED);
@@ -379,7 +379,7 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
         Nop();
     }
 
-    // вызываем прерывание
+    // РІС‹Р·С‹РІР°РµРј РїСЂРµСЂС‹РІР°РЅРёРµ
     IFS0bits.U1TXIF = 1;
     
     return 0;
@@ -388,14 +388,14 @@ int mCmd_DMACallback( void * _This, BYTE* Buf, WORD BufLen)
 #define TMP_SIZE_MASK TMP_SIZE-1
 #define bTMP_SIZE TMP_SIZE*2
 
-// Функция откатывает команды, добавленные в очередь uCmdQueue и, связанную с ней, очередь BufferQueue, функцией mCmd_Process
+// Р¤СѓРЅРєС†РёСЏ РѕС‚РєР°С‚С‹РІР°РµС‚ РєРѕРјР°РЅРґС‹, РґРѕР±Р°РІР»РµРЅРЅС‹Рµ РІ РѕС‡РµСЂРµРґСЊ uCmdQueue Рё, СЃРІСЏР·Р°РЅРЅСѓСЋ СЃ РЅРµР№, РѕС‡РµСЂРµРґСЊ BufferQueue, С„СѓРЅРєС†РёРµР№ mCmd_Process
 int mCmd_RevertCmd( OC_CHANEL_STATE * OCN)
 {
     xCMD_QUEUE * Value = NULL;
     //xCMD_QUEUE * Value1 = NULL;
     BYTE Priority = 0;
     //DWORD DataSize = 0;
-    volatile WORD BufCount = TMP_SIZE; // свободное мето в буфере в элементах ( (WORD)r + (WORD)rs )
+    volatile WORD BufCount = TMP_SIZE; // СЃРІРѕР±РѕРґРЅРѕРµ РјРµС‚Рѕ РІ Р±СѓС„РµСЂРµ РІ СЌР»РµРјРµРЅС‚Р°С… ( (WORD)r + (WORD)rs )
     //WORD TmpT = 0;
     OC_BUF * BufPtr = NULL;
 
@@ -403,11 +403,11 @@ int mCmd_RevertCmd( OC_CHANEL_STATE * OCN)
 
 
         if(OCN->CurrentState == xCMD_SLOW_RUN){
-            // на xCMD_SLOW_RUN откатываем до конца
+            // РЅР° xCMD_SLOW_RUN РѕС‚РєР°С‚С‹РІР°РµРј РґРѕ РєРѕРЅС†Р°
             if(OCN->uCmdQueue.Count == 0 )
                 return 0;
         } else {
-            // Если 2 или менее готовых команд, то завершаем откат
+            // Р•СЃР»Рё 2 РёР»Рё РјРµРЅРµРµ РіРѕС‚РѕРІС‹С… РєРѕРјР°РЅРґ, С‚Рѕ Р·Р°РІРµСЂС€Р°РµРј РѕС‚РєР°С‚
             if(OCN->BufferQueue.Count <= 2 )
                 return 0;
         }
@@ -470,13 +470,13 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
     //BYTE BufLoad = 0;
     //BYTE BufProcess = 0;
     //BYTE NeedStart = 0;
-    WORD BufCount = TMP_SIZE; // свободное мето в буфере в элементах ( (WORD)r + (WORD)rs )
-    //WORD Buf1Cnt = 0;           // количество данных в буфере 1
-    //WORD Buf2Cnt = 0;           // количество данных в буфере 2
+    WORD BufCount = TMP_SIZE; // СЃРІРѕР±РѕРґРЅРѕРµ РјРµС‚Рѕ РІ Р±СѓС„РµСЂРµ РІ СЌР»РµРјРµРЅС‚Р°С… ( (WORD)r + (WORD)rs )
+    //WORD Buf1Cnt = 0;           // РєРѕР»РёС‡РµСЃС‚РІРѕ РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂРµ 1
+    //WORD Buf2Cnt = 0;           // РєРѕР»РёС‡РµСЃС‚РІРѕ РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂРµ 2
    // WORD TmpSize2 = 0;
     WORD TmpSize = 0;              
-    //BYTE FirstPass = 1;         // первый проход
-    //BYTE Buf1Ready = 0;         // признак готовности буфера
+    //BYTE FirstPass = 1;         // РїРµСЂРІС‹Р№ РїСЂРѕС…РѕРґ
+    //BYTE Buf1Ready = 0;         // РїСЂРёР·РЅР°Рє РіРѕС‚РѕРІРЅРѕСЃС‚Рё Р±СѓС„РµСЂР°
     //BYTE Buf2Ready = 0;
     //WAIT_READY Buf1Wait = NO_WAIT_READ_COMPLETE;
     //WAIT_READY Buf2Wait = NO_WAIT_READ_COMPLETE;
@@ -489,7 +489,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
     while (BufCount){
 
         if(Queue_ExtractAllToMin( &OCN->mCmdQueue, &Priority, (BYTE**)&Value ) != 0){
-            // если нет команды, то останов
+            // РµСЃР»Рё РЅРµС‚ РєРѕРјР°РЅРґС‹, С‚Рѕ РѕСЃС‚Р°РЅРѕРІ
             //Command.State = xCMD_STOP;
             //Command.Value = (DWORD)0x0000; 
             //Value = &Command;
@@ -510,7 +510,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
         switch (Value->State) {
 
         case xCMD_ACCELERATE:
-            // проверка на некорректные данные 
+            // РїСЂРѕРІРµСЂРєР° РЅР° РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ 
             if(OCN->mCMD_Status.AccX > OCN->Config->AccRecordCount){
                 OCN->mCMD_Status.AccX = (WORD)OCN->Config->AccRecordCount;
             }
@@ -523,12 +523,12 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                 break;
             }
 
-            // получение количества данных
+            // РїРѕР»СѓС‡РµРЅРёРµ РєРѕР»РёС‡РµСЃС‚РІР° РґР°РЅРЅС‹С…
             DataSize = Value->Value - OCN->mCMD_Status.AccX;
             if (DataSize > BufCount) {
                 DataSize = BufCount;
             } 
-            // получение адреса
+            // РїРѕР»СѓС‡РµРЅРёРµ Р°РґСЂРµСЃР°
             Addr = OCN->Config->AccBaseAddress + (OCN->mCMD_Status.AccX) * sizeof(WORD);
 
             /*
@@ -541,7 +541,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             FirstPass = 1;
             */
 
-            // вычисляем количество полных буферов
+            // РІС‹С‡РёСЃР»СЏРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РЅС‹С… Р±СѓС„РµСЂРѕРІ
             if (DataSize > 0)
             {
                 //TmpSize2 = (WORD)DataSize;
@@ -560,7 +560,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                         }
                         SPIFlashReadArray(Addr, (BYTE*)TmpBuf1, Buf1Cnt * sizeof(WORD), Buf1Wait);
                         Addr += Buf1Cnt * sizeof(WORD);
-                        if(FirstPass != 1 ) Buf2Ready = 1; // готовы данные во втором буфере
+                        if(FirstPass != 1 ) Buf2Ready = 1; // РіРѕС‚РѕРІС‹ РґР°РЅРЅС‹Рµ РІРѕ РІС‚РѕСЂРѕРј Р±СѓС„РµСЂРµ
                         BufLoad = 1;
                     }  
                     if((((BufLoad == 1) && (Buf2Ready == 0)) || (FirstPass == 1)) && (TmpSize2 > 0)){
@@ -576,8 +576,8 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                         }
                         SPIFlashReadArray(Addr, (BYTE*)TmpBuf2, Buf2Cnt * sizeof(WORD) , Buf2Wait);
                         Addr += Buf2Cnt * sizeof(WORD);
-                        FirstPass = 0;      // первый проход
-                        Buf1Ready = 1;      // готовы данные в первом буфере
+                        FirstPass = 0;      // РїРµСЂРІС‹Р№ РїСЂРѕС…РѕРґ
+                        Buf1Ready = 1;      // РіРѕС‚РѕРІС‹ РґР°РЅРЅС‹Рµ РІ РїРµСЂРІРѕРј Р±СѓС„РµСЂРµ
                         BufLoad = 0;
                     }
                     while(Buf1Ready||Buf2Ready){
@@ -596,7 +596,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                         while(TmpSize > 0){
                             Interval = *TmpBufPtr;
                             TmpBufPtr++;
-                            OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                            OCN->T += Interval;       // РЅР° flash С…СЂР°РЅСЏС‚СЃСЏ РёРЅС‚РµСЂРІР°Р»С‹ ( РІ TmpBufPtr)
                             BufPtr->r = OCN->T;
                             BufPtr->rs = OCN->T + Pulse;
                             if(BufPtr->r == 0) BufPtr->r++; 
@@ -615,7 +615,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
 
                     Interval = *TmpBufPtr;
                     TmpBufPtr++;
-                    OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                    OCN->T += Interval;       // РЅР° flash С…СЂР°РЅСЏС‚СЃСЏ РёРЅС‚РµСЂРІР°Р»С‹ ( РІ TmpBufPtr)
                     BufPtr->r = OCN->T;
                     BufPtr->rs = OCN->T + Pulse;
                     if(BufPtr->r == 0) BufPtr->r++; 
@@ -634,8 +634,8 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             
                 OCN->mCMD_Status.AccX += (WORD)DataSize;
                 BufCount -= (WORD)DataSize;
-                OCN->mCMD_Status.RUN_Interval = Interval;   // эта переменная указывает на значение последнего интервала
-                // Добавляем команду в очередь
+                OCN->mCMD_Status.RUN_Interval = Interval;   // СЌС‚Р° РїРµСЂРµРјРµРЅРЅР°СЏ СѓРєР°Р·С‹РІР°РµС‚ РЅР° Р·РЅР°С‡РµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ РёРЅС‚РµСЂРІР°Р»Р°
+                // Р”РѕР±Р°РІР»СЏРµРј РєРѕРјР°РЅРґСѓ РІ РѕС‡РµСЂРµРґСЊ
                 Command.State = Value->State;
                 Command.Value = DataSize; 
                 //LOCK(OC_DMA_INT_LEVEL, Queue_Insert(&OCN->BufferQueue, Priority, (BYTE*)Buf));
@@ -649,7 +649,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
         case xCMD_SLOW_RUN:
         case xCMD_RUN:
 
-            // получение размеров данных
+            // РїРѕР»СѓС‡РµРЅРёРµ СЂР°Р·РјРµСЂРѕРІ РґР°РЅРЅС‹С…
             DataSize = (DWORD)Value->Value;
 
             if (DataSize > BufCount) {
@@ -680,7 +680,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
 
                 BufCount -= (WORD)DataSize;
                 Value->Value -= DataSize;
-                // Добавляем команду в очередь
+                // Р”РѕР±Р°РІР»СЏРµРј РєРѕРјР°РЅРґСѓ РІ РѕС‡РµСЂРµРґСЊ
                 Command.State = Value->State;
                 Command.Value = DataSize; 
                 LOCK(OC_INT_LEVEL, Queue_Insert(&OCN->uCmdQueue, Priority, (BYTE*)&Command));
@@ -693,7 +693,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             break;
         case xCMD_DECELERATE:
             
-            // проверка на некорректные данные 
+            // РїСЂРѕРІРµСЂРєР° РЅР° РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ 
             if(OCN->mCMD_Status.AccX > OCN->Config->AccRecordCount){
                 OCN->mCMD_Status.AccX = (WORD)OCN->Config->AccRecordCount;
             }
@@ -706,12 +706,12 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                 break;
             }
 
-            // получение количества данных
+            // РїРѕР»СѓС‡РµРЅРёРµ РєРѕР»РёС‡РµСЃС‚РІР° РґР°РЅРЅС‹С…
             DataSize = (DWORD)OCN->mCMD_Status.AccX - Value->Value;
             if (DataSize > BufCount) {
                 DataSize = BufCount;
             }
-            // получение адреса
+            // РїРѕР»СѓС‡РµРЅРёРµ Р°РґСЂРµСЃР°
             Addr = OCN->Config->AccBaseAddress + ((DWORD)OCN->mCMD_Status.AccX) * sizeof(WORD);
 
             /*
@@ -723,7 +723,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             Buf2Wait = NO_WAIT_READ_COMPLETE;
             Buf1Wait = NO_WAIT_READ_COMPLETE;
             */
-            // вычисляем количество полных буферов
+            // РІС‹С‡РёСЃР»СЏРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РЅС‹С… Р±СѓС„РµСЂРѕРІ
             if (DataSize > 0)
             {
 
@@ -742,7 +742,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                             Buf1Ready = 1;
                         }
                         SPIFlashReadArray(Addr, (BYTE*)TmpBuf1, Buf1Cnt * sizeof(WORD), Buf1Wait);
-                        if(FirstPass != 1 ) Buf2Ready = 1; // готовы данные во втором буфере
+                        if(FirstPass != 1 ) Buf2Ready = 1; // РіРѕС‚РѕРІС‹ РґР°РЅРЅС‹Рµ РІРѕ РІС‚РѕСЂРѕРј Р±СѓС„РµСЂРµ
                         BufLoad = 1;
                     }  
                     if((((BufLoad == 1) && (Buf2Ready == 0)) || (FirstPass == 1)) && (TmpSize2 > 0)){
@@ -758,8 +758,8 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                             Buf2Ready = 1;
                         }
                         SPIFlashReadArray(Addr, (BYTE*)TmpBuf2, Buf2Cnt * sizeof(WORD) , Buf2Wait);
-                        FirstPass = 0;      // первый проход
-                        Buf1Ready = 1;      // готовы данные в первом буфере
+                        FirstPass = 0;      // РїРµСЂРІС‹Р№ РїСЂРѕС…РѕРґ
+                        Buf1Ready = 1;      // РіРѕС‚РѕРІС‹ РґР°РЅРЅС‹Рµ РІ РїРµСЂРІРѕРј Р±СѓС„РµСЂРµ
                         BufLoad = 0;
                     }
                     while(Buf1Ready||Buf2Ready){
@@ -778,7 +778,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                         while(TmpSize > 0){
                             TmpBufPtr--;
                             Interval = *TmpBufPtr;
-                            OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                            OCN->T += Interval;       // РЅР° flash С…СЂР°РЅСЏС‚СЃСЏ РёРЅС‚РµСЂРІР°Р»С‹ ( РІ TmpBufPtr)
                             BufPtr->r = OCN->T;
                             BufPtr->rs = OCN->T + Pulse;
                             if(BufPtr->r == 0) BufPtr->r++; 
@@ -795,7 +795,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                 while(TmpSize > 0){
                     TmpBufPtr--;
                     Interval = *TmpBufPtr;
-                    OCN->T += Interval;       // на flash хранятся интервалы ( в TmpBufPtr)
+                    OCN->T += Interval;       // РЅР° flash С…СЂР°РЅСЏС‚СЃСЏ РёРЅС‚РµСЂРІР°Р»С‹ ( РІ TmpBufPtr)
                     BufPtr->r = OCN->T;
                     BufPtr->rs = OCN->T + Pulse;
                     if(BufPtr->r == 0) BufPtr->r++; 
@@ -812,10 +812,10 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
                     TmpSize--;
                 }
                 
-                OCN->mCMD_Status.RUN_Interval = Interval;   // эта переменная указывает на значение последнего интервала
+                OCN->mCMD_Status.RUN_Interval = Interval;   // СЌС‚Р° РїРµСЂРµРјРµРЅРЅР°СЏ СѓРєР°Р·С‹РІР°РµС‚ РЅР° Р·РЅР°С‡РµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ РёРЅС‚РµСЂРІР°Р»Р°
                 OCN->mCMD_Status.AccX -= (WORD)DataSize;
                 BufCount -= (WORD)DataSize;
-                // Добавляем команду в очередь
+                // Р”РѕР±Р°РІР»СЏРµРј РєРѕРјР°РЅРґСѓ РІ РѕС‡РµСЂРµРґСЊ
                 Command.State = Value->State;
                 Command.Value = DataSize; 
                 //LOCK(OC_DMA_INT_LEVEL, Queue_Insert(&OCN->BufferQueue, Priority, (BYTE*)Buf));
@@ -826,14 +826,14 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             }
 
             break;
-        case xCMD_SET_SPEED: //задаёт значение интервала для xCMD_RUN ( в случае, если не задано, используется последнее значение xCMD_ACCELERATE/xCMD_DECELERATE)
-            // для uCMD не используется
-            // TODO: надо округлять десятичные
+        case xCMD_SET_SPEED: //Р·Р°РґР°С‘С‚ Р·РЅР°С‡РµРЅРёРµ РёРЅС‚РµСЂРІР°Р»Р° РґР»СЏ xCMD_RUN ( РІ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё РЅРµ Р·Р°РґР°РЅРѕ, РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РїРѕСЃР»РµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ xCMD_ACCELERATE/xCMD_DECELERATE)
+            // РґР»СЏ uCMD РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ
+            // TODO: РЅР°РґРѕ РѕРєСЂСѓРіР»СЏС‚СЊ РґРµСЃСЏС‚РёС‡РЅС‹Рµ
             OCN->mCMD_Status.RUN_Interval = (WORD)Value->Value;
             OCN->mCMD_Status.State = Value->State;
             Queue_Delete(&OCN->mCmdQueue);
             break;
-        case xCMD_SET_TIMER: // TODO: Возможно, в mCMD не нужно
+        case xCMD_SET_TIMER: // TODO: Р’РѕР·РјРѕР¶РЅРѕ, РІ mCMD РЅРµ РЅСѓР¶РЅРѕ
         case xCMD_SET_DIRECTION:
         case xCMD_STOP:
             Command.State = Value->State;
@@ -844,7 +844,7 @@ int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen)
             //ProcessCmd = 0;
             break;
         case xCMD_EMERGENCY_STOP:
-            // все вырубить
+            // РІСЃРµ РІС‹СЂСѓР±РёС‚СЊ
             #ifdef __C30__
                 PORT1_ENABLE = 1;
                 PORT2_ENABLE = 1;
@@ -906,7 +906,7 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
 {
     
     Config->AccBaseAddress = 0x40000;
-    Config->AccRecordCount = 32000; // 10 градусов
+    Config->AccRecordCount = 32000; // 10 РіСЂР°РґСѓСЃРѕРІ
     switch(Number){
     case 0:
         Config->DMAConfig.DmaId = OC1_DMA_ID;
@@ -919,7 +919,7 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
         Config->DMAConfig.DMABufSize = OC2_DMA_BUF_LEN;
         break;
     case 2:
-        Config->DMAConfig.DmaId = OC1_DMA_ID;  // без разницы DMA у OC3 нет
+        Config->DMAConfig.DmaId = OC1_DMA_ID;  // Р±РµР· СЂР°Р·РЅРёС†С‹ DMA Сѓ OC3 РЅРµС‚
         Config->OCConfig.Index = ID_OC3;
         break;
     }
@@ -933,13 +933,13 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
     Config->OCConfig.WorkMode = TOGGLE;
     Config->TmrId = TIMER2;
     Config->MConfig.StepPerTurn = 200;
-    //TODO: Вычислить К и B на основании других параметров
+    //TODO: Р’С‹С‡РёСЃР»РёС‚СЊ Рљ Рё B РЅР° РѕСЃРЅРѕРІР°РЅРёРё РґСЂСѓРіРёС… РїР°СЂР°РјРµС‚СЂРѕРІ
     
 
-    //TODO: как-то учесть трение
+    //TODO: РєР°Рє-С‚Рѕ СѓС‡РµСЃС‚СЊ С‚СЂРµРЅРёРµ
     {
         double I;
-        // линия на графике двигателя (F1,P1)(F2,P2)
+        // Р»РёРЅРёСЏ РЅР° РіСЂР°С„РёРєРµ РґРІРёРіР°С‚РµР»СЏ (F1,P1)(F2,P2)
         double F1 = 100;
         double F2 = 1000;
         double P1 = 0.76;
@@ -948,9 +948,9 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
 
         Config->MConfig.K = (P2 - P1)/(F2-F1);
         Config->MConfig.B = P1 - F1 * Config->MConfig.K;
-        // предварительные вычисления. здесь характеристики двигателей.
-        Config->K = Config->MConfig.K * Config->MConfig.StepPerTurn / I;  // размерность 1/сек
-        Config->B = Config->MConfig.B / I; // размерность 1/сек^2
+        // РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅС‹Рµ РІС‹С‡РёСЃР»РµРЅРёСЏ. Р·РґРµСЃСЊ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё РґРІРёРіР°С‚РµР»РµР№.
+        Config->K = Config->MConfig.K * Config->MConfig.StepPerTurn / I;  // СЂР°Р·РјРµСЂРЅРѕСЃС‚СЊ 1/СЃРµРє
+        Config->B = Config->MConfig.B / I; // СЂР°Р·РјРµСЂРЅРѕСЃС‚СЊ 1/СЃРµРє^2
         Config->V = Config->K / Config->B;                                  // V = K/B
         Config->U = 2.0/(Config->V*Config->V*Config->B);                    // U = 2/(V^2B)
     }
@@ -960,7 +960,7 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
     Config->dx = 360.0/(Config->MntConfig.Reduction * Config->DrvConfig.uStepPerStep * Config->MConfig.StepPerTurn);
 }
 
-// Пришлось делать пошаговые вычисления, т.к. компилятор С30 ошибается
+// РџСЂРёС€Р»РѕСЃСЊ РґРµР»Р°С‚СЊ РїРѕС€Р°РіРѕРІС‹Рµ РІС‹С‡РёСЃР»РµРЅРёСЏ, С‚.Рє. РєРѕРјРїРёР»СЏС‚РѕСЂ РЎ30 РѕС€РёР±Р°РµС‚СЃСЏ
 float GetInterval(float X, float K, float B)
 {
     volatile float KX;
@@ -982,15 +982,15 @@ float GetInterval(float X, float K, float B)
     return V;
 }
 
-// вычисляет точку в которой произойдет пересечение траекторий телескопа и цели
-// diffX - разница между текущим положением и положением цели
-// TargetSpeed скорость цели
-// K, B -   параметры алгоритма
-// dx       шаг 
-// результат передаётся:
-// AccX     Количество шагов ускорения и торможения
-// RunX     Количество шагов скорости
-// RunSpeed Скорость
+// РІС‹С‡РёСЃР»СЏРµС‚ С‚РѕС‡РєСѓ РІ РєРѕС‚РѕСЂРѕР№ РїСЂРѕРёР·РѕР№РґРµС‚ РїРµСЂРµСЃРµС‡РµРЅРёРµ С‚СЂР°РµРєС‚РѕСЂРёР№ С‚РµР»РµСЃРєРѕРїР° Рё С†РµР»Рё
+// diffX - СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ С‚РµРєСѓС‰РёРј РїРѕР»РѕР¶РµРЅРёРµРј Рё РїРѕР»РѕР¶РµРЅРёРµРј С†РµР»Рё
+// TargetSpeed СЃРєРѕСЂРѕСЃС‚СЊ С†РµР»Рё
+// K, B -   РїР°СЂР°РјРµС‚СЂС‹ Р°Р»РіРѕСЂРёС‚РјР°
+// dx       С€Р°Рі 
+// СЂРµР·СѓР»СЊС‚Р°С‚ РїРµСЂРµРґР°С‘С‚СЃСЏ:
+// AccX     РљРѕР»РёС‡РµСЃС‚РІРѕ С€Р°РіРѕРІ СѓСЃРєРѕСЂРµРЅРёСЏ Рё С‚РѕСЂРјРѕР¶РµРЅРёСЏ
+// RunX     РљРѕР»РёС‡РµСЃС‚РІРѕ С€Р°РіРѕРІ СЃРєРѕСЂРѕСЃС‚Рё
+// RunSpeed РЎРєРѕСЂРѕСЃС‚СЊ
 int GetDestAngWGuide(LONG diff, float TargetSpeed, float K, float B, float dx, LONG MaxSpeed, LONG * DestAng)
 {
     volatile float A;
@@ -1012,24 +1012,24 @@ int GetDestAngWGuide(LONG diff, float TargetSpeed, float K, float B, float dx, L
     if (DestAng != NULL) 
         return -1;
     if((TargetSpeed > 0) && (diff < 0 )){
-        // движение навстречу
+        // РґРІРёР¶РµРЅРёРµ РЅР°РІСЃС‚СЂРµС‡Сѓ
         if((-diff) < (MaxSpeed * 2)){
-            // без вставки RUN
+            // Р±РµР· РІСЃС‚Р°РІРєРё RUN
         }
     } else if ((TargetSpeed < 0) && (diff > 0 )){
-        // движение навстречу
+        // РґРІРёР¶РµРЅРёРµ РЅР°РІСЃС‚СЂРµС‡Сѓ
         if(diff < (MaxSpeed * 2)){
-            // без вставки RUN
+            // Р±РµР· РІСЃС‚Р°РІРєРё RUN
         }
     } else if((TargetSpeed > 0) && (diff > 0 )){
-        // движение вдогонку
+        // РґРІРёР¶РµРЅРёРµ РІРґРѕРіРѕРЅРєСѓ
         if(diff < (MaxSpeed * 2)){
-            // без вставки RUN
+            // Р±РµР· РІСЃС‚Р°РІРєРё RUN
         }
     } else if ((TargetSpeed < 0) && (diff < 0 )){
-        // движение вдогонку
+        // РґРІРёР¶РµРЅРёРµ РІРґРѕРіРѕРЅРєСѓ
         if((-diff) < (MaxSpeed * 2)){
-            // без вставки RUN
+            // Р±РµР· РІСЃС‚Р°РІРєРё RUN
         }
     }
 
@@ -1040,7 +1040,7 @@ int GetDestAngWGuide(LONG diff, float TargetSpeed, float K, float B, float dx, L
 
 
     diffX = diff * dx;
-    // вычисляем время, необходимое на наведение
+    // РІС‹С‡РёСЃР»СЏРµРј РІСЂРµРјСЏ, РЅРµРѕР±С…РѕРґРёРјРѕРµ РЅР° РЅР°РІРµРґРµРЅРёРµ
     A = 2.0 * B; 
     A += TargetSpeed;
     B = diffX * K;
@@ -1053,7 +1053,7 @@ int GetDestAngWGuide(LONG diff, float TargetSpeed, float K, float B, float dx, L
     sqrtDd2A = sqrt(D) / Am2;
     T = sqrtDd2A - 0.5;
 
-    // вычисление координаты
+    // РІС‹С‡РёСЃР»РµРЅРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹
     TT = T * T;
     BTT = B * TT;
     KT = K * T;
@@ -1173,13 +1173,13 @@ int Cmd_Process()
     xCMD_QUEUE mCmd;
     //BYTE ProcessCmd = 1;
     BYTE Priority = 50;
-    static double GuideTime = 10.0; // 10 секунд
+    static double GuideTime = 10.0; // 10 СЃРµРєСѓРЅРґ
     
     if(Queue_ExtractAllToMin( &CmdQueue, &Priority, (BYTE**)&Value ) == 0){
 
         switch (Value->Command) {
 
-        case CMD_STOP:                                  // остановка
+        case CMD_STOP:                                  // РѕСЃС‚Р°РЅРѕРІРєР°
             mCmd.State = xCMD_DECELERATE;
             mCmd.Value = 0;
             LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
@@ -1195,10 +1195,10 @@ int Cmd_Process()
             //LOCK(1,Queue_Insert(&OControll2.mCmdQueue, Priority, (BYTE*)&mCmd));
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_GO_TO_POSITION:                        // перейти на позицию; параметры: a, d,
-            // Если канал отключен, то запускаем
+        case CMD_GO_TO_POSITION:                        // РїРµСЂРµР№С‚Рё РЅР° РїРѕР·РёС†РёСЋ; РїР°СЂР°РјРµС‚СЂС‹: a, d,
+            // Р•СЃР»Рё РєР°РЅР°Р» РѕС‚РєР»СЋС‡РµРЅ, С‚Рѕ Р·Р°РїСѓСЃРєР°РµРј
             if((OControll1.CurrentState == xCMD_STOP) && (OControll2.CurrentState == xCMD_STOP)){
-                // вычисляем и запускаем
+                // РІС‹С‡РёСЃР»СЏРµРј Рё Р·Р°РїСѓСЃРєР°РµРј
                 if(Aim(&OControll1, (LONG)(Value->a), Priority) == 0){
                     xCmdStart(0);
                 }
@@ -1208,7 +1208,7 @@ int Cmd_Process()
                 Queue_Delete(&CmdQueue);
             }
             break;
-        case CMD_GO_TO_POSITION_AND_GUIDE_STAR:         // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d,
+        case CMD_GO_TO_POSITION_AND_GUIDE_STAR:         // РїРµСЂРµР№С‚Рё РЅР° РїРѕР·РёС†РёСЋ Рё СЃРѕРїСЂРѕРІРѕР¶РґР°С‚СЊ Р·РІРµР·РґСѓ ( РѕР±С‹С‡РЅРѕРµ С‡Р°СЃРѕРІРѕРµ РІРµРґРµРЅРёРµ) a, d,
             if(0){
                 mCmd.State = xCMD_SET_DIRECTION;
                 mCmd.Value = 1;
@@ -1225,30 +1225,30 @@ int Cmd_Process()
             }
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_SET_GUIDE_TIME:                        // установить время сопровождения объекта a ( в сек )
+        case CMD_SET_GUIDE_TIME:                        // СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РІСЂРµРјСЏ СЃРѕРїСЂРѕРІРѕР¶РґРµРЅРёСЏ РѕР±СЉРµРєС‚Р° a ( РІ СЃРµРє )
             GuideTime = (double)Value->a;
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_GO_HOME:                               // перевести телескоп в положение парковки  
+        case CMD_GO_HOME:                               // РїРµСЂРµРІРµСЃС‚Рё С‚РµР»РµСЃРєРѕРї РІ РїРѕР»РѕР¶РµРЅРёРµ РїР°СЂРєРѕРІРєРё  
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_SLOW_GO_HOME:                          // медленное возвращение на парковочную позицию после возобновления электропитания
+        case CMD_SLOW_GO_HOME:                          // РјРµРґР»РµРЅРЅРѕРµ РІРѕР·РІСЂР°С‰РµРЅРёРµ РЅР° РїР°СЂРєРѕРІРѕС‡РЅСѓСЋ РїРѕР·РёС†РёСЋ РїРѕСЃР»Рµ РІРѕР·РѕР±РЅРѕРІР»РµРЅРёСЏ СЌР»РµРєС‚СЂРѕРїРёС‚Р°РЅРёСЏ
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_SET_AXIS:                              // калибровка ( устанавливает текущее положение телескопа) a, d
+        case CMD_SET_AXIS:                              // РєР°Р»РёР±СЂРѕРІРєР° ( СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ С‚РµРєСѓС‰РµРµ РїРѕР»РѕР¶РµРЅРёРµ С‚РµР»РµСЃРєРѕРїР°) a, d
             OControll1.XPosition = Value->a;
             OControll2.XPosition = Value->d;
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_SET_GUIDE_SPEED:                       // калибровка ( устанавливает скорость сопровождения звезды) guidespeed
+        case CMD_SET_GUIDE_SPEED:                       // РєР°Р»РёР±СЂРѕРІРєР° ( СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ СЃРєРѕСЂРѕСЃС‚СЊ СЃРѕРїСЂРѕРІРѕР¶РґРµРЅРёСЏ Р·РІРµР·РґС‹) guidespeed
             OControll1.Config->GuideSpeed = Value->a1;
             OControll2.Config->GuideSpeed = Value->d1;
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_SET_AIM_SPEED:                         // калибровка ( устанавливает скорость наведения) runspeed
+        case CMD_SET_AIM_SPEED:                         // РєР°Р»РёР±СЂРѕРІРєР° ( СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ СЃРєРѕСЂРѕСЃС‚СЊ РЅР°РІРµРґРµРЅРёСЏ) runspeed
             Queue_Delete(&CmdQueue);
             break;
-        case CMD_EMG_STOP:                              // аварийная остановка
+        case CMD_EMG_STOP:                              // Р°РІР°СЂРёР№РЅР°СЏ РѕСЃС‚Р°РЅРѕРІРєР°
             mCmd.State = xCMD_EMERGENCY_STOP;
             LOCK(1,Queue_Insert(&OControll1.mCmdQueue, 0, (BYTE*)&mCmd));
             LOCK(1,Queue_Insert(&OControll2.mCmdQueue, 0, (BYTE*)&mCmd));
@@ -1283,7 +1283,7 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
     
     diff = destang - OCN->XPosition;
     if(diff == 0) return -1;
-    // определяем направление движения
+    // РѕРїСЂРµРґРµР»СЏРµРј РЅР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
     if(diff < 0){
         diff = -diff;
         mCmd.State = xCMD_SET_DIRECTION;
@@ -1328,14 +1328,14 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
     }
     return 0;
 }
-// Наведение и сопровождение звёзд
-// Параметры:
-// destang          угол цели на момент начала движения
-// TargetSpeed      Скорость движения цели по заданной оси ( знак указывает направление )
-// GuideTime        Время сопровождения цели ( значения больше 0 ) 
-//                  если значение равно 0, то устанавливается максимально возможная 
-//                  величина с заниженным приоритетом ( будет прервана любой новой командой)
-// Priority         Приоритет
+// РќР°РІРµРґРµРЅРёРµ Рё СЃРѕРїСЂРѕРІРѕР¶РґРµРЅРёРµ Р·РІС‘Р·Рґ
+// РџР°СЂР°РјРµС‚СЂС‹:
+// destang          СѓРіРѕР» С†РµР»Рё РЅР° РјРѕРјРµРЅС‚ РЅР°С‡Р°Р»Р° РґРІРёР¶РµРЅРёСЏ
+// TargetSpeed      РЎРєРѕСЂРѕСЃС‚СЊ РґРІРёР¶РµРЅРёСЏ С†РµР»Рё РїРѕ Р·Р°РґР°РЅРЅРѕР№ РѕСЃРё ( Р·РЅР°Рє СѓРєР°Р·С‹РІР°РµС‚ РЅР°РїСЂР°РІР»РµРЅРёРµ )
+// GuideTime        Р’СЂРµРјСЏ СЃРѕРїСЂРѕРІРѕР¶РґРµРЅРёСЏ С†РµР»Рё ( Р·РЅР°С‡РµРЅРёСЏ Р±РѕР»СЊС€Рµ 0 ) 
+//                  РµСЃР»Рё Р·РЅР°С‡РµРЅРёРµ СЂР°РІРЅРѕ 0, С‚Рѕ СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ РјР°РєСЃРёРјР°Р»СЊРЅРѕ РІРѕР·РјРѕР¶РЅР°СЏ 
+//                  РІРµР»РёС‡РёРЅР° СЃ Р·Р°РЅРёР¶РµРЅРЅС‹Рј РїСЂРёРѕСЂРёС‚РµС‚РѕРј ( Р±СѓРґРµС‚ РїСЂРµСЂРІР°РЅР° Р»СЋР±РѕР№ РЅРѕРІРѕР№ РєРѕРјР°РЅРґРѕР№)
+// Priority         РџСЂРёРѕСЂРёС‚РµС‚
 int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double GuideTime, BYTE Priority)
 {
     LONG diff;
@@ -1343,7 +1343,7 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
     xCMD_QUEUE mCmd;
     diff = destang - OCN->XPosition;
     if(diff != 0) {
-        // определяем направление движения
+        // РѕРїСЂРµРґРµР»СЏРµРј РЅР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
         if(diff < 0){
             diff = -diff;
             mCmd.State = xCMD_SET_DIRECTION;
@@ -1354,7 +1354,7 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
             mCmd.Value = 0;
             LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
         }
-        // Таймер наведения
+        // РўР°Р№РјРµСЂ РЅР°РІРµРґРµРЅРёСЏ
         mCmd.State = xCMD_SET_TIMER;
         mCmd.Value = (DWORD)OC_TMR2;
         LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
