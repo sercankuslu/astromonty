@@ -38,8 +38,10 @@ int Queue_ExtractMin( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE * Value );       
 int Queue_ExtractAllToMin(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);    // возвращает пару (k,v) с минимальным значением ключа k. удал€€ из хранилища все пары, наход€щиес€ раньше пары с минимальным значением k
 int Queue_Init(PRIORITY_QUEUE * Queue, QUEUE_ELEMENT * KeyBuf, BYTE KeyBufSize, BYTE * ValueBuf, WORD ValueSize );         // инициирует очередь
 int Queue_Delete(PRIORITY_QUEUE * Queue);                                       // удал€ет пару из начала очереди
+int Queue_Revert( PRIORITY_QUEUE * Queue );                                     // ”дал€ет с хвоста очереди ( отмен€ет добавление )
 int Queue_Selftest ();
-int Queue_First(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);
+int Queue_First(PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value);             // ¬озрвращает первый в очереди элемент ( самый старый )
+int Queue_Last( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value );            // ¬озрвращает последний в очереди элемент ( самый новый )
 /*
 // Example
 QUEUE_ELEMENT q[5];

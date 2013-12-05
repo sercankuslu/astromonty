@@ -48,7 +48,7 @@ int Queue_GetEndBuffer( PRIORITY_QUEUE * Queue, BYTE Key, BYTE ** Value )
     return 0;
 
 }
-
+// Возрвращает первый в очереди элемент ( самый старый )
 int Queue_First( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
 {
     if(Queue->Count == 0)      // Очередь пуста
@@ -57,6 +57,23 @@ int Queue_First( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
         *Key = Queue->Start->Key;
     if(Value != NULL)
         *Value = Queue->Start->Value;
+    return 0;
+}
+// Возрвращает последний в очереди элемент ( самый новый )
+int Queue_Last( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
+{
+    QUEUE_ELEMENT * j = NULL;
+    if(Queue->Count == 0)      // Очередь пуста
+        return -1;
+    j = Queue->End;
+    if(j == Queue->Queue){
+        j = Queue->Queue + Queue->Count;
+    }
+    j--;
+    if(Key != NULL)
+        *Key = j->Key;
+    if(Value != NULL)
+        *Value = j->Value;
     return 0;
 }
 
@@ -181,6 +198,7 @@ int Queue_ExtractAllToMin( PRIORITY_QUEUE * Queue, BYTE * Key, BYTE ** Value )
     
 }
 
+// Удаляет первый в очереди элемент ( самый старый )
 int Queue_Delete( PRIORITY_QUEUE * Queue )
 {
     if(Queue->Count == 0)      // Очередь пуста
@@ -189,6 +207,19 @@ int Queue_Delete( PRIORITY_QUEUE * Queue )
     Queue->Start++;
     if(Queue->Start >= (Queue->Queue + Queue->Size) )
         Queue->Start = Queue->Queue;
+    Queue->Count--;
+    return 0;
+}
+
+// Удаляет последний в очереди элемент ( самый новый )
+int Queue_Revert( PRIORITY_QUEUE * Queue )
+{
+    if(Queue->Count == 0)      // Очередь пуста
+        return -1;
+
+    if(Queue->End == Queue->Queue )
+        Queue->End = (Queue->Queue + Queue->Size);
+    Queue->End--;
     Queue->Count--;
     return 0;
 }
