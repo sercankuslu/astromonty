@@ -230,10 +230,10 @@ void MACInit(void)
 #endif
 
     // If the RESET pin is connected, take the chip out of reset
-#if defined(ENC_RST_IO)
-    ENC_RST_IO      = 1;
-    ENC_RST_TRIS    = 0;
-#endif
+//#if defined(ENC_RST_IO)
+//    ENC_RST_IO      = 1;
+//    ENC_RST_TRIS    = 0;
+//#endif
 
     // Set up SPI
     //ClearSPIDoneFlag(); 
@@ -247,9 +247,9 @@ void MACInit(void)
     // means the part is in RESET or there is something wrong with the SPI
     // connection.  This loop makes sure that we can communicate with the
     // ENC28J60 before proceeding.
-    #if !defined(ENC_RST_IO)
+    //#if !defined(ENC_RST_IO)
     SendSystemReset();
-    #endif
+   // #endif
     do {        
         i = ReadETHReg(ESTAT).Val;
     } while((i & 0x08) || (~i & ESTAT_CLKRDY));
