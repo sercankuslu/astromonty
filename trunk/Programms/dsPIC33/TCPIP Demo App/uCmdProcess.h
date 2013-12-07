@@ -140,8 +140,9 @@ typedef struct CHANEL_CONFIG {
     DWORD                   AccRecordCount;             // Количество записей в таблице ускорения на внешней памяти
     double                  K;                          // приведенные параметры двигателя
     double                  B;
-    double                  U;                          // U = 2/(V^2B)
-    double                  V;                          // V = K/B
+    double                  Xmax;                       
+    double                  Vmax;                       
+    double                  Tmax;
     double                  GuideSpeed;                 // Скорость сопровождения звезды
 }CHANEL_CONFIG;
 
