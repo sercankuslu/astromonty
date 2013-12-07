@@ -203,6 +203,8 @@ int main(void)
         
     static DWORD t = 0;
     static DWORD dwLastIP = 0;
+    volatile DWORD d = 0;
+    volatile DWORD d1 = 0;
 
     // Initialize application specific hardware
     // Для работы A13  его нужно отключить от ADC
@@ -272,9 +274,11 @@ int main(void)
     // down into smaller pieces so that other tasks can have CPU time.
     while(1)
     {
-        //if(TickGet() - d >= TICK_SECOND/16000ul)
-        //{
-        //    d = TickGet();
+        if(TickGet() - d >= TICK_SECOND)
+        {
+            LED1_IO ^= 1;
+            d = TickGet();
+        }
         //       LATDbits.LATD0 ^= 1; // выход STEP
             
         //}
