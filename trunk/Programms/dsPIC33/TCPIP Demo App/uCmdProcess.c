@@ -1361,19 +1361,19 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
 {
     LONG diff;
     LONG diff_2;
-    
+    double GuideTimerStep = 0.0000016;
     xCMD_QUEUE mCmd;
     diff = destang - OCN->XPosition;
 
     GetDestAngWGuide(diff, TargetSpeed, OCN->Config, &diff_2);
     Aim(OCN, diff_2 + OCN->XPosition, Priority);
 
-    if(1){
+    if(TargetSpeed != 0.0){
         mCmd.State = xCMD_SET_DIRECTION;
         if(TargetSpeed >= 0){
-            mCmd.Value = 1;
-        } else {
             mCmd.Value = 0;
+        } else {
+            mCmd.Value = 1;
             TargetSpeed = -TargetSpeed;
         }
         LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
@@ -1382,10 +1382,10 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
         LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
         
         mCmd.State = xCMD_SET_SPEED;
-        mCmd.Value = (DWORD)(TargetSpeed / OCN->Config->dx);
+        mCmd.Value = (DWORD)(OCN->Config->dx / (GuideTimerStep * TargetSpeed));
         LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
         mCmd.State = xCMD_SLOW_RUN;
-        mCmd.Value = 288000;
+        mCmd.Value =  (DWORD)(GuideTime / GuideTimerStep);
         LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
     }
     return 0;
