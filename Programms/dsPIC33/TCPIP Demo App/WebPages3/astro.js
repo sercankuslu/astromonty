@@ -916,6 +916,8 @@ function updateTargetCrosPos(){
     AbsolutePosition.visible = Visible;
     if(!Loading) document.getElementById('gotobutton').disabled = !Visible;
 }
+
+
 function updateTargetForm(){
     var RAobj = AngleToObj(TargetPosition.X,true);
     var DEobj = AngleToObj(TargetPosition.Y,false);
@@ -927,14 +929,23 @@ function updateTargetForm(){
     document.getElementById('DEm').value = DEobj.M;
     document.getElementById('DEs').value = DEobj.S.toFixed(2);
 }
+
 function GoTo(){
     if(AbsolutePosition.visible && !Loading){
         document.getElementById('gotobutton').disabled = true;
-        // CMD_GO_TO_POSITION = 1
-        newAJAXCommand('index.htm',
-            function(){document.getElementById('gotobutton').disabled = false;}, false,
-            "cmd=1&prty=50&ang0=" + Math.floor(AbsolutePosition.a * StepValue.X) + "&ang1=" + Math.floor(AbsolutePosition.d * StepValue.Y)
-        );
+        if(document.getElementById('clock').checked){
+            // CMD_GO_TO_POSITION_AND_GUIDE_STAR = 2
+            newAJAXCommand('index.htm',
+                function(){document.getElementById('gotobutton').disabled = false;}, false,
+                "cmd=2&prty=50&ang0=" + Math.floor(AbsolutePosition.a * StepValue.X) + "&ang1=" + Math.floor(AbsolutePosition.d * StepValue.Y)
+            );
+        } else {
+            // CMD_GO_TO_POSITION = 1
+            newAJAXCommand('index.htm',
+                function(){document.getElementById('gotobutton').disabled = false;}, false,
+                "cmd=1&prty=50&ang0=" + Math.floor(AbsolutePosition.a * StepValue.X) + "&ang1=" + Math.floor(AbsolutePosition.d * StepValue.Y)
+            );
+        }
     }
 }
 
