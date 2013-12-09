@@ -61,6 +61,7 @@ int uCmd_ICCallback(void * _This);
 double GetInterval(double X, double K, double B);
 double QuadraticEquationRoot1(double A, double B, double C);
 int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE priority);
+int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double GuideTime, BYTE Priority);
 int mCmd_Process( OC_CHANEL_STATE * OCN, WORD BufLen);
 
 int GetDestAngWGuide(double TgtRefPos, double TgtSpeed, CHANEL_CONFIG * Config, LONG * DestAng);
@@ -151,21 +152,11 @@ int uCmd_Init(void)
     uCmd_DefaultConfig(&AppConfig.ChanellsConfig[0], 0);
     CreateAccTable();
 
-    {
-        LONG DestAng = 0;
-        GetDestAngWGuide(10.0, 1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(10.0, -1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(-10.0, 1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(-10.0, -1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(30.0, 1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(30.0, -1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(-30.0, 1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-        GetDestAngWGuide(-30.0, -1.0, &AppConfig.ChanellsConfig[0], &DestAng);
-    }
+   
 #endif 
 
 
-    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_64, IDLE_ENABLE, BIT_16, SYNC_DISABLE);
+    TimerInit(TIMER2, CLOCK_SOURCE_INTERNAL, GATED_DISABLE, PRE_1_8, IDLE_ENABLE, BIT_16, SYNC_DISABLE);
     TimerSetValue(TIMER2, 0x0000, 0xFFFF);
     TimerSetCallback(TIMER2, NULL);
     TimerSetInt(TIMER2, 0, FALSE);
@@ -281,8 +272,12 @@ int uCmd_Init(void)
     IEC0bits.U1TXIE = 1;
     IPC3bits.U1TXIP = 1;
 
+#else
+    {
+        LONG DestAng = 0;
+        AimAndGuide(&OControll1, 200000, 0.00041667, 30, 50);
+    }
 #endif
-    
     return 0;
 }
 
@@ -921,21 +916,24 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
 {
     
     Config->AccBaseAddress = 0x40000;
-    Config->AccRecordCount = 32767; // 10 градусов
+    Config->AccRecordCount = 32000; // 10 градусов
     switch(Number){
     case 0:
         Config->DMAConfig.DmaId = OC1_DMA_ID;
         Config->OCConfig.Index = ID_OC1;
         Config->DMAConfig.DMABufSize = OC1_DMA_BUF_LEN;
+        Config->GuideSpeed = -0.00417807934636275010445197530291;
         break;
     case 1:
         Config->DMAConfig.DmaId = OC2_DMA_ID;
         Config->OCConfig.Index = ID_OC2;
         Config->DMAConfig.DMABufSize = OC2_DMA_BUF_LEN;
+        Config->GuideSpeed = 0.0;
         break;
     case 2:
         Config->DMAConfig.DmaId = OC1_DMA_ID;  // без разницы DMA у OC3 нет
         Config->OCConfig.Index = ID_OC3;
+        Config->GuideSpeed = 0.0;
         break;
     }
     Config->DrvConfig.dSTEPPulseWidth = 0.000002; // 2 uS
@@ -974,6 +972,7 @@ void uCmd_DefaultConfig(CHANEL_CONFIG * Config, BYTE Number)
         T2 = GetInterval(MaxAccLength + Config->dx, Config->K, Config->B);
         Config->Vmax = Config->dx / (T2 - Config->Tmax);
         Config->Xmax = MaxAccLength;
+        
         
     }
     //rr->d = (-(rr->K)/(2.0 * rr->B * rr->TimerStep));
@@ -1196,6 +1195,7 @@ int Cmd_Process()
     BYTE Priority = 50;
     static double GuideTime = 10.0; // 10 секунд
     
+    
     if(Queue_ExtractAllToMin( &CmdQueue, &Priority, (BYTE**)&Value ) == 0){
 
         switch (Value->Command) {
@@ -1230,21 +1230,15 @@ int Cmd_Process()
             }
             break;
         case CMD_GO_TO_POSITION_AND_GUIDE_STAR:         // перейти на позицию и сопровождать звезду ( обычное часовое ведение) a, d,
-            if(0){
-                mCmd.State = xCMD_SET_DIRECTION;
-                mCmd.Value = 1;
-                LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
-                mCmd.State = xCMD_SET_TIMER;
-                mCmd.Value = (DWORD)OC_TMR3;
-                LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
-                mCmd.State = xCMD_SET_SPEED;
-                mCmd.Value = 46500;
-                LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
-                mCmd.State = xCMD_SLOW_RUN;
-                mCmd.Value = 288000;
-                LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
+            if((OControll1.CurrentState == xCMD_STOP) && (OControll2.CurrentState == xCMD_STOP)){
+                if(AimAndGuide(&OControll1, (LONG)(Value->a), OControll1.Config->GuideSpeed, GuideTime, Priority) == 0){
+                    xCmdStart(0);
+                }
+                if(AimAndGuide(&OControll2, (LONG)(Value->d), OControll2.Config->GuideSpeed, GuideTime, Priority) == 0){
+                    xCmdStart(1);
+                }
+                Queue_Delete(&CmdQueue);
             }
-            Queue_Delete(&CmdQueue);
             break;
         case CMD_SET_GUIDE_TIME:                        // установить время сопровождения объекта a ( в сек )
             GuideTime = (double)Value->a;
@@ -1309,12 +1303,11 @@ int Aim(OC_CHANEL_STATE * OCN, LONG destang, BYTE Priority)
         diff = -diff;
         mCmd.State = xCMD_SET_DIRECTION;
         mCmd.Value = 1;
-        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
     } else {
         mCmd.State = xCMD_SET_DIRECTION;
         mCmd.Value = 0;
-        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
     }
+    LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
     mCmd.State = xCMD_SET_TIMER;
     mCmd.Value = (DWORD)OC_TMR2;
     LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
@@ -1361,11 +1354,14 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
 {
     LONG diff;
     LONG diff_2;
-    double GuideTimerStep = 0.0000016;
+    volatile double GuideTimerStep = 0.0000016;
+    volatile double StepInterval = 0.0;
+    volatile double DXdTargetSpeed = 0.0;
+    volatile double GuideStepCount = 0.0;
     xCMD_QUEUE mCmd;
     diff = destang - OCN->XPosition;
 
-    GetDestAngWGuide(diff, TargetSpeed, OCN->Config, &diff_2);
+    GetDestAngWGuide(diff * OCN->Config->dx, TargetSpeed, OCN->Config, &diff_2);
     Aim(OCN, diff_2 + OCN->XPosition, Priority);
 
     if(TargetSpeed != 0.0){
@@ -1376,17 +1372,20 @@ int AimAndGuide(OC_CHANEL_STATE * OCN, LONG destang, double TargetSpeed, double 
             mCmd.Value = 1;
             TargetSpeed = -TargetSpeed;
         }
-        LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
+        DXdTargetSpeed = OCN->Config->dx / TargetSpeed;
+        StepInterval =  DXdTargetSpeed / GuideTimerStep;
+        GuideStepCount = GuideTime / DXdTargetSpeed;
+
+        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
         mCmd.State = xCMD_SET_TIMER;
         mCmd.Value = (DWORD)OC_TMR3;
-        LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
-        
+        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
         mCmd.State = xCMD_SET_SPEED;
-        mCmd.Value = (DWORD)(OCN->Config->dx / (GuideTimerStep * TargetSpeed));
-        LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
+        mCmd.Value = (DWORD)(StepInterval);
+        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
         mCmd.State = xCMD_SLOW_RUN;
-        mCmd.Value =  (DWORD)(GuideTime / GuideTimerStep);
-        LOCK(1,Queue_Insert(&OControll1.mCmdQueue, Priority, (BYTE*)&mCmd));
+        mCmd.Value =  (DWORD)(GuideStepCount);
+        LOCK(1,Queue_Insert(&OCN->mCmdQueue, Priority, (BYTE*)&mCmd));
     }
     return 0;
 }
