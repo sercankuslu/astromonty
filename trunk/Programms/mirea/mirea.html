@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+<!--
+/*
+ * Copyright (C) 2009 Apple Inc. All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ -->
+<html>
+  <head>
+    <title>MIREA</title>
+    <script type="text/javascript" src="./webgl-utils.js"></script>
+    <script type="text/javascript" src="./webgl-debug.js"></script>
+    <script type="text/javascript" src="./J3DI.js"> </script>
+    <script type="text/javascript" src="./J3DIMath.js"> </script>
+    <script type="text/javascript" src="./Controls.js"> </script>
+
+    <script id="vshader" type="x-shader/x-vertex">
+        uniform mat4 u_modelViewProjMatrix;
+        uniform mat4 u_normalMatrix;
+        uniform vec3 lightDir;
+
+        attribute vec3 vNormal;
+        attribute vec4 vTexCoord;
+        attribute vec4 vPosition;
+
+        varying float v_Dot;
+        varying vec2 v_texCoord;
+
+        void main()
+        {
+            gl_Position = u_modelViewProjMatrix * vPosition;
+            v_texCoord = vTexCoord.st;
+            vec4 transNormal = u_normalMatrix * vec4(vNormal,1);
+            v_Dot = max(dot(transNormal.xyz, lightDir), 0.0);
+        }
+    </script>
+
+    <script id="fshader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        uniform sampler2D sampler2d;
+
+        varying float v_Dot;
+        varying vec2 v_texCoord;
+
+        void main()
+        {
+            vec4 color = texture2D(sampler2d,v_texCoord);
+            color += vec4(0.1,0.1,0.1,1);
+            gl_FragColor = vec4(color.xyz * v_Dot, color.a);
+        }
+    </script>
+
+    <script>
+        const numRowCols = 4;
+        const numLayers = 1;
+        const layoutWidth = 0;
+        const layoutHeight = 1.4;
+        const globeSize = 25;
+        const minIncAngle = 0.2;
+        const maxIncAngle = 2;
+        var g = {};  // globals
+        /*var mirea = {
+            A = {
+                Selected = false, // весь корпус заменяется внешним видом без деталей
+                floors = {
+                    F1 = {
+                        Selected = false, // весь этаж заменяется внешним видом без деталей
+                        Rooms = {
+                            A17 = {
+                                Selected = false, 
+                            },
+                        }
+                    },
+                }
+            },
+        };*/
+        function init()
+        {
+            var gl = initWebGL("example");
+            if (!gl) {
+                return;
+            }
+            g.program = simpleSetup(gl, "vshader", "fshader",
+                                [ "vPosition", "vTexCoord", "vNormal"],
+                                [ 0, 0.5, 0.5, 1 ], 10000);
+            gl.uniform3f(gl.getUniformLocation(g.program, "lightDir"), 0.5, 1, 0);
+            gl.uniform1i(gl.getUniformLocation(g.program, "sampler2d"), 0);
+
+            if (g.program) {
+                g.u_normalMatrixLoc = gl.getUniformLocation(g.program, "u_normalMatrix");
+                g.u_modelViewProjMatrixLoc = gl.getUniformLocation(g.program, "u_modelViewProjMatrix");
+            }
+
+            //g.sphere = makeSphere(gl, 1, 30, 30);
+            //g.sphere.loaded = true;
+            g.sphere = loadObj(gl, "./mirea.obj");
+
+            // get the images
+            wallTexture  = loadImageTexture(gl, "./Brick_Non_Uniform_Running_Red.jpg");
+            floorTexture = loadImageTexture(gl, "./Finishes.Flooring.Wood.Parquet.12.jpg");
+            stairTexture = loadImageTexture(gl, "./Sitework.Paving - Surfacing.Cobble Stone.1.jpg");
+
+            return gl;
+        }
+
+        width = -1;
+        height = -1;
+        g.Step = 0;
+        g.open = true;
+        g.close = false;
+        var requestId;
+
+        function reshape(ctx)
+        {
+            var canvas = document.getElementById('example');
+            if (canvas.width == width && canvas.height == height)
+                return;
+
+            g.width = canvas.width;
+            g.height = canvas.height;
+
+            ctx.viewport(0, 0, g.width , g.height);
+
+            //g.perspectiveMatrix = new J3DIMatrix4();
+            //g.perspectiveMatrix.perspective(30, g.width /height, 1, 10000);
+            //g.perspectiveMatrix.lookat(0,0,20, 0, 0, 0, 0, 1, 0);
+            //g.perspectiveMatrix.rotate(40, 1,0,0);
+            //g.perspectiveMatrix.rotate(yRot/5, 0,1,0);
+        }
+
+        function drawOne(ctx, angle, x, y, z, scale, texture, objName)
+        {
+            if(!g.sphere.loaded){
+                return;
+            }
+            //if(typeof(g.sphere.groups[objName]) == "undefined"){
+            //    return;
+            //}
+            
+            // setup VBOs
+            ctx.enableVertexAttribArray(0);
+            ctx.enableVertexAttribArray(1);
+            ctx.enableVertexAttribArray(2);
+
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.vertexObject);
+            ctx.vertexAttribPointer(0, 3, ctx.FLOAT, false, 0, 0);
+
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.normalObject);
+            ctx.vertexAttribPointer(2, 3, ctx.FLOAT, false, 0, 0);
+
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.texCoordObject);
+            ctx.vertexAttribPointer(1, 2, ctx.FLOAT, false, 0, 0);
+
+            ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, g.sphere.indexObject);
+
+            // generate the model-view matrix
+            var mvMatrix = new J3DIMatrix4();
+
+            mvMatrix.translate(x,y,z);
+            //mvMatrix.translate(0, 0, transl * 5);
+            //mvMatrix.rotate(30, 1,0,0);
+            //mvMatrix.rotate(yRot/5, 0,1,0);
+            mvMatrix.rotate(angle, 1,0,0);
+            //mvMatrix.scale(scale, scale, scale);
+
+            // construct the normal matrix from the model-view matrix
+            var normalMatrix = new J3DIMatrix4(mvMatrix);
+            normalMatrix.invert();
+            normalMatrix.transpose();
+            normalMatrix.setUniform(ctx, g.u_normalMatrixLoc, false);
+
+            // construct the model-view * projection matrix
+            var mvpMatrix = new J3DIMatrix4(g.perspectiveMatrix);
+            mvpMatrix.multiply(mvMatrix);
+            mvpMatrix.setUniform(ctx, g.u_modelViewProjMatrixLoc, false);
+
+            ctx.bindTexture(ctx.TEXTURE_2D, texture);
+            var count = g.sphere.groups[objName][1];
+            var indicies = g.sphere.groups[objName][0];
+            ctx.drawElements(ctx.TRIANGLES, count, ctx.UNSIGNED_SHORT, indicies * 2);
+            //ctx.drawElements(ctx.TRIANGLES, g.sphere.numIndices, ctx.UNSIGNED_SHORT, 0);
+            //ctx.drawElements(ctx.TRIANGLES, 3870, ctx.UNSIGNED_SHORT, 0);
+        }
+
+        function drawPicture(ctx)
+        {
+            reshape(ctx);
+	        ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+            
+            g.perspectiveMatrix = new J3DIMatrix4();
+            g.perspectiveMatrix.perspective(10, g.width /g.height, 1, 1000);
+            g.perspectiveMatrix.translate(0, 0, transl * 5);
+            g.perspectiveMatrix.lookat(0,0,20, 0, 0, 0, 0, 1, 0);
+            g.perspectiveMatrix.rotate(40, 1,0,0);
+            g.perspectiveMatrix.rotate(yRot/5, 0,1,0);
+            
+            if(!g.sphere.loaded){
+                return;
+            }
+            var startX = -layoutWidth/2;
+            var startY = -layoutHeight/2;
+            var startZ = 0;
+            var incX = 0;//layoutWidth / (numRowCols-1);
+            var incY = layoutHeight / (numRowCols-1);
+            var incZ = 0;
+            var objName = "";
+            if(g.open){
+                if(g.Step < 5.0){
+                    g.Step += 0.1 
+                } else { g.open = false; }
+            } 
+            if(g.close){
+                if(g.Step > 0.0){
+                    g.Step -= 0.1 
+                }           
+            }
+            var Regexp = /(\w)(\d)_(\w+)(\d+)/;
+            //for(i = 0; i < g.sphere.groups.length; i++){
+            for (var objName in g.sphere.groups) {
+                //objName = "Floor00" + (j+1);
+                //objName = "Floor003";
+                var T = Regexp.exec(objName);
+                var texture;
+                
+                var Y = 0;
+                if(T){
+                    if((T[1] == 'G') && (T[3] == 'fake')) {
+                        continue;
+                    }
+                    if(T[3] == 'wall'){
+                        texture = wallTexture
+                    } else if(T[3] == 'floor'){
+                        texture = floorTexture
+                    } else if(T[3] == 'stair'){
+                        texture = stairTexture
+                    } else if(T[3] == 'fake') {
+                        texture = stairTexture
+                    }
+                    if(T[2] > 5){
+                        Y = g.Step;
+                    }
+                        drawOne(ctx, 0,
+                            0,//startX + incX * k,
+                            Y, //startY + incY * j,
+                            0,//startZ + incZ * i,
+                            //showEarth[index] ? 1 : 0.6, showEarth[index] ? wallTexture : floorTexture,
+                            0, texture,
+                            objName);
+                }
+            }
+
+            ctx.bindTexture(ctx.TEXTURE_2D, null);
+
+            framerate.snapshot();
+        }
+
+        function start()
+        {
+            var c = document.getElementById("example");
+            var w = Math.floor(window.innerWidth * 0.9);
+            var h = Math.floor(window.innerHeight * 0.9);
+
+            //c = WebGLDebugUtils.makeLostContextSimulatingCanvas(c);
+            // tell the simulator when to lose context.
+            //c.loseContextInNCalls(1500);
+
+            c.addEventListener('webglcontextlost', handleContextLost, false);
+            c.addEventListener('webglcontextrestored', handleContextRestored, false);
+
+            c.width = w;
+            c.height = h;
+
+            var ctx = init();
+            if (!ctx) {
+                return;
+            }
+            initControl(c);
+            currentAngles = [ ];
+            incAngles = [ ];
+            showEarth = [ ];
+
+            for (var i = 0; i < numRowCols * numRowCols * numLayers; ++i) {
+                currentAngles[i] = 0;
+                incAngles[i] = Math.random() * (maxIncAngle - minIncAngle) + minIncAngle;
+                showEarth[i] = Math.random() > 0.5;
+            }
+
+            framerate = new Framerate("framerate");
+            var f = function() {
+                drawPicture(ctx)
+                requestId = window.requestAnimFrame(f, c);
+            };
+            f();
+
+            function handleContextLost(e) {
+                e.preventDefault();
+                clearLoadingImages();
+                if (requestId !== undefined) {
+                    window.cancelAnimFrame(requestId);
+                    requestId = undefined;
+                }
+            }
+
+            function handleContextRestored() {
+                init();
+                f();
+            }
+        }
+    </script>
+    <style type="text/css">
+        canvas {
+            border: 2px solid black;
+        }
+    </style>
+  </head>
+  <body onload="start()">
+    <canvas id="example">
+    There is supposed to be an example drawing here, but it's not important.
+    </canvas>
+    <div id="framerate"></div>
+  </body>
+</html>
