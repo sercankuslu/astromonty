@@ -107,10 +107,11 @@
             // get the images
             g.Textures = [];
             g.Textures['stair'] = loadImageTexture(gl, "./Stone.1.jpg");
-            g.Textures['building'] = loadImageTexture(gl, "./Stone.1.jpg");
+            g.Textures['building'] = loadImageTexture(gl, "./Brick_Non_Uniform_Running_Red.jpg");
             g.Textures['door'] = loadImageTexture(gl, "./Water_2.jpg");
             g.Textures['wall']  = loadImageTexture(gl, "./Brick_Non_Uniform_Running_Red.jpg");
             g.Textures['floor'] = loadImageTexture(gl, "./Finishes.Flooring.Wood.Parquet.12.jpg");
+            g.Textures['roof'] = loadImageTexture(gl, "./Finishes.Flooring.Wood.Parquet.12.jpg");
 
             return gl;
         }
@@ -208,9 +209,10 @@
             
             var mvMatrix = new J3DIMatrix4();
             g.perspectiveMatrix = new J3DIMatrix4();
-            g.perspectiveMatrix.perspective(10, g.width /g.height, 1, 1000);
+            g.perspectiveMatrix.perspective(50, g.width /g.height, 1, 10000);
             g.perspectiveMatrix.translate( 0, 0, transl * 5);
             g.perspectiveMatrix.lookat(0,0,20, 0, 0, 0, 0, 1, 0);            
+            g.perspectiveMatrix.rotate(zRot, 0,0,1);
             g.perspectiveMatrix.rotate(xRot/5 + 60, 1,0,0);
             g.perspectiveMatrix.rotate(yRot/5, 0,1,0);
             
@@ -446,22 +448,22 @@
     <div id="framerate"></div>
     <div> 
         <select id="building_id">
-            <option value="10">Выберите корпус</option>
+            <option value="10" selected>Общий вид</option>
             <option value="A0">Корпус А вход</option>
             <option value="A1">Корпус А левое крыло</option>
             <option value="A2">Корпус А правое крыло</option>
             <option value="B">Корпус Б</option>
             <option value="V">Корпус В</option>
-            <option value="G" selected >Корпус Г</option>
+            <option value="G">Корпус Г</option>
             <option value="D"> Корпус Д</option>
         </select>
         <select id="level_id">
             <option value="10">Выберите этаж</option>
             <option value="1">Этаж 1</option>
-            <option value="2" selected>Этаж 2</option>
+            <option value="2">Этаж 2</option>
             <option value="3">Этаж 3</option>
             <option value="4">Этаж 4</option>
-            <option value="5">Этаж 5</option>
+            <option value="5" selected>Этаж 5</option>
         </select>
     </div>
   </body>
