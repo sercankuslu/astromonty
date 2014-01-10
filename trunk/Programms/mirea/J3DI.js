@@ -385,9 +385,19 @@ function doLoadObj(obj, text)
     // 'group' is an object whose property names are the group name and
     // whose value is a 2 element array with [<first index>, <num indices>]
     var groups = { };
-    var currentGroup = [-1, 0];
-    groups["_unnamed"] = currentGroup;
-
+    //var currentGroup = [-1, 0];
+    //groups["_unnamed"] = currentGroup;
+    var currentGroup = {
+        box:{
+            Xmin:0,Ymin:0,Zmin:0,
+            Xmax:0,Ymax:0,Zmax:0,
+            first:true,
+        },
+        count:0,
+        index:0
+    };
+    var box = {};
+    box.first = true;
     var lines = text.split("\n");
     for (var lineIndex in lines) {
         var line = lines[lineIndex].replace(/[ \t]+/g, " ").replace(/\s\s*$/, "");
@@ -399,14 +409,49 @@ function doLoadObj(obj, text)
         var array = line.split(" ");
         if (array[0] == "g") {
             // new group
-            currentGroup = [indexArray.length, 0];
+            currentGroup = {};
+            currentGroup.index = indexArray.length;
+            currentGroup.count = 0;
+            currentGroup.box = box;
+            box = {};
+            box.first = true;
             groups[array[1]] = currentGroup;
+            
         }
         else if (array[0] == "v") {
             // vertex
-            vertex.push(parseFloat(array[1])/1000);
-            vertex.push(parseFloat(array[2])/1000);
-            vertex.push(parseFloat(array[3])/1000);
+            var X = parseFloat(array[1])/1000;
+            var Y = parseFloat(array[2])/1000;
+            var Z = parseFloat(array[3])/1000;
+            vertex.push(X);
+            vertex.push(Y);
+            vertex.push(Z);            
+            if(box.first){
+                box.Xmin = X;
+                box.Ymin = Y;
+                box.Zmin = Z;
+                box.Xmax = X;
+                box.Ymax = Y;
+                box.Zmax = Z;
+                box.first=false;
+            } else {
+                if( X < box.Xmin){
+                    box.Xmin = X; 
+                } else if(X > box.Xmax){
+                    box.Xmax = X; 
+                }
+                if( Y < box.Ymin){
+                    box.Ymin = Y; 
+                } else if( Y > box.Ymax){
+                    box.Ymax = Y; 
+                }
+                if( Z < box.Zmin){
+                    box.Zmin = Z; 
+                } else if( Z > box.Zmax){
+                    box.Zmax = Z; 
+                }
+                
+            }
         }
         else if (array[0] == "vt") {
             // normal
@@ -487,7 +532,7 @@ function doLoadObj(obj, text)
                 }
 
                 indexArray.push(facemap[array[i]]);
-                currentGroup[1]++;
+                currentGroup.count++;
             }
         }
     }

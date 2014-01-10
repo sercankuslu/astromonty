@@ -18,9 +18,10 @@ function startTouch(evt) {
 function continueTouch(evt) {
   if(drag == 1){
     var x = evt.touches[0].pageX,  y = evt.touches[0].pageY;
-    yRot += x - xOffs;  xRot = y - yOffs;
+    yRot += x - xOffs;  xRot += y - yOffs;
     xOffs = x;  yOffs = y;
-    drawScene();}
+    //drawScene();
+  }
   else if(drag == 2){
     var dx = evt.touches[1].pageX - evt.touches[0].pageX;
     var dy = evt.touches[1].pageY - evt.touches[0].pageY;
@@ -29,9 +30,9 @@ function continueTouch(evt) {
     if( idTouch0 == evt.touches[0].identifier ) fi = Math.atan2(dy, dx);
     else fi = Math.atan2(-dy, -dx);
     transl *= rTouch / r;
-    zRot = pi180*(fiTouch - fi);
+    zRot += pi180*(fiTouch - fi);
     rTouch = r;  fiTouch = fi;
-    drawScene();
+    //drawScene();
   }
 }
 function stopTouch() {
@@ -48,18 +49,18 @@ function mymousemove( ev ){
   if ( drag == 0 ) return;
   if ( ev.shiftKey ) {
     transl *= 1 + (ev.clientY - yOffs)/1000;
-    zRot = (xOffs - ev.clientX)*.3; }
+    zRot += (xOffs - ev.clientX)*.3; }
   else {
-    yRot += - xOffs + ev.clientX;  xRot = - yOffs + ev.clientY; }
+    yRot += - xOffs + ev.clientX;  xRot += - yOffs + ev.clientY; }
   xOffs = ev.clientX;   yOffs = ev.clientY;
-  drawScene();
+  //drawScene();
 }
 function wheelHandler(ev) {
   var del = 1.1;
   if (ev.shiftKey) del = 1.01;
   var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
   transl *= ds;
-  drawScene();
+  //drawScene();
   ev.preventDefault();
 }
 

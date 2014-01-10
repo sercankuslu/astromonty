@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <!--
 /*
@@ -52,10 +52,10 @@
             gl_Position = u_modelViewProjMatrix * vPosition;
             v_texCoord = vTexCoord.st;
             vec4 transNormal = u_normalMatrix * vec4(vNormal,1);
-            v_Dot = max(dot(transNormal.xyz, lightDir), 0.0);
+            v_Dot = max(dot(transNormal.xyz, lightDir), 0.4);
         }
     </script>
-
+    
     <script id="fshader" type="x-shader/x-fragment">
         precision mediump float;
 
@@ -71,7 +71,7 @@
             gl_FragColor = vec4(color.xyz * v_Dot, color.a);
         }
     </script>
-
+   
     <script>
         const numRowCols = 4;
         const numLayers = 1;
@@ -81,21 +81,7 @@
         const minIncAngle = 0.2;
         const maxIncAngle = 2;
         var g = {};  // globals
-        /*var mirea = {
-            A = {
-                Selected = false, // ���� ������ ���������� ������� ����� ��� �������
-                floors = {
-                    F1 = {
-                        Selected = false, // ���� ���� ���������� ������� ����� ��� �������
-                        Rooms = {
-                            A17 = {
-                                Selected = false, 
-                            },
-                        }
-                    },
-                }
-            },
-        };*/
+        
         function init()
         {
             var gl = initWebGL("example");
@@ -103,24 +89,28 @@
                 return;
             }
             g.program = simpleSetup(gl, "vshader", "fshader",
+            //g.program = simpleSetup(gl, "shader-vs", "shader-fs",
                                 [ "vPosition", "vTexCoord", "vNormal"],
                                 [ 0, 0.5, 0.5, 1 ], 10000);
             gl.uniform3f(gl.getUniformLocation(g.program, "lightDir"), 0.5, 1, 0);
             gl.uniform1i(gl.getUniformLocation(g.program, "sampler2d"), 0);
+        
 
             if (g.program) {
                 g.u_normalMatrixLoc = gl.getUniformLocation(g.program, "u_normalMatrix");
                 g.u_modelViewProjMatrixLoc = gl.getUniformLocation(g.program, "u_modelViewProjMatrix");
             }
 
-            //g.sphere = makeSphere(gl, 1, 30, 30);
-            //g.sphere.loaded = true;
-            g.sphere = loadObj(gl, "./mirea.obj");
+            g.buildings = loadObj(gl, "./mirea.obj");
+            g.buildings.parsed = false;
 
             // get the images
-            wallTexture  = loadImageTexture(gl, "./Brick_Non_Uniform_Running_Red.jpg");
-            floorTexture = loadImageTexture(gl, "./Finishes.Flooring.Wood.Parquet.12.jpg");
-            stairTexture = loadImageTexture(gl, "./Sitework.Paving - Surfacing.Cobble Stone.1.jpg");
+            g.Textures = [];
+            g.Textures['stair'] = loadImageTexture(gl, "./Stone.1.jpg");
+            g.Textures['building'] = loadImageTexture(gl, "./Stone.1.jpg");
+            g.Textures['door'] = loadImageTexture(gl, "./Water_2.jpg");
+            g.Textures['wall']  = loadImageTexture(gl, "./Brick_Non_Uniform_Running_Red.jpg");
+            g.Textures['floor'] = loadImageTexture(gl, "./Finishes.Flooring.Wood.Parquet.12.jpg");
 
             return gl;
         }
@@ -150,12 +140,18 @@
             //g.perspectiveMatrix.rotate(yRot/5, 0,1,0);
         }
 
-        function drawOne(ctx, angle, x, y, z, scale, texture, objName)
-        {
-            if(!g.sphere.loaded){
+        function drawOne(ctx, angle, x, y, z, scale, texture, obj)
+        {   
+            if(!g.buildings.loaded){
                 return;
             }
-            //if(typeof(g.sphere.groups[objName]) == "undefined"){
+            if(!g.buildings.parsed){
+                return;
+            }
+            if (typeof(obj) == 'undefined'){
+                return;
+            }
+            //if(typeof(g.buildings.groups[objName]) == "undefined"){
             //    return;
             //}
             
@@ -164,27 +160,27 @@
             ctx.enableVertexAttribArray(1);
             ctx.enableVertexAttribArray(2);
 
-            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.vertexObject);
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.buildings.vertexObject);
             ctx.vertexAttribPointer(0, 3, ctx.FLOAT, false, 0, 0);
 
-            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.normalObject);
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.buildings.normalObject);
             ctx.vertexAttribPointer(2, 3, ctx.FLOAT, false, 0, 0);
 
-            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.sphere.texCoordObject);
+            ctx.bindBuffer(ctx.ARRAY_BUFFER, g.buildings.texCoordObject);
             ctx.vertexAttribPointer(1, 2, ctx.FLOAT, false, 0, 0);
 
-            ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, g.sphere.indexObject);
+            ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, g.buildings.indexObject);
 
             // generate the model-view matrix
             var mvMatrix = new J3DIMatrix4();
 
             mvMatrix.translate(x,y,z);
-            //mvMatrix.translate(0, 0, transl * 5);
+            //mvMatrix.translate(5, -3, 0);
             //mvMatrix.rotate(30, 1,0,0);
             //mvMatrix.rotate(yRot/5, 0,1,0);
-            mvMatrix.rotate(angle, 1,0,0);
-            //mvMatrix.scale(scale, scale, scale);
-
+            //mvMatrix.rotate(angle, 1,0,0);
+            mvMatrix.scale(scale, scale, scale);
+            
             // construct the normal matrix from the model-view matrix
             var normalMatrix = new J3DIMatrix4(mvMatrix);
             normalMatrix.invert();
@@ -195,12 +191,13 @@
             var mvpMatrix = new J3DIMatrix4(g.perspectiveMatrix);
             mvpMatrix.multiply(mvMatrix);
             mvpMatrix.setUniform(ctx, g.u_modelViewProjMatrixLoc, false);
+            
 
             ctx.bindTexture(ctx.TEXTURE_2D, texture);
-            var count = g.sphere.groups[objName][1];
-            var indicies = g.sphere.groups[objName][0];
+            var count = obj.obj.count;
+            var indicies = obj.obj.index;
             ctx.drawElements(ctx.TRIANGLES, count, ctx.UNSIGNED_SHORT, indicies * 2);
-            //ctx.drawElements(ctx.TRIANGLES, g.sphere.numIndices, ctx.UNSIGNED_SHORT, 0);
+            //ctx.drawElements(ctx.TRIANGLES, g.buildings.numIndices, ctx.UNSIGNED_SHORT, 0);
             //ctx.drawElements(ctx.TRIANGLES, 3870, ctx.UNSIGNED_SHORT, 0);
         }
 
@@ -209,73 +206,180 @@
             reshape(ctx);
 	        ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
             
+            var mvMatrix = new J3DIMatrix4();
             g.perspectiveMatrix = new J3DIMatrix4();
             g.perspectiveMatrix.perspective(10, g.width /g.height, 1, 1000);
-            g.perspectiveMatrix.translate(0, 0, transl * 5);
-            g.perspectiveMatrix.lookat(0,0,20, 0, 0, 0, 0, 1, 0);
-            g.perspectiveMatrix.rotate(40, 1,0,0);
+            g.perspectiveMatrix.translate( 0, 0, transl * 5);
+            g.perspectiveMatrix.lookat(0,0,20, 0, 0, 0, 0, 1, 0);            
+            g.perspectiveMatrix.rotate(xRot/5 + 60, 1,0,0);
             g.perspectiveMatrix.rotate(yRot/5, 0,1,0);
             
-            if(!g.sphere.loaded){
+            if(!g.buildings.loaded){
                 return;
             }
-            var startX = -layoutWidth/2;
-            var startY = -layoutHeight/2;
-            var startZ = 0;
-            var incX = 0;//layoutWidth / (numRowCols-1);
-            var incY = layoutHeight / (numRowCols-1);
-            var incZ = 0;
-            var objName = "";
-            if(g.open){
-                if(g.Step < 5.0){
-                    g.Step += 0.1 
-                } else { g.open = false; }
-            } 
-            if(g.close){
-                if(g.Step > 0.0){
-                    g.Step -= 0.1 
-                }           
+            if(!g.buildings.parsed){
+                // G_building
+                // G_1_floor
+                // G_1_floor_1
+                var RE_4 = /(\w+)_(\d+)_(\w+)_(\d+)$/; // элемент
+                var RE_2 = /(\w+)_(\d+)_floor$/; // этаж
+                var RE_1 = /(\w+)_building$/; // здание
+                g.buildings.parsed = true;
+                g.buildings.items = [];
+                /*
+                    g.buildings.items = [
+                        G:{ 
+                            Name:name,
+                            Selected : false,
+                            items : [
+                                floor:{
+                                    Name:name,
+                                    Selected : false
+                                    items : [
+                                        wall:{
+                                            Name:name,
+                                            Selected : false                                    
+                                        },
+                                        stair:{
+                                            Name:name,
+                                            Selected : false                                    
+                                        },
+                                        door:{
+                                            Name:name,
+                                            Selected : false,
+                                            box:{
+                                                Xmin:0,Ymin:0,Zmin:0,
+                                                Xmax:0,Ymax:0,Zmax:0,
+                                                first:true,
+                                            };
+                                            obj:{index:0,count:0};
+                                        },
+                                    ],
+                                },
+                            ]
+                        },
+                        A:{
+                        }
+                    ];
+                */
+                for (var objName in g.buildings.groups) {
+                    var T = RE_4.exec(objName);
+                    var B = RE_1.exec(objName);
+                    var L = RE_2.exec(objName);
+
+                    if(B){ 
+                        var b = B[1];
+                        if (typeof(g.buildings.items[b]) == 'undefined'){ // здание
+                            g.buildings.items[b] = {};
+                            g.buildings.items[b].items = [];
+                        } 
+                        g.buildings.items[b].Name = objName;
+                        g.buildings.items[b].Selected = false;
+                        g.buildings.items[b].TextureName = "building";
+                        g.buildings.items[b].box = g.buildings.groups[objName].box;
+                        g.buildings.items[b].obj = {};
+                        g.buildings.items[b].obj.index = g.buildings.groups[objName].index;
+                        g.buildings.items[b].obj.count = g.buildings.groups[objName].count;
+                    } else if(L){ 
+                        var b = L[1];
+                        var f = L[2];
+                        if (typeof(g.buildings.items[b]) == 'undefined'){ // здание
+                            g.buildings.items[b] = {}; 
+                            g.buildings.items[b].items = [];
+                        } 
+                        if (typeof(g.buildings.items[b].items[f]) == 'undefined'){ // этаж
+                            g.buildings.items[b].items[f] = {};                            
+                            g.buildings.items[b].items[f].items = [];
+                        }
+                        g.buildings.items[b].items[f].Name = objName;
+                        g.buildings.items[b].items[f].Selected = false;
+                        g.buildings.items[b].items[f].TextureName = "building";
+                        g.buildings.items[b].items[f].box = g.buildings.groups[objName].box;
+                        g.buildings.items[b].items[f].obj = {};
+                        g.buildings.items[b].items[f].obj.index = g.buildings.groups[objName].index;
+                        g.buildings.items[b].items[f].obj.count = g.buildings.groups[objName].count;
+                        
+                    } else if(T){ //G_1_stair_1
+                        var b = T[1];
+                        var f = T[2];
+                        var o = T[3];
+                        var n = T[4];
+                        // g.buildings.items['G']
+                        if (typeof(g.buildings.items[b]) == 'undefined'){ // здание G
+                            g.buildings.items[b] = {}; 
+                            g.buildings.items[b].items = [];
+                        } 
+                        //g.buildings.items['G'].items[1]
+                        if (typeof(g.buildings.items[b].items[f]) == 'undefined'){ // этаж 1
+                            g.buildings.items[b].items[f] = {};
+                            g.buildings.items[b].items[f].items = [];
+                        }
+                        //g.buildings.items['G'].items[1].items['stair']
+                        if (typeof(g.buildings.items[b].items[f].items[o]) == 'undefined'){ // элемент на этаже (stair)
+                            g.buildings.items[b].items[f].items[o] = {};
+                            g.buildings.items[b].items[f].items[o].items = [];
+                        } 
+                        g.buildings.items[b].items[f].items[o].Selected = true;
+                        
+                        //g.buildings.items['G'].items[1].items['stair'].items[0]
+                        var i = g.buildings.items[b].items[f].items[o].items.length;
+                        g.buildings.items[b].items[f].items[o].items[i] = {};
+                        g.buildings.items[b].items[f].items[o].items[i].Name = objName;
+                        g.buildings.items[b].items[f].items[o].items[i].Selected = false;
+                        g.buildings.items[b].items[f].items[o].items[i].box = g.buildings.groups[objName].box;
+                        g.buildings.items[b].items[f].items[o].items[i].obj = {};
+                        g.buildings.items[b].items[f].items[o].items[i].obj.index = g.buildings.groups[objName].index;
+                        g.buildings.items[b].items[f].items[o].items[i].obj.count = g.buildings.groups[objName].count;
+
+                        if(o == "stair"){
+                            g.buildings.items[b].items[f].items[o].items[i].TextureName = "stair";
+                        } else if(o == "wall"){
+                            g.buildings.items[b].items[f].items[o].items[i].TextureName = "wall"; 
+                        } else if(o == "floor"){
+                            g.buildings.items[b].items[f].items[o].items[i].TextureName = "floor";
+                        } else if(o == "door"){
+                            g.buildings.items[b].items[f].items[o].items[i].TextureName = "door";
+                        }
+                    } else {
+                        objName = "";
+                    }
+                }                
             }
-            var Regexp = /(\w)(\d)_(\w+)(\d+)/;
-            //for(i = 0; i < g.sphere.groups.length; i++){
-            for (var objName in g.sphere.groups) {
-                //objName = "Floor00" + (j+1);
-                //objName = "Floor003";
-                var T = Regexp.exec(objName);
-                var texture;
-                
-                var Y = 0;
-                if(T){
-                    if((T[1] == 'G') && (T[3] == 'fake')) {
-                        continue;
-                    }
-                    if(T[3] == 'wall'){
-                        texture = wallTexture
-                    } else if(T[3] == 'floor'){
-                        texture = floorTexture
-                    } else if(T[3] == 'stair'){
-                        texture = stairTexture
-                    } else if(T[3] == 'fake') {
-                        texture = stairTexture
-                    }
-                    if(T[2] > 5){
-                        Y = g.Step;
-                    }
-                        drawOne(ctx, 0,
-                            0,//startX + incX * k,
-                            Y, //startY + incY * j,
-                            0,//startZ + incZ * i,
-                            //showEarth[index] ? 1 : 0.6, showEarth[index] ? wallTexture : floorTexture,
-                            0, texture,
-                            objName);
-                }
+            
+            var X = 0;
+            var Y = 0;
+            var Z = 0;
+            var b = document.getElementById("building_id").value;
+            for (var i in g.buildings.items) {
+                g.buildings.items[i].Selected = false;
             }
+            if(typeof(g.buildings.items[b]) != 'undefined'){
+                g.buildings.items[b].Selected = true;
+                X = -(g.buildings.items[b].box.Xmin + (g.buildings.items[b].box.Xmax - g.buildings.items[b].box.Xmin)/2);
+                Y = -(g.buildings.items[b].box.Ymin + (g.buildings.items[b].box.Ymax - g.buildings.items[b].box.Ymin)/2);
+                Z = -(g.buildings.items[b].box.Zmin + (g.buildings.items[b].box.Zmax - g.buildings.items[b].box.Zmin)/2);
+            }
+            if(b == 'G'){
+                var f = document.getElementById("level_id").value;
+                g.buildings.items.G.items[f].Selected = true;
+            }
+            //for(i = 0; i < g.buildings.groups.length; i++){
+            doDrawItem(ctx, g.buildings.items, X, Y, Z);
 
             ctx.bindTexture(ctx.TEXTURE_2D, null);
 
             framerate.snapshot();
         }
-
+        function doDrawItem(ctx, items, X,Y,Z){
+            for (var i in items) {
+                if(!items[i].Selected){
+                    //(ctx, angle, x, y, z, scale, texture, objName)
+                    drawOne(ctx, 0, X, Y, Z,  1, g.Textures[items[i].TextureName], items[i]);
+                } else {
+                    doDrawItem(ctx, items[i].items, X,Y,Z);
+                }
+            }
+        }
         function start()
         {
             var c = document.getElementById("example");
@@ -340,5 +444,25 @@
     There is supposed to be an example drawing here, but it's not important.
     </canvas>
     <div id="framerate"></div>
+    <div> 
+        <select id="building_id">
+            <option value="10">Выберите корпус</option>
+            <option value="A0">Корпус А вход</option>
+            <option value="A1">Корпус А левое крыло</option>
+            <option value="A2">Корпус А правое крыло</option>
+            <option value="B">Корпус Б</option>
+            <option value="V">Корпус В</option>
+            <option value="G" selected >Корпус Г</option>
+            <option value="D"> Корпус Д</option>
+        </select>
+        <select id="level_id">
+            <option value="10">Выберите этаж</option>
+            <option value="1">Этаж 1</option>
+            <option value="2" selected>Этаж 2</option>
+            <option value="3">Этаж 3</option>
+            <option value="4">Этаж 4</option>
+            <option value="5">Этаж 5</option>
+        </select>
+    </div>
   </body>
 </html>
