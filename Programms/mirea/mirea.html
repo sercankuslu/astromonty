@@ -220,14 +220,23 @@
                 return;
             }
             if(!g.buildings.parsed){
-                // G_building
-                // G_1_floor
-                // G_1_floor_1
-                var RE_4 = /(\w+)_(\d+)_(\w+)_(\d+)$/; // элемент
-                var RE_2 = /(\w+)_(\d+)_floor$/; // этаж
-                var RE_1 = /(\w+)_building$/; // здание
+                // <path>.<type>.<flags>
+                // G.building.F000
+                // G.building.F000
+                // G.1.1.floor.F000
+                // A0.3.1.floor.F000
+                // G_1_floor_f000
+                // G_1_floor_1_f000
+                
+                var str = "A0_1_floor_1_f000".replace(/_/g,".");
+                var RE = /([\w\d]+)\.?|(f\d\d\d)/g;                
+                
                 g.buildings.parsed = true;
                 g.buildings.items = [];
+                g.buildings.items1 = new J3dObj('mirea', '',0x33);
+                g.buildings.items1.add('G', 'building', 0x33);
+                g.buildings.items1.G.add('1', 'floor', 0x33);
+                g.buildings.items1.G[1].add('1', 'door', 0x33);
                 /*
                     g.buildings.items = [
                         G:{ 
@@ -265,10 +274,12 @@
                     ];
                 */
                 for (var objName in g.buildings.groups) {
-                    var T = RE_4.exec(objName);
-                    var B = RE_1.exec(objName);
-                    var L = RE_2.exec(objName);
-
+                    var result = [];
+                    var i;
+                    while ((i = RE.exec(objName)) != null){
+                        result[result.length] = i[1];
+                    }
+                    
                     if(B){ 
                         var b = B[1];
                         if (typeof(g.buildings.items[b]) == 'undefined'){ // здание
@@ -434,6 +445,29 @@
                 f();
             }
         }
+        J3dObj = function(name, type, flags) {
+            var F = +flags;
+            this.Name = name;
+            this.Selected = false;
+            this.type = type;
+            //this.items = {};
+            // показывать, когда родитель выделен
+            this.showWhenParentSelect = (flags & 0x10)?true:false;
+            // показывать, когда родитель не выделен
+            this.showWhenParentUnselect = (flags & 0x20)?true:false;
+            // показывать, когда выделен
+            this.showWhenSelect = (flags & 0x01)?true:false;
+            // показывать, когда не выделен
+            this.showWhenUnselect = (flags & 0x02)?true:false;
+            
+        }
+        J3dObj.prototype.add = function(name, flags) {
+            if(typeof(name) == 'object'){
+            } else {
+                this[name] = new J3dObj(name,flags);
+            }
+        }
+        
     </script>
     <style type="text/css">
         canvas {
